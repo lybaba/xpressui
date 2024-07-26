@@ -1,7 +1,5 @@
-import { usePostUIContext } from './PostUIProvider';
 import { PathProps, withRouter } from '../../common/router';
 import ContactForm from './contactform';
-
 
 type PostUIProps = {
     isLivePreview: boolean;
@@ -10,15 +8,11 @@ type PostUIProps = {
 type Props = PostUIProps & PathProps;
 
 function PostUI(props: Props) {
-    const postUIContext = usePostUIContext();
+    /*const postUIContext = usePostUIContext();
 
     const {
         postConfig,
-    } = postUIContext;
-
-
-    if (!postConfig)
-        return null;
+    } = postUIContext;*/
     
     return <ContactForm {...props} />
     /*switch (postConfig.type) {

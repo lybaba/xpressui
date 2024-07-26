@@ -66,6 +66,7 @@ function BtnGroup(props: BtnGroupProps) {
                             color="primary"
                             onClick={(e) => {
                                 e.preventDefault();
+                                console.log("IIIIIIIIIIIIIIII")
                                 onNextBtnClick(postUIContext, formProps)
                             }}
                         >

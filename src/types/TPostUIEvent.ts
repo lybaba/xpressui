@@ -29,8 +29,6 @@ type TPostUIEvent = {
     frontend: FrontendClient;
     eventType: string;
     data: Record<string, any>;
-    onSuccess: (data: any) => void;
-    onError: (data: any) => void
 }
 
 export default TPostUIEvent;

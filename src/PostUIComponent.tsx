@@ -16,6 +16,7 @@ import FrontendClient from './api/frontend';
 import { MULTI_STEP_FORM_TYPE } from './api/post';
 import TPostUIState from './components/post-ui/TPostUIState';
 import PostUI from './components/post-ui/PostUI';
+import { EVENT_HANDLERS } from './components/post-ui/Actions';
 
 type TPostConfigWitBaseUrl = {
     postConfig: TPostConfig;
@@ -66,11 +67,11 @@ async function getConfig(postConfigFileName: string, postAssetsFileName: string 
         const res = await Promise.all([
             fetchPostConfig(postConfigFileName),
             fetchPostAssets(postAssetsFileName)]);
-    
+
         return res;
     } else {
         const res = await fetchPostConfig(postConfigFileName);
-    
+
         return [res, []];
     }
 }
@@ -129,16 +130,19 @@ function renderPostUI(props: RenderPostUIProps) {
     }
 
 
-    const eventData: TPostUIEvent = {
+    const event: TPostUIEvent = {
         frontend,
         eventType: TPostUIEventType.InitEvent,
-        onSuccess: (data: any) => null,
-        onError: (data: any) => null,
         ...dataProps
     }
 
-    const event = new CustomEvent(IAK_POST_UI_EVENT, { detail: eventData });
-    document.dispatchEvent(event);
+    const onSuccess =   (data: any) =>  null;
+    const onError = (data: any) => null;
+
+    if (EVENT_HANDLERS.length) {
+        EVENT_HANDLERS.forEach((eventHandler) => eventHandler(event, onSuccess, onError));
+    }
+
 
     return (
         <PostUIProvider
@@ -157,58 +161,25 @@ type PostUIProps = {
     mediaFiles?: TMediaFile[];
 }
 
-export function render(props: PostUIProps) {
-    const {
-        postConfig,
-        baseUrl = '',
-        template = '',
-        mediaFiles = [],
-        mountNodeId
-    } = props;
 
-    const mediaFilesMap: Record<string, TMediaFile> = {};
-
-    mediaFiles.forEach((mediaFile: TMediaFile) => {
-        mediaFilesMap[mediaFile.id] = mediaFile;
-    });
-
-    const root = ReactDOM.createRoot(
-        document.getElementById(mountNodeId) as HTMLElement
-    );
-
-    root.render(
-        <React.StrictMode>
-            <ThemeProvider theme={theme}>
-                <HashRouter>
-                    <ModalProvider>
-                        {
-                            renderPostUI({
-                                postConfig,
-                                baseUrl,
-                                template,
-                                mediaFiles,
-                                mediaFilesMap
-                            })
-                        }
-                    </ModalProvider>
-                </HashRouter>
-            </ThemeProvider>
-        </React.StrictMode>
-    );
-}
 
 class PostUIComponent extends HTMLElement {
-    private name: string;
-
-    constructor (_name: string) {
-        super();
-        this.name = _name;
+    static get observedAttributes() {
+        return ['name'];
     }
 
     connectedCallback() {
+        this.render();
+    }
+
+    attributeChangedCallback() {
+        this.render();
+    }
+
+    render() {
         const root = ReactDOM.createRoot(this);
-        
-        const postName = this.getAttribute("name") ?? '';
+
+        const postName = this.getAttribute("name") || '';
 
         // Get the reference to the template
         const templateReference: any = document.querySelector(`#${postName}`);

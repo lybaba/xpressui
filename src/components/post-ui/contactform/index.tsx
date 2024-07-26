@@ -40,9 +40,11 @@ function ContactForm(props: Props) {
         <Container>
             <Form
                 onSubmit={(formValues: any, form: FormApi<string, any>) => {
+                    console.log("submitForm : ", formValues);
+
                     if (!isLivePreview) {
                         submitForm(postUIContext, currentStepIndex, formValues).then((data) => {
-                            console.log("Form Submitted Successfully : ", data);
+                            console.log("Form Submitted Successfully....");
                         })
                     } else {
                         console.log("submitForm : ", formValues);

@@ -2,8 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 
-import PostUIWebComponent, { render } from './PostUIComponent';
+import PostUIWebComponent from './PostUIComponent';
 import App from './demo/App';
+import TPostUIEvent from './types/TPostUIEvent';
+import { EVENT_HANDLERS } from './components/post-ui/Actions';
 
 
 if (!customElements.get('iak-post-ui')) { customElements.define('iak-post-ui', PostUIWebComponent); }
@@ -23,4 +25,22 @@ root.render(
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 //reportWebVitals();
 
-export default render;
+
+const xpress = {
+    addEventHandler: (eventhandler: (event: TPostUIEvent) => Promise<any>) => {
+        EVENT_HANDLERS.push(
+            async function (
+                event: TPostUIEvent,
+                onSuccess: (data: any) => void,
+                onError: (data: any) => void) {
+                try {
+                    const res = await eventhandler(event);
+                    onSuccess(res);
+                } catch (reason: any) {
+                    onError(reason);
+                }
+            });
+    }
+}
+
+export default xpress;

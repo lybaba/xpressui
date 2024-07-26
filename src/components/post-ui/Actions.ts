@@ -5,12 +5,20 @@ import TPostConfigState,
     TPostUIContext,
 } from "./TPostUIState";
 import TPostUIEvent, { TPostUIEventType } from "../../types/TPostUIEvent";
-import { BUILDER_TAB_FORMS, IAK_POST_UI_EVENT } from "../../types/Constants";
+import { BUILDER_TAB_FORMS } from "../../types/Constants";
 import { FormRenderProps } from "react-final-form";
 
 
 export const SET_CURRENT_STEP_INDEX = 'set_step';
 export const SET_CONFIG = 'set_config';
+
+export type EventHandlerType =  (
+    event: TPostUIEvent, 
+    onSuccess: (data : any) => void,
+    onError: (data: any) => void,
+   ) => void;
+
+export const EVENT_HANDLERS: Array<EventHandlerType> = [];
 
 export function init(state: TPostConfigState): TPostConfigState {
     return state;
@@ -62,34 +70,40 @@ export async function setPostUIConfig(postUIContext: TPostUIContext,
     });
 }
 
-export async function onSuccess(context: TPostUIContext, eventType: TPostUIEventType, data: any) {
-    console.log("onSuccess ", eventType, " ", data);
+export async function doOnSuccess(context: TPostUIContext, event: TPostUIEvent, data: any) {
+    console.log("doOnSuccess event=", event, " response=", data);
 }
 
-export async function onError(context: TPostUIContext, eventType: TPostUIEventType, data: any) {
-    console.log("onError ", eventType, " ", data);
+export async function doOnError(context: TPostUIContext, event: TPostUIEvent, data: any) {
+    console.log("doOnError event=", event, " response=", data);
 }
 
 
 export async function submitForm(context: TPostUIContext, sectionIndex: number, values: Record<string, any>) {
     const {
-        frontend
+        frontend,
     } = context;
 
 
     const eventType = TPostUIEventType.SubmitFormEvent;
-    const eventData : TPostUIEvent = {
+    const event : TPostUIEvent = {
         frontend,
         eventType,
         data: {
             formData: values
         },
-        onSuccess:  (data: any) => onSuccess(context, eventType, data),
-        onError: (data: any) => onError(context, eventType, data),
     }
 
-    const event = new CustomEvent(IAK_POST_UI_EVENT, {detail: eventData});
-    document.dispatchEvent(event);
+    const onSuccess =   (data: any) => doOnSuccess(context, event, data);
+
+    const onError = (data: any) => doOnError(context, event, data);
+
+    if (EVENT_HANDLERS.length) {
+        EVENT_HANDLERS.forEach((eventHandler) => eventHandler(event, onSuccess, onError));
+    } else {
+        console.log("Please provide an eventHandler to submit your data to your backend (server)");
+        onSuccess({});
+    }
 }
 
 
@@ -114,7 +128,7 @@ export async function onNextBtnClick(context: TPostUIContext, formProps: FormRen
 
         const eventType = TPostUIEventType.SelectStepEvent;
 
-        const eventData: TPostUIEvent = {
+        const event: TPostUIEvent = {
             frontend,
             eventType,
             data: {
@@ -123,12 +137,16 @@ export async function onNextBtnClick(context: TPostUIContext, formProps: FormRen
                 targetStepIndex: currentStepIndex + 1,
                 steps
             },
-            onSuccess: (data: any) => setCurrentStepIndex(context, currentStepIndex + 1),
-            onError: (data: any) => onError(context, eventType, data)
         };
 
-        const event = new CustomEvent(IAK_POST_UI_EVENT, { detail: eventData });
-        document.dispatchEvent(event);
+        const onSuccess =   (data: any) => setCurrentStepIndex(context, currentStepIndex + 1);
+        const onError = (data: any) => doOnError(context, event, data);
+
+        if (EVENT_HANDLERS.length) {
+            EVENT_HANDLERS.forEach((eventHandler) => eventHandler(event, onSuccess, onError));
+        } else {
+            onSuccess({});
+        }
     }
 }
 
@@ -150,7 +168,7 @@ export async function onPrevBtnClick(context: TPostUIContext, formProps: FormRen
     if (currentStepNum > 1) {
         const eventType = TPostUIEventType.SelectStepEvent;
 
-        const eventData: TPostUIEvent = {
+        const event: TPostUIEvent = {
             frontend,
             eventType,
             data: {
@@ -159,11 +177,15 @@ export async function onPrevBtnClick(context: TPostUIContext, formProps: FormRen
                 targetStepIndex: currentStepIndex - 1,
                 steps
             },
-            onSuccess: (data: any) => setCurrentStepIndex(context, currentStepIndex - 1),
-            onError: (data: any) => onError(context, eventType, data)
         };
 
-        const event = new CustomEvent(IAK_POST_UI_EVENT, { detail: eventData });
-        document.dispatchEvent(event);
+        const onSuccess =  (data: any) => setCurrentStepIndex(context, currentStepIndex - 1);
+        const onError = (data: any) => doOnError(context, event, data);
+
+        if (EVENT_HANDLERS.length) {
+            EVENT_HANDLERS.forEach((eventHandler) => eventHandler(event, onSuccess, onError));
+        } else {
+            onSuccess({});
+        }
     }
 }

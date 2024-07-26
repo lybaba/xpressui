@@ -28,6 +28,8 @@ import { isEmpty } from 'lodash';
 import TFieldConfig from '../types/TFieldConfig';
 import { Stack } from '@mui/joy';
 import Section from './Section';
+import { ButtonGroup } from '@mui/material';
+import BtnGroup from './BtnGroup';
 
 
 type CustomFormProps = {
@@ -223,6 +225,9 @@ function CustomForm(props: CustomFormProps) {
                         />
                     ))
                 }
+                <BtnGroup
+                    formProps={formProps}
+                />
             </Stack>
         )
     }

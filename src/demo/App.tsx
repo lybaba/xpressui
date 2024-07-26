@@ -46,7 +46,7 @@ function AppBody() {
 function Home() {
   return (
     <Box>
-      Hello World....
+      XPress UI Demo.
     </Box>
   )
 }

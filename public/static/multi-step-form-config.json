@@ -1,0 +1,70 @@
+{
+  "successMsg": "",
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+  "type": "multistepform",
+  "submitBtnLabel": "Submit",
+  "header": "",
+  "id": "sqSLutTHa2BHEBv47Z1yW8",
+  "choices": [],
+  "fields": {
+    "step_3": [
+      {
+        "choices": [],
+        "label": "Message",
+        "type": "textarea",
+        "required": true,
+        "name": "message"
+      }
+    ],
+    "multi_step_form": [
+      {
+        "choices": [],
+        "label": "Email",
+        "type": "text",
+        "required": true,
+        "name": "email"
+      }
+    ],
+    "forms": [
+      {
+        "choices": [],
+        "label": "Step 1",
+        "type": "section",
+        "canDelete": false,
+        "name": "multi_step_form"
+      },
+      {
+        "choices": [],
+        "label": "Step 2",
+        "type": "section",
+        "name": "step_2"
+      },
+      {
+        "choices": [],
+        "label": "Step 3",
+        "type": "section",
+        "name": "step_3"
+      }
+    ],
+    "step_2": [
+      {
+        "choices": [],
+        "label": "Nom",
+        "type": "text",
+        "required": true,
+        "name": "nom"
+      }
+    ]
+  },
+  "hero": "",
+  "frontendController": "controller-sample.js",
+  "logo": "",
+  "label": "MultiStep Form",
+  "background": "",
+  "name": "multi-step-form",
+  "prevBtnLabel": "Previous",
+  "nextBtnLabel": "Next",
+  "backendController": "controller-sample.php",
+  "timestamp": 1721687607,
+  "errorMsg": ""
+}

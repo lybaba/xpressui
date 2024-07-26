@@ -1,10 +1,11 @@
 {
   "source": "src/index.tsx",
-  "name": "postui",
+  "name": "xpress-ui",
   "version": "1.0.0",
   "description": "IAKPress Frontend Post UI Components",
   "author": "lybaba",
   "license": "MIT",
+  "repository": "lybaba/xpress-ui",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",

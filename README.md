@@ -1,4 +1,4 @@
-# postui
+# xpress-ui
 
 > IAKPress Frontend Post UI Components
 

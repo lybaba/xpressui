@@ -148,7 +148,7 @@ function renderPostUI(props: RenderPostUIProps) {
         <PostUIProvider
             initialState={initialState}
         >
-            <PostUI />
+            <PostUI name={postName} />
         </PostUIProvider>
     );
 }

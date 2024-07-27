@@ -3,6 +3,7 @@ import ContactForm from './contactform';
 
 type PostUIProps = {
     isLivePreview: boolean;
+    name: string;
 }
 
 type Props = PostUIProps & PathProps;

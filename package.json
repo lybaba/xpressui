@@ -1,17 +1,18 @@
 {
   "source": "src/index.tsx",
-  "name": "xpress-ui",
+  "name": "xpressui",
   "version": "1.0.0",
   "description": "IAKPress Frontend Post UI Components",
   "main": "dist/cjs/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "/dist"
+    "/dist/lib"
   ],
   "scripts": {
     "test": "echo \"Error : no test specified\" && exit 1",
-    "build": "rollup -c --bundleConfigAsCjs",
+    "build": "tsc -p .",
+    "rollup": "rollup -c --bundleConfigAsCjs",
     "start": "react-scripts start"
   },
   "author": "lybaba",

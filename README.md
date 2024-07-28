@@ -7,7 +7,7 @@
 ## Install
 
 ```bash
-npm install --save postui
+npm install --save xpressui
 ```
 
 ## Usage
@@ -15,8 +15,8 @@ npm install --save postui
 ```tsx
 import React, { Component } from 'react'
 
-import MyComponent from 'postui'
-import 'xpress-ui/dist/lib/index.css'
+import MyComponent from 'xpressui/lib/dist'
+import 'xpressui/dist/index.css'
 
 class Example extends Component {
   render() {

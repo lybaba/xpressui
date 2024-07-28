@@ -14,10 +14,15 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "outDir": "lib",
+    "declaration": true,
+
+    "emitDeclarationOnly": false,
   },
   "include": ["src"],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
   ]
 }

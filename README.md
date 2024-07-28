@@ -16,7 +16,7 @@ npm install --save postui
 import React, { Component } from 'react'
 
 import MyComponent from 'postui'
-import 'postui/dist/index.css'
+import 'xpress-ui/dist/lib/index.css'
 
 class Example extends Component {
   render() {

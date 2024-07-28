@@ -1,20 +1,18 @@
 import * as React from 'react';
 import GlobalStyles from '@mui/joy/GlobalStyles';
 import Box from '@mui/joy/Box';
-import IconButton from '@mui/joy/IconButton';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
 import ListItemButton, { listItemButtonClasses } from '@mui/joy/ListItemButton';
 import ListItemContent from '@mui/joy/ListItemContent';
 import Typography from '@mui/joy/Typography';
 import Sheet from '@mui/joy/Sheet';
-import BrightnessAutoRoundedIcon from '@mui/icons-material/BrightnessAutoRounded';
 
 import ColorSchemeToggle from './ColorSchemeToggle';
 import { closeSidebar } from '../utils';
 import { PathProps, withRouter } from '../../common/router';
 
-import logo from './logo.jpg';
+//import logo from './logo.jpg';
 import { APPS } from '../config';
 
 function Toggler({
@@ -113,7 +111,7 @@ function Sidebar(props: PathProps) {
         onClick={() => closeSidebar()}
       />
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-        <IconButton
+        {/*<IconButton
           color="neutral"
           sx={{
             display: { xs: 'none', sm: 'inline-flex' },
@@ -140,6 +138,7 @@ function Sidebar(props: PathProps) {
             />
           </Box>
         </IconButton>
+        */}
         <Typography level="title-lg">XPress UI.</Typography>
         <ColorSchemeToggle sx={{ ml: 'auto' }} />
       </Box>

@@ -73,20 +73,20 @@ function XPressUIBody_(props: XPressUIBodyProps) {
 
   useEffect(() => {
     if (!isEmpty(postName)) {
-      getPostConfigAndTemplate(`config/${postName}.json`, `templates/${postName}.html`).then((data) => {
-        if (!isEmpty(data[0])) {
+      const postConfigFileName = `config/${postName}.json`;
+      const postTemplateFileName = `templates/${postName}.html`;
+
+      getPostConfigAndTemplate(postConfigFileName, postTemplateFileName).then((data) => {
+        if (data.length && !isEmpty(data[0])) {
           const postConfigWithBaseUrl = data[0] as TPostConfigWitBaseUrl;
 
           const {
             postConfig,
           } = postConfigWithBaseUrl;
 
-          const template = data[1] as string;
+          const template = data.length > 1 ? data[1] as string : '';
 
-          console.log("___template : ", template)
-          console.log("___postConfig____________ : ", template)
-
-          //setPostUIConfigAndTemplate(postUIContext, postConfig, template);
+          setPostUIConfigAndTemplate(postUIContext, postConfig, template);
         }
       });
     }

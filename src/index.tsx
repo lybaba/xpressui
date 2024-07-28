@@ -17,9 +17,12 @@ if (rootElem) {
     const root = ReactDOM.createRoot(
         rootElem
     );
+
+    const postConfigFileName = `config/${postName}.json`;
+    const postAssetsFileName = `config/assets.json`;
     
-    getPostConfigAndAssets(`config/${postName}.json`, `config/assets.json`).then((data) => {
-        if (!isEmpty(data[0]) && !isEmpty(data[1])) {
+    getPostConfigAndAssets(postConfigFileName, postAssetsFileName).then((data) => {
+        if (data.length === 2 && !isEmpty(data[0]) && !isEmpty(data[1])) {
             const postConfigWithBaseUrl = data[0] as TPostConfigWitBaseUrl;
 
             const {

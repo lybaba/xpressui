@@ -3,28 +3,18 @@
   "name": "xpressui",
   "version": "1.0.0",
   "description": "IAKPress Frontend Post UI Components",
-  "main": "dist/cjs/index.js",
-  "module": "dist/index.js",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "/dist/lib"
+    "/dist"
   ],
   "scripts": {
     "test": "echo \"Error : no test specified\" && exit 1",
     "build": "tsc -p .",
-    "rollup": "rollup -c --bundleConfigAsCjs",
     "start": "react-scripts start"
   },
   "author": "lybaba",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lybaba/xpress-ui.git"
-  },
-  "bugs": {
-    "url": "https://github.com/lybaba/xpress-ui/issues"
-  },
-  "homepage": "https://github.com/lybaba/xpress-ui#readme",
   "dependencies": {
     "@emotion/cache": "^11.11.0",
     "@emotion/react": "^11.11.3",
@@ -34,9 +24,6 @@
     "@mui/material": "^5.15.3",
     "@mui/material-nextjs": "^5.15.9",
     "@paypal/react-paypal-js": "^7.8.2",
-    "@testing-library/jest-dom": "^5.14.1",
-    "@testing-library/react": "^13.0.0",
-    "@testing-library/user-event": "^13.2.1",
     "@types/color": "^3.0.3",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.7.13",
@@ -108,11 +95,6 @@
     "prettier": "^2.8.0",
     "react-refresh": "^0.14.2",
     "react-refresh-webpack-plugin": "^0.1.0",
-    "rollup": "^4.19.0",
-    "rollup-plugin-dts": "^6.1.1",
-    "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-postcss": "^4.0.2",
-    "rollup-plugin-typescript2": "^0.36.0",
     "terser-webpack-plugin": "^5.3.10",
     "ts-loader": "^9.5.1",
     "tslib": "^2.6.3",

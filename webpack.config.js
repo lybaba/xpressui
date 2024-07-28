@@ -10,7 +10,7 @@ const webpack = require('webpack')
 dddd
 module.exports = {
     entry: {
-        app: './src/index.tsx',
+        xpressui: './src/index.tsx',
       },
     module: {
         rules: [

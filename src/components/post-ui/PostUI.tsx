@@ -1,20 +1,22 @@
+import { useEffect } from 'react';
 import { PathProps, withRouter } from '../../common/router';
 import ContactForm from './contactform';
+import { isEmpty } from 'lodash';
 
 type PostUIProps = {
     isLivePreview: boolean;
-    name: string;
 }
 
 type Props = PostUIProps & PathProps;
 
 function PostUI(props: Props) {
+
     /*const postUIContext = usePostUIContext();
 
     const {
         postConfig,
     } = postUIContext;*/
-    
+
     return <ContactForm {...props} />
     /*switch (postConfig.type) {
         case MULTI_STEP_FORM_TYPE:

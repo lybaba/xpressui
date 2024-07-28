@@ -11,19 +11,13 @@ export function usePostUIContext() {
   return useContext(PostUIContext);
 }
 
-type OwnProps = {
-  initialState?: TPostUIState;
-}
 
-type Props = OwnProps & PropsWithChildren;
-
-const PostUIProvider: React.FC<Props> = (props: Props) => {
+const PostUIProvider: React.FC<PropsWithChildren> = (props: PropsWithChildren) => {
   const {
     children,
-    initialState = INITIAL_STATE
   } = props;
 
-  const [state, dispatch] = useReducer<TPostUIReducer, TPostUIState>(reducer, initialState, init);
+  const [state, dispatch] = useReducer<TPostUIReducer, TPostUIState>(reducer, INITIAL_STATE, init);
 
   const value = {
     ...state,

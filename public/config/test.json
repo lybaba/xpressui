@@ -1,0 +1,119 @@
+{
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+  "type": "contactform",
+  "submitBtnLabel": "Submit",
+  "header": "",
+  "desc": "",
+  "fields": {
+    "test": [
+      {
+        "choices": [],
+        "label": "Prénom",
+        "type": "text",
+        "name": "prenom"
+      },
+      {
+        "choices": [],
+        "label": "Titi",
+        "type": "image",
+        "mediaId": "5wQXeFcg4gmmDxBri6CE41",
+        "id": "wMUTZpX8AJz8cb1hLjSbbf",
+        "name": "mariam"
+      },
+      {
+        "choices": [],
+        "minLen": "6",
+        "type": "email",
+        "name": "email",
+        "id": "v2YcaUm7i8vp9yr8J9SuL3",
+        "errorMsg": "Email Invalide",
+        "maxLen": "32",
+        "canDelete": false,
+        "required": true,
+        "label": "Email"
+      }
+    ],
+    "forms": [
+      {
+        "choices": [],
+        "label": "Test",
+        "type": "fieldgroup",
+        "canDelete": false,
+        "id": "4EPqF7pkGcuWnAjpduByLr",
+        "name": "test"
+      }
+    ]
+  },
+  "frontendController": "controller-sample.js",
+  "mediaLogoId": "",
+  "logo": "ggWka3V972Jku9zvgiKpC6",
+  "label": "Students",
+  "name": "test",
+  "inputStyle": "",
+  "mediaHeaderId": "",
+  "fieldElementProps": "",
+  "bodyElementProps": "",
+  "nextBtnLabel": "Next",
+  "mediaGalleryId": "",
+  "id": "atc8NPwmwt4NbQZZUNiiML",
+  "submitErrorMsg": "",
+  "hero": "",
+  "submitSuccessMsg": "",
+  "background": "eLA2mqxraDstJZKC7dXb2t",
+  "prevBtnLabel": "Previous",
+  "title": "Test",
+  "labelStyle": "",
+  "backendController": "controller-sample.php",
+  "mediaBackgroundId": "",
+  "timestamp": 1720810126,
+  "appPages": [
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "chanteurs",
+      "label": "Chanteurs"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "doudou-fait-du-velo",
+      "label": "Foo"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "test",
+      "label": "Students"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "onlinestore",
+      "name": "ebay",
+      "label": "Ebay"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "toto_fait_du_velo",
+      "label": "Toto fais du véloo"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "multistepform",
+      "name": "multi-step-form",
+      "label": "MultiStep Form"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "toto",
+      "label": "Contact US"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "my-form",
+      "label": "My Form"
+    }
+  ]
+}

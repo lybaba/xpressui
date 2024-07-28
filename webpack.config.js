@@ -7,7 +7,6 @@ const TerserPlugin = require("terser-webpack-plugin");
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const webpack = require('webpack')
 
-dddd
 module.exports = {
     entry: {
         xpressui: './src/index.tsx',

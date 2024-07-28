@@ -14,6 +14,8 @@ import { PathProps, withRouter } from '../../common/router';
 
 //import logo from './logo.jpg';
 import { APPS } from '../config';
+import { usePostUIContext } from '../../components/post-ui/PostUIProvider';
+import TAppPage from '../../types/TAppPage';
 
 function Toggler({
   defaultExpanded = false,
@@ -47,15 +49,22 @@ function Toggler({
   );
 }
 
-function Sidebar(props: PathProps) {
+type Props = PathProps;
+
+function Sidebar(props: Props) {
   const {
     navigate,
-    params,
+    params
   } = props;
 
+  const postUIContext = usePostUIContext();
   const {
-    postName = '',
-  } = params;
+    postConfig
+  } = postUIContext;
+
+  const {
+    appPages = []
+  } = postConfig;
 
 
   return (
@@ -164,17 +173,16 @@ function Sidebar(props: PathProps) {
         >
 
           {
-            APPS.map((app, index) => (
+            appPages.map((appPage : TAppPage, index: number) => (
               <ListItem key={index}>
                 <ListItemButton
                   onClick={(e) => {
                     e.preventDefault();
-                    navigate(`/${app.name}`)
+                    navigate(`/${appPage.name}`)
                   }}
-                  selected={ app.name == postName }
                 >
                   <ListItemContent>
-                    <Typography level="title-sm">{app.desc}</Typography>
+                    <Typography level="title-sm">{appPage.label}</Typography>
                   </ListItemContent>
                 </ListItemButton>
               </ListItem>

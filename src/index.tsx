@@ -1,24 +1,48 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-
-import PostUIWebComponent from './PostUIComponent';
 import App from './demo/App';
 import TPostUIEvent from './types/TPostUIEvent';
 import { EVENT_HANDLERS } from './components/post-ui/Actions';
+import { TPostConfigWitBaseUrl, getPostConfigAndAssets } from './components/post-ui/post-utils';
+import { isEmpty } from 'lodash';
+import TMediaFile from './types/TMediaFile';
 
 
-if (!customElements.get('iak-post-ui')) { customElements.define('iak-post-ui', PostUIWebComponent); }
+const rootElem = document.getElementById('xpress') as HTMLElement
 
+if (rootElem) {
+    const postName = rootElem.getAttribute("data-post-name") || '';
 
-const root = ReactDOM.createRoot(
-    document.getElementById('xpress-root') as HTMLElement
-);
-root.render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
-);
+    const root = ReactDOM.createRoot(
+        rootElem
+    );
+    
+    getPostConfigAndAssets(`config/${postName}.json`, `config/assets.json`).then((data) => {
+        if (!isEmpty(data[0]) && !isEmpty(data[1])) {
+            const postConfigWithBaseUrl = data[0] as TPostConfigWitBaseUrl;
+
+            const {
+                postConfig,
+                baseUrl
+            } = postConfigWithBaseUrl;
+
+            const mediaFiles = data[1] as TMediaFile[]; 
+
+            root.render(
+                <React.StrictMode>
+                    <App 
+                        rootPostName={postName}
+                        postConfig={postConfig}
+                        mediaFiles={mediaFiles}
+                        baseUrl={baseUrl}
+                    />
+                </React.StrictMode>
+            );
+        }
+    });
+}
+
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

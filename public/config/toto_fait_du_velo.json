@@ -1,0 +1,126 @@
+{
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+  "type": "contactform",
+  "submitBtnLabel": "Submit",
+  "header": "",
+  "desc": "",
+  "fields": {
+    "forms": [
+      {
+        "choices": [],
+        "label": "Toto fait du vélo",
+        "type": "fieldgroup",
+        "canDelete": false,
+        "id": "tyCJip86bMQ3WcbSxsad9m",
+        "name": "toto_fait_du_velo"
+      }
+    ],
+    "toto_fait_du_velo": [
+      {
+        "choices": [],
+        "label": "Choix",
+        "type": "single-select",
+        "id": "9T6AVCTEhnsWsjBQEwhPLt",
+        "placeholder": "Séléctionnez votre artiste préféré",
+        "name": "choix"
+      },
+      {
+        "choices": [],
+        "label": "Adresse Postale",
+        "type": "text",
+        "id": "2ydABr5eN2EyUbGrw9EQP6",
+        "required": true,
+        "name": "adresse_postale"
+      },
+      {
+        "choices": [],
+        "label": "Message",
+        "type": "textarea",
+        "id": "o9H3pdVuaG24BHzKXrQB3H",
+        "required": true,
+        "name": "message"
+      },
+      {
+        "choices": [],
+        "name": "email",
+        "type": "email",
+        "id": "nz7rHJySPmFgJaMaobZfNW",
+        "canDelete": false,
+        "required": true,
+        "label": "Email"
+      }
+    ]
+  },
+  "frontendController": "controller-sample.js",
+  "mediaLogoId": "",
+  "logo": "nPk6WnfmYyVG3n6RD1Z6PJ",
+  "label": "Toto fais du véloo",
+  "name": "toto_fait_du_velo",
+  "inputStyle": "",
+  "mediaHeaderId": "",
+  "fieldElementProps": "",
+  "bodyElementProps": "",
+  "nextBtnLabel": "Next",
+  "mediaGalleryId": "",
+  "id": "prVknbWjqXm9fx3VmF1ogg",
+  "submitErrorMsg": "",
+  "hero": "",
+  "submitSuccessMsg": "",
+  "background": "f1SZvH8jh4ZUXQ6L78PBy8",
+  "prevBtnLabel": "Previous",
+  "title": "Toto fait du vélo",
+  "labelStyle": "",
+  "backendController": "controller-sample.php",
+  "mediaBackgroundId": "",
+  "timestamp": 1720814678,
+  "appPages": [
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "chanteurs",
+      "label": "Chanteurs"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "doudou-fait-du-velo",
+      "label": "Foo"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "test",
+      "label": "Students"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "onlinestore",
+      "name": "ebay",
+      "label": "Ebay"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "toto_fait_du_velo",
+      "label": "Toto fais du véloo"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "multistepform",
+      "name": "multi-step-form",
+      "label": "MultiStep Form"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "toto",
+      "label": "Contact US"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "my-form",
+      "label": "My Form"
+    }
+  ]
+}

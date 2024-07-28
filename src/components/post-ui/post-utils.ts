@@ -2,7 +2,7 @@ import { isEmpty } from "lodash";
 import TMediaFile from "../../types/TMediaFile";
 import TPostConfig from "../../types/TPostConfig";
 
-type TPostConfigWitBaseUrl = {
+export type TPostConfigWitBaseUrl = {
     postConfig: TPostConfig;
     baseUrl: string;
 }
@@ -46,30 +46,24 @@ export async function fetchPostAssets(fileName: string): Promise<TMediaFile[] | 
     return null;
 }
 
-/*export async function fetchPostTemplate(fileName: string): Promise<string | null> {
+export async function fetchPostTemplate(fileName: string): Promise<string | ''> {
     try {
         const response = await fetch(`./${fileName}`);
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
         }
 
-        const url = response.url;
-        const index = url.lastIndexOf(fileName);
-        const baseUrl = url.substring(0, index);
-
-        const postConfig = await response.json();
-        return {
-            postConfig,
-            baseUrl
-        };
+        const template = await response.text();
+        return template;
     } catch (reason: any) {
         console.error(reason);
     }
 
-    return null;
-}*/
+    return '';
+}
 
-export async function getConfig(postConfigFileName: string, postAssetsFileName: string = "", postTemplateFileName = "") {
+
+export async function getPostConfigAndAssets(postConfigFileName: string, postAssetsFileName: string = "") {
     if (!isEmpty(postAssetsFileName)) {
         const res = await Promise.all([
             fetchPostConfig(postConfigFileName),
@@ -80,5 +74,19 @@ export async function getConfig(postConfigFileName: string, postAssetsFileName: 
         const res = await fetchPostConfig(postConfigFileName);
 
         return [res, []];
+    }
+}
+
+export async function getPostConfigAndTemplate(postConfigFileName: string, postTemplateFileName: string = "") {
+    if (!isEmpty(postTemplateFileName)) {
+        const res = await Promise.all([
+            fetchPostConfig(postConfigFileName),
+            fetchPostTemplate(postTemplateFileName)]);
+
+        return res;
+    } else {
+        const res = await fetchPostConfig(postConfigFileName);
+
+        return [res, ''];
     }
 }

@@ -1,5 +1,6 @@
 import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
+import TAppPage from "./TAppPage";
 
 export type TPostSettings = {
     label: string;
@@ -34,6 +35,7 @@ type TPostConfig = {
     nextBtnLabel: string;
     prevBtnLabel: string;
     choices: TChoice[];
+    appPages?: TAppPage[];
     frontendController: string;
     backendController: string;
 }

@@ -1,0 +1,90 @@
+{
+  "successMsg": "",
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+  "type": "contactform",
+  "submitBtnLabel": "Submit",
+  "header": "",
+  "id": "wv4wZiYCphw5zZfLtVQLzL",
+  "choices": [],
+  "fields": {
+    "my_form": [
+      {
+        "choices": [],
+        "label": "Email",
+        "type": "email",
+        "canDelete": false,
+        "name": "email"
+      }
+    ],
+    "forms": [
+      {
+        "choices": [],
+        "label": "My Form",
+        "type": "section",
+        "canDelete": false,
+        "name": "my_form"
+      }
+    ]
+  },
+  "hero": "",
+  "frontendController": "controller-sample.js",
+  "logo": "",
+  "label": "My Form",
+  "background": "",
+  "name": "my-form",
+  "prevBtnLabel": "Previous",
+  "nextBtnLabel": "Next",
+  "backendController": "controller-sample.php",
+  "timestamp": 1721674283,
+  "errorMsg": "",
+  "appPages": [
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "chanteurs",
+      "label": "Chanteurs"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "doudou-fait-du-velo",
+      "label": "Foo"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "test",
+      "label": "Students"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "onlinestore",
+      "name": "ebay",
+      "label": "Ebay"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "toto_fait_du_velo",
+      "label": "Toto fais du véloo"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "multistepform",
+      "name": "multi-step-form",
+      "label": "MultiStep Form"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "toto",
+      "label": "Contact US"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "my-form",
+      "label": "My Form"
+    }
+  ]
+}

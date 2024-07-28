@@ -1,0 +1,99 @@
+{
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+  "type": "contactform",
+  "submitBtnLabel": "Submit",
+  "id": "v5b7oVFknjSBCKoihy1rnB",
+  "desc": "",
+  "fields": {
+    "forms": [
+      {
+        "choices": [],
+        "label": "Toto",
+        "type": "fieldgroup",
+        "canDelete": false,
+        "id": "eZJMvN4tEbcEaDWCPDDGN9",
+        "name": "toto"
+      }
+    ],
+    "toto": [
+      {
+        "choices": [],
+        "label": "Mariam",
+        "mediaId": "nPk6WnfmYyVG3n6RD1Z6PJ",
+        "type": "image-url",
+        "id": "wUsxDfPfhSTLjUsA88q1aL",
+        "name": "mariam"
+      },
+      {
+        "choices": [],
+        "label": "Email",
+        "type": "email",
+        "canDelete": false,
+        "id": "wF6fwuTFaNJ4FPQZEFzQBh",
+        "name": "email"
+      }
+    ]
+  },
+  "frontendController": "controller-sample.js",
+  "mediaLogoId": "",
+  "name": "toto",
+  "label": "Contact US",
+  "mediaHeaderId": "",
+  "prevBtnLabel": "Previous",
+  "nextBtnLabel": "Next",
+  "title": "Toto",
+  "backendController": "controller-sample.php",
+  "mediaBackgroundId": "",
+  "timestamp": 1720873627,
+  "mediaGalleryId": "",
+  "appPages": [
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "chanteurs",
+      "label": "Chanteurs"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "doudou-fait-du-velo",
+      "label": "Foo"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "test",
+      "label": "Students"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "onlinestore",
+      "name": "ebay",
+      "label": "Ebay"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "toto_fait_du_velo",
+      "label": "Toto fais du véloo"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "multistepform",
+      "name": "multi-step-form",
+      "label": "MultiStep Form"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "toto",
+      "label": "Contact US"
+    },
+    {
+      "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+      "type": "contactform",
+      "name": "my-form",
+      "label": "My Form"
+    }
+  ]
+}

@@ -27,6 +27,9 @@ function Section(props: PostFieldProps) {
 
     const showSection = !isMultiStepForm || currentStepIndex === sectionIndex;
 
+    if (! postConfig.fields || ! postConfig.fields[sectionConfig.name])
+        return null;
+    
     const fields = postConfig.fields[sectionConfig.name];
 
     return showSection && (

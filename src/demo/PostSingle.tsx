@@ -1,4 +1,5 @@
 import { PathProps, withRouter } from "../common/router"
+import PostUI from "../components/post-ui/PostUI";
 
 declare global {
     namespace JSX {
@@ -22,7 +23,7 @@ function PostSingle(props: PathProps) {
     } = params;
 
     return (
-      <iak-post-ui name={postName} />
+      <PostUI name={postName} />
     )
   }
 

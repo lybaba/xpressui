@@ -7,6 +7,7 @@ import TPostConfigState,
 import TPostUIEvent, { TPostUIEventType } from "../../types/TPostUIEvent";
 import { BUILDER_TAB_FORMS } from "../../types/Constants";
 import { FormRenderProps } from "react-final-form";
+import { TPostUIConfig } from "../../types/TPostUIConfigProps";
 
 
 export const SET_CURRENT_STEP_INDEX = 'set_step';
@@ -50,11 +51,7 @@ export async function setPostUITemplate(postUIContext: TPostUIContext, template:
     });
 }
 
-export async function setPostUIConfig(postUIContext: TPostUIContext, 
-                                      postConfig: TPostConfig,
-                                      mediaFiles: TMediaFile[], 
-                                      mediaFilesMap: Record<string, TMediaFile>,
-                                      template: string = '') {
+export async function setPostUIConfigAndTemplate(postUIContext: TPostUIContext, postConfig: TPostConfig, template: string) {
     const {
         dispatch,
     } = postUIContext;
@@ -62,11 +59,22 @@ export async function setPostUIConfig(postUIContext: TPostUIContext,
     dispatch({
         type: SET_CONFIG,
         payload: {
+            currentStepIndex: 0,
             postConfig,
-            mediaFiles,
-            mediaFilesMap,
             template
         }
+    });
+}
+
+
+export async function setPostUIConfig(postUIContext: TPostUIContext, config: TPostUIConfig) {
+    const {
+        dispatch,
+    } = postUIContext;
+
+    dispatch({
+        type: SET_CONFIG,
+        payload: config
     });
 }
 

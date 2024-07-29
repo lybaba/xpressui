@@ -2,20 +2,20 @@ import { CssVarsProvider, ThemeProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
 import Box from '@mui/joy/Box';
 
-import Sidebar from './lib/components/layout/Sidebar';
-import Header from './lib/components/layout/Header';
+import Sidebar from './components/layout/Sidebar';
+import Header from './components/layout/Header';
 import { Outlet, Route, Routes } from 'react-router-dom';
 
 
 import { useEffect } from 'react';
-import TPostConfig from './lib/types/TPostConfig';
-import TMediaFile from './lib/types/TMediaFile';
-import FrontendClient from './lib/utils/frontend';
-import { setPostUIConfig, setPostUIConfigAndTemplate } from './lib/components/post-ui/Actions';
-import { usePostUIContext } from './lib/components/post-ui/PostUIProvider';
-import PostUI from './lib/components/post-ui/PostUI';
-import { PathProps, withRouter } from './lib/common/router';
-import { TPostConfigWitBaseUrl, getPostConfigAndTemplate } from './lib/components/post-ui/post-utils';
+import TPostConfig from './common/TPostConfig';
+import TMediaFile from './common/TMediaFile';
+import FrontendClient from './utils/frontend';
+import { setPostUIConfig, setPostUIConfigAndTemplate } from './components/post-ui/Actions';
+import { usePostUIContext } from './components/post-ui/PostUIProvider';
+import PostUI from './components/post-ui/PostUI';
+import { PathProps, withRouter } from './components/router';
+import { TPostConfigWitBaseUrl, getPostConfigAndTemplate } from './components/post-ui/post-utils';
 import { isEmpty } from 'lodash';
 
 type XPressUIProps = {

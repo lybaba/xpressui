@@ -1,0 +1,24 @@
+import { Stack } from '@mui/joy';
+import { usePostUIContext } from '../PostUIProvider';
+import { PathProps, withRouter } from '../../router';
+
+
+
+function CustomPost(props: PathProps) {
+    const postUIContext = usePostUIContext();
+
+    const {
+        postConfig
+    } = postUIContext;
+    
+
+    return (
+        <Stack
+            sx={{ flexGrow: 1 }}
+        >
+            Custom Post
+        </Stack>
+    );
+}
+
+export default withRouter(CustomPost)

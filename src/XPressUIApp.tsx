@@ -1,9 +1,9 @@
 import { ThemeProvider } from '@mui/joy/styles';
 import { BrowserRouter } from "react-router-dom";
 import theme from './styles/default';
-import TPostConfig from './lib/types/TPostConfig';
-import TMediaFile from './lib/types/TMediaFile';
-import PostUIProvider from './lib/components/post-ui/PostUIProvider';
+import TPostConfig from './common/TPostConfig';
+import TMediaFile from './common/TMediaFile';
+import PostUIProvider from './components/post-ui/PostUIProvider';
 import XPressUI from './XPressUI';
 
 

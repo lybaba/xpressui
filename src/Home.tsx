@@ -1,10 +1,13 @@
 import { Box } from "@mui/joy";
-import XPressUIApp from "./XPressUIApp";
+import PostUIProvider from "./components/post-ui/PostUIProvider";
 
 export default function App(props: any) {
     return (
-        <Box>
-            Hello from NextJS
-        </Box>
+        <PostUIProvider>
+            <Box>
+                Hello World
+            </Box>
+        </PostUIProvider>
     )
+
   }

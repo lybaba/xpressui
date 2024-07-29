@@ -35,3 +35,7 @@ tsconfig.tsbuildinfo
 .next
 next-env.d.ts
 dist
+lib
+tsconfig.tsbuildinfo
+lib.tsconfig.tsbuildinfo
+.tsbuildinfo

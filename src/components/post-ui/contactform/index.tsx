@@ -6,9 +6,9 @@ import { submitForm } from '../Actions';
 import CustomForm from '../../CustomForm';
 import { Form } from 'react-final-form';
 import { useCallback } from 'react';
-import { buildSchema } from '../../../utils/post-validate';
-import { ajv } from '../../../utils/frontend';
+import { ajv } from '../../../common/frontend';
 import validate from '../Validator';
+import { buildSchema } from '../../../common/post';
 
 
 type ContactFormProps = {

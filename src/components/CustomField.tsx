@@ -3,7 +3,7 @@ import PostFieldProps from './PostFieldProps';
 import {
     IMAGE_TYPE,
     SUBMIT_TYPE
-} from '../utils/field';
+} from '../common/field';
 
 import { Box, FormControl, Stack } from '@mui/joy';
 

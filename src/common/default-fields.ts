@@ -1,6 +1,6 @@
-import TFieldConfig from "../common/TFieldConfig";
+import TFieldConfig from "./TFieldConfig";
 import { EMAIL_TYPE, TEXT_TYPE } from "./field";
-import LABELS from "./config/labels";
+import LABELS from "./labels";
 
 export const EMAIL_FIELD : TFieldConfig = {
     type: EMAIL_TYPE,

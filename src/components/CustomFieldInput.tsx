@@ -10,7 +10,7 @@ import {
     SUBMIT_TYPE,
     TEXTAREA_TYPE,
     doNormalizeFieldValue
-} from '../utils/field';
+} from '../common/field';
 
 import FormFieldProps from './FormFieldProps';
 import { FormHelperText, Input } from '@mui/joy';
@@ -18,7 +18,7 @@ import SingleSelect from './single-select';
 import MultiSelect from './multi-select';
 import RichEditor from './richeditor';
 import CustomCheckbox from './checkbox';
-import { getErrorText, getHasError } from '../utils/validation-errors';
+import { getErrorText, getHasError } from '../common/validation-errors';
 import { InfoOutlined } from '@mui/icons-material';
 import { isEmpty } from 'lodash';
 import PostFieldProps from './PostFieldProps';

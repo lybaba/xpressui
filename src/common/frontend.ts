@@ -3,8 +3,8 @@ import Ajv from "ajv";
 import addFormats from 'ajv-formats';
 import addErrors from 'ajv-errors';
 import { isEmpty } from "lodash";
-import TPostConfig from "../common/TPostConfig";
-import TMediaFile from "../common/TMediaFile";
+import TPostConfig from "./TPostConfig";
+import TMediaFile from "./TMediaFile";
 
 
 export const ajv = new Ajv({ allErrors: true });

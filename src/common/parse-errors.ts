@@ -1,5 +1,5 @@
 import { ErrorObject } from 'ajv';
-import LABELS from './config/labels';
+import LABELS from './labels';
 
 
 function getErrorLabel(errorKey: string, errorValue: string = "", limit: number = 0) : string {

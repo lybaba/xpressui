@@ -1,10 +1,10 @@
 
-import TFieldConfig from '../common/TFieldConfig';
+import TFieldConfig from './TFieldConfig';
 
 import slugify from 'slugify';
 import { lowerCase } from 'lodash';
-import TPostConfig from '../common/TPostConfig';
-import TChoice from '../common/TChoice';
+import TPostConfig from './TPostConfig';
+import TChoice from './TChoice';
 
 export const SECTION_TYPE = 'section';
 export const FIELDGROUP_TYPE = 'fieldgroup';

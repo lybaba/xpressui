@@ -1,4 +1,4 @@
-import FrontendClient from "../utils/frontend";
+import FrontendClient from "./frontend";
 import TMediaFile from "./TMediaFile";
 import TPostConfig from "./TPostConfig";
 

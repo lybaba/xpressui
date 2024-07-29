@@ -15,7 +15,7 @@ import TMediaFile from '../../common/TMediaFile';
 import MediaFileDetails from './MediaFileDetails';
 import { ChevronLeftOutlined, ChevronRightRounded } from '@mui/icons-material';
 import { usePostUIContext } from '../post-ui/PostUIProvider';
-import { getLargeImageUrl } from '../../utils/post';
+import { getLargeImageUrl } from '../../common/post';
 import TPostConfig from '../../common/TPostConfig';
 import TFieldConfig from '../../common/TFieldConfig';
 import { useEffect, useState } from 'react';
@@ -34,7 +34,7 @@ const MediaPhoto = (props: MediaPhotoProps) => {
 
     const postUIContext = usePostUIContext();
 
-    const photoURL = getLargeImageUrl(postUIContext, postConfig, mediaFile);
+    const photoURL = getLargeImageUrl(postUIContext, '', postConfig, mediaFile);
 
     const metadata = mediaFile.metadata.large;
 

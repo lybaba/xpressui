@@ -2,7 +2,7 @@ import { FormRenderProps } from 'react-final-form';
 import { Checkbox } from '@mui/joy';
 import FormFieldTitle from '../FormFieldTitle';
 import FormFieldProps from '../FormFieldProps';
-import { getBooleanValue } from '../../utils/field';
+import { getBooleanValue } from '../../common/field';
 
 type FormProps = {
   formProps: FormRenderProps<any, any>;

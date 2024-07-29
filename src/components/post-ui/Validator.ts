@@ -1,12 +1,12 @@
 import { isEmpty } from 'lodash';
-import parseErrors from '../../utils/parse-errors';
+import parseErrors from '../../common/parse-errors';
 import { ValidateFunction } from 'ajv';
 import { TPostUIContext } from './TPostUIState';
-import { getSectionByIndex } from '../../utils/post';
+import { getSectionByIndex } from '../../common/post';
 import TPostConfig from '../../common/TPostConfig';
 import TFieldConfig from '../../common/TFieldConfig';
-import { getBooleanValue } from '../../utils/field';
-import LABELS from '../../utils/config/labels';
+import { getBooleanValue } from '../../common/field';
+import LABELS from '../../common/labels';
 
 
 export default function validate(

@@ -1,6 +1,5 @@
 import { ThemeProvider } from '@mui/joy/styles';
 import { BrowserRouter } from "react-router-dom";
-import theme from './styles/default';
 import TPostConfig from './common/TPostConfig';
 import TMediaFile from './common/TMediaFile';
 import PostUIProvider from './components/post-ui/PostUIProvider';
@@ -25,7 +24,7 @@ export default function XPressUIApp(props: XPressUIAppProps) {
   } = props;
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider>
       <BrowserRouter>
         <PostUIProvider>
           <XPressUI

@@ -2,9 +2,9 @@ import { Dispatch } from "react";
 import IAction from "../../common/IAction";
 
 import TPostConfig from '../../common/TPostConfig'
-import { DEFAULT_FORM_CONFIG } from "../../utils/post";
+import { DEFAULT_FORM_CONFIG } from "../../common/post";
 import TMediaFile from "../../common/TMediaFile";
-import FrontendClient from "../../utils/frontend";
+import FrontendClient from "../../common/frontend";
 
 export interface TPostUIState {
     postConfig: TPostConfig;

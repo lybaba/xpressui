@@ -9,5 +9,4 @@ export default function App(props: any) {
             </Box>
         </PostUIProvider>
     )
-
   }

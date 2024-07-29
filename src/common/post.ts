@@ -1,13 +1,30 @@
-import TFieldConfig from "../common/TFieldConfig";
-import TPostConfig from "../common/TPostConfig";
+import { 
+    CHECKBOX_TYPE,
+    DATETIME_TYPE,
+    EMAIL_TYPE,
+    MULTI_SELECT_TYPE,
+    NUMBER_TYPE,
+    PASSWORD_TYPE,
+    PRICE_TYPE,
+    SINGLE_SELECT_TYPE,
+    TEL_TYPE,
+    TEXTAREA_TYPE,
+    TEXT_TYPE,
+    URL_TYPE 
+} from "./field";
+import { ValidateFunction } from "ajv";
+import TFieldConfig from "./TFieldConfig";
+import TPostConfig from "./TPostConfig";
 import { SECTION_TYPE, normalizeFieldName } from './field';
-import { BACKEND_STORAGE_BASE_URL, BUILDER_TAB_FORMS } from '../common/Constants';
+import { BUILDER_TAB_FORMS } from './Constants';
 import { EMAIL_FIELD } from './default-fields';
-import TMediaFile from '../common/TMediaFile';
+import TMediaFile from './TMediaFile';
 import { TPostUIContext } from '../components/post-ui/TPostUIState';
 import { isEmpty } from 'lodash';
 import shortUUID from "short-uuid";
-import LABELS from "./config/labels";
+import LABELS from "./labels";
+import TChoice from "./TChoice";
+import parseErrors from "./parse-errors";
 
 export const FORM_ID = "form";
 export const SECTION_ID = 'attrgroup';
@@ -98,13 +115,13 @@ export const DEFAULT_FORM_CONFIG: TPostConfig = {
     backendController: 'controller-sample.php'
 }
 
-function storageURL(relativePath: string) {
-   return BACKEND_STORAGE_BASE_URL + relativePath + '?alt=media'
+function storageURL(storageUrl: string, relativePath: string) {
+   return storageUrl + relativePath + '?alt=media'
 }
 
-export const buildImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, fileName: string): string => {
+export const buildImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, fileName: string): string => {
     if (isEmpty(postUIContext.postName)) {
-        return storageURL(`static%2F${postConfig.uid}%2F${fileName}`);
+        return storageURL(storageUrl, `static%2F${postConfig.uid}%2F${fileName}`);
     } else {
         const url = postUIContext.frontend.imagesClient.getUri({
             url: fileName
@@ -115,24 +132,24 @@ export const buildImageUrl = (postUIContext: TPostUIContext, postConfig: TPostCo
 }
 
 
-export const getLargeImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return buildImageUrl(postUIContext, postConfig, `${mediaFile.id}-large.${mediaFile.type}`);
+export const getLargeImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return buildImageUrl(postUIContext, storageUrl, postConfig, `${mediaFile.id}-large.${mediaFile.type}`);
 }
 
-const doGetImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile, prefix: string): string => {
-    return buildImageUrl(postUIContext, postConfig, `${mediaFile.id}-${prefix}.${mediaFile.type}`);
+const doGetImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile, prefix: string): string => {
+    return buildImageUrl(postUIContext,  storageUrl, postConfig, `${mediaFile.id}-${prefix}.${mediaFile.type}`);
 }
 
-export const getSmallImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return doGetImageUrl(postUIContext, postConfig, mediaFile, "small");
+export const getSmallImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return doGetImageUrl(postUIContext,  storageUrl, postConfig, mediaFile, "small");
 }
 
-export const getThumbImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return doGetImageUrl(postUIContext, postConfig, mediaFile, "thumb");
+export const getThumbImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return doGetImageUrl(postUIContext,  storageUrl, postConfig, mediaFile, "thumb");
 }
 
-export const getMediumImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return doGetImageUrl(postUIContext, postConfig, mediaFile, "medium");
+export const getMediumImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return doGetImageUrl(postUIContext, storageUrl, postConfig, mediaFile, "medium");
 }
 
 
@@ -210,4 +227,120 @@ export const getDefaultFields = (postConfig: TPostConfig): Record<string, TField
     }
 
     return fields;
+}
+
+
+
+type ValidatorProps = {
+    validator: ValidateFunction<any>;
+    postConfig: TPostConfig;
+    values: Record<string, any>;
+}
+
+
+function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
+    const res: any = {};
+
+    switch (fieldConfig.type) {
+        case NUMBER_TYPE:
+            res.type = "int32";
+            break;
+
+        case PRICE_TYPE:
+            res.type = "float32";
+            break;
+
+        case CHECKBOX_TYPE:
+            res.type = "boolean";
+            break;
+
+        case SINGLE_SELECT_TYPE:
+        case MULTI_SELECT_TYPE:
+            if (isEmpty(fieldConfig.choices))
+                return null;
+            
+            res.enum = fieldConfig.choices.map((opt: TChoice) => opt.name);
+            break;
+
+
+        case TEXT_TYPE:
+        case TEXTAREA_TYPE:
+        case EMAIL_TYPE:
+        case PASSWORD_TYPE:
+        case TEL_TYPE:
+        case URL_TYPE:
+        case DATETIME_TYPE:
+            res.type = "string";
+            break;
+
+        default:
+            return res;
+    }
+
+
+    if (fieldConfig.type === EMAIL_TYPE)
+        res.format = "email";
+
+    if (fieldConfig.pattern)
+        res.pattern = fieldConfig.pattern;
+
+    if (fieldConfig.minLen)
+        res.minLength = Number(fieldConfig.minLen);
+
+    if (fieldConfig.maxLen)
+        res.maxLength = Number(fieldConfig.maxLen);
+
+
+    return res;
+}
+
+
+export function buildSchema(postConfig: TPostConfig, sectionIdex: number): object {
+    const currentSection = getSectionByIndex(postConfig, sectionIdex);
+    
+    const fields: TFieldConfig[] = currentSection && postConfig.fields.hasOwnProperty(currentSection.name) 
+                                    ? postConfig.fields[currentSection.name] : [];
+
+    const required: string[] = [];
+    const errorMessage: Record<string, string> = {};
+    const properties: Record<string, any> = {};
+
+    fields.forEach((fieldConfig: TFieldConfig) => {
+        const ajvType = toAjvFieldType(fieldConfig);
+        if (!isEmpty(ajvType)) {
+            properties[fieldConfig.name] = ajvType;
+
+            if (fieldConfig.required)
+                required.push(fieldConfig.name);
+
+            if (fieldConfig.errorMsg)
+                errorMessage[fieldConfig.name] = fieldConfig.errorMsg;
+        }
+    });
+
+    const requiredProps = !isEmpty(required) ? { required } : {};
+
+    const errorMessageProps = !isEmpty(errorMessage) ? { errorMessage: { properties: errorMessage } } : {}
+
+    return {
+        type: "object",
+        properties,
+        ...requiredProps,
+        additionalProperties: true,
+        ...errorMessageProps
+    };
+}
+
+export default function validate(props: ValidatorProps): Record<string, string> {
+    const {
+        validator,
+        values
+    } = props;
+    console.log("___validator ", validator);
+    console.log("___values ", values);
+    validator(values);
+    const errors = parseErrors(validator.errors);
+    console.log("___errors ", errors);
+
+    return errors;
 }

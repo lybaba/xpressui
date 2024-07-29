@@ -1,6 +1,6 @@
 import { FormLabel, Typography } from "@mui/joy";
 import PostFieldProps from "./PostFieldProps";
-import { SECTION_TYPE } from "../utils/field";
+import { SECTION_TYPE } from "../common/field";
 
 
 const FormFieldTitle = (props: PostFieldProps) => {

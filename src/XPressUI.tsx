@@ -10,7 +10,7 @@ import { Outlet, Route, Routes } from 'react-router-dom';
 import { useEffect } from 'react';
 import TPostConfig from './common/TPostConfig';
 import TMediaFile from './common/TMediaFile';
-import FrontendClient from './utils/frontend';
+import FrontendClient from './common/frontend';
 import { setPostUIConfig, setPostUIConfigAndTemplate } from './components/post-ui/Actions';
 import { usePostUIContext } from './components/post-ui/PostUIProvider';
 import PostUI from './components/post-ui/PostUI';

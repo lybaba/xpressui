@@ -2,7 +2,7 @@ import { FormRenderProps } from 'react-final-form'
 import { Stack } from '@mui/joy';
 import TFieldConfig from '../../common/TFieldConfig';
 import PostField from '../PostField';
-import { getSectionFields } from '../../utils/post';
+import { getSectionFields } from '../../common/post';
 import { usePostUIContext } from './PostUIProvider';
 import { PathProps, withRouter } from '../router';
 

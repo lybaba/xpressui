@@ -1,8 +1,4 @@
 
-export const BACKEND_STORAGE_BASE_URL = "https://firebasestorage.googleapis.com/v0/b/joosorolstore.appspot.com/o/";
-export const BACKEND_API_BASE_URL = "https://us-central1-joosorolstore.cloudfunctions.net";
-export const BACKEND_IMAGES_BASE_URL = "https://iakpress-console.web.app/images";
-
 export const MENU_POSTS = 'posts';
 export const MENU_MEDIA = 'media';
 export const MENU_APPS = 'apps';

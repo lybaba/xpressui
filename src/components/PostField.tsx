@@ -10,7 +10,7 @@ import {
     IMAGE_TYPE,
     OUTPUT_TYPE,
     SUBMIT_TYPE,
-} from "../utils/field";
+} from "../common/field";
 import PostFieldProps from "./PostFieldProps";
 import FieldTemplate from "./CustomField";
 import FieldLabelTemplate from "./CustomFieldLabel";

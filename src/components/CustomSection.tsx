@@ -3,7 +3,7 @@ import React from 'react';
 import { Stack } from '@mui/joy';
 import PostFieldProps from './PostFieldProps';
 import { usePostUIContext } from './post-ui/PostUIProvider';
-import { MULTI_STEP_FORM_TYPE } from '../utils/post';
+import { MULTI_STEP_FORM_TYPE } from '../common/post';
 
 type CustomSectionProps = {
     dataType: string;

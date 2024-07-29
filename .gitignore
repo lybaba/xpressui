@@ -32,3 +32,6 @@ stats.json
 tsconfig.tsbuildinfo
 
 /public/images
+.next
+next-env.d.ts
+dist

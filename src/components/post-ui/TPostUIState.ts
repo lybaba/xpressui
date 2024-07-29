@@ -2,7 +2,7 @@ import { Dispatch } from "react";
 import IAction from "../../common/IAction";
 
 import TPostConfig from '../../common/TPostConfig'
-import { DEFAULT_FORM_CONFIG } from "../../common/post";
+import { DEFAULT_FORM_CONFIG } from "../../common/TPostConfig";
 import TMediaFile from "../../common/TMediaFile";
 import FrontendClient from "../../common/frontend";
 

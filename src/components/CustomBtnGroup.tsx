@@ -12,7 +12,7 @@ import {
 } from '../common/Constants';
 import { usePostUIContext } from "./post-ui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
-import { MULTI_STEP_FORM_TYPE } from "../common/post";
+import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
 import { onNextBtnClick, onPrevBtnClick } from "./post-ui/Actions";
 
 type CustomBtnGroupProps = {

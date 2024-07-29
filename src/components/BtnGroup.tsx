@@ -5,8 +5,8 @@ import {
 } from '../common/Constants';
 import { usePostUIContext } from "./post-ui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
-import { MULTI_STEP_FORM_TYPE } from "../common/post";
 import { onNextBtnClick, onPrevBtnClick } from "./post-ui/Actions";
+import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
 
 type BtnGroupProps = {
     formProps: FormRenderProps<any, any>;

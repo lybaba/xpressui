@@ -15,14 +15,10 @@ import {
 import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
 import TPostConfig from "./TPostConfig";
-import { SECTION_TYPE, normalizeFieldName } from './field';
 import { BUILDER_TAB_FORMS } from './Constants';
-import { EMAIL_FIELD } from './default-fields';
 import TMediaFile from './TMediaFile';
 import { TPostUIContext } from '../components/post-ui/TPostUIState';
 import { isEmpty } from 'lodash';
-import shortUUID from "short-uuid";
-import LABELS from "./labels";
 import TChoice from "./TChoice";
 import parseErrors from "./parse-errors";
 
@@ -47,80 +43,12 @@ export type TGetPostAssetsResult = {
     mediaFilesMap: Record<string, TMediaFile>;
 }
 
-export const CONTACTFORM_TYPE = 'contactform';
-export const ADVANCEDFORM_TYPE = 'advancedform';
-export const ONLINESTORE_TYPE = 'onlinestore';
-export const MULTI_STEP_FORM_TYPE = 'multistepform';
-
-
-export const CONTACT_FORM: TPostType = {
-    type: CONTACTFORM_TYPE,
-    label: LABELS.contactform,
-    description: LABELS.contactformDesc,
-    icon: 'address.png'
-};
-
-export const ADVANCED_FORM: TPostType = {
-    type: ADVANCEDFORM_TYPE,
-    label: LABELS.advancedform,
-    description: LABELS.advancedformDesc,
-    icon: 'ico_advanced_forms.png'
-};
-
-export const ONLINESTORE_POST: TPostType = {
-    type: ONLINESTORE_TYPE,
-    label: LABELS.onlinestore,
-    description: LABELS.onlinestoreDesc,
-    icon: 'product.png'
-};
-
-export const MULTI_STEP_FORM_POST: TPostType = {
-    type: MULTI_STEP_FORM_TYPE,
-    label: LABELS.multistepform,
-    description: LABELS.multistepformDesc,
-    icon: 'process.png'
-};
-
-export const POST_TYPES: Array<TPostType> = [
-    CONTACT_FORM,
-    ADVANCED_FORM,
-    MULTI_STEP_FORM_POST,
-    ONLINESTORE_POST,
-];
-
-export const POST_TYPES_MAP: Record<string, TPostType> = {};
-POST_TYPES.forEach((postType) => {
-    POST_TYPES_MAP[postType.type] = postType;
-});
-
-export const DEFAULT_FORM_CONFIG: TPostConfig = {
-    id: shortUUID.generate(),
-    uid: shortUUID.generate(),
-    timestamp: Math.floor(Date.now() / 1000),
-    type: CONTACTFORM_TYPE,
-    name: 'demo',
-    label: 'demo',
-    fields: {[BUILDER_TAB_FORMS]: []},
-    background: '',
-    logo: '',
-    header: '',
-    hero: '',
-    submitBtnLabel: 'Submit',
-    errorMsg: '',
-    successMsg: '',
-    nextBtnLabel: 'Next',
-    prevBtnLabel: 'Previous',
-    choices: [],
-    frontendController: 'controller-sample.js',
-    backendController: 'controller-sample.php'
-}
-
 function storageURL(storageUrl: string, relativePath: string) {
    return storageUrl + relativePath + '?alt=media'
 }
 
 export const buildImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, fileName: string): string => {
-    if (isEmpty(postUIContext.postName)) {
+    if (!isEmpty(storageUrl)) {
         return storageURL(storageUrl, `static%2F${postConfig.uid}%2F${fileName}`);
     } else {
         const url = postUIContext.frontend.imagesClient.getUri({
@@ -206,28 +134,6 @@ export const getSectionByName = (postConfig: TPostConfig, groupName: string) => 
     return groupIndex >= 0 ? postConfig.fields[BUILDER_TAB_FORMS][groupIndex] : null;
 }
 
-export const getDefaultFields = (postConfig: TPostConfig): Record<string, TFieldConfig[]> => {
-    // create and add default form config
-    const defaultFormConfig: TFieldConfig = {
-        type: SECTION_TYPE,
-        label: postConfig.label,
-        name: normalizeFieldName(postConfig.label),
-        choices: [],
-        canDelete: false
-    };
-
-    const fields: Record<string, TFieldConfig[]> = {
-        [BUILDER_TAB_FORMS]: [defaultFormConfig]
-    };
-
-    if (postConfig.type === CONTACTFORM_TYPE || postConfig.type === ADVANCEDFORM_TYPE) {
-        fields[defaultFormConfig.name] = [
-            EMAIL_FIELD,
-        ];
-    }
-
-    return fields;
-}
 
 
 

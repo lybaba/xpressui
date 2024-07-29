@@ -1,17 +1,19 @@
 import { ErrorObject } from 'ajv';
-import LABELS from './labels';
 
+const REQUIRED_FIELD_MSG = "This field is required.";
+const FIELD_VALUE_TOO_LONG = "Data too long for field (max length : %s Characters)";
+const FIELD_VALUE_TOO_SHORT = "Data too short for field (min length : %s Characters)";
 
 function getErrorLabel(errorKey: string, errorValue: string = "", limit: number = 0) : string {
     switch (errorKey) {
         case 'required':
-            return LABELS.requiredField;
+            return REQUIRED_FIELD_MSG;
 
         case 'minLength':
-            return LABELS.fieldValueTooShort.replace("%s", `${limit}`);
+            return FIELD_VALUE_TOO_SHORT;
 
         case 'maxLength':
-            return LABELS.fieldValueTooLong.replace("%s", `${limit}`);
+            return FIELD_VALUE_TOO_LONG;
 
 
         default:

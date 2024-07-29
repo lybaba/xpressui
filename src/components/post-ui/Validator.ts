@@ -6,8 +6,8 @@ import { getSectionByIndex } from '../../common/post';
 import TPostConfig from '../../common/TPostConfig';
 import TFieldConfig from '../../common/TFieldConfig';
 import { getBooleanValue } from '../../common/field';
-import LABELS from '../../common/labels';
 
+const REQUIRED_FIELD_MSG = 'This field is required';
 
 export default function validate(
                             context: TPostUIContext,
@@ -35,7 +35,7 @@ export default function validate(
             isRequired
             && isEmpty(formValues[fieldConfig.name])    
             && !errors.hasOwnProperty(fieldConfig.name)) {
-            errors[fieldConfig.name] = LABELS.requiredField;
+            errors[fieldConfig.name] = REQUIRED_FIELD_MSG;
         }
     })
 

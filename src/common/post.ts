@@ -47,9 +47,13 @@ function storageURL(storageUrl: string, relativePath: string) {
    return storageUrl + relativePath + '?alt=media'
 }
 
-export const buildImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, fileName: string): string => {
-    if (!isEmpty(storageUrl)) {
-        return storageURL(storageUrl, `static%2F${postConfig.uid}%2F${fileName}`);
+export const buildImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, fileName: string): string => {
+    const {
+        baseStorageUrl = ''
+    } = postUIContext;
+
+    if (!isEmpty(baseStorageUrl)) {
+        return storageURL(baseStorageUrl, `static%2F${postConfig.uid}%2F${fileName}`);
     } else {
         const url = postUIContext.frontend.imagesClient.getUri({
             url: fileName
@@ -60,24 +64,24 @@ export const buildImageUrl = (postUIContext: TPostUIContext, storageUrl: string,
 }
 
 
-export const getLargeImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return buildImageUrl(postUIContext, storageUrl, postConfig, `${mediaFile.id}-large.${mediaFile.type}`);
+export const getLargeImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return buildImageUrl(postUIContext, postConfig, `${mediaFile.id}-large.${mediaFile.type}`);
 }
 
-const doGetImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile, prefix: string): string => {
-    return buildImageUrl(postUIContext,  storageUrl, postConfig, `${mediaFile.id}-${prefix}.${mediaFile.type}`);
+const doGetImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile, prefix: string): string => {
+    return buildImageUrl(postUIContext,  postConfig, `${mediaFile.id}-${prefix}.${mediaFile.type}`);
 }
 
-export const getSmallImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return doGetImageUrl(postUIContext,  storageUrl, postConfig, mediaFile, "small");
+export const getSmallImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return doGetImageUrl(postUIContext,  postConfig, mediaFile, "small");
 }
 
-export const getThumbImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return doGetImageUrl(postUIContext,  storageUrl, postConfig, mediaFile, "thumb");
+export const getThumbImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return doGetImageUrl(postUIContext,  postConfig, mediaFile, "thumb");
 }
 
-export const getMediumImageUrl = (postUIContext: TPostUIContext, storageUrl: string, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return doGetImageUrl(postUIContext, storageUrl, postConfig, mediaFile, "medium");
+export const getMediumImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return doGetImageUrl(postUIContext, postConfig, mediaFile, "medium");
 }
 
 

@@ -27,8 +27,8 @@ export const ImageBoxBody = (props: Props) => {
 
     const postUIContext = usePostUIContext();
 
-    const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, '', postConfig, mediaFile) :
-                                     getMediumImageUrl(postUIContext, '', postConfig, mediaFile);
+    const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, postConfig, mediaFile) :
+                                     getMediumImageUrl(postUIContext, postConfig, mediaFile);
 
     const metadata = isLivePreview ? mediaFile.metadata.thumb : mediaFile.metadata.medium;
 

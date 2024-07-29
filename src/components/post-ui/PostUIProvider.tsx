@@ -11,13 +11,19 @@ export function usePostUIContext() {
   return useContext(PostUIContext);
 }
 
+type OwnProps = {
+  baseStorageUrl?: string; 
+}
 
-const PostUIProvider: React.FC<PropsWithChildren> = (props: PropsWithChildren) => {
+type Props = OwnProps & PropsWithChildren;
+
+const PostUIProvider: React.FC<Props> = (props: Props) => {
   const {
     children,
+    baseStorageUrl = '',
   } = props;
 
-  const [state, dispatch] = useReducer<TPostUIReducer, TPostUIState>(reducer, INITIAL_STATE, init);
+  const [state, dispatch] = useReducer<TPostUIReducer, TPostUIState>(reducer, {...INITIAL_STATE, baseStorageUrl}, init);
 
   const value = {
     ...state,

@@ -14,6 +14,7 @@ export interface TPostUIState {
     mediaFilesMap : Record<string, TMediaFile>;
     serverErrors?: Record<string, string>;
     baseUrl: string;
+    baseStorageUrl?: string;
     imagesBaseUrl: string;
     postName: string;
     frontend: FrontendClient;
@@ -40,6 +41,7 @@ export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
     dispatch: DEFAULT_DISPATCH_ACTION,
     baseUrl: '',
     imagesBaseUrl: '',
+    baseStorageUrl: '',
     frontend: new FrontendClient({
         postConfig: DEFAULT_FORM_CONFIG,
         baseUrl: '',

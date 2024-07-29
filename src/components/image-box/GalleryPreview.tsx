@@ -34,7 +34,7 @@ const MediaPhoto = (props: MediaPhotoProps) => {
 
     const postUIContext = usePostUIContext();
 
-    const photoURL = getLargeImageUrl(postUIContext, '', postConfig, mediaFile);
+    const photoURL = getLargeImageUrl(postUIContext, postConfig, mediaFile);
 
     const metadata = mediaFile.metadata.large;
 

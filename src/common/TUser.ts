@@ -1,15 +1,13 @@
-type TUser = {
-    firstname: string,
-    lastname: string,
+export type TCreateUserData = {
+    uid: string;
+    name: string;
     email: string,
-    password: string,
-    is_super_admin: boolean,
-    role: string
+    password: string;
+    isCustomer: boolean;
 }
 
-export type TUserInfo = {
-    firstname: string,
-    lastname: string,
+export type TUpdateUserData = {
+    name: string;
 }
 
 export type TChangePasswordData = {
@@ -20,20 +18,23 @@ export type TChangePasswordData = {
 
 export type TUserCredentials = {
     email: string,
-    password: string,
-    is_super_admin: boolean,
-    role: string
+    password: string;
+    isCustomer: boolean;
 }
 
 export type TUserEmail = {
-    email: string,
-    is_super_admin: boolean,
-    role: string
+    email: string;
+    isCustomer: boolean;
 }
 
-export const DEFAULT_USER_INFO : TUserInfo = {
-    firstname: '',
-    lastname: ''
+
+type TUser = {
+    uid: string;
+    name: string;
+    email: string;
+    isCustomer?: boolean;
+    emailVerified?: boolean;
+    photoURL?: string;
 }
 
 export default TUser;

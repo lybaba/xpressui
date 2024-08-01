@@ -2,9 +2,13 @@
   "source": "src/index.tsx",
   "name": "xpressui",
   "version": "1.0.0",
+  "repository": "https://github.com/lybaba/xpressui",
   "description": "IAKPress Frontend Post UI Components",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "files": [
     "/dist"
   ],
@@ -51,6 +55,7 @@
     "react-router-dom": "6",
     "react-use": "^17.5.0",
     "sass": "^1.55.0",
+    "sharp": "^0.33.4",
     "short-uuid": "^5.2.0",
     "slate": "^0.85.0",
     "slate-react": "^0.83.2",

@@ -4,6 +4,7 @@ import TPostConfig from "../common/TPostConfig";
 import TBuilderMenu from "../common/TBuilderMenu";
 import TMediaFile from "../common/TMediaFile";
 import { ReactNode } from "react";
+import TUser from "../common/TUser";
 
 type PostFieldProps =  {
     postConfig: TPostConfig;
@@ -22,6 +23,7 @@ type PostFieldProps =  {
     mediaFilesMap: Record<string, TMediaFile>;
     elemProps?: any;
     children?: ReactNode | undefined;
+    user?: TUser | null;
 }
 
 export default PostFieldProps;

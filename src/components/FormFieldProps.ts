@@ -4,6 +4,7 @@ import TBuilderMenu from "../common/TBuilderMenu";
 import TPostConfig from "../common/TPostConfig";
 import TMediaFile from "../common/TMediaFile";
 import { ReactNode } from "react";
+import TUser from "../common/TUser";
 
 type FormFieldProps =  {
     postConfig: TPostConfig;
@@ -22,6 +23,7 @@ type FormFieldProps =  {
     mediaFilesMap: Record<string, TMediaFile>;
     elemProps?: any;
     children?: ReactNode | undefined;
+    user?: TUser | null;
 }
 
 export default FormFieldProps;

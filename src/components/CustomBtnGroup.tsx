@@ -10,10 +10,10 @@ import {
     SUBMIT_BTN_INPUT_TYPE,
     SUBMIT_BTN_LABEL_TYPE,
 } from '../common/Constants';
-import { usePostUIContext } from "./post-ui/PostUIProvider";
+import { usePostUIContext } from "./postui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
 import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
-import { onNextBtnClick, onPrevBtnClick } from "./post-ui/Actions";
+import { onNextBtnClick, onPrevBtnClick } from "./postui/Actions";
 
 type CustomBtnGroupProps = {
     dataType: string;

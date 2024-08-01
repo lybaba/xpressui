@@ -12,7 +12,7 @@ import ColorSchemeToggle from './ColorSchemeToggle';
 import { closeSidebar } from './utils';
 
 //import logo from './logo.jpg';
-import { usePostUIContext } from '../post-ui/PostUIProvider';
+import { usePostUIContext } from '../postui/PostUIProvider';
 import TAppPage from '../../common/TAppPage';
 
 function Toggler({

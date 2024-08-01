@@ -10,10 +10,10 @@ import { useEffect } from 'react';
 import TPostConfig from './common/TPostConfig';
 import TMediaFile from './common/TMediaFile';
 import FrontendClient from './common/frontend';
-import { setPostUIConfig, setPostUIConfigAndTemplate } from './components/post-ui/Actions';
-import { usePostUIContext } from './components/post-ui/PostUIProvider';
-import PostUI from './components/post-ui/PostUI';
-import { TPostConfigWitBaseUrl, getPostConfigAndTemplate } from './components/post-ui/post-utils';
+import { setPostUIConfig, setPostUIConfigAndTemplate } from './components/postui/Actions';
+import { usePostUIContext } from './components/postui/PostUIProvider';
+import PostUI from './components/postui/PostUI';
+import { TPostConfigWitBaseUrl, getPostConfigAndTemplate } from './components/postui/post-utils';
 import { isEmpty } from 'lodash';
 
 type XPressUIProps = {

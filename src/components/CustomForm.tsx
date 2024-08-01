@@ -1,4 +1,4 @@
-import { usePostUIContext } from './post-ui/PostUIProvider';
+import { usePostUIContext } from './postui/PostUIProvider';
 import { FormRenderProps } from 'react-final-form';
 import parse, { attributesToProps, HTMLReactParserOptions } from 'html-react-parser';
 import { getFieldConfigByIndex, getSectionByIndex } from '../common/post';

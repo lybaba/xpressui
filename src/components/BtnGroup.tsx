@@ -3,9 +3,9 @@ import { Button, ButtonGroup, Stack, Typography } from "@mui/joy";
 import {
     BUILDER_TAB_FORMS,
 } from '../common/Constants';
-import { usePostUIContext } from "./post-ui/PostUIProvider";
+import { usePostUIContext } from "./postui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
-import { onNextBtnClick, onPrevBtnClick } from "./post-ui/Actions";
+import { onNextBtnClick, onPrevBtnClick } from "./postui/Actions";
 import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
 
 type BtnGroupProps = {

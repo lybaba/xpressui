@@ -1,7 +1,6 @@
 {
-  "name": "xpressui",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@lybaba/xpressui",
+  "version": "0.3.0",
   "repository": "https://github.com/lybaba/xpressui",
   "description": "IAKPress Frontend Post UI Components",
   "main": "dist/index.js",
@@ -10,7 +9,8 @@
     "registry": "https://npm.pkg.github.com"
   },
   "files": [
-    "/dist"
+    "/dist",
+    "/lib"
   ],
   "scripts": {
     "test": "echo \"Error : no test specified\" && exit 1",

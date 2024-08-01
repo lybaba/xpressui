@@ -14,7 +14,7 @@ import { useModalContext } from '../ModalProvider';
 import TMediaFile from '../../common/TMediaFile';
 import MediaFileDetails from './MediaFileDetails';
 import { ChevronLeftOutlined, ChevronRightRounded } from '@mui/icons-material';
-import { usePostUIContext } from '../post-ui/PostUIProvider';
+import { usePostUIContext } from '../postui/PostUIProvider';
 import { getLargeImageUrl } from '../../common/post';
 import TPostConfig from '../../common/TPostConfig';
 import TFieldConfig from '../../common/TFieldConfig';

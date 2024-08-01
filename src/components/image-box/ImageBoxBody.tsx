@@ -6,7 +6,7 @@ import {
 import { Image } from "@mui/icons-material";
 import { isEmpty } from "lodash";
 import { getMediumImageUrl, getThumbImageUrl } from "../../common/post";
-import { usePostUIContext } from "../post-ui/PostUIProvider";
+import { usePostUIContext } from "../postui/PostUIProvider";
 import TMediaFile from "../../common/TMediaFile";
 import PostFieldProps from "../PostFieldProps";
 

@@ -1,5 +1,5 @@
 import { Box } from "@mui/joy";
-import PostUIProvider from "./components/post-ui/PostUIProvider";
+import PostUIProvider from "./components/postui/PostUIProvider";
 
 export default function App(props: any) {
     return (

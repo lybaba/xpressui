@@ -71,7 +71,7 @@ export const HTTP_METHOD_GET = 'GET';
 export const HTTP_METHOD_PUT = 'PUT';
 export const HTTP_METHOD_DELETE = 'DELETE';
 
-export const IAK_POST_UI_EVENT = 'iak-post-ui-event';
+export const IAK_POST_UI_EVENT = 'iak-postui-event';
 
 
 export const CURRENCY_CODE_FIELD = 'currency_code';

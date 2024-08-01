@@ -1,7 +1,7 @@
 import { ThemeProvider } from '@mui/joy/styles';
 import TPostConfig from './common/TPostConfig';
 import TMediaFile from './common/TMediaFile';
-import PostUIProvider from './components/post-ui/PostUIProvider';
+import PostUIProvider from './components/postui/PostUIProvider';
 import XPressUI from './XPressUI';
 
 

@@ -17,7 +17,7 @@ import TFieldConfig from "./TFieldConfig";
 import TPostConfig from "./TPostConfig";
 import { BUILDER_TAB_FORMS } from './Constants';
 import TMediaFile from './TMediaFile';
-import { TPostUIContext } from '../components/post-ui/TPostUIState';
+import { TPostUIContext } from '../components/postui/TPostUIState';
 import { isEmpty } from 'lodash';
 import TChoice from "./TChoice";
 import parseErrors from "./parse-errors";

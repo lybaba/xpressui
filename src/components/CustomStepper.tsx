@@ -1,7 +1,7 @@
 import { Step, StepIndicator, Stepper } from "@mui/joy";
 
 import { FormRenderProps } from "react-final-form";
-import { usePostUIContext } from "./post-ui/PostUIProvider";
+import { usePostUIContext } from "./postui/PostUIProvider";
 import { BUILDER_TAB_FORMS } from "../common/Constants";
 import TFieldConfig from "../common/TFieldConfig";
 import { CheckRounded } from "@mui/icons-material";

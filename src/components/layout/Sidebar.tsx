@@ -10,7 +10,6 @@ import Sheet from '@mui/joy/Sheet';
 
 import ColorSchemeToggle from './ColorSchemeToggle';
 import { closeSidebar } from './utils';
-import { PathProps, withRouter } from '../router';
 
 //import logo from './logo.jpg';
 import { usePostUIContext } from '../post-ui/PostUIProvider';
@@ -48,9 +47,7 @@ function Toggler({
   );
 }
 
-type Props = PathProps;
-
-function Sidebar(props: Props) {
+export default function Sidebar(props: any) {
   const {
     navigate,
     params
@@ -192,5 +189,3 @@ function Sidebar(props: Props) {
     </Sheet>
   );
 }
-
-export default withRouter(Sidebar)

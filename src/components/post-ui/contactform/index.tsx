@@ -1,6 +1,5 @@
 import { Container } from '@mui/joy';
 import { usePostUIContext } from '../PostUIProvider';
-import { PathProps, withRouter } from '../../router';
 import { FormApi } from 'final-form';
 import { submitForm } from '../Actions';
 import CustomForm from '../../CustomForm';
@@ -15,7 +14,7 @@ type ContactFormProps = {
     isLivePreview: boolean
 }
 
-type Props = ContactFormProps & PathProps;
+type Props = ContactFormProps;
 function ContactForm(props: Props) {
     const postUIContext = usePostUIContext();
 
@@ -76,4 +75,4 @@ function ContactForm(props: Props) {
     );
 }
 
-export default withRouter(ContactForm)
+export default ContactForm;

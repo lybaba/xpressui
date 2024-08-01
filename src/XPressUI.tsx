@@ -4,7 +4,6 @@ import Box from '@mui/joy/Box';
 
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
-import { Outlet, Route, Routes } from 'react-router-dom';
 
 
 import { useEffect } from 'react';
@@ -14,7 +13,6 @@ import FrontendClient from './common/frontend';
 import { setPostUIConfig, setPostUIConfigAndTemplate } from './components/post-ui/Actions';
 import { usePostUIContext } from './components/post-ui/PostUIProvider';
 import PostUI from './components/post-ui/PostUI';
-import { PathProps, withRouter } from './components/router';
 import { TPostConfigWitBaseUrl, getPostConfigAndTemplate } from './components/post-ui/post-utils';
 import { isEmpty } from 'lodash';
 
@@ -26,18 +24,15 @@ type XPressUIProps = {
   baseUrl: string;
 }
 
-type XPressUIBodyProps = PathProps & XPressUIProps;
+type XPressUIBodyProps = XPressUIProps;
 
-function XPressUIBody_(props: XPressUIBodyProps) {
+function XPressUIBody(props: XPressUIBodyProps) {
   const {
     rootPostName,
     mediaFiles,
     baseUrl,
     postConfig,
     template = '',
-    params: {
-      postName
-    }
   } = props;
 
   const postUIContext = usePostUIContext();
@@ -72,6 +67,7 @@ function XPressUIBody_(props: XPressUIBodyProps) {
   }, [rootPostName]);
 
   useEffect(() => {
+    const postName = 'toto'
     if (!isEmpty(postName)) {
       const postConfigFileName = `config/${postName}.json`;
       const postTemplateFileName = `templates/${postName}.html`;
@@ -91,7 +87,7 @@ function XPressUIBody_(props: XPressUIBodyProps) {
       });
     }
 
-  }, [postName]);
+  }, []);
 
 
   return (
@@ -119,15 +115,12 @@ function XPressUIBody_(props: XPressUIBodyProps) {
             gap: 1,
           }}
         >
-          <Outlet />
+          Hello
         </Box>
       </Box>
     </CssVarsProvider>
   );
 }
-
-const XPressUIBody = withRouter(XPressUIBody_);
-
 
 function Home() {
   return (
@@ -141,17 +134,11 @@ function Home() {
 
 function XPressUI(props: XPressUIProps) {
   return (
-    <Routes>
-      <Route element={<XPressUIBody {...props} />}>
-        <Route path="/" element={<Home />} />
-        <Route path={`/:postName`} element={<PostUI />} />
-      </Route>
-      <Route path="*" element={<NoMatch />} />
-    </Routes>
+    <PostUI isLivePreview={false} />
   )
 }
 
-function NoMatchBody(props: PathProps) {
+function NoMatch(props: any) {
   console.log("No_MATCH____props : ", props)
   return (
     <Box>
@@ -159,8 +146,6 @@ function NoMatchBody(props: PathProps) {
     </Box>
   )
 }
-
-const NoMatch = withRouter(NoMatchBody);
 
 
 export default XPressUI;

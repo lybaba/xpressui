@@ -1,10 +1,7 @@
 import { Stack } from '@mui/joy';
 import { usePostUIContext } from '../PostUIProvider';
-import { PathProps, withRouter } from '../../router';
 
-
-
-function CustomPost(props: PathProps) {
+export default function CustomPost(props: any) {
     const postUIContext = usePostUIContext();
 
     const {
@@ -21,4 +18,3 @@ function CustomPost(props: PathProps) {
     );
 }
 
-export default withRouter(CustomPost)

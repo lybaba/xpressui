@@ -1,21 +1,33 @@
 {
-  "name": "my-app",
+  "name": "xpressui",
   "version": "0.1.0",
   "private": true,
+  "repository": "https://github.com/lybaba/xpressui",
+  "description": "IAKPress Frontend Post UI Components",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "files": [
+    "/dist"
+  ],
   "scripts": {
+    "test": "echo \"Error : no test specified\" && exit 1",
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "next build && tsc --project ./lib.tsconfig.json",
+    "start": "next start"
   },
   "dependencies": {
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^5.16.6",
     "@mui/joy": "^5.0.0-beta.48",
     "ajv": "^8.17.1",
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^3.0.1",
     "axios": "^1.7.3",
+    "html-react-parser": "^5.1.12",
     "lodash": "^4.17.21",
     "next": "14.2.5",
     "react": "^18",
@@ -26,6 +38,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

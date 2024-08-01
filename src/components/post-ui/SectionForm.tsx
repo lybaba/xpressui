@@ -4,17 +4,16 @@ import TFieldConfig from '../../common/TFieldConfig';
 import PostField from '../PostField';
 import { getSectionFields } from '../../common/post';
 import { usePostUIContext } from './PostUIProvider';
-import { PathProps, withRouter } from '../router';
 
 type OwnProps = {
     section: TFieldConfig;
     formProps: FormRenderProps<any, any>
 }
 
-type Props = OwnProps & PathProps;
+type Props = OwnProps;
 
 
-function SectionFormBody(props: Props) {
+export default function SectionForm(props: Props) {
     const postUIContext = usePostUIContext();
 
     const {
@@ -72,7 +71,3 @@ function SectionFormBody(props: Props) {
         </Stack>
     );
 }
-
-const SectionForm = withRouter(SectionFormBody);
-
-export default SectionForm;

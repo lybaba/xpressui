@@ -1,8 +1,7 @@
 import { Stack } from '@mui/joy';
-import { PathProps, withRouter } from '../../router';
 
 
-function AdvancedForm(props: PathProps) {
+export default function AdvancedForm(props: any) {
     return (
         <Stack
             sx={{ flexGrow: 1 }}
@@ -11,5 +10,3 @@ function AdvancedForm(props: PathProps) {
         </Stack>
     );
 }
-
-export default withRouter(AdvancedForm)

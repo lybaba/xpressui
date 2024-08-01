@@ -1,15 +1,12 @@
-import { useEffect } from 'react';
-import { PathProps, withRouter } from '../router';
 import ContactForm from './contactform';
-import { isEmpty } from 'lodash';
 
 type PostUIProps = {
     isLivePreview: boolean;
 }
 
-type Props = PostUIProps & PathProps;
+type Props = PostUIProps;
 
-function PostUI(props: Props) {
+export default function PostUI(props: Props) {
 
     /*const postUIContext = usePostUIContext();
 
@@ -29,5 +26,3 @@ function PostUI(props: Props) {
             return <AdvancedForm />
     }*/
 }
-
-export default withRouter(PostUI)

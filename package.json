@@ -1,6 +1,6 @@
 {
   "name": "@lybaba/xpressui",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "repository": "https://github.com/lybaba/xpressui",
   "description": "IAKPress Frontend Post UI Components",
   "main": "dist/index.js",
@@ -9,14 +9,12 @@
     "registry": "https://npm.pkg.github.com"
   },
   "files": [
-    "/dist",
     "/lib"
   ],
   "scripts": {
     "test": "echo \"Error : no test specified\" && exit 1",
-    "dev": "next dev",
-    "build": "next build && tsc --project ./lib.tsconfig.json",
-    "start": "next start"
+    "build": "react-scripts build && tsc --project ./lib.tsconfig.json",
+    "start": "react-scripts start"
   },
   "dependencies": {
     "@emotion/react": "^11.13.0",
@@ -33,11 +31,14 @@
     "react": "^18",
     "react-dom": "^18",
     "react-final-form": "^6.5.9",
+    "react-router-dom": "^6.26.0",
     "short-uuid": "^5.2.0",
     "slugify": "^1.6.6",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.0.0",
+    "@types/jest": "^29.5.12",
     "@types/lodash": "^4.17.7",
     "@types/node": "^20",
     "@types/react": "^18",
@@ -46,6 +47,19 @@
     "eslint-config-next": "14.2.5",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "web-vitals": "^4.2.2"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

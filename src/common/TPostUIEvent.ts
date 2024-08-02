@@ -1,6 +1,3 @@
-import { AxiosInstance } from "axios";
-import TPostConfig from "./TPostConfig";
-import TMediaFile from "./TMediaFile";
 import FrontendClient from "./frontend";
 
 export enum TPostUIEventType {

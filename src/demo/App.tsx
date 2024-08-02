@@ -1,38 +1,81 @@
 import { ThemeProvider } from '@mui/joy/styles';
-import { BrowserRouter, HashRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import theme from './styles/default';
-import TPostConfig from '../common/TPostConfig';
 import TMediaFile from '../common/TMediaFile';
-import PostUIProvider from '../components/postui/PostUIProvider';
-import XPressUI from './XPressUI';
-
+import PostUIProvider, { usePostUIContext } from '../components/postui/PostUIProvider';
+import { useEffect } from 'react';
+import { getPostConfigAndAssets } from 'src/components/postui/post-utils';
+import FrontendClient from 'src/common/frontend';
+import { initPostUI } from 'src/components/postui/Actions';
+import PostUIRouter from './PostUIRouter';
 type AppProps = {
   rootPostName: string;
-  postConfig: TPostConfig;
-  template?: string;
-  mediaFiles: TMediaFile[];
-  baseUrl: string;
+}
+
+function MainContent(props: AppProps) {
+  const {
+    rootPostName,
+  } = props;
+
+  const postUIContext = usePostUIContext();
+
+  useEffect(() => {
+    const postConfigFileName = `config/${rootPostName}.json`;
+    const postAssetsFileName = `config/assets.json`;
+
+    getPostConfigAndAssets(postConfigFileName, postAssetsFileName).then((postConfigParams) => {
+      if (postConfigParams) {
+
+        const {
+          postConfig,
+          baseUrl,
+          mediaFiles
+        } = postConfigParams;
+
+        const mediaFilesMap: Record<string, TMediaFile> = {};
+
+        mediaFiles.forEach((mediaFile: TMediaFile) => {
+          mediaFilesMap[mediaFile.id] = mediaFile;
+        });
+
+        if (postConfig) {
+          const imagesBaseUrl = `${baseUrl}images`;
+
+          const FrontendClientArgs = {
+            baseUrl,
+            imagesBaseUrl,
+            postConfig,
+            mediaFiles,
+            mediaFilesMap,
+          }
+
+          const frontend = new FrontendClient(FrontendClientArgs);
+
+          initPostUI(postUIContext, { ...FrontendClientArgs, frontend, rootPostConfig: postConfig });
+        }
+      }
+    });
+
+  }, []);
+
+
+
+  return (
+    <PostUIRouter
+      rootPostName={rootPostName}
+    />
+  )
 }
 
 
-function App(props: AppProps) {
-  const {
-    rootPostName,
-    mediaFiles,
-    baseUrl,
-    postConfig,
-  } = props;
 
+function App(props: AppProps) {
   return (
     <ThemeProvider theme={theme}>
       <BrowserRouter>
         <PostUIProvider>
-          <XPressUI
-           {...props}
-           rootPostName={rootPostName}
-           postConfig={postConfig}
-           mediaFiles={mediaFiles}
-           baseUrl={baseUrl}
+          <MainContent
+            {...props}
           />
         </PostUIProvider>
       </BrowserRouter>

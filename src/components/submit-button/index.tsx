@@ -3,14 +3,14 @@ import {
 } from "@mui/joy";
 
 import { FormRenderProps } from 'react-final-form'
+import TPostFieldProps from "src/common/TPostFieldProps";
 
-import PostFieldProps from "../PostFieldProps";
 
 type FormProps = {
     formProps: FormRenderProps<any, any>;
 }
 
-type Props = PostFieldProps & FormProps;
+type Props = TPostFieldProps & FormProps;
 
 export const SubmitBtn = (props: Props) => {
     const {

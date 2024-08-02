@@ -9,13 +9,13 @@ import {
 import { FormRenderProps } from 'react-final-form'
 
 import TChoice from "../../common/TChoice";
-import FormFieldProps from "../FormFieldProps";
+import TFormFieldProps from "../../common/TFormFieldProps";
 
 type FormProps = {
     formProps: FormRenderProps<any, any>;
 }
 
-type Props = FormFieldProps & FormProps;
+type Props = TFormFieldProps & FormProps;
 
 export const MultiSelect = (props: Props) => {
     const {

@@ -11,7 +11,7 @@ import {
     OUTPUT_TYPE,
     SUBMIT_TYPE,
 } from "../common/field";
-import PostFieldProps from "./PostFieldProps";
+import TPostFieldProps from "../common/TPostFieldProps";
 import FieldTemplate from "./CustomField";
 import FieldLabelTemplate from "./CustomFieldLabel";
 import FieldInputTemplate from "./CustomFieldInput";
@@ -20,7 +20,7 @@ import FieldInputTemplate from "./CustomFieldInput";
 type FormProps = {
     formProps: FormRenderProps<any, any>;
 }
-type Props = PostFieldProps & FormProps;
+type Props = TPostFieldProps & FormProps;
 
 export const PostField = (props: Props) => {
     const {

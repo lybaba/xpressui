@@ -59,12 +59,12 @@ function Sidebar(props: Props) {
 
   const postUIContext = usePostUIContext();
   const {
-    postConfig
+    currentPostConfig
   } = postUIContext;
 
   const {
     appPages = []
-  } = postConfig;
+  } = currentPostConfig;
 
 
   return (

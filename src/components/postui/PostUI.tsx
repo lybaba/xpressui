@@ -1,12 +1,7 @@
+import TPostUIProps from '../../common/TPostUIProps';
 import ContactForm from './contactform';
 
-type PostUIProps = {
-    isLivePreview?: boolean;
-}
-
-type Props = PostUIProps;
-
-export default function PostUI(props: Props) {
+export default function PostUI(props: TPostUIProps) {
 
     /*const postUIContext = usePostUIContext();
 
@@ -14,11 +9,8 @@ export default function PostUI(props: Props) {
         postConfig,
     } = postUIContext;*/
 
-    const {
-        isLivePreview = false
-    } = props;
 
-    return <ContactForm {...props} isLivePreview={isLivePreview} />
+    return <ContactForm {...props} />
     /*switch (postConfig.type) {
         case MULTI_STEP_FORM_TYPE:
             return <CustomPost />

@@ -8,13 +8,13 @@ import { isEmpty } from "lodash";
 import { getMediumImageUrl, getThumbImageUrl } from "../../common/post";
 import { usePostUIContext } from "../postui/PostUIProvider";
 import TMediaFile from "../../common/TMediaFile";
-import PostFieldProps from "../PostFieldProps";
+import TPostFieldProps from "../../common/TPostFieldProps";
 
 type OwnProps = {
     mediaFile: TMediaFile; 
 }
 
-type Props = OwnProps & PostFieldProps;
+type Props = OwnProps & TPostFieldProps;
 
 export const ImageBoxBody = (props: Props) => {
     const {

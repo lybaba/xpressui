@@ -3,10 +3,10 @@ import TMediaFile from "./TMediaFile";
 import TPostConfig from "./TPostConfig";
 
 export type TPostUIConfig = {
-    postConfig: TPostConfig;
+    rootPostConfig: TPostConfig;
     mediaFiles: TMediaFile[]; 
     mediaFilesMap: Record<string, TMediaFile>;
-    template: string;
+    rootPostName?: string;
     baseUrl: string;
     imagesBaseUrl: string;
     frontend: FrontendClient;

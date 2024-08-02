@@ -1,6 +1,6 @@
 import { FormRenderProps } from 'react-final-form'
 import { isEmpty } from "lodash";
-import PostFieldProps from "../PostFieldProps";
+import TPostFieldProps from "../../common/TPostFieldProps";
 import ImageBoxBody from "./ImageBoxBody";
 import { Image } from "@mui/icons-material";
 
@@ -8,7 +8,7 @@ type FormProps = {
     formProps: FormRenderProps<any, any>;
 }
 
-type Props = PostFieldProps & FormProps;
+type Props = TPostFieldProps & FormProps;
 
 export const ImageBox = (props: Props) => {
     const {

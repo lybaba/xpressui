@@ -12,7 +12,6 @@ import {
     doNormalizeFieldValue
 } from '../common/field';
 
-import FormFieldProps from './FormFieldProps';
 import { FormHelperText, Input } from '@mui/joy';
 import SingleSelect from './single-select';
 import MultiSelect from './multi-select';
@@ -21,9 +20,10 @@ import CustomCheckbox from './checkbox';
 import { getErrorText, getHasError } from '../common/validation-errors';
 import { InfoOutlined } from '@mui/icons-material';
 import { isEmpty } from 'lodash';
-import PostFieldProps from './PostFieldProps';
 import SubmitBtn from './submit-button';
 import ImageBox from './image-box';
+import TFormFieldProps from 'src/common/TFormFieldProps';
+import TPostFieldProps from 'src/common/TPostFieldProps';
 
 type InputTemplateProps = {
     input: FieldInputProps<any, HTMLElement>;
@@ -32,8 +32,8 @@ type InputTemplateProps = {
 };
 
 
-type FormInputControlProps = FormFieldProps & InputTemplateProps;
-type CustomFieldInputProps = PostFieldProps;
+type FormInputControlProps = TFormFieldProps & InputTemplateProps;
+type CustomFieldInputProps = TPostFieldProps;
 
 export const FormInputControl = (props: FormInputControlProps) => {
     const inputRef: any = useRef(null);

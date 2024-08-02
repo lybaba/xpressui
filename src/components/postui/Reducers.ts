@@ -1,3 +1,4 @@
+import { AUTH_CHECKING, SERVER_REQUEST, SERVER_RESPONSE } from "../../common/Constants";
 import IAction from "../../common/IAction";
 
 
@@ -14,7 +15,26 @@ export const INITIAL_STATE: TPostUIState = DEFAULT_POSTUI_CONTEXT;
 
 export default function reducer(state: TPostUIState, action: IAction): TPostUIState {
     switch (action.type) {
+        case AUTH_CHECKING:
+            return {
+                ...state,
+                authChecking: action.payload
+            }
 
+        case SERVER_REQUEST:
+            return {
+                ...state,
+                isLoading: true,
+                serverResponse: { success: true, message: '' }
+            }
+    
+        case SERVER_RESPONSE:
+            return {
+                ...state,
+                isLoading: false,
+                serverResponse: action.payload
+            }
+    
         case SET_CURRENT_STEP_INDEX:
         case SET_CONFIG:
                 return {

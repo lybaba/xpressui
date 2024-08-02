@@ -55,12 +55,12 @@ export default function Sidebar(props: any) {
 
   const postUIContext = usePostUIContext();
   const {
-    postConfig
+    currentPostConfig
   } = postUIContext;
 
   const {
     appPages = []
-  } = postConfig;
+  } = currentPostConfig;
 
 
   return (

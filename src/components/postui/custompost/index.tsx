@@ -1,12 +1,10 @@
 import { Stack } from '@mui/joy';
-import { usePostUIContext } from '../PostUIProvider';
+import TPostUIProps from 'src/common/TPostUIProps';
 
-export default function CustomPost(props: any) {
-    const postUIContext = usePostUIContext();
-
+export default function CustomPost(props: TPostUIProps) {
     const {
         postConfig
-    } = postUIContext;
+    } = props;
     
 
     return (

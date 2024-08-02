@@ -7,19 +7,21 @@ import { usePostUIContext } from "./postui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
 import { onNextBtnClick, onPrevBtnClick } from "./postui/Actions";
 import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
+import TPostUIProps from "src/common/TPostUIProps";
 
-type BtnGroupProps = {
+type OwnProps = {
     formProps: FormRenderProps<any, any>;
 }
 
-function BtnGroup(props: BtnGroupProps) {
+type Props = OwnProps & TPostUIProps;
+function BtnGroup(props: Props) {
     const {
-        formProps
+        formProps,
+        postConfig,
     } = props;
 
     const postUIContext = usePostUIContext();
     const {
-        postConfig,
         currentStepIndex,
     } = postUIContext
 
@@ -50,7 +52,7 @@ function BtnGroup(props: BtnGroupProps) {
                         <Button
                             onClick={(e) => {
                                 e.preventDefault();
-                                onPrevBtnClick(postUIContext, formProps)
+                                onPrevBtnClick(postUIContext, props, formProps)
                             }}
                             disabled={!showPrevBtn}
                         >
@@ -67,7 +69,7 @@ function BtnGroup(props: BtnGroupProps) {
                             onClick={(e) => {
                                 e.preventDefault();
                                 console.log("IIIIIIIIIIIIIIII")
-                                onNextBtnClick(postUIContext, formProps)
+                                onNextBtnClick(postUIContext, props,formProps)
                             }}
                         >
                             {

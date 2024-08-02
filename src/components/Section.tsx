@@ -1,16 +1,16 @@
 import TFieldConfig from '../common/TFieldConfig';
 import { Stack } from '@mui/joy';
-import PostFieldProps from './PostFieldProps';
 import { usePostUIContext } from './postui/PostUIProvider';
 import { MULTI_STEP_FORM_TYPE } from '../common/TPostConfig';
 import PostField from './PostField';
+import TPostFieldProps from 'src/common/TPostFieldProps';
 
 
-function Section(props: PostFieldProps) {
+function Section(props: TPostFieldProps) {
     const {
         fieldConfig,
         fieldIndex,
-        formProps
+        postConfig,
     } = props;
 
     const sectionConfig = fieldConfig;
@@ -18,9 +18,7 @@ function Section(props: PostFieldProps) {
 
     const postUIContext = usePostUIContext();
     const {
-        postConfig,
         currentStepIndex,
-        mediaFilesMap
     } = postUIContext
 
     const isMultiStepForm = postConfig.type === MULTI_STEP_FORM_TYPE;
@@ -45,13 +43,11 @@ function Section(props: PostFieldProps) {
                 fields.map((fieldConfig: TFieldConfig, index) => (
                     <PostField
                         key={index}
-                        formProps={formProps}
-                        postConfig={postConfig}
+                        {...props}
                         formName={sectionConfig.name}
                         fieldConfig={fieldConfig}
                         fieldIndex={index}
                         parentFieldConfig={sectionConfig}
-                        mediaFilesMap={mediaFilesMap}
                     />
                 ))
             }

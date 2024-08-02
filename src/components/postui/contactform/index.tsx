@@ -1,31 +1,27 @@
 import { Container } from '@mui/joy';
 import { usePostUIContext } from '../PostUIProvider';
-import { FormApi } from 'final-form';
 import { submitForm } from '../Actions';
-import CustomForm from '../../CustomForm';
 import { Form } from 'react-final-form';
 import { useCallback } from 'react';
 import { ajv } from '../../../common/frontend';
 import validate from '../Validator';
 import { buildSchema } from '../../../common/post';
+import TPostUIProps from '../../../common/TPostUIProps';
+import FormSectionList from '../FormSectionList';
 
 
-type ContactFormProps = {
-    isLivePreview: boolean
-}
 
-type Props = ContactFormProps;
-function ContactForm(props: Props) {
+function ContactForm(props: TPostUIProps) {
     const postUIContext = usePostUIContext();
 
     const {
-        postConfig,
         currentStepIndex
     } = postUIContext;
 
     const {
-        isLivePreview = false
+        postConfig
     } = props;
+
 
     const getValidator = useCallback(() => {
         const schema = buildSchema(postConfig, currentStepIndex);
@@ -38,17 +34,11 @@ function ContactForm(props: Props) {
     return (
         <Container>
             <Form
-                onSubmit={(formValues: any, form: FormApi<string, any>) => {
+                onSubmit={(formValues: any) => {
                     console.log("submitForm : ", formValues);
-
-                    if (!isLivePreview) {
-                        submitForm(postUIContext, currentStepIndex, formValues).then((data) => {
-                            console.log("Form Submitted Successfully....");
-                        })
-                    } else {
-                        console.log("submitForm : ", formValues);
-                    }
-
+                    submitForm(postUIContext, props, formValues).then((data) => {
+                        console.log("Form Submitted Successfully....");
+                    })
                 }}
                 validate={(values: any) => validate(
                     postUIContext,
@@ -67,7 +57,7 @@ function ContactForm(props: Props) {
                         onSubmit={formProps.handleSubmit}
                         noValidate
                     >
-                       <CustomForm {...props} formProps={formProps} />
+                       <FormSectionList {...props} formProps={formProps} />
                     </form>
                 )}
             />

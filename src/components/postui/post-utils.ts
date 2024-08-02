@@ -1,6 +1,7 @@
 import { isEmpty } from "lodash";
 import TMediaFile from "../../common/TMediaFile";
 import TPostConfig from "../../common/TPostConfig";
+import { TPostConfigPrams } from "src/common/TPostConfigPrams";
 
 export type TPostConfigWitBaseUrl = {
     postConfig: TPostConfig;
@@ -63,30 +64,32 @@ export async function fetchPostTemplate(fileName: string): Promise<string | ''> 
 }
 
 
-export async function getPostConfigAndAssets(postConfigFileName: string, postAssetsFileName: string = "") {
+export async function getPostConfigAndAssets(postConfigFileName: string, postAssetsFileName: string = "") : Promise<TPostConfigPrams> {
     if (!isEmpty(postAssetsFileName)) {
         const res = await Promise.all([
             fetchPostConfig(postConfigFileName),
             fetchPostAssets(postAssetsFileName)]);
 
-        return res;
+        const postConfigWithBaseUrl = res[0];
+        if (postConfigWithBaseUrl) {
+            return {
+                ...postConfigWithBaseUrl,
+                mediaFiles: res[1] ? res[1] : []
+            }
+        }
     } else {
         const res = await fetchPostConfig(postConfigFileName);
-
-        return [res, []];
+        if (res) {
+            return {
+                ...res,
+                mediaFiles: []
+            }
+        }
     }
-}
 
-export async function getPostConfigAndTemplate(postConfigFileName: string, postTemplateFileName: string = "") {
-    if (!isEmpty(postTemplateFileName)) {
-        const res = await Promise.all([
-            fetchPostConfig(postConfigFileName),
-            fetchPostTemplate(postTemplateFileName)]);
-
-        return res;
-    } else {
-        const res = await fetchPostConfig(postConfigFileName);
-
-        return [res, ''];
+    return {
+        postConfig: null,
+        baseUrl: '',
+        mediaFiles: []
     }
 }

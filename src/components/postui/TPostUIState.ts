@@ -5,10 +5,12 @@ import TPostConfig from '../../common/TPostConfig'
 import { DEFAULT_FORM_CONFIG } from "../../common/TPostConfig";
 import TMediaFile from "../../common/TMediaFile";
 import FrontendClient from "../../common/frontend";
+import TUser from "../../common/TUser";
+import TServerResponse from "../../common/TServerResponse";
 
 export interface TPostUIState {
-    postConfig: TPostConfig;
-    template?: string;
+    currentPostConfig: TPostConfig;
+    rootPostConfig: TPostConfig;
     currentStepIndex: number;
     mediaFiles: TMediaFile[];
     mediaFilesMap : Record<string, TMediaFile>;
@@ -16,8 +18,11 @@ export interface TPostUIState {
     baseUrl: string;
     baseStorageUrl?: string;
     imagesBaseUrl: string;
-    postName: string;
     frontend: FrontendClient;
+    user: TUser | null;
+    isLoading: boolean;
+    authChecking: boolean;
+    serverResponse: TServerResponse;
 }
 export type TPostUIDispatch = {
     dispatch: Dispatch<IAction>;
@@ -32,12 +37,11 @@ const DEFAULT_DISPATCH_ACTION: Dispatch<IAction> = (value: IAction) => null
 
 
 export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
-    postConfig: DEFAULT_FORM_CONFIG,
-    template: '',
+    currentPostConfig: DEFAULT_FORM_CONFIG,
+    rootPostConfig: DEFAULT_FORM_CONFIG,
     currentStepIndex: 0,
     mediaFiles: [],
     mediaFilesMap: {},
-    postName: '',
     dispatch: DEFAULT_DISPATCH_ACTION,
     baseUrl: '',
     imagesBaseUrl: '',
@@ -49,6 +53,14 @@ export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
         mediaFiles: [],
         mediaFilesMap: {}
     }),
+    isLoading: false,
+    authChecking: false,
+    serverResponse: {
+        success: true,
+        statusCode: 200,
+        message: '',
+    },
+    user: null,
 };
 
 export type TDispatchFieldGroupProps = {

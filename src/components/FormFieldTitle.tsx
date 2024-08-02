@@ -1,9 +1,9 @@
 import { FormLabel, Typography } from "@mui/joy";
-import PostFieldProps from "./PostFieldProps";
 import { SECTION_TYPE } from "../common/field";
+import TPostFieldProps from "../common/TPostFieldProps";
 
 
-const FormFieldTitle = (props: PostFieldProps) => {
+const FormFieldTitle = (props: TPostFieldProps) => {
   const {
     fieldConfig,
   } = props;

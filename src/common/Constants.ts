@@ -91,20 +91,6 @@ export const MODAL_SELECT_MULTI_MEDIA_FILES = 'select_multi_media_files';
 export const MODAL_POST_BLOCK_EDIT = 'form_section_edit';
 export const MODAL_FIELD_CONFIG_EDIT = 'field_config_edit';
 
-export const SECTION_TYPE = 'section';
-export const FIELD_TYPE = 'field';
-export const INPUT_TYPE = 'input';
-export const LABEL_TYPE = 'label';
-export const BTN_GROUP_TYPE = 'btn-group';
-export const PREV_BTN_INPUT_TYPE = 'prev-btn-input';
-export const PREV_BTN_LABEL_TYPE = 'prev-btn-label';
-export const NEXT_BTN_INPUT_TYPE = 'next-btn-input';
-export const NEXT_BTN_LABEL_TYPE = 'next-btn-label';
-export const SUBMIT_BTN_INPUT_TYPE = 'submit-btn-input';
-export const SUBMIT_BTN_LABEL_TYPE = 'submit-btn-label';
-export const STEPPER_TYPE = 'stepper';
-export const STEP_TYPE = 'step';
-export const STEP_INDICATOR_TYPE = 'step-indicator';
 
 
 export const SERVER_REQUEST = 'server_request';

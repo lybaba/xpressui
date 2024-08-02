@@ -1,13 +1,13 @@
-import TMediaFile from "../../common/TMediaFile";
 import TPostConfig from "../../common/TPostConfig";
 import TPostConfigState,
 {
     TPostUIContext,
 } from "./TPostUIState";
 import TPostUIEvent, { TPostUIEventType } from "../../common/TPostUIEvent";
-import { BUILDER_TAB_FORMS } from "../../common/Constants";
+import { BUILDER_TAB_FORMS, SERVER_REQUEST, SERVER_RESPONSE } from "../../common/Constants";
 import { FormRenderProps } from "react-final-form";
 import { TPostUIConfig } from "../../common/TPostUIConfigProps";
+import TPostUIProps from "../../common/TPostUIProps";
 
 
 export const SET_CURRENT_STEP_INDEX = 'set_step';
@@ -18,8 +18,6 @@ export type EventHandlerType =  (
     onSuccess: (data : any) => void,
     onError: (data: any) => void,
    ) => void;
-
-export const EVENT_HANDLERS: Array<EventHandlerType> = [];
 
 export function init(state: TPostConfigState): TPostConfigState {
     return state;
@@ -38,7 +36,7 @@ export async function setCurrentStepIndex(postUIContext: TPostUIContext, current
     });
 }
 
-export async function setPostUITemplate(postUIContext: TPostUIContext, template: string) {
+export async function setCurrentPostUITemplate(postUIContext: TPostUIContext, template: string) {
     const {
         dispatch,
     } = postUIContext;
@@ -51,7 +49,7 @@ export async function setPostUITemplate(postUIContext: TPostUIContext, template:
     });
 }
 
-export async function setPostUIConfigAndTemplate(postUIContext: TPostUIContext, postConfig: TPostConfig, template: string) {
+export async function setCurrentPostConfig(postUIContext: TPostUIContext, currentPostConfig: TPostConfig) {
     const {
         dispatch,
     } = postUIContext;
@@ -60,72 +58,78 @@ export async function setPostUIConfigAndTemplate(postUIContext: TPostUIContext, 
         type: SET_CONFIG,
         payload: {
             currentStepIndex: 0,
-            postConfig,
-            template
+            currentPostConfig,
         }
     });
 }
 
 
-export async function setPostUIConfig(postUIContext: TPostUIContext, config: TPostUIConfig) {
+export async function initPostUI(postUIContext: TPostUIContext, config: TPostUIConfig) {
     const {
         dispatch,
     } = postUIContext;
 
     dispatch({
         type: SET_CONFIG,
-        payload: config
+        payload: {
+            ...config,
+            currentPostConfig: config.rootPostConfig
+        }
     });
 }
 
-export async function doOnSuccess(context: TPostUIContext, event: TPostUIEvent, data: any) {
-    console.log("doOnSuccess event=", event, " response=", data);
-}
-
-export async function doOnError(context: TPostUIContext, event: TPostUIEvent, data: any) {
-    console.log("doOnError event=", event, " response=", data);
-}
-
-
-export async function submitForm(context: TPostUIContext, sectionIndex: number, values: Record<string, any>) {
+export async function submitForm(context: TPostUIContext, postProps: TPostUIProps, formData: Record<string, any>) {
     const {
         frontend,
     } = context;
-
 
     const eventType = TPostUIEventType.SubmitFormEvent;
     const event : TPostUIEvent = {
         frontend,
         eventType,
         data: {
-            formData: values
+            formData
         },
     }
 
-    const onSuccess =   (data: any) => doOnSuccess(context, event, data);
+    context.dispatch({
+        type: SERVER_REQUEST,
+    });
 
-    const onError = (data: any) => doOnError(context, event, data);
+    try {
+        const res = await postProps.onPostUIEvent(event);
 
-    if (EVENT_HANDLERS.length) {
-        EVENT_HANDLERS.forEach((eventHandler) => eventHandler(event, onSuccess, onError));
-    } else {
-        console.log("Please provide an eventHandler to submit your data to your backend (server)");
-        onSuccess({});
+        context.dispatch({
+            type: SERVER_RESPONSE,
+        });
+
+        if (!res.success)
+            return res;
+
+    } catch (reason: any) {
+        context.dispatch({
+            type: SERVER_RESPONSE,
+        });
+
+        return reason;
     }
 }
 
 
-export async function onNextBtnClick(context: TPostUIContext, formProps: FormRenderProps<any, any>) {
+export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUIProps, formProps: FormRenderProps<any, any>) {
     const {
         valid,
         values
     } = formProps;
 
     const {
-        postConfig,
         currentStepIndex,
         frontend
     } = context
+
+    const {
+        postConfig,
+    } = postProps;
 
     const steps = postConfig.fields[BUILDER_TAB_FORMS];
     const nbSteps = steps.length;
@@ -147,27 +151,45 @@ export async function onNextBtnClick(context: TPostUIContext, formProps: FormRen
             },
         };
 
-        const onSuccess =   (data: any) => setCurrentStepIndex(context, currentStepIndex + 1);
-        const onError = (data: any) => doOnError(context, event, data);
+        context.dispatch({
+            type: SERVER_REQUEST,
+        });
+    
+        try {
+            const res = await postProps.onPostUIEvent(event);
+    
+            context.dispatch({
+                type: SERVER_RESPONSE,
+            });
+    
+            if (!res.success)
+                return res;
 
-        if (EVENT_HANDLERS.length) {
-            EVENT_HANDLERS.forEach((eventHandler) => eventHandler(event, onSuccess, onError));
-        } else {
-            onSuccess({});
+
+            setCurrentStepIndex(context, currentStepIndex + 1);
+        } catch (reason: any) {
+            context.dispatch({
+                type: SERVER_RESPONSE,
+            });
+    
+            return reason;
         }
     }
 }
 
-export async function onPrevBtnClick(context: TPostUIContext, formProps: FormRenderProps<any, any>) {
+export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUIProps,  formProps: FormRenderProps<any, any>) {
     const {
         values
     } = formProps;
 
     const {
-        postConfig,
         currentStepIndex,
         frontend
-    } = context
+    } = context;
+
+    const {
+        postConfig,
+    } = postProps;
 
     const steps = postConfig.fields[BUILDER_TAB_FORMS];
 
@@ -187,13 +209,28 @@ export async function onPrevBtnClick(context: TPostUIContext, formProps: FormRen
             },
         };
 
-        const onSuccess =  (data: any) => setCurrentStepIndex(context, currentStepIndex - 1);
-        const onError = (data: any) => doOnError(context, event, data);
+        context.dispatch({
+            type: SERVER_REQUEST,
+        });
+    
+        try {
+            const res = await postProps.onPostUIEvent(event);
+    
+            context.dispatch({
+                type: SERVER_RESPONSE,
+            });
+    
+            if (!res.success)
+                return res;
 
-        if (EVENT_HANDLERS.length) {
-            EVENT_HANDLERS.forEach((eventHandler) => eventHandler(event, onSuccess, onError));
-        } else {
-            onSuccess({});
+
+            setCurrentStepIndex(context, currentStepIndex - 1);
+        } catch (reason: any) {
+            context.dispatch({
+                type: SERVER_RESPONSE,
+            });
+    
+            return reason;
         }
     }
 }

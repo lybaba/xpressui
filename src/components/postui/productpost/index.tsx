@@ -1,6 +1,5 @@
 import { Stack } from '@mui/joy';
-import { usePostUIContext } from '../PostUIProvider';
-import TPostUIProps from 'src/common/TPostUIProps';
+import TPostUIProps from '../../../common/TPostUIProps';
 
 
 

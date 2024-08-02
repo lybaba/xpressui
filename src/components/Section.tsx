@@ -3,7 +3,7 @@ import { Stack } from '@mui/joy';
 import { usePostUIContext } from './postui/PostUIProvider';
 import { MULTI_STEP_FORM_TYPE } from '../common/TPostConfig';
 import PostField from './PostField';
-import TPostFieldProps from 'src/common/TPostFieldProps';
+import TPostFieldProps from '../common/TPostFieldProps';
 
 
 function Section(props: TPostFieldProps) {

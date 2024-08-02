@@ -9,7 +9,7 @@ import { FormRenderProps } from 'react-final-form'
 
 import TChoice from "../../common/TChoice";
 import { SINGLE_SELECT_TYPE } from "../../common/field";
-import TPostFieldProps from "src/common/TPostFieldProps";
+import TPostFieldProps from "../../common/TPostFieldProps";
 
 type FormProps = {
     formProps: FormRenderProps<any, any>;

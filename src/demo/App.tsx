@@ -4,9 +4,9 @@ import theme from './styles/default';
 import TMediaFile from '../common/TMediaFile';
 import PostUIProvider, { usePostUIContext } from '../components/postui/PostUIProvider';
 import { useEffect } from 'react';
-import { getPostConfigAndAssets } from 'src/components/postui/post-utils';
-import FrontendClient from 'src/common/frontend';
-import { initPostUI } from 'src/components/postui/Actions';
+import { getPostConfigAndAssets } from '../components/postui/post-utils';
+import FrontendClient from '../common/frontend';
+import { initPostUI } from '../components/postui/Actions';
 import PostUIRouter from './PostUIRouter';
 type AppProps = {
   rootPostName: string;

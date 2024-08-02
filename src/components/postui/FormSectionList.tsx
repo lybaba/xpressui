@@ -1,7 +1,7 @@
-import { BUILDER_TAB_FORMS } from 'src/common/Constants';
+import { BUILDER_TAB_FORMS } from '../../common/Constants';
 import TPostUIProps from '../../common/TPostUIProps';
 import { Stack } from '@mui/joy';
-import TFieldConfig from 'src/common/TFieldConfig';
+import TFieldConfig from '../../common/TFieldConfig';
 import Section from '../Section';
 import BtnGroup from '../BtnGroup';
 import { FormRenderProps } from 'react-final-form';

@@ -1,7 +1,7 @@
 import { isEmpty } from "lodash";
 import TMediaFile from "../../common/TMediaFile";
 import TPostConfig from "../../common/TPostConfig";
-import { TPostConfigPrams } from "src/common/TPostConfigPrams";
+import { TPostConfigPrams } from "../../common/TPostConfigPrams";
 
 export type TPostConfigWitBaseUrl = {
     postConfig: TPostConfig;

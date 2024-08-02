@@ -3,7 +3,7 @@ import {
 } from "@mui/joy";
 
 import { FormRenderProps } from 'react-final-form'
-import TPostFieldProps from "src/common/TPostFieldProps";
+import TPostFieldProps from "../../common/TPostFieldProps";
 
 
 type FormProps = {

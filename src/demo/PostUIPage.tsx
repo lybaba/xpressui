@@ -1,12 +1,12 @@
 import { PathProps, withRouter } from "../components/router"
 import PostUI from "../components/postui/PostUI";
-import { usePostUIContext } from "src/components/postui/PostUIProvider";
-import TPostUIEvent from "src/common/TPostUIEvent";
-import TServerResponse from "src/common/TServerResponse";
+import { usePostUIContext } from "../components/postui/PostUIProvider";
+import TPostUIEvent from "../common/TPostUIEvent";
+import TServerResponse from "../common/TServerResponse";
 import { useEffect } from "react";
 import { isEmpty } from "lodash";
-import { fetchPostConfig } from "src/components/postui/post-utils";
-import { setCurrentPostConfig } from "src/components/postui/Actions";
+import { fetchPostConfig, TPostConfigWitBaseUrl } from "../components/postui/post-utils";
+import { setCurrentPostConfig } from "../components/postui/Actions";
 
 
 
@@ -27,7 +27,7 @@ function PostUIPage(props: PathProps) {
       if (!isEmpty(postName)) {
         const postConfigFileName = `config/${postName}.json`;
   
-        fetchPostConfig(postConfigFileName).then((postConfigWithBaseUrl) => {
+        fetchPostConfig(postConfigFileName).then((postConfigWithBaseUrl: TPostConfigWitBaseUrl | null) => {
             if (postConfigWithBaseUrl) {
               const {
                 postConfig,

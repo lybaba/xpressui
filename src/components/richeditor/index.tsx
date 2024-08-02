@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import Textarea from '@mui/joy/Textarea';
 
 import { FormRenderProps } from 'react-final-form';
-import TFormFieldProps from 'src/common/TFormFieldProps';
+import TFormFieldProps from '../../common/TFormFieldProps';
 
 type FormProps = {
   formProps: FormRenderProps<any, any>;

@@ -1,7 +1,7 @@
-import TPostUIEvent from "src/common/TPostUIEvent";
-import TServerResponse from "src/common/TServerResponse";
-import PostUI from "src/components/postui/PostUI";
-import { usePostUIContext } from "src/components/postui/PostUIProvider";
+import TPostUIEvent from "../common/TPostUIEvent";
+import TServerResponse from "../common/TServerResponse";
+import PostUI from "../components/postui/PostUI";
+import { usePostUIContext } from "../components/postui/PostUIProvider";
 
 export default function HomePage(props: any) {
     const postUIContext = usePostUIContext();

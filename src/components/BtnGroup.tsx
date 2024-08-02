@@ -7,7 +7,7 @@ import { usePostUIContext } from "./postui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
 import { onNextBtnClick, onPrevBtnClick } from "./postui/Actions";
 import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
-import TPostUIProps from "src/common/TPostUIProps";
+import TPostUIProps from "../common/TPostUIProps";
 
 type OwnProps = {
     formProps: FormRenderProps<any, any>;

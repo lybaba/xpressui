@@ -1,6 +1,5 @@
 import { Stack } from '@mui/joy';
-import TPostUIProps from 'src/common/TPostUIProps';
-
+import TPostUIProps from '../../../common/TPostUIProps';
 export default function CustomPost(props: TPostUIProps) {
     const {
         postConfig

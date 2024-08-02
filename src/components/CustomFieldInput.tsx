@@ -22,8 +22,8 @@ import { InfoOutlined } from '@mui/icons-material';
 import { isEmpty } from 'lodash';
 import SubmitBtn from './submit-button';
 import ImageBox from './image-box';
-import TFormFieldProps from 'src/common/TFormFieldProps';
-import TPostFieldProps from 'src/common/TPostFieldProps';
+import TFormFieldProps from '../common/TFormFieldProps';
+import TPostFieldProps from '../common/TPostFieldProps';
 
 type InputTemplateProps = {
     input: FieldInputProps<any, HTMLElement>;

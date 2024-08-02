@@ -32,6 +32,7 @@ type TFieldConfig = {
     nextBtnLabel?: string;
     choices: Array<TChoice>;
     action?: string;
+    mediaUrl?: string;
     background?: string;
     logo?: string;
     header?: string;

@@ -1,5 +1,5 @@
 
-import TPostFieldProps from 'src/common/TPostFieldProps';
+import TPostFieldProps from '../common/TPostFieldProps';
 import {
     IMAGE_TYPE,
     SUBMIT_TYPE

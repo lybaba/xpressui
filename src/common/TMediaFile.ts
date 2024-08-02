@@ -10,7 +10,7 @@ type TMediaFile = {
     type: string;
     desc?: string;
     size?: number;
-    metadata: Record<string, TMediaFileMetadata>
+    metadata?: Record<string, TMediaFileMetadata>
 }
 
 export default TMediaFile;

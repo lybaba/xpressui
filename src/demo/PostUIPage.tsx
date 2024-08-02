@@ -40,6 +40,7 @@ function PostUIPage(props: PathProps) {
   
     }, [postName]);
 
+    // callback for submit data to server.  
     async function onPostUIEvent(event: TPostUIEvent) : Promise<TServerResponse> {
 
       console.log("PostUIPage____onPostUIEvent : ", event);

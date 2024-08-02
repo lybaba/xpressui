@@ -7,15 +7,7 @@ import Header from './components/Header';
 import { Outlet, Route, Routes } from 'react-router-dom';
 
 
-import { useEffect } from 'react';
-import TPostConfig from '../common/TPostConfig';
-import TMediaFile from '../common/TMediaFile';
-import FrontendClient from '../common/frontend';
-import { initPostUI, setCurrentPostConfig } from '../components/postui/Actions';
-import { usePostUIContext } from '../components/postui/PostUIProvider';
 import { PathProps, withRouter } from '../components/router';
-import { fetchPostConfig } from '../components/postui/post-utils';
-import { isEmpty } from 'lodash';
 import PostUIPage from './PostUIPage';
 import HomePage from './HomePage';
 
@@ -66,30 +58,6 @@ const PostUIRouterBody = withRouter(PostUIRouterBody_);
 
 
 function PostUIRouter(props: PostUIRouterProps) {
-  const {
-    rootPostName,
-  } = props;
-
-  const postUIContext = usePostUIContext();
-
-
-  useEffect(() => {
-    if (!isEmpty(rootPostName)) {
-      const postConfigFileName = `config/${rootPostName}.json`;
-
-      fetchPostConfig(postConfigFileName).then((postConfigWithBaseUrl) => {
-          if (postConfigWithBaseUrl) {
-            const {
-              postConfig,
-            } = postConfigWithBaseUrl;
-  
-            setCurrentPostConfig(postUIContext, postConfig);
-          }
-      });
-    }
-
-  }, [rootPostName]);
-
   return (
     <Routes>
       <Route element={<PostUIRouterBody {...props} />}>

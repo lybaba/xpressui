@@ -61,9 +61,12 @@ function MainContent(props: AppProps) {
 
 
   return (
-    <PostUIRouter
-      rootPostName={rootPostName}
-    />
+    <BrowserRouter>
+      <PostUIRouter
+        rootPostName={rootPostName}
+      />
+    </BrowserRouter>
+
   )
 }
 
@@ -72,13 +75,11 @@ function MainContent(props: AppProps) {
 function App(props: AppProps) {
   return (
     <ThemeProvider theme={theme}>
-      <BrowserRouter>
-        <PostUIProvider>
-          <MainContent
-            {...props}
-          />
-        </PostUIProvider>
-      </BrowserRouter>
+      <PostUIProvider>
+        <MainContent
+          {...props}
+        />
+      </PostUIProvider>
     </ThemeProvider>
   )
 }

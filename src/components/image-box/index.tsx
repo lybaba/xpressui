@@ -24,6 +24,7 @@ export const ImageBox = (props: Props) => {
 
     const mediaFile = !isEmpty(mediaId) && mediaFilesMap.hasOwnProperty(mediaId) ? mediaFilesMap[mediaId] : null;
     
+    console.log("________MEDIA___FILE : ", mediaFile)
     if (!mediaFile) {
         return (
             <Image />

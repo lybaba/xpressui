@@ -26,8 +26,7 @@ type TFormFieldProps =  {
     mediaFilesMap: Record<string, TMediaFile>;
     elemProps?: any;
     children?: ReactNode | undefined;
-    user?: TUser | null;
-    onPostUIEvent: (event: TPostUIEvent) => Promise<TServerResponse>;
+    onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
     renderComponent?: (postConfig: TPostConfig,
                     fieldConfig: TFieldConfig,
                     componentType: TComponentType, 

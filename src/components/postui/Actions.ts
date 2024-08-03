@@ -8,6 +8,7 @@ import { BUILDER_TAB_FORMS, SERVER_REQUEST, SERVER_RESPONSE } from "../../common
 import { FormRenderProps } from "react-final-form";
 import { TPostUIConfig } from "../../common/TPostUIConfigProps";
 import TPostUIProps from "../../common/TPostUIProps";
+import TServerResponse from "../../common/TServerResponse";
 
 
 export const SET_CURRENT_STEP_INDEX = 'set_step';
@@ -21,6 +22,21 @@ export type EventHandlerType =  (
 
 export function init(state: TPostConfigState): TPostConfigState {
     return state;
+}
+
+// ====================================================================
+function dispatchUnknownError(context: TPostUIContext, data: any) : TServerResponse {
+    const res = {
+        success: false,
+        message: '"An unknown error has occured."',
+        data
+    }
+    context.dispatch({
+        type: SERVER_RESPONSE,
+        payload: res
+    });
+
+    return res;
 }
 
 export async function setCurrentStepIndex(postUIContext: TPostUIContext, currentStepIndex: number) {
@@ -63,6 +79,7 @@ export async function setCurrentPostConfig(postUIContext: TPostUIContext, curren
     });
 }
 
+// ====================================================================
 
 export async function initPostUI(postUIContext: TPostUIContext, config: TPostUIConfig) {
     const {
@@ -77,6 +94,19 @@ export async function initPostUI(postUIContext: TPostUIContext, config: TPostUIC
         }
     });
 }
+
+// ====================================================================
+
+// default onPostUIEvent handler
+async function handlePostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
+    console.log("handlePostUIEvent event : ", event)
+    return {
+        success: true,
+        message: ''
+    }
+}
+
+// ====================================================================
 
 export async function submitForm(context: TPostUIContext, postProps: TPostUIProps, formData: Record<string, any>) {
     const {
@@ -97,7 +127,11 @@ export async function submitForm(context: TPostUIContext, postProps: TPostUIProp
     });
 
     try {
-        const res = await postProps.onPostUIEvent(event);
+        const {
+            onPostUIEvent = handlePostUIEvent
+        } = postProps;
+
+        const res = await onPostUIEvent(event);
 
         context.dispatch({
             type: SERVER_RESPONSE,
@@ -107,14 +141,11 @@ export async function submitForm(context: TPostUIContext, postProps: TPostUIProp
             return res;
 
     } catch (reason: any) {
-        context.dispatch({
-            type: SERVER_RESPONSE,
-        });
-
-        return reason;
+        return dispatchUnknownError(context, reason);
     }
 }
 
+// ====================================================================
 
 export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUIProps, formProps: FormRenderProps<any, any>) {
     const {
@@ -156,7 +187,11 @@ export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUI
         });
     
         try {
-            const res = await postProps.onPostUIEvent(event);
+            const {
+                onPostUIEvent = handlePostUIEvent
+            } = postProps;
+    
+            const res = await onPostUIEvent(event);
     
             context.dispatch({
                 type: SERVER_RESPONSE,
@@ -168,14 +203,12 @@ export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUI
 
             setCurrentStepIndex(context, currentStepIndex + 1);
         } catch (reason: any) {
-            context.dispatch({
-                type: SERVER_RESPONSE,
-            });
-    
-            return reason;
+            return dispatchUnknownError(context, reason);
         }
     }
 }
+
+// ====================================================================
 
 export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUIProps,  formProps: FormRenderProps<any, any>) {
     const {
@@ -214,7 +247,11 @@ export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUI
         });
     
         try {
-            const res = await postProps.onPostUIEvent(event);
+            const {
+                onPostUIEvent = handlePostUIEvent
+            } = postProps;
+    
+            const res = await onPostUIEvent(event);
     
             context.dispatch({
                 type: SERVER_RESPONSE,
@@ -226,11 +263,7 @@ export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUI
 
             setCurrentStepIndex(context, currentStepIndex - 1);
         } catch (reason: any) {
-            context.dispatch({
-                type: SERVER_RESPONSE,
-            });
-    
-            return reason;
+            return dispatchUnknownError(context, reason);
         }
     }
 }

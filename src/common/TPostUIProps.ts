@@ -8,7 +8,7 @@ import TServerResponse from "./TServerResponse";
 type TPostUIProps = {
     postConfig: TPostConfig;
     baseUrl?: string;
-    onPostUIEvent: (event: TPostUIEvent) => Promise<TServerResponse>;
+    onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
     renderComponent?: (postConfig: TPostConfig,
                     fieldConfig: TFieldConfig,
                     componentType: TComponentType, 

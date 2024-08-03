@@ -1,4 +1,3 @@
-import axios, { AxiosInstance } from "axios";
 import Ajv from "ajv";
 import addFormats from 'ajv-formats';
 import addErrors from 'ajv-errors';
@@ -22,8 +21,6 @@ export type FrontendClientArgs = {
 export class FrontendClient {
   private _baseUrl: string;
   private _imagesBaseUrl: string;
-  private _axiosServerClient: AxiosInstance;
-  private _axiosImagesClient: AxiosInstance;
   private _postConfig: TPostConfig;
   private _mediaFiles: TMediaFile[];
   private _mediaFilesMap: Record<string, TMediaFile>;
@@ -34,22 +31,6 @@ export class FrontendClient {
     this._postConfig = args.postConfig;
     this._mediaFiles = args.mediaFiles;
     this._mediaFilesMap = args.mediaFilesMap;
-
-    const axiosServerConfig: any = {};
-
-    if (!isEmpty(this._baseUrl)) {
-      axiosServerConfig['baseURL'] = this._baseUrl;
-    }
-
-    this._axiosServerClient = axios.create(axiosServerConfig);
-
-    const axiosAssetsConfig: any = {};
-
-    if (!isEmpty(this._imagesBaseUrl)) {
-      axiosAssetsConfig['baseURL'] = this._imagesBaseUrl;
-    }
-
-    this._axiosImagesClient = axios.create(axiosAssetsConfig);
   }
 
   get postConfig() {
@@ -70,14 +51,6 @@ export class FrontendClient {
 
   get imagesBaseUrl() {
     return this._imagesBaseUrl;
-  }
-
-  get serverClient() {
-    return this._axiosServerClient;
-  }
-
-  get imagesClient() {
-    return this._axiosImagesClient;
   }
 }
 

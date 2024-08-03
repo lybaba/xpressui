@@ -21,7 +21,6 @@ import { TPostUIContext } from '../components/postui/TPostUIState';
 import { isEmpty } from 'lodash';
 import TChoice from "./TChoice";
 import parseErrors from "./parse-errors";
-import TUser from "./TUser";
 
 export const FORM_ID = "form";
 export const SECTION_ID = 'attrgroup';
@@ -48,41 +47,43 @@ function storageURL(storageUrl: string, relativePath: string) {
    return storageUrl + relativePath + '?alt=media'
 }
 
-export const buildImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, fileName: string, user: TUser | null): string => {
+export const buildImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, fileName: string): string => {
     const {
-        baseStorageUrl = ''
+        baseStorageUrl = '',
+        user
     } = postUIContext;
 
     if (!isEmpty(baseStorageUrl) && user) {
         return storageURL(baseStorageUrl, `static%2F${user.uid}%2F${fileName}`);
     } else {
-        const url = postUIContext.frontend.imagesClient.getUri({
-            url: fileName
-        });
+        const baseUrl = postUIContext.frontend.imagesBaseUrl;
+        if (baseUrl.endsWith('/'))
+            return `${baseUrl}${fileName}`;
+        else
+            return `${baseUrl}/${fileName}`;
 
-        return url;
     }
 }
 
 
-export const getLargeImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile, user: TUser | null = null): string => {
-    return buildImageUrl(postUIContext, postConfig, `${mediaFile.id}-large.${mediaFile.type}`, user);
+export const getLargeImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return buildImageUrl(postUIContext, postConfig, `${mediaFile.id}-large.${mediaFile.type}`);
 }
 
-const doGetImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile, prefix: string, user: TUser | null = null): string => {
-    return buildImageUrl(postUIContext,  postConfig, `${mediaFile.id}-${prefix}.${mediaFile.type}`, user);
+const doGetImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile, prefix: string): string => {
+    return buildImageUrl(postUIContext,  postConfig, `${mediaFile.id}-${prefix}.${mediaFile.type}`);
 }
 
-export const getSmallImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile,user: TUser | null = null): string => {
-    return doGetImageUrl(postUIContext,  postConfig, mediaFile, "small", user);
+export const getSmallImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return doGetImageUrl(postUIContext,  postConfig, mediaFile, "small");
 }
 
-export const getThumbImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile, user: TUser | null = null): string => {
-    return doGetImageUrl(postUIContext,  postConfig, mediaFile, "thumb", user);
+export const getThumbImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return doGetImageUrl(postUIContext,  postConfig, mediaFile, "thumb");
 }
 
-export const getMediumImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile, user: TUser | null = null): string => {
-    return doGetImageUrl(postUIContext, postConfig, mediaFile, "medium", user);
+export const getMediumImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
+    return doGetImageUrl(postUIContext, postConfig, mediaFile, "medium");
 }
 
 

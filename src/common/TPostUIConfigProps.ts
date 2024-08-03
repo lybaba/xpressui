@@ -1,6 +1,7 @@
 import FrontendClient from "./frontend";
 import TMediaFile from "./TMediaFile";
 import TPostConfig from "./TPostConfig";
+import TUser from "./TUser";
 
 export type TPostUIConfig = {
     rootPostConfig: TPostConfig;
@@ -10,4 +11,6 @@ export type TPostUIConfig = {
     baseUrl: string;
     imagesBaseUrl: string;
     frontend: FrontendClient;
+    baseStorageUrl?: string;
+    user?: TUser | null;
 };

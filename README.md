@@ -63,7 +63,7 @@ const MULTI_STEP_FORM_CONFIG: TPostConfig = {
       "step_1": [
           {
               "label": "Email",
-              "type": "text",
+              "type": "email",
               "required": true,
               "name": "email"
           }

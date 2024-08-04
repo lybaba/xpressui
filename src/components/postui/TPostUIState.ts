@@ -51,8 +51,6 @@ export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
         postConfig: DEFAULT_FORM_CONFIG,
         baseUrl: '',
         imagesBaseUrl: '',
-        mediaFiles: [],
-        mediaFilesMap: {}
     }),
     isLivePreview: false,
     isLoading: false,

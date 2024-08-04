@@ -8,7 +8,7 @@ import { FormRenderProps } from 'react-final-form';
 import { usePostUIContext } from './PostUIProvider';
 
 type OwnProps = {
-    formProps: FormRenderProps<any, any>;
+    formProps?: FormRenderProps<any, any>;
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -35,7 +35,6 @@ export default function FormSectionList(props: Props) {
                         formName={fieldConfig.name}
                         fieldConfig={fieldConfig}
                         fieldIndex={fieldIndex}
-                        parentFieldConfig={postConfig}
                     />
                 ))
             }

@@ -4,6 +4,7 @@ import {
     CHECKBOXES_TYPE,
     CHECKBOX_TYPE,
     IMAGE_TYPE,
+    IMAGE_URL_TYPE,
     MULTI_SELECT_TYPE,
     RADIO_BUTTONS_TYPE,
     SINGLE_SELECT_TYPE,
@@ -44,10 +45,10 @@ export const FormInputControl = (props: FormInputControlProps) => {
         input,
         hasError,
         isFirstInputfield,
-        formProps: {
-            submitting
-        }
+        formProps
     } = props;
+
+    const submitting = formProps ? formProps.submitting : false;
 
     const {
         type
@@ -137,6 +138,7 @@ export const CustomFieldInput = (props: CustomFieldInputProps) => {
             )
 
         case IMAGE_TYPE:
+        case IMAGE_URL_TYPE:
             return (
                 <ImageBox
                     {...props}

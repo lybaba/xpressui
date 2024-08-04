@@ -174,11 +174,9 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
             break;
 
         case SINGLE_SELECT_TYPE:
-        case MULTI_SELECT_TYPE:
-            if (isEmpty(fieldConfig.choices))
-                return null;
-            
-            res.enum = fieldConfig.choices.map((opt: TChoice) => opt.name);
+        case MULTI_SELECT_TYPE:            
+            if (fieldConfig.choices)
+                res.enum = fieldConfig.choices.map((opt: TChoice) => opt.name);
             break;
 
 

@@ -3,11 +3,10 @@ import {
     Stack,
 } from "@mui/joy";
 
-import { FormRenderProps } from 'react-final-form'
-
 import FormFieldTitle from "./FormFieldTitle";
 import {
     IMAGE_TYPE,
+    IMAGE_URL_TYPE,
     OUTPUT_TYPE,
     SUBMIT_TYPE,
 } from "../common/field";
@@ -17,12 +16,7 @@ import FieldLabelTemplate from "./CustomFieldLabel";
 import FieldInputTemplate from "./CustomFieldInput";
 
 
-type FormProps = {
-    formProps: FormRenderProps<any, any>;
-}
-type Props = TPostFieldProps & FormProps;
-
-export const PostField = (props: Props) => {
+export const PostField = (props: TPostFieldProps) => {
     const {
         fieldConfig,
     } = props;
@@ -45,6 +39,7 @@ export const PostField = (props: Props) => {
 
     
             case IMAGE_TYPE:
+            case IMAGE_URL_TYPE:
             case SUBMIT_TYPE:
                 return (
                     <FieldTemplate

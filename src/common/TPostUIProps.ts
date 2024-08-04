@@ -7,6 +7,7 @@ import TServerResponse from "./TServerResponse";
 
 type TPostUIProps = {
     postConfig: TPostConfig;
+    template?: string;
     baseUrl?: string;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
     renderComponent?: (postConfig: TPostConfig,

@@ -12,14 +12,13 @@ type TPostFieldProps =  {
     formName?: string;
     fieldConfig: TFieldConfig;
     fieldIndex: number;
-    parentFieldConfig: TFieldConfig;
     hideLabel?: boolean;
     disabled?: boolean;
     isFirstInputfield?: boolean;
     builderMenu?: TBuilderMenu;
     isFieldOption?: boolean;
     normalizeFieldValue?: (value: any) => any,
-    formProps: FormRenderProps<any, any>;
+    formProps?: FormRenderProps<any, any>;
     elemProps?: any;
     children?: ReactNode | undefined;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;

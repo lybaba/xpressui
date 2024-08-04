@@ -147,11 +147,9 @@ export async function submitForm(context: TPostUIContext, postProps: TPostUIProp
 
 // ====================================================================
 
-export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUIProps, formProps: FormRenderProps<any, any>) {
-    const {
-        valid,
-        values
-    } = formProps;
+export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUIProps, formProps?: FormRenderProps<any, any>) {
+    const valid = formProps ? formProps.valid : true;
+    const values = formProps ? formProps.values : {}
 
     const {
         currentStepIndex,
@@ -210,10 +208,8 @@ export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUI
 
 // ====================================================================
 
-export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUIProps,  formProps: FormRenderProps<any, any>) {
-    const {
-        values
-    } = formProps;
+export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUIProps,  formProps?: FormRenderProps<any, any>) {
+    const values = formProps ? formProps.values : {}
 
     const {
         currentStepIndex,

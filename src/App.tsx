@@ -1,10 +1,11 @@
 import { ThemeProvider } from '@mui/joy/styles';
 import theme from './styles/default';
 import PostUIProvider from './components/postui/PostUIProvider';
-import TPostUIEvent, { TPostUIEventType } from 'src/common/TPostUIEvent';
-import TServerResponse from 'src/common/TServerResponse';
+import TPostUIEvent, { TPostUIEventType } from './common/TPostUIEvent';
+import TServerResponse from './common/TServerResponse';
 import PostUI from './components/postui/PostUI';
 import TPostConfig from './common/TPostConfig';
+import { Stack } from '@mui/joy';
 
 const MULTI_STEP_FORM_CONFIG: TPostConfig = {
   "uid": "user123",
@@ -20,6 +21,11 @@ const MULTI_STEP_FORM_CONFIG: TPostConfig = {
   "errorMsg": "Submission failed.",
   "sections": {
       "main": [
+        {
+          "name": "step_0",
+          "label": "Step 0",
+          "type": "section",
+      },
           {
               "name": "step_1",
               "label": "Step 1",
@@ -36,10 +42,20 @@ const MULTI_STEP_FORM_CONFIG: TPostConfig = {
               "type": "section",
           }
       ],
+      "step_0": [
+        {
+            "label": "XPressUI",
+            "type": "image-url",
+            "name": "xpressui",
+            mediaInfo: {
+              filePath: '/images/new_product.jpg'
+            }
+        }
+    ],
       "step_1": [
           {
               "label": "Email",
-              "type": "text",
+              "type": "email",
               "required": true,
               "name": "email"
           }
@@ -116,7 +132,19 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <PostUIProvider>
+      <Stack
+        gap={4}
+        spacing={4}
+        sx={{
+          display: 'flex',
+          maxWidth: '800px',
+          mx: 'auto',
+          px: { xs: 2, md: 6 },
+          py: { xs: 2, md: 3 }
+        }}
+      >
         <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
+        </Stack>
       </PostUIProvider>
     </ThemeProvider>
   )

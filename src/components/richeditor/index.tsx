@@ -1,16 +1,10 @@
 import { useRef } from 'react';
 import Textarea from '@mui/joy/Textarea';
 
-import { FormRenderProps } from 'react-final-form';
 import TFormFieldProps from '../../common/TFormFieldProps';
 
-type FormProps = {
-  formProps: FormRenderProps<any, any>;
-}
 
-type Props = TFormFieldProps & FormProps;
-
-export const RichEditor = (props: Props) => {
+export const RichEditor = (props: TFormFieldProps) => {
   const textareaInput: any = useRef(null);
 
 

@@ -2,6 +2,7 @@
 import TPostFieldProps from '../common/TPostFieldProps';
 import {
     IMAGE_TYPE,
+    IMAGE_URL_TYPE,
     SUBMIT_TYPE
 } from '../common/field';
 
@@ -54,6 +55,7 @@ export const CustomField = (props: TPostFieldProps) => {
             );
 
         case IMAGE_TYPE:
+        case IMAGE_URL_TYPE:
             return (
                 <Stack
                     gap={1}

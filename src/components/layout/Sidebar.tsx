@@ -58,10 +58,6 @@ export default function Sidebar(props: any) {
     currentPostConfig
   } = postUIContext;
 
-  const {
-    appPages = []
-  } = currentPostConfig;
-
 
   return (
     <Sheet
@@ -167,23 +163,6 @@ export default function Sidebar(props: any) {
             '--ListItem-radius': (theme) => theme.vars.radius.sm,
           }}
         >
-
-          {
-            appPages.map((appPage : TAppPage, index: number) => (
-              <ListItem key={index}>
-                <ListItemButton
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(`/${appPage.name}`)
-                  }}
-                >
-                  <ListItemContent>
-                    <Typography level="title-sm">{appPage.label}</Typography>
-                  </ListItemContent>
-                </ListItemButton>
-              </ListItem>
-            ))
-          }
         </List>
       </Box>
     </Sheet>

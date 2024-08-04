@@ -43,7 +43,6 @@ function Section(props: TPostFieldProps) {
                         formName={sectionConfig.name}
                         fieldConfig={fieldConfig}
                         fieldIndex={index}
-                        parentFieldConfig={sectionConfig}
                     />
                 ))
             }

@@ -19,8 +19,7 @@ type TFormFieldProps =  {
     isFirstInputfield?: boolean;
     builderMenu?: TBuilderMenu;
     normalizeFieldValue?: (value: any) => any,
-    formProps: FormRenderProps<any, any>;
-    parentFieldConfig: TFieldConfig;
+    formProps?: FormRenderProps<any, any>;
     elemProps?: any;
     children?: ReactNode | undefined;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;

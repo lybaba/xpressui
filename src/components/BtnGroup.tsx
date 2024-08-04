@@ -10,7 +10,7 @@ import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
 import TPostUIProps from "../common/TPostUIProps";
 
 type OwnProps = {
-    formProps: FormRenderProps<any, any>;
+    formProps?: FormRenderProps<any, any>;
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -68,7 +68,6 @@ function BtnGroup(props: Props) {
                             color="primary"
                             onClick={(e) => {
                                 e.preventDefault();
-                                console.log("IIIIIIIIIIIIIIII")
                                 onNextBtnClick(postUIContext, props,formProps)
                             }}
                         >
@@ -92,11 +91,15 @@ function BtnGroup(props: Props) {
                     )
                 }
             </ButtonGroup>
-            <Typography level="body-sm">
-                {
-                    `${currentStepNum} / ${nbSteps}`
-                }
-            </Typography>
+            {
+                isMultiStepForm && (
+                    <Typography level="body-sm">
+                        {
+                            `${currentStepNum} / ${nbSteps}`
+                        }
+                    </Typography>
+                )
+            }
         </Stack>
     );
 }

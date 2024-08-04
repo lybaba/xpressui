@@ -1,6 +1,5 @@
 import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
-import TAppPage from "./TAppPage";
 import shortUUID from "short-uuid";
 import { MAIN_SECTION } from "./Constants";
 import { TMediaInfo } from "./TMediaFile";
@@ -8,7 +7,7 @@ import { TMediaInfo } from "./TMediaFile";
 
 export const CONTACTFORM_TYPE = 'contactform';
 export const ADVANCEDFORM_TYPE = 'advancedform';
-export const ONLINESTORE_TYPE = 'onlinestore';
+export const PRODUCTLISTING_TYPE = 'productlisting';
 export const MULTI_STEP_FORM_TYPE = 'multistepform';
 
 export type TPostSettings = {

@@ -1,14 +1,8 @@
-import { FormRenderProps } from 'react-final-form'
 import TPostFieldProps from "../../common/TPostFieldProps";
 import ImageBoxBody from "./ImageBoxBody";
 
-type FormProps = {
-    formProps: FormRenderProps<any, any>;
-}
 
-type Props = TPostFieldProps & FormProps;
-
-export const ImageBox = (props: Props) => {
+export const ImageBox = (props: TPostFieldProps) => {
     const {
         fieldConfig,
         postConfig,

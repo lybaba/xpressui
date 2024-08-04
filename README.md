@@ -63,7 +63,7 @@ const MULTI_STEP_FORM_CONFIG: TPostConfig = {
       "step_1": [
           {
               "label": "Email",
-              "type": "text",
+              "type": "email",
               "required": true,
               "name": "email"
           }
@@ -137,7 +137,11 @@ async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
 
 class Example extends Component {
   render() {
-    return <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent} />
+    return(
+      <PostUIProvider>
+        <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
+      </PostUIProvider>
+    )
   }
 }
 ```

@@ -27,7 +27,7 @@ export const MENU_CREATE = 'create';
 
 export const BUILDER_TAB_ENTRIES = 'entries';
 export const BUILDER_TAB_MEDIA = 'media';
-export const BUILDER_TAB_FORMS = 'forms';
+export const MAIN_SECTION = 'main';
 export const BUILDER_TAB_PAGES = 'pages';
 export const BUILDER_TAB_GENERAL_SETTINGS = 'general-settings ';
 export const BUILDER_TAB_PAGE_CONFIG_EDIT = 'field-config-edit';

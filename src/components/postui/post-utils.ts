@@ -62,34 +62,3 @@ export async function fetchPostTemplate(fileName: string): Promise<string | ''> 
 
     return '';
 }
-
-
-export async function getPostConfigAndAssets(postConfigFileName: string, postAssetsFileName: string = "") : Promise<TPostConfigPrams> {
-    if (!isEmpty(postAssetsFileName)) {
-        const res = await Promise.all([
-            fetchPostConfig(postConfigFileName),
-            fetchPostAssets(postAssetsFileName)]);
-
-        const postConfigWithBaseUrl = res[0];
-        if (postConfigWithBaseUrl) {
-            return {
-                ...postConfigWithBaseUrl,
-                mediaFiles: res[1] ? res[1] : []
-            }
-        }
-    } else {
-        const res = await fetchPostConfig(postConfigFileName);
-        if (res) {
-            return {
-                ...res,
-                mediaFiles: []
-            }
-        }
-    }
-
-    return {
-        postConfig: null,
-        baseUrl: '',
-        mediaFiles: []
-    }
-}

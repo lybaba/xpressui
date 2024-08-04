@@ -21,8 +21,8 @@ export default function validate(
 
     const currentSection = getSectionByIndex(postConfig, sectionIdex);
     
-    const fields: TFieldConfig[] = currentSection && postConfig.fields.hasOwnProperty(currentSection.name) 
-                                    ? postConfig.fields[currentSection.name] : [];
+    const fields: TFieldConfig[] = currentSection && postConfig.sections.hasOwnProperty(currentSection.name) 
+                                    ? postConfig.sections[currentSection.name] : [];
 
     fields.forEach((fieldConfig: TFieldConfig) => {
         const {

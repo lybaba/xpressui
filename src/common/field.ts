@@ -119,11 +119,6 @@ export const getFieldSubTypes = (type: string): Array<TChoice> => {
                 UPLOAD_IMAGE_TYPE_FIELD,
             ];
 
-        case MULTI_SELECT_TYPE:
-            return [
-                MULTI_SELECT_TYPE_FIELD,
-                SINGLE_SELECT_TYPE_FIELD,
-            ];
 
         default:
             return [];

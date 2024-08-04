@@ -15,8 +15,8 @@ import {
 import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
 import TPostConfig from "./TPostConfig";
-import { BUILDER_TAB_FORMS } from './Constants';
-import TMediaFile from './TMediaFile';
+import { MAIN_SECTION } from './Constants';
+import TMediaFile, { TMediaInfo, TMediaFileMetadata } from './TMediaFile';
 import { TPostUIContext } from '../components/postui/TPostUIState';
 import { isEmpty } from 'lodash';
 import TChoice from "./TChoice";
@@ -47,52 +47,59 @@ function storageURL(storageUrl: string, relativePath: string) {
    return storageUrl + relativePath + '?alt=media'
 }
 
-export const buildImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, fileName: string): string => {
+export const buildImageUrl = (postUIContext: TPostUIContext, fileMeta: TMediaFileMetadata): string => {
     const {
         baseStorageUrl = '',
         user
     } = postUIContext;
 
     if (!isEmpty(baseStorageUrl) && user) {
-        return storageURL(baseStorageUrl, `static%2F${user.uid}%2F${fileName}`);
+        return storageURL(baseStorageUrl, `static%2F${user.uid}%2F${fileMeta.filePath}`);
     } else {
         const baseUrl = postUIContext.frontend.imagesBaseUrl;
         if (baseUrl.endsWith('/'))
-            return `${baseUrl}${fileName}`;
+            return `${baseUrl}${fileMeta.filePath}`;
         else
-            return `${baseUrl}/${fileName}`;
+            return `${baseUrl}/${fileMeta.filePath}`;
 
     }
 }
 
-
-export const getLargeImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return buildImageUrl(postUIContext, postConfig, `${mediaFile.id}-large.${mediaFile.type}`);
+export const getLargeImageUrl = (postUIContext: TPostUIContext, mediaFile: TMediaInfo): string => {
+    if (isEmpty(mediaFile.largeMeta))
+        return mediaFile.filePath ? mediaFile.filePath : '';
+    
+    return buildImageUrl(postUIContext, mediaFile.largeMeta);
 }
 
-const doGetImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile, prefix: string): string => {
-    return buildImageUrl(postUIContext,  postConfig, `${mediaFile.id}-${prefix}.${mediaFile.type}`);
+export const getSmallImageUrl = (postUIContext: TPostUIContext, mediaFile: TMediaInfo): string => {
+    if (isEmpty(mediaFile.smallMeta))
+        return mediaFile.filePath ? mediaFile.filePath : '';
+    
+    return buildImageUrl(postUIContext, mediaFile.smallMeta);
 }
 
-export const getSmallImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return doGetImageUrl(postUIContext,  postConfig, mediaFile, "small");
+export const getThumbImageUrl = (postUIContext: TPostUIContext, mediaFile: TMediaInfo): string => {
+    if (isEmpty(mediaFile.thumbMeta))
+        return mediaFile.filePath ? mediaFile.filePath : '';
+    
+    return buildImageUrl(postUIContext, mediaFile.thumbMeta);
 }
 
-export const getThumbImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return doGetImageUrl(postUIContext,  postConfig, mediaFile, "thumb");
-}
-
-export const getMediumImageUrl = (postUIContext: TPostUIContext, postConfig: TPostConfig, mediaFile: TMediaFile): string => {
-    return doGetImageUrl(postUIContext, postConfig, mediaFile, "medium");
+export const getMediumImageUrl = (postUIContext: TPostUIContext, mediaFile: TMediaInfo): string => {
+    if (isEmpty(mediaFile.mediumMeta))
+        return mediaFile.filePath ? mediaFile.filePath : '';
+    
+    return buildImageUrl(postUIContext, mediaFile.mediumMeta);
 }
 
 
 export const getSectionList = (postConfig: TPostConfig): Array<TFieldConfig> => {
-    return postConfig.fields.hasOwnProperty(BUILDER_TAB_FORMS) ? postConfig.fields[BUILDER_TAB_FORMS] : []
+    return postConfig.sections.hasOwnProperty(MAIN_SECTION) ? postConfig.sections[MAIN_SECTION] : []
 }
 
 export const getSectionFields = (postConfig: TPostConfig, sectionName: string): Array<TFieldConfig> => {
-    return postConfig.fields.hasOwnProperty(sectionName) ? postConfig.fields[sectionName] : [];
+    return postConfig.sections.hasOwnProperty(sectionName) ? postConfig.sections[sectionName] : [];
 }
 
 export const getSectionHasFields = (postConfig: TPostConfig, sectionName: string): boolean => {
@@ -102,10 +109,10 @@ export const getSectionHasFields = (postConfig: TPostConfig, sectionName: string
 
 
 export const getSectionByIndex = (postConfig: TPostConfig, index: number): TFieldConfig | null => {
-    if (!postConfig || index < 0 || index >= postConfig.fields[BUILDER_TAB_FORMS].length)
+    if (!postConfig || index < 0 || index >= postConfig.sections[MAIN_SECTION].length)
         return null;
 
-    return postConfig.fields[BUILDER_TAB_FORMS][index];
+    return postConfig.sections[MAIN_SECTION][index];
 }
 
 
@@ -113,10 +120,10 @@ export const getFieldConfigByIndex = (postConfig: TPostConfig, sectionIndex: num
     const sectionConfig = getSectionByIndex(postConfig, sectionIndex);
 
     if (sectionConfig) {
-        if (fieldIndex < 0 || fieldIndex >= postConfig.fields[sectionConfig.name].length)
+        if (fieldIndex < 0 || fieldIndex >= postConfig.sections[sectionConfig.name].length)
             return null;
 
-        return postConfig.fields[sectionConfig.name][fieldIndex];
+        return postConfig.sections[sectionConfig.name][fieldIndex];
     }
 
     return null;
@@ -125,8 +132,8 @@ export const getFieldConfigByIndex = (postConfig: TPostConfig, sectionIndex: num
 export const getSectionByName = (postConfig: TPostConfig, groupName: string) => {
     let groupIndex = -1;
 
-    if (postConfig.fields[BUILDER_TAB_FORMS]) {
-        postConfig.fields[BUILDER_TAB_FORMS].every((tmp: TFieldConfig, index: number) => {
+    if (postConfig.sections[MAIN_SECTION]) {
+        postConfig.sections[MAIN_SECTION].every((tmp: TFieldConfig, index: number) => {
 
             if (tmp.name === groupName) {
                 groupIndex = index;
@@ -137,7 +144,7 @@ export const getSectionByName = (postConfig: TPostConfig, groupName: string) => 
         });
     }
 
-    return groupIndex >= 0 ? postConfig.fields[BUILDER_TAB_FORMS][groupIndex] : null;
+    return groupIndex >= 0 ? postConfig.sections[MAIN_SECTION][groupIndex] : null;
 }
 
 
@@ -210,8 +217,8 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
 export function buildSchema(postConfig: TPostConfig, sectionIdex: number): object {
     const currentSection = getSectionByIndex(postConfig, sectionIdex);
     
-    const fields: TFieldConfig[] = currentSection && postConfig.fields.hasOwnProperty(currentSection.name) 
-                                    ? postConfig.fields[currentSection.name] : [];
+    const fields: TFieldConfig[] = currentSection && postConfig.sections.hasOwnProperty(currentSection.name) 
+                                    ? postConfig.sections[currentSection.name] : [];
 
     const required: string[] = [];
     const errorMessage: Record<string, string> = {};

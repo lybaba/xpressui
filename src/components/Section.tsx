@@ -25,10 +25,10 @@ function Section(props: TPostFieldProps) {
 
     const showSection = !isMultiStepForm || currentStepIndex === sectionIndex;
 
-    if (! postConfig.fields || ! postConfig.fields[sectionConfig.name])
+    if (! postConfig.sections || ! postConfig.sections[sectionConfig.name])
         return null;
     
-    const fields = postConfig.fields[sectionConfig.name];
+    const fields = postConfig.sections[sectionConfig.name];
 
     return showSection && (
         <Stack

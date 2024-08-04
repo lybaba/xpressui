@@ -1,27 +1,3 @@
-# xpress-ui
-
-> XPressUI Frontend Post UI Components
-
-Build Form UI and Online-Store UI (aka PostUI)  from a Json Configuration File.
-Just declare your Post UI as a Json Object and XPressUI will take the rest.
-- Generate the Post UI
-- Handle the Post UI internals ( form validation, navigation, and post data to your backend server)
-
-[![NPM](https://img.shields.io/npm/v/postui.svg)](https://www.npmjs.com/package/postui) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-
-## Node version used
-nvm install 20.10.0
-nvm use 20.10.0
-
-## Install
-
-```bash
-npm install --save @lybaba/xpressui
-```
-
-## Usage
-
-```tsx
 import { ThemeProvider } from '@mui/joy/styles';
 import theme from './styles/default';
 import PostUIProvider from './components/postui/PostUIProvider';
@@ -135,13 +111,15 @@ async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
   return serverRes;
 }
 
-class Example extends Component {
-  render() {
-    return <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent} />
-  }
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <PostUIProvider>
+        <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
+      </PostUIProvider>
+    </ThemeProvider>
+  )
 }
-```
 
-## License
-
-MIT © [lybaba](https://github.com/lybaba)
+export default App;

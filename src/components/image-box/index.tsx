@@ -1,8 +1,6 @@
 import { FormRenderProps } from 'react-final-form'
-import { isEmpty } from "lodash";
 import TPostFieldProps from "../../common/TPostFieldProps";
 import ImageBoxBody from "./ImageBoxBody";
-import { Image } from "@mui/icons-material";
 
 type FormProps = {
     formProps: FormRenderProps<any, any>;
@@ -13,31 +11,14 @@ type Props = TPostFieldProps & FormProps;
 export const ImageBox = (props: Props) => {
     const {
         fieldConfig,
-        mediaFilesMap,
         postConfig,
-        isLivePreview = false,
     } = props;
-
-    const {
-        mediaId = ''
-    } = fieldConfig;
-
-    const mediaFile = !isEmpty(mediaId) && mediaFilesMap.hasOwnProperty(mediaId) ? mediaFilesMap[mediaId] : null;
-    
-    console.log("________MEDIA___FILE : ", mediaFile)
-    if (!mediaFile) {
-        return (
-            <Image />
-        )
-    }
 
     return (
         <ImageBoxBody
             {...props}
             postConfig={postConfig}
             fieldConfig={fieldConfig}
-            mediaFile={mediaFile}
-            isLivePreview={isLivePreview}
         />            
     );
 }

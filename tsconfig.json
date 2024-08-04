@@ -21,10 +21,11 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": ["vite/client"]
   },
  "include": [
     "src/**/*"
-  ],
+, "src/index.tsx"  ],
   "exclude": ["node_modules"]
 }

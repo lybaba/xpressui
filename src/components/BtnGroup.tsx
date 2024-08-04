@@ -1,7 +1,7 @@
 import { Button, ButtonGroup, Stack, Typography } from "@mui/joy";
 
 import {
-    BUILDER_TAB_FORMS,
+    MAIN_SECTION,
 } from '../common/Constants';
 import { usePostUIContext } from "./postui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
@@ -25,7 +25,7 @@ function BtnGroup(props: Props) {
         currentStepIndex,
     } = postUIContext
 
-    const steps = postConfig.fields[BUILDER_TAB_FORMS];
+    const steps = postConfig.sections[MAIN_SECTION];
     const nbSteps = steps.length;
 
     const isMultiStepForm = postConfig.type === MULTI_STEP_FORM_TYPE;

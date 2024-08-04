@@ -1,10 +1,13 @@
+import { TMediaInfo } from "./TMediaFile";
+
 type TChoice = {
     name: string;
     label: string;
     desc?: string;
-    imageList?: string[];
+    mediaId?: string;
+    mediaInfo?: TMediaInfo;
+    mediaInfoList?: TMediaInfo[];
     permalink?: string;
-    videoList?: string[];
     regularPrice?: number;
     salePrice?: number;
     disabled?: boolean;

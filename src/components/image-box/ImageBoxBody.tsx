@@ -6,27 +6,35 @@ import { Image } from "@mui/icons-material";
 import { isEmpty } from "lodash";
 import { getMediumImageUrl, getThumbImageUrl } from "../../common/post";
 import { usePostUIContext } from "../postui/PostUIProvider";
-import TMediaFile from "../../common/TMediaFile";
 import TPostFieldProps from "../../common/TPostFieldProps";
 
-type OwnProps = {
-    mediaFile: TMediaFile;
-}
-
-type Props = OwnProps & TPostFieldProps;
-
-export const ImageBoxBody = (props: Props) => {
+export const ImageBoxBody = (props: TPostFieldProps) => {
     const {
-        postConfig,
         fieldConfig,
-        mediaFile,
-        isLivePreview,
     } = props;
+
+    const {
+        mediaInfo
+    } = fieldConfig;
 
     const postUIContext = usePostUIContext();
 
-    const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, postConfig, mediaFile) :
-        getMediumImageUrl(postUIContext, postConfig, mediaFile);
+    const {
+        isLivePreview
+    } = postUIContext;
+
+    if (!mediaInfo)
+        return (
+            <>
+                <Image/>
+                {
+                    props.children
+                }
+            </>
+        )
+
+    const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, mediaInfo) :
+        getMediumImageUrl(postUIContext, mediaInfo);
 
     return (
         <>
@@ -46,9 +54,7 @@ export const ImageBoxBody = (props: Props) => {
 
                         />
                     ) : (
-                        <Image
-
-                        />
+                        <Image/>
                     )
                 }
             </>

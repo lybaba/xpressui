@@ -1,4 +1,4 @@
-import { BUILDER_TAB_FORMS } from '../../common/Constants';
+import { MAIN_SECTION } from '../../common/Constants';
 import TPostUIProps from '../../common/TPostUIProps';
 import { Stack } from '@mui/joy';
 import TFieldConfig from '../../common/TFieldConfig';
@@ -17,11 +17,10 @@ export default function FormSectionList(props: Props) {
         postConfig,
     } = props;
 
-    const sections = postConfig.fields[BUILDER_TAB_FORMS];
+    const sections = postConfig.sections[MAIN_SECTION];
 
-    const {
-        mediaFilesMap
-    } = usePostUIContext();
+    console.log(1, sections)
+
 
     return (
         <Stack
@@ -33,7 +32,6 @@ export default function FormSectionList(props: Props) {
                     <Section
                         key={fieldIndex}
                         {...props}
-                        mediaFilesMap={mediaFilesMap}
                         formName={fieldConfig.name}
                         fieldConfig={fieldConfig}
                         fieldIndex={fieldIndex}

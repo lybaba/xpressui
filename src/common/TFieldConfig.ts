@@ -1,4 +1,5 @@
 import TChoice from "./TChoice";
+import { TMediaInfo } from "./TMediaFile";
 
 export type ImageSize = {
     width: number;
@@ -30,13 +31,9 @@ type TFieldConfig = {
     errorMsg?: string;
     successMsg?: string;
     nextBtnLabel?: string;
-    choices: Array<TChoice>;
-    action?: string;
-    mediaUrl?: string;
-    background?: string;
-    logo?: string;
-    header?: string;
-    hero?: string;
+    choices?: Array<TChoice>;
+    mediaInfo?: TMediaInfo;
+    mediaInfoList?: TMediaInfo[];
 };
 
 export type TFieldConfigInfo = {

@@ -11,7 +11,7 @@ import FormSectionList from '../FormSectionList';
 
 
 
-function ContactForm(props: TPostUIProps) {
+function PostUIForm(props: TPostUIProps) {
     const postUIContext = usePostUIContext();
 
     const {
@@ -65,4 +65,4 @@ function ContactForm(props: TPostUIProps) {
     );
 }
 
-export default ContactForm;
+export default PostUIForm;

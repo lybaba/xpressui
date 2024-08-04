@@ -4,7 +4,7 @@ import TPostConfigState,
     TPostUIContext,
 } from "./TPostUIState";
 import TPostUIEvent, { TPostUIEventType } from "../../common/TPostUIEvent";
-import { BUILDER_TAB_FORMS, SERVER_REQUEST, SERVER_RESPONSE } from "../../common/Constants";
+import { MAIN_SECTION, SERVER_REQUEST, SERVER_RESPONSE } from "../../common/Constants";
 import { FormRenderProps } from "react-final-form";
 import { TPostUIConfig } from "../../common/TPostUIConfigProps";
 import TPostUIProps from "../../common/TPostUIProps";
@@ -162,7 +162,7 @@ export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUI
         postConfig,
     } = postProps;
 
-    const steps = postConfig.fields[BUILDER_TAB_FORMS];
+    const steps = postConfig.sections[MAIN_SECTION];
     const nbSteps = steps.length;
 
     const currentStepNum = currentStepIndex + 1;
@@ -224,7 +224,7 @@ export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUI
         postConfig,
     } = postProps;
 
-    const steps = postConfig.fields[BUILDER_TAB_FORMS];
+    const steps = postConfig.sections[MAIN_SECTION];
 
     const currentStepNum = currentStepIndex + 1;
 

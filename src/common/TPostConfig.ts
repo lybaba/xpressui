@@ -2,7 +2,8 @@ import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
 import TAppPage from "./TAppPage";
 import shortUUID from "short-uuid";
-import { BUILDER_TAB_FORMS } from "./Constants";
+import { MAIN_SECTION } from "./Constants";
+import { TMediaInfo } from "./TMediaFile";
 
 
 export const CONTACTFORM_TYPE = 'contactform';
@@ -31,20 +32,22 @@ type TPostConfig = {
     type: string;
     name: string;
     label: string;
-    timestamp: number;
-    fields: Record<string, Array<TFieldConfig>>;
-    background: string;
-    logo: string;
-    header: string;
-    hero: string;
-    submitBtnLabel: string;
-    errorMsg: string;
-    successMsg: string;
-    nextBtnLabel: string;
-    prevBtnLabel: string;
-    choices: TChoice[];
-    appPages?: TAppPage[];
-    frontendController: string;
+    timestamp?: number;
+    sections: Record<string, TFieldConfig[]>;
+    background?: string;
+    backgroundInfo?: TMediaInfo;
+    logo?: string;
+    logoInfo?: TMediaInfo 
+    header?: string;
+    headerInfo?: TMediaInfo
+    hero?: string;
+    heroInfo?: TMediaInfo;
+    submitBtnLabel?: string;
+    errorMsg?: string;
+    successMsg?: string;
+    nextBtnLabel?: string;
+    prevBtnLabel?: string;
+    choices?: TChoice[];
     backendController: string;
 }
 
@@ -55,7 +58,7 @@ export const DEFAULT_FORM_CONFIG: TPostConfig = {
     type: CONTACTFORM_TYPE,
     name: 'demo',
     label: 'demo',
-    fields: {[BUILDER_TAB_FORMS]: []},
+    sections: {[MAIN_SECTION]: []},
     background: '',
     logo: '',
     header: '',
@@ -66,7 +69,6 @@ export const DEFAULT_FORM_CONFIG: TPostConfig = {
     nextBtnLabel: 'Next',
     prevBtnLabel: 'Previous',
     choices: [],
-    frontendController: 'controller-sample.js',
     backendController: 'controller-sample.php'
 }
 

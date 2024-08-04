@@ -137,7 +137,11 @@ async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
 
 class Example extends Component {
   render() {
-    return <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent} />
+    return (
+     <PostUIProvider>
+       <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent} />
+     </PostUIProvider>
+   )
   }
 }
 ```

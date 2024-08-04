@@ -1,29 +1,31 @@
 import { Button, ButtonGroup, Stack, Typography } from "@mui/joy";
 
 import {
-    BUILDER_TAB_FORMS,
-} from '../types/Constants';
-import { usePostUIContext } from "./post-ui/PostUIProvider";
+    MAIN_SECTION,
+} from '../common/Constants';
+import { usePostUIContext } from "./postui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
-import { MULTI_STEP_FORM_TYPE } from "../api/post";
-import { onNextBtnClick, onPrevBtnClick } from "./post-ui/Actions";
+import { onNextBtnClick, onPrevBtnClick } from "./postui/Actions";
+import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
+import TPostUIProps from "../common/TPostUIProps";
 
-type BtnGroupProps = {
+type OwnProps = {
     formProps: FormRenderProps<any, any>;
 }
 
-function BtnGroup(props: BtnGroupProps) {
+type Props = OwnProps & TPostUIProps;
+function BtnGroup(props: Props) {
     const {
-        formProps
+        formProps,
+        postConfig,
     } = props;
 
     const postUIContext = usePostUIContext();
     const {
-        postConfig,
         currentStepIndex,
     } = postUIContext
 
-    const steps = postConfig.fields[BUILDER_TAB_FORMS];
+    const steps = postConfig.sections[MAIN_SECTION];
     const nbSteps = steps.length;
 
     const isMultiStepForm = postConfig.type === MULTI_STEP_FORM_TYPE;
@@ -50,7 +52,7 @@ function BtnGroup(props: BtnGroupProps) {
                         <Button
                             onClick={(e) => {
                                 e.preventDefault();
-                                onPrevBtnClick(postUIContext, formProps)
+                                onPrevBtnClick(postUIContext, props, formProps)
                             }}
                             disabled={!showPrevBtn}
                         >
@@ -67,7 +69,7 @@ function BtnGroup(props: BtnGroupProps) {
                             onClick={(e) => {
                                 e.preventDefault();
                                 console.log("IIIIIIIIIIIIIIII")
-                                onNextBtnClick(postUIContext, formProps)
+                                onNextBtnClick(postUIContext, props,formProps)
                             }}
                         >
                             {

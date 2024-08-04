@@ -7,15 +7,15 @@ import {
 
 import { FormRenderProps } from 'react-final-form'
 
-import TChoice from "../../types/TChoice";
-import PostFieldProps from "../PostFieldProps";
-import { SINGLE_SELECT_TYPE } from "../../api/field";
+import TChoice from "../../common/TChoice";
+import { SINGLE_SELECT_TYPE } from "../../common/field";
+import TPostFieldProps from "../../common/TPostFieldProps";
 
 type FormProps = {
     formProps: FormRenderProps<any, any>;
 }
 
-type Props = PostFieldProps & FormProps;
+type Props = TPostFieldProps & FormProps;
 
 export const SingleSelect = (props: Props) => {
     const {

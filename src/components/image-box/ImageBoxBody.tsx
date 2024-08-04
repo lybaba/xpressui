@@ -1,66 +1,66 @@
 import {
-    AspectRatio,
     Box,
 } from "@mui/joy";
 
 import { Image } from "@mui/icons-material";
 import { isEmpty } from "lodash";
-import { getMediumImageUrl, getThumbImageUrl } from "../../api/post";
-import { usePostUIContext } from "../post-ui/PostUIProvider";
-import TMediaFile from "../../types/TMediaFile";
-import PostFieldProps from "../PostFieldProps";
+import { getMediumImageUrl, getThumbImageUrl } from "../../common/post";
+import { usePostUIContext } from "../postui/PostUIProvider";
+import TPostFieldProps from "../../common/TPostFieldProps";
 
-type OwnProps = {
-    mediaFile: TMediaFile; 
-}
-
-type Props = OwnProps & PostFieldProps;
-
-export const ImageBoxBody = (props: Props) => {
+export const ImageBoxBody = (props: TPostFieldProps) => {
     const {
-        postConfig,
         fieldConfig,
-        mediaFile,
-        isLivePreview,
-        elemProps,
     } = props;
+
+    const {
+        mediaInfo
+    } = fieldConfig;
 
     const postUIContext = usePostUIContext();
 
-    const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, postConfig, mediaFile) :
-                                     getMediumImageUrl(postUIContext, postConfig, mediaFile);
+    const {
+        isLivePreview
+    } = postUIContext;
 
-    const metadata = isLivePreview ? mediaFile.metadata.thumb : mediaFile.metadata.medium;
+    if (!mediaInfo)
+        return (
+            <>
+                <Image/>
+                {
+                    props.children
+                }
+            </>
+        )
+
+    const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, mediaInfo) :
+        getMediumImageUrl(postUIContext, mediaInfo);
 
     return (
         <>
-        <AspectRatio
-            ratio={`${metadata.width}/${metadata.height}`}
-            sx={{
-                borderRadius: 'md',
-                maxWidth: Number(metadata.width),
-                maxHeight: Number(metadata.height),
-                width: '100%'
-            }}
-            {...elemProps}
-        >
-            {
-                !isEmpty(photoURL) ? (
-                    <Box
-                        component={'img'}
-                        src={`${photoURL}`}
-                        loading="lazy"
-                        alt={fieldConfig.label}
+            <>
+                {
+                    !isEmpty(photoURL) ? (
+                        <Box
+                            component={'img'}
+                            src={`${photoURL}`}
+                            loading="lazy"
+                            alt={fieldConfig.label}
 
-                    />
-                ) : (
-                    <Image />
-                )
+                            sx={{
+                                maxWidth: '100%',
+                                height: 'auto'
+                            }}
+
+                        />
+                    ) : (
+                        <Image/>
+                    )
+                }
+            </>
+            {
+                props.children
             }
-        </AspectRatio>
-        {
-             props.children
-        }
         </>
     );
 }

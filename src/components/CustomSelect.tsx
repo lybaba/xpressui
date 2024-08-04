@@ -1,7 +1,7 @@
-import ISelectOption from '../types/ISelectOption';
+import ISelectOption from '../common/ISelectOption';
 import { Autocomplete, Box, Input } from '@mui/joy';
 import { FormApi } from "final-form";
-import ISelectData from "../types/ISelectData";
+import ISelectData from "../common/ISelectData";
 
 interface PropsType {
     form: FormApi<Record<string, any>>;

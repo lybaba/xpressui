@@ -1,14 +1,14 @@
 import { FormRenderProps } from 'react-final-form';
 import { Checkbox } from '@mui/joy';
 import FormFieldTitle from '../FormFieldTitle';
-import FormFieldProps from '../FormFieldProps';
-import { getBooleanValue } from '../../api/field';
+import { getBooleanValue } from '../../common/field';
+import TFormFieldProps from '../../common/TFormFieldProps';
 
 type FormProps = {
   formProps: FormRenderProps<any, any>;
 }
 
-type Props = FormFieldProps & FormProps;
+type Props = TFormFieldProps & FormProps;
 
 export const CustomCheckbox = (props: Props) => {
   const {

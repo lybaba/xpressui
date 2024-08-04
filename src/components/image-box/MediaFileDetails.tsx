@@ -1,9 +1,9 @@
 
 
 import { Box } from '@mui/joy';
-import TFieldConfig from '../../types/TFieldConfig';
-import TMediaFile from '../../types/TMediaFile';
-import TPostConfig from '../../types/TPostConfig';
+import TFieldConfig from '../../common/TFieldConfig';
+import TMediaFile from '../../common/TMediaFile';
+import TPostConfig from '../../common/TPostConfig';
 
 
 type Props = {

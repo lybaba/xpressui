@@ -1,5 +1,4 @@
 import {
-    AspectRatio,
     Box,
     ButtonGroup,
     Divider,
@@ -10,59 +9,47 @@ import {
     Stack,
     Typography,
 } from '@mui/joy';
-import { useModalContext } from '../../common/ModalProvider';
-import TMediaFile from '../../types/TMediaFile';
+import { useModalContext } from '../ModalProvider';
+import TMediaFile from '../../common/TMediaFile';
 import MediaFileDetails from './MediaFileDetails';
 import { ChevronLeftOutlined, ChevronRightRounded } from '@mui/icons-material';
-import { usePostUIContext } from '../post-ui/PostUIProvider';
-import { getLargeImageUrl } from '../../api/post';
-import TPostConfig from '../../types/TPostConfig';
-import TFieldConfig from '../../types/TFieldConfig';
+import { usePostUIContext } from '../postui/PostUIProvider';
+import { getLargeImageUrl } from '../../common/post';
+import TPostConfig from '../../common/TPostConfig';
+import TFieldConfig from '../../common/TFieldConfig';
 import { useEffect, useState } from 'react';
 
 type MediaPhotoProps = {
     postConfig: TPostConfig;
     fieldConfig: TFieldConfig;
-    mediaFile: TMediaFile; 
+    mediaFile: TMediaFile;
     isLivePreview: boolean;
 }
 const MediaPhoto = (props: MediaPhotoProps) => {
     const {
         mediaFile,
-        postConfig
     } = props;
 
     const postUIContext = usePostUIContext();
 
-    const photoURL = getLargeImageUrl(postUIContext, postConfig, mediaFile);
-
-    const metadata = mediaFile.metadata.large;
+    const photoURL = getLargeImageUrl(postUIContext, mediaFile);
 
     return (
-        <AspectRatio
-            ratio={`${metadata.width}/${metadata.height}`}
+        <Box
+            component={'img'}
+            src={`${photoURL}`}
+            alt={mediaFile.label}
             sx={{
-                borderRadius: 'md',
-                maxWidth: Number(metadata.width),
-                maxHeight: Number(metadata.height),
-                width: '100%'
+                maxWidth: '100%',
+                height: 'auto'
             }}
-        >
-            <Box
-                component={'img'}
-                src={`${photoURL}`}
-                alt={mediaFile.label}
-                sx={{
-                    backgroundColor: 'background.surface',
-                }}
-            />
-        </AspectRatio>
+        />
     );
 }
 
 
 function GalleryPreview(props: any) {
-    const [currentMediaFile, stCurrentMediaFile] = useState<TMediaFile> (props.mediaFile);
+    const [currentMediaFile, stCurrentMediaFile] = useState<TMediaFile>(props.mediaFile);
 
     const {
         fieldConfig,
@@ -80,7 +67,7 @@ function GalleryPreview(props: any) {
 
     useEffect(() => {
         stCurrentMediaFile(props.mediaFile);
-    },[props.mediaFile.id])
+    }, [props.mediaFile.id])
 
     const onClose = () => {
         setModalAction({

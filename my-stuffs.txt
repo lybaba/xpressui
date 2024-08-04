@@ -1,0 +1,3 @@
+
+registre npm:
+https://docs.github.com/fr/packages/working-with-a-github-packages-registry/working-with-the-npm-registry

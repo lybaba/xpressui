@@ -1,13 +1,13 @@
 
-import PostFieldProps from './PostFieldProps';
+import TPostFieldProps from '../common/TPostFieldProps';
 import {
     IMAGE_TYPE,
     SUBMIT_TYPE
-} from '../api/field';
+} from '../common/field';
 
 import { Box, FormControl, Stack } from '@mui/joy';
 
-export const CustomField = (props: PostFieldProps) => {
+export const CustomField = (props: TPostFieldProps) => {
     const {
         fieldConfig,
         elemProps,

@@ -10,20 +10,20 @@ import {
     SUBMIT_TYPE,
     TEXTAREA_TYPE,
     doNormalizeFieldValue
-} from '../api/field';
+} from '../common/field';
 
-import FormFieldProps from './FormFieldProps';
 import { FormHelperText, Input } from '@mui/joy';
 import SingleSelect from './single-select';
 import MultiSelect from './multi-select';
 import RichEditor from './richeditor';
 import CustomCheckbox from './checkbox';
-import { getErrorText, getHasError } from '../api/validation-errors';
+import { getErrorText, getHasError } from '../common/validation-errors';
 import { InfoOutlined } from '@mui/icons-material';
 import { isEmpty } from 'lodash';
-import PostFieldProps from './PostFieldProps';
 import SubmitBtn from './submit-button';
 import ImageBox from './image-box';
+import TFormFieldProps from '../common/TFormFieldProps';
+import TPostFieldProps from '../common/TPostFieldProps';
 
 type InputTemplateProps = {
     input: FieldInputProps<any, HTMLElement>;
@@ -32,8 +32,8 @@ type InputTemplateProps = {
 };
 
 
-type FormInputControlProps = FormFieldProps & InputTemplateProps;
-type CustomFieldInputProps = PostFieldProps;
+type FormInputControlProps = TFormFieldProps & InputTemplateProps;
+type CustomFieldInputProps = TPostFieldProps;
 
 export const FormInputControl = (props: FormInputControlProps) => {
     const inputRef: any = useRef(null);

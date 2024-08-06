@@ -8,6 +8,10 @@ import TChoice from './TChoice';
 
 export const SECTION_TYPE = 'section';
 export const FIELDGROUP_TYPE = 'fieldgroup';
+export const PRODUCTFORM_TYPE = 'productform';
+export const PRODUCTLIST_TYPE = 'productlist';
+export const PRODUCTITEM_TYPE = 'productitem';
+
 
 export const MEDIA_TYPE = 'media';
 export const CHECKBOX_TYPE = 'checkbox';
@@ -28,6 +32,7 @@ export const CHECKBOXES_TYPE = 'checkboxes';
 
 export const SUBMIT_TYPE = 'submit';
 export const TEXT_TYPE = 'text';
+export const SLUG_TYPE = 'slug';
 export const TEXTAREA_TYPE = 'textarea';
 export const TEL_TYPE = 'tel';
 export const OUTPUT_TYPE = 'output';

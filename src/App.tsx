@@ -92,7 +92,7 @@ async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(event.data), 
+      body: JSON.stringify(event.data.formData), 
     });
 
     const {

@@ -5,8 +5,6 @@ import {
     Select,
 } from "@mui/joy";
 
-import { FormRenderProps } from 'react-final-form'
-
 import TChoice from "../../common/TChoice";
 import { SINGLE_SELECT_TYPE } from "../../common/field";
 import TPostFieldProps from "../../common/TPostFieldProps";

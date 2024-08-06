@@ -18,10 +18,12 @@ type TFormFieldProps =  {
     input: FieldInputProps<any, HTMLElement>;
     isFirstInputfield?: boolean;
     builderMenu?: TBuilderMenu;
-    normalizeFieldValue?: (value: any) => any,
+    normalizeFieldValue?: (value: any) => any;
     formProps?: FormRenderProps<any, any>;
     elemProps?: any;
     children?: ReactNode | undefined;
+    startDecorator?: React.ReactNode;
+    endDecorator?: React.ReactNode;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
     renderComponent?: (postConfig: TPostConfig,
                     fieldConfig: TFieldConfig,

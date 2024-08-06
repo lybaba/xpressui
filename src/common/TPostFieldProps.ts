@@ -17,6 +17,8 @@ type TPostFieldProps =  {
     isFirstInputfield?: boolean;
     builderMenu?: TBuilderMenu;
     isFieldOption?: boolean;
+    startDecorator?: React.ReactNode;
+    endDecorator?: React.ReactNode;
     normalizeFieldValue?: (value: any) => any,
     formProps?: FormRenderProps<any, any>;
     elemProps?: any;

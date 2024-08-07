@@ -17,7 +17,7 @@ export const CustomCheckbox = (props: TFormFieldProps) => {
       onChange={(event) => {
         formProps?.form.mutators.setFieldValue(fieldConfig.name, event.target.checked);
       }}
-      checked={getBooleanValue(input.value)}
+      checked={getBooleanValue(input?.value)}
       label={<FormFieldTitle {...props} />}
       {...elemProps}
     />

@@ -4,8 +4,10 @@ import PostUIProvider from './components/ui/PostUIProvider';
 import TPostUIEvent, { TPostUIEventType } from './common/TPostUIEvent';
 import TServerResponse from './common/TServerResponse';
 import PostUI from './components/ui/PostUI';
-import TFormConfig from './common/TFormConfig';
+import TFormConfig, { CHOICE_FORM_TYPE, RenderingMode } from './common/TFormConfig';
 import { Stack } from '@mui/joy';
+import TFieldConfig from './common/TFieldConfig';
+import { CHECKBOX_TYPE, NUMBER_TYPE, SECTION_TYPE, TEXT_TYPE, UPLOAD_IMAGE_TYPE } from './common/field';
 
 const MULTI_STEP_FORM_CONFIG: TFormConfig = {
   "uid": "user123",
@@ -79,6 +81,50 @@ const MULTI_STEP_FORM_CONFIG: TFormConfig = {
   }
 }
 
+// ==================
+
+
+
+const NAME: TFieldConfig = { type: TEXT_TYPE, name: 'name', label: "Name", required: true, canEdit: false };
+const LABEL: TFieldConfig = { type: TEXT_TYPE, name: 'label', label: "Label", required: true };
+const PRICE: TFieldConfig = { type: NUMBER_TYPE, name: 'price', label: "Price" };
+const IMG: TFieldConfig = { type: UPLOAD_IMAGE_TYPE, name: 'img', label: "Image" };
+const DISABLED: TFieldConfig = { type: CHECKBOX_TYPE, name: 'disabled', label: "Disabled" };
+
+const CHOICE_GROUP_FORM_NAME = 'choicegroup';
+const CHOICE_GROUP_FORM_LABEL = 'Choice Group';
+
+const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
+  uid: "0",
+  id: "0",
+  type: CHOICE_FORM_TYPE,
+  name: CHOICE_GROUP_FORM_NAME,
+  label: CHOICE_GROUP_FORM_LABEL,
+  submitBtnLabel: "Save",
+  prevBtnLabel: "",
+  nextBtnLabel: "",
+  backendController: "",
+  successMsg: "",
+  errorMsg: "",
+  renderingMode: RenderingMode.CREATE_ENTRY,
+  sections: {
+      main: [
+          {
+              name: CHOICE_GROUP_FORM_NAME,
+              label: CHOICE_GROUP_FORM_LABEL,
+              type: SECTION_TYPE,
+          }
+      ],
+      [CHOICE_GROUP_FORM_NAME]: [
+          NAME,
+          LABEL,
+      ]
+  }
+}
+
+
+
+// ======================
 
 // callback for sending data to server.  
 async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
@@ -143,7 +189,7 @@ function App() {
           py: { xs: 2, md: 3 }
         }}
       >
-        <PostUI formConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
+        <PostUI formConfig={CHOICEGROUP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
         </Stack>
       </PostUIProvider>
     </ThemeProvider>

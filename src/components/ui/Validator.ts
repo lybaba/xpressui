@@ -2,7 +2,7 @@ import { isEmpty } from 'lodash';
 import parseErrors from '../../common/parse-errors';
 import { ValidateFunction } from 'ajv';
 import { TPostUIContext } from './TPostUIState';
-import { getSectionByIndex } from '../../common/post';
+import { getSectionByIndex, shouldRenderField } from '../../common/post';
 import TFormConfig from '../../common/TFormConfig';
 import TFieldConfig from '../../common/TFieldConfig';
 import { getBooleanValue } from '../../common/field';
@@ -33,6 +33,7 @@ export default function validate(
 
         if (
             isRequired
+            && shouldRenderField(formConfig, fieldConfig)
             && isEmpty(formValues[fieldConfig.name])    
             && !errors.hasOwnProperty(fieldConfig.name)) {
             errors[fieldConfig.name] = REQUIRED_FIELD_MSG;

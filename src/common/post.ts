@@ -1,4 +1,4 @@
-import { 
+import {
     CHECKBOX_TYPE,
     DATETIME_TYPE,
     EMAIL_TYPE,
@@ -11,7 +11,7 @@ import {
     TEL_TYPE,
     TEXTAREA_TYPE,
     TEXT_TYPE,
-    URL_TYPE 
+    URL_TYPE
 } from "./field";
 import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
@@ -45,7 +45,7 @@ export type TGetPostAssetsResult = {
 }
 
 function storageURL(storageUrl: string, relativePath: string) {
-   return storageUrl + relativePath + '?alt=media'
+    return storageUrl + relativePath + '?alt=media'
 }
 
 export const buildImageUrl = (postUIContext: TPostUIContext, fileMeta: TMediaFileMetadata): string => {
@@ -69,28 +69,28 @@ export const buildImageUrl = (postUIContext: TPostUIContext, fileMeta: TMediaFil
 export const getLargeImageUrl = (postUIContext: TPostUIContext, mediaFile: TMediaInfo): string => {
     if (isEmpty(mediaFile.largeMeta))
         return mediaFile.filePath ? mediaFile.filePath : '';
-    
+
     return buildImageUrl(postUIContext, mediaFile.largeMeta);
 }
 
 export const getSmallImageUrl = (postUIContext: TPostUIContext, mediaFile: TMediaInfo): string => {
     if (isEmpty(mediaFile.smallMeta))
         return mediaFile.filePath ? mediaFile.filePath : '';
-    
+
     return buildImageUrl(postUIContext, mediaFile.smallMeta);
 }
 
 export const getThumbImageUrl = (postUIContext: TPostUIContext, mediaFile: TMediaInfo): string => {
     if (isEmpty(mediaFile.thumbMeta))
         return mediaFile.filePath ? mediaFile.filePath : '';
-    
+
     return buildImageUrl(postUIContext, mediaFile.thumbMeta);
 }
 
 export const getMediumImageUrl = (postUIContext: TPostUIContext, mediaFile: TMediaInfo): string => {
     if (isEmpty(mediaFile.mediumMeta))
         return mediaFile.filePath ? mediaFile.filePath : '';
-    
+
     return buildImageUrl(postUIContext, mediaFile.mediumMeta);
 }
 
@@ -175,7 +175,7 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
             break;
 
         case SINGLE_SELECT_TYPE:
-        case MULTI_SELECT_TYPE:            
+        case MULTI_SELECT_TYPE:
             if (fieldConfig.choices)
                 res.enum = fieldConfig.choices.map((opt: TChoice) => opt.name);
             break;
@@ -212,18 +212,19 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
     return res;
 }
 
-export function shouldRenderField(formConfig: TFormConfig, fieldConfig: TFieldConfig) : boolean {
+export function shouldRenderField(formConfig: TFormConfig, fieldConfig: TFieldConfig): boolean {
     const {
-        renderingMode = RenderingMode.CREATE_ENTRY
+        renderingMode = RenderingMode.CREATE_ENTRY as RenderingMode
     } = formConfig;
 
     const {
         canEdit = true
     } = fieldConfig;
 
-    if (renderingMode == RenderingMode.MODIFY_ENTRY && (!canEdit || fieldConfig.type === SLUG_TYPE))
+    if (renderingMode === RenderingMode.MODIFY_ENTRY && (!canEdit || fieldConfig.type === SLUG_TYPE))
         return false;
 
+    
     if (formConfig.type === CHOICE_FORM_TYPE || formConfig.type === PRODUCTFORM_TYPE) {
         if (renderingMode === RenderingMode.CREATE_ENTRY && fieldConfig.name === LABEL_ID)
             return false;
@@ -234,28 +235,27 @@ export function shouldRenderField(formConfig: TFormConfig, fieldConfig: TFieldCo
 
 export function buildSchema(formConfig: TFormConfig, sectionIdex: number): object {
     const currentSection = getSectionByIndex(formConfig, sectionIdex);
-    
-    const fields: TFieldConfig[] = currentSection && formConfig.sections.hasOwnProperty(currentSection.name) 
-                                    ? formConfig.sections[currentSection.name] : [];
+
+    const fields: TFieldConfig[] = currentSection && formConfig.sections.hasOwnProperty(currentSection.name)
+        ? formConfig.sections[currentSection.name] : [];
 
     const required: string[] = [];
     const errorMessage: Record<string, string> = {};
     const properties: Record<string, any> = {};
 
-    for(const fieldConfig of fields)  {
-        if (!shouldRenderField(formConfig, fieldConfig))
-            continue;
+    for (const fieldConfig of fields) {
+        if (shouldRenderField(formConfig, fieldConfig)) {
+            const ajvType = toAjvFieldType(fieldConfig);
 
-        const ajvType = toAjvFieldType(fieldConfig);
+            if (!isEmpty(ajvType)) {
+                properties[fieldConfig.name] = ajvType;
 
-        if (!isEmpty(ajvType)) {
-            properties[fieldConfig.name] = ajvType;
+                if (fieldConfig.required)
+                    required.push(fieldConfig.name);
 
-            if (fieldConfig.required)
-                required.push(fieldConfig.name);
-
-            if (fieldConfig.errorMsg)
-                errorMessage[fieldConfig.name] = fieldConfig.errorMsg;
+                if (fieldConfig.errorMsg)
+                    errorMessage[fieldConfig.name] = fieldConfig.errorMsg;
+            }
         }
     }
 

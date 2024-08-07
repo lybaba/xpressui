@@ -1,6 +1,7 @@
 import { usePostUIContext } from './PostUIProvider';
 import { submitForm } from './Actions';
 import { Form } from 'react-final-form';
+import { FormApi } from 'final-form';
 import { useCallback } from 'react';
 import { ajv } from '../../common/frontend';
 import validate from './Validator';
@@ -20,7 +21,8 @@ function FormUI(props: TPostUIProps) {
     const {
         formConfig,
         template = '',
-        entry = {}
+        entry = {},
+        restartForm = true
     } = props;
 
 
@@ -34,10 +36,13 @@ function FormUI(props: TPostUIProps) {
 
     return (
         <Form
-            onSubmit={(formValues: any) => {
+            onSubmit={(formValues: any,  form: FormApi<any, any>) => {
                 console.log("submitForm : ", formValues);
                 submitForm(postUIContext, props, formValues).then((data) => {
                     console.log("Form Submitted Successfully....");
+                    if (restartForm) {
+                        form.restart();
+                    }
                 })
             }}
             validate={(values: any) => {

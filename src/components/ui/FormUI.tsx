@@ -17,13 +17,13 @@ function FormUI(props: TPostUIProps) {
     } = postUIContext;
 
     const {
-        postConfig,
+        formConfig,
         template = ''
     } = props;
 
 
     const getValidator = useCallback(() => {
-        const schema = buildSchema(postConfig, currentStepIndex);
+        const schema = buildSchema(formConfig, currentStepIndex);
         console.log("___validator______schema ", schema);
 
         const validator = ajv.compile(schema);
@@ -40,7 +40,7 @@ function FormUI(props: TPostUIProps) {
             }}
             validate={(values: any) => validate(
                 postUIContext,
-                postConfig,
+                formConfig,
                 getValidator(),
                 currentStepIndex,
                 values

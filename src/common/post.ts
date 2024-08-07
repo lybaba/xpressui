@@ -14,10 +14,10 @@ import {
 } from "./field";
 import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
-import TPostConfig from "./TPostConfig";
+import TFormConfig from "./TFormConfig";
 import { MAIN_SECTION } from './Constants';
 import TMediaFile, { TMediaInfo, TMediaFileMetadata } from './TMediaFile';
-import { TPostUIContext } from '../components/postui/TPostUIState';
+import { TPostUIContext } from '../components/ui/TPostUIState';
 import { isEmpty } from 'lodash';
 import TChoice from "./TChoice";
 import parseErrors from "./parse-errors";
@@ -94,46 +94,46 @@ export const getMediumImageUrl = (postUIContext: TPostUIContext, mediaFile: TMed
 }
 
 
-export const getSectionList = (postConfig: TPostConfig): Array<TFieldConfig> => {
-    return postConfig.sections.hasOwnProperty(MAIN_SECTION) ? postConfig.sections[MAIN_SECTION] : []
+export const getSectionList = (formConfig: TFormConfig): Array<TFieldConfig> => {
+    return formConfig.sections.hasOwnProperty(MAIN_SECTION) ? formConfig.sections[MAIN_SECTION] : []
 }
 
-export const getSectionFields = (postConfig: TPostConfig, sectionName: string): Array<TFieldConfig> => {
-    return postConfig.sections.hasOwnProperty(sectionName) ? postConfig.sections[sectionName] : [];
+export const getSectionFields = (formConfig: TFormConfig, sectionName: string): Array<TFieldConfig> => {
+    return formConfig.sections.hasOwnProperty(sectionName) ? formConfig.sections[sectionName] : [];
 }
 
-export const getSectionHasFields = (postConfig: TPostConfig, sectionName: string): boolean => {
-    const fields = getSectionFields(postConfig, sectionName);
+export const getSectionHasFields = (formConfig: TFormConfig, sectionName: string): boolean => {
+    const fields = getSectionFields(formConfig, sectionName);
     return fields.length != 0;
 }
 
 
-export const getSectionByIndex = (postConfig: TPostConfig, index: number): TFieldConfig | null => {
-    if (!postConfig || index < 0 || index >= postConfig.sections[MAIN_SECTION].length)
+export const getSectionByIndex = (formConfig: TFormConfig, index: number): TFieldConfig | null => {
+    if (!formConfig || index < 0 || index >= formConfig.sections[MAIN_SECTION].length)
         return null;
 
-    return postConfig.sections[MAIN_SECTION][index];
+    return formConfig.sections[MAIN_SECTION][index];
 }
 
 
-export const getFieldConfigByIndex = (postConfig: TPostConfig, sectionIndex: number, fieldIndex: number): TFieldConfig | null => {
-    const sectionConfig = getSectionByIndex(postConfig, sectionIndex);
+export const getFieldConfigByIndex = (formConfig: TFormConfig, sectionIndex: number, fieldIndex: number): TFieldConfig | null => {
+    const sectionConfig = getSectionByIndex(formConfig, sectionIndex);
 
     if (sectionConfig) {
-        if (fieldIndex < 0 || fieldIndex >= postConfig.sections[sectionConfig.name].length)
+        if (fieldIndex < 0 || fieldIndex >= formConfig.sections[sectionConfig.name].length)
             return null;
 
-        return postConfig.sections[sectionConfig.name][fieldIndex];
+        return formConfig.sections[sectionConfig.name][fieldIndex];
     }
 
     return null;
 }
 
-export const getSectionByName = (postConfig: TPostConfig, groupName: string) => {
+export const getSectionByName = (formConfig: TFormConfig, groupName: string) => {
     let groupIndex = -1;
 
-    if (postConfig.sections[MAIN_SECTION]) {
-        postConfig.sections[MAIN_SECTION].every((tmp: TFieldConfig, index: number) => {
+    if (formConfig.sections[MAIN_SECTION]) {
+        formConfig.sections[MAIN_SECTION].every((tmp: TFieldConfig, index: number) => {
 
             if (tmp.name === groupName) {
                 groupIndex = index;
@@ -144,7 +144,7 @@ export const getSectionByName = (postConfig: TPostConfig, groupName: string) => 
         });
     }
 
-    return groupIndex >= 0 ? postConfig.sections[MAIN_SECTION][groupIndex] : null;
+    return groupIndex >= 0 ? formConfig.sections[MAIN_SECTION][groupIndex] : null;
 }
 
 
@@ -152,7 +152,7 @@ export const getSectionByName = (postConfig: TPostConfig, groupName: string) => 
 
 type ValidatorProps = {
     validator: ValidateFunction<any>;
-    postConfig: TPostConfig;
+    formConfig: TFormConfig;
     values: Record<string, any>;
 }
 
@@ -212,11 +212,11 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
 }
 
 
-export function buildSchema(postConfig: TPostConfig, sectionIdex: number): object {
-    const currentSection = getSectionByIndex(postConfig, sectionIdex);
+export function buildSchema(formConfig: TFormConfig, sectionIdex: number): object {
+    const currentSection = getSectionByIndex(formConfig, sectionIdex);
     
-    const fields: TFieldConfig[] = currentSection && postConfig.sections.hasOwnProperty(currentSection.name) 
-                                    ? postConfig.sections[currentSection.name] : [];
+    const fields: TFieldConfig[] = currentSection && formConfig.sections.hasOwnProperty(currentSection.name) 
+                                    ? formConfig.sections[currentSection.name] : [];
 
     const required: string[] = [];
     const errorMessage: Record<string, string> = {};

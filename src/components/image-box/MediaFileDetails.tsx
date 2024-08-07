@@ -3,11 +3,11 @@
 import { Box } from '@mui/joy';
 import TFieldConfig from '../../common/TFieldConfig';
 import TMediaFile from '../../common/TMediaFile';
-import TPostConfig from '../../common/TPostConfig';
+import TFormConfig from '../../common/TFormConfig';
 
 
 type Props = {
-    postConfig: TPostConfig;
+    formConfig: TFormConfig;
     fieldConfig: TFieldConfig;
     mediaFile: TMediaFile; 
     isLivePreview: boolean;

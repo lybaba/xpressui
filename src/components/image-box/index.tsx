@@ -1,17 +1,17 @@
-import TPostFieldProps from "../../common/TPostFieldProps";
+import TFormFieldProps from "../../common/TFormFieldProps";
 import ImageBoxBody from "./ImageBoxBody";
 
 
-export const ImageBox = (props: TPostFieldProps) => {
+export const ImageBox = (props: TFormFieldProps) => {
     const {
         fieldConfig,
-        postConfig,
+        formConfig,
     } = props;
 
     return (
         <ImageBoxBody
             {...props}
-            postConfig={postConfig}
+            formConfig={formConfig}
             fieldConfig={fieldConfig}
         />            
     );

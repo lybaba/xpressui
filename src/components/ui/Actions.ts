@@ -1,4 +1,4 @@
-import TPostConfig from "../../common/TPostConfig";
+import TFormConfig from "../../common/TFormConfig";
 import TPostConfigState,
 {
     TPostUIContext,
@@ -65,7 +65,7 @@ export async function setCurrentPostUITemplate(postUIContext: TPostUIContext, te
     });
 }
 
-export async function setCurrentPostConfig(postUIContext: TPostUIContext, currentPostConfig: TPostConfig) {
+export async function setCurrentPostConfig(postUIContext: TPostUIContext, currentFormConfig: TFormConfig) {
     const {
         dispatch,
     } = postUIContext;
@@ -74,7 +74,7 @@ export async function setCurrentPostConfig(postUIContext: TPostUIContext, curren
         type: SET_CONFIG,
         payload: {
             currentStepIndex: 0,
-            currentPostConfig,
+            currentFormConfig,
         }
     });
 }
@@ -90,7 +90,7 @@ export async function initPostUI(postUIContext: TPostUIContext, config: TPostUIC
         type: SET_CONFIG,
         payload: {
             ...config,
-            currentPostConfig: config.rootPostConfig
+            currentFormConfig: config.rootFormConfig
         }
     });
 }
@@ -157,10 +157,10 @@ export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUI
     } = context
 
     const {
-        postConfig,
+        formConfig,
     } = postProps;
 
-    const steps = postConfig.sections[MAIN_SECTION];
+    const steps = formConfig.sections[MAIN_SECTION];
     const nbSteps = steps.length;
 
     const currentStepNum = currentStepIndex + 1;
@@ -217,10 +217,10 @@ export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUI
     } = context;
 
     const {
-        postConfig,
+        formConfig,
     } = postProps;
 
-    const steps = postConfig.sections[MAIN_SECTION];
+    const steps = formConfig.sections[MAIN_SECTION];
 
     const currentStepNum = currentStepIndex + 1;
 

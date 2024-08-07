@@ -46,7 +46,7 @@ export const MultiSelect = (props: TFormFieldProps) => {
                     },
                 },
             }}
-            defaultValue={input.value ? input.value : []}
+            defaultValue={input?.value ? input.value : []}
             onChange={(e, value) => {
                 formProps?.form.mutators.setFieldValue(fieldConfig.name, value)
             }}

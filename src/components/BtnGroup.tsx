@@ -3,10 +3,10 @@ import { Button, ButtonGroup, Stack, Typography } from "@mui/joy";
 import {
     MAIN_SECTION,
 } from '../common/Constants';
-import { usePostUIContext } from "./postui/PostUIProvider";
+import { usePostUIContext } from "./ui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
-import { onNextBtnClick, onPrevBtnClick } from "./postui/Actions";
-import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
+import { onNextBtnClick, onPrevBtnClick } from "./ui/Actions";
+import { MULTI_STEP_FORM_TYPE } from "../common/TFormConfig";
 import TPostUIProps from "../common/TPostUIProps";
 
 type OwnProps = {
@@ -17,7 +17,7 @@ type Props = OwnProps & TPostUIProps;
 function BtnGroup(props: Props) {
     const {
         formProps,
-        postConfig,
+        formConfig,
     } = props;
 
     const postUIContext = usePostUIContext();
@@ -25,10 +25,10 @@ function BtnGroup(props: Props) {
         currentStepIndex,
     } = postUIContext
 
-    const steps = postConfig.sections[MAIN_SECTION];
+    const steps = formConfig.sections[MAIN_SECTION];
     const nbSteps = steps.length;
 
-    const isMultiStepForm = postConfig.type === MULTI_STEP_FORM_TYPE;
+    const isMultiStepForm = formConfig.type === MULTI_STEP_FORM_TYPE;
     const currentStepNum = currentStepIndex + 1;
 
     const showNextBtn = isMultiStepForm && currentStepNum < nbSteps;
@@ -57,7 +57,7 @@ function BtnGroup(props: Props) {
                             disabled={!showPrevBtn}
                         >
                             {
-                                postConfig.prevBtnLabel
+                                formConfig.prevBtnLabel
                             }
                         </Button>
                     ) : null
@@ -72,7 +72,7 @@ function BtnGroup(props: Props) {
                             }}
                         >
                             {
-                                postConfig.nextBtnLabel
+                                formConfig.nextBtnLabel
                             }
                         </Button>
                     )
@@ -85,7 +85,7 @@ function BtnGroup(props: Props) {
                             variant="solid"
                         >
                             {
-                                postConfig.submitBtnLabel
+                                formConfig.submitBtnLabel
                             }
                         </Button>
                     )

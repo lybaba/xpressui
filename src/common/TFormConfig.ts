@@ -25,7 +25,7 @@ export type TPostSettings = {
     backendController: string;
 };
 
-type TPostConfig = {
+type TFormConfig = {
     id: string;
     uid: string;
     type: string;
@@ -50,7 +50,7 @@ type TPostConfig = {
     backendController: string;
 }
 
-export const DEFAULT_FORM_CONFIG: TPostConfig = {
+export const DEFAULT_FORM_CONFIG: TFormConfig = {
     id: shortUUID.generate(),
     uid: shortUUID.generate(),
     timestamp: Math.floor(Date.now() / 1000),
@@ -71,4 +71,4 @@ export const DEFAULT_FORM_CONFIG: TPostConfig = {
     backendController: 'controller-sample.php'
 }
 
-export default TPostConfig;
+export default TFormConfig;

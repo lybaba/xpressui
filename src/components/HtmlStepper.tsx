@@ -2,7 +2,7 @@ import { Step, StepIndicator, Stepper } from "@mui/joy";
 
 import { FormRenderProps } from "react-final-form";
 import { CheckRounded } from "@mui/icons-material";
-import { usePostUIContext } from "./postui/PostUIProvider";
+import { usePostUIContext } from "./ui/PostUIProvider";
 import TPostUIProps from "../common/TPostUIProps";
 import { MAIN_SECTION } from "../common/Constants";
 import TFieldConfig from "../common/TFieldConfig";
@@ -20,7 +20,7 @@ function HtmlFormStepper(props: Props) {
     const {
         elemProps,
         formProps,
-        postConfig,
+        formConfig,
     } = props;
 
     const valid = formProps ? formProps.valid : true;
@@ -30,7 +30,7 @@ function HtmlFormStepper(props: Props) {
         currentStepIndex
     } = postUIContext;
 
-    const fields = postConfig.sections[MAIN_SECTION];
+    const fields = formConfig.sections[MAIN_SECTION];
 
     return (
         <Stepper

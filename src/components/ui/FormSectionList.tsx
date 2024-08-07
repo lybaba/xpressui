@@ -14,10 +14,10 @@ type OwnProps = {
 type Props = OwnProps & TPostUIProps;
 export default function FormSectionList(props: Props) {
     const {
-        postConfig,
+        formConfig,
     } = props;
 
-    const sections = postConfig.sections[MAIN_SECTION];
+    const sections = formConfig.sections[MAIN_SECTION];
 
     console.log(1, sections)
 

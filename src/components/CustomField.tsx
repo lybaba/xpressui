@@ -1,5 +1,5 @@
 
-import TPostFieldProps from '../common/TPostFieldProps';
+import TFormFieldProps from '../common/TFormFieldProps';
 import {
     IMAGE_TYPE,
     IMAGE_URL_TYPE,
@@ -8,7 +8,7 @@ import {
 
 import { Box, FormControl, Stack } from '@mui/joy';
 
-export const CustomField = (props: TPostFieldProps) => {
+export const CustomField = (props: TFormFieldProps) => {
     const {
         fieldConfig,
         elemProps,

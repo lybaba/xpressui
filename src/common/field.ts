@@ -3,7 +3,7 @@ import TFieldConfig from './TFieldConfig';
 
 import slugify from 'slugify';
 import { lowerCase } from 'lodash';
-import TPostConfig from './TPostConfig';
+import TFormConfig from './TFormConfig';
 import TChoice from './TChoice';
 
 export const SECTION_TYPE = 'section';
@@ -180,7 +180,7 @@ export const getBooleanValue  = (value: any) : boolean => {
   }
 
 
-export const getFieldTypes = (postConfig: TPostConfig): Array<TChoice> => {
+export const getFieldTypes = (formConfig: TFormConfig): Array<TChoice> => {
     return REQUEST_FORM_FIELD_TYPES;
 }
 

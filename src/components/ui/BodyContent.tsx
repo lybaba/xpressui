@@ -35,7 +35,7 @@ type Props = OwnProps & TPostUIProps
 function BodyContent(props: Props) {
     const {
         formProps,
-        postConfig,
+        formConfig,
         template
     } = props;
 
@@ -75,7 +75,7 @@ function BodyContent(props: Props) {
                             } else if (componentType === TComponentType.SECTION_TYPE) {
                                 const dataIndex = Number(elem.props['data-index'] ?? '0');
 
-                                const fieldConfig = getSectionByIndex(postConfig, dataIndex);
+                                const fieldConfig = getSectionByIndex(formConfig, dataIndex);
 
                                 if (fieldConfig) {
 
@@ -98,7 +98,7 @@ function BodyContent(props: Props) {
                                 const fieldIndex = Number(elemProps['data-index']);
                                 //console.log("elem.props['data-index'] = ", elem.props['data-index'])
 
-                                const fieldConfig = getFieldConfigByIndex(postConfig, sectionIndex, fieldIndex);
+                                const fieldConfig = getFieldConfigByIndex(formConfig, sectionIndex, fieldIndex);
 
                                 if (fieldConfig) {
 
@@ -107,7 +107,7 @@ function BodyContent(props: Props) {
                                             return (
                                                 <CustomField
                                                     key={index}
-                                                    postConfig={postConfig}
+                                                    formConfig={formConfig}
                                                     fieldConfig={fieldConfig}
                                                     formProps={formProps}
                                                     elemProps={elemProps}
@@ -121,7 +121,7 @@ function BodyContent(props: Props) {
                                             return (
                                                 <CustomFieldInput
                                                     key={index}
-                                                    postConfig={postConfig}
+                                                    formConfig={formConfig}
                                                     fieldConfig={fieldConfig}
                                                     formProps={formProps}
                                                     elemProps={elemProps}
@@ -135,7 +135,7 @@ function BodyContent(props: Props) {
                                             return (
                                                 <CustomFieldLabel
                                                     key={index}
-                                                    postConfig={postConfig}
+                                                    formConfig={formConfig}
                                                     fieldConfig={fieldConfig}
                                                     formProps={formProps}
                                                     elemProps={elemProps}

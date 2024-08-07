@@ -1,10 +1,10 @@
 import { isEmpty } from "lodash";
 import TMediaFile from "../../common/TMediaFile";
-import TPostConfig from "../../common/TPostConfig";
-import { TPostConfigPrams } from "../../common/TPostConfigPrams";
+import TFormConfig from "../../common/TFormConfig";
+import { TFormConfigPrams } from "../../common/TFormConfigPrams";
 
 export type TPostConfigWitBaseUrl = {
-    postConfig: TPostConfig;
+    formConfig: TFormConfig;
     baseUrl: string;
 }
 
@@ -19,9 +19,9 @@ export async function fetchPostConfig(fileName: string): Promise<TPostConfigWitB
         const index = url.lastIndexOf(fileName);
         const baseUrl = url.substring(0, index);
 
-        const postConfig = await response.json();
+        const formConfig = await response.json();
         return {
-            postConfig,
+            formConfig,
             baseUrl
         };
     } catch (reason: any) {

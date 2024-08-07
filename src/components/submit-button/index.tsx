@@ -2,10 +2,10 @@ import {
     Button,
 } from "@mui/joy";
 
-import TPostFieldProps from "../../common/TPostFieldProps";
+import TFormFieldProps from "../../common/TFormFieldProps";
 
 
-export const SubmitBtn = (props: TPostFieldProps) => {
+export const SubmitBtn = (props: TFormFieldProps) => {
     const {
         elemProps = {},
     } = props;

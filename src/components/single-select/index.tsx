@@ -7,11 +7,11 @@ import {
 
 import TChoice from "../../common/TChoice";
 import { SINGLE_SELECT_TYPE } from "../../common/field";
-import TPostFieldProps from "../../common/TPostFieldProps";
+import TFormFieldProps from "../../common/TFormFieldProps";
 
 
 
-export const SingleSelect = (props: TPostFieldProps) => {
+export const SingleSelect = (props: TFormFieldProps) => {
     const {
         fieldConfig,
         formProps,

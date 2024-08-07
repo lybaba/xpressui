@@ -1,13 +1,13 @@
 import { ThemeProvider } from '@mui/joy/styles';
 import theme from './styles/default';
-import PostUIProvider from './components/postui/PostUIProvider';
+import PostUIProvider from './components/ui/PostUIProvider';
 import TPostUIEvent, { TPostUIEventType } from './common/TPostUIEvent';
 import TServerResponse from './common/TServerResponse';
-import PostUI from './components/postui/PostUI';
-import TPostConfig from './common/TPostConfig';
+import PostUI from './components/ui/PostUI';
+import TFormConfig from './common/TFormConfig';
 import { Stack } from '@mui/joy';
 
-const MULTI_STEP_FORM_CONFIG: TPostConfig = {
+const MULTI_STEP_FORM_CONFIG: TFormConfig = {
   "uid": "user123",
   "id": "123",
   "type": "multistepform",
@@ -87,7 +87,7 @@ async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
 
   // add logic to post the data (event.data) to the server
   if (event.eventType === TPostUIEventType.SubmitFormEvent) {
-    const response = await fetch(event.frontend.postConfig.backendController, {
+    const response = await fetch(event.frontend.formConfig.backendController, {
       method: "POST", 
       headers: {
         "Content-Type": "application/json",
@@ -98,7 +98,7 @@ async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
     const {
       errorMsg = 'Submission failed.',
       successMsg = 'Form has been successfully submitted.'
-    } = event.frontend.postConfig;
+    } = event.frontend.formConfig;
 
     if (!response.ok) {
       const serverRes: TServerResponse = {
@@ -143,7 +143,7 @@ function App() {
           py: { xs: 2, md: 3 }
         }}
       >
-        <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
+        <PostUI formConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
         </Stack>
       </PostUIProvider>
     </ThemeProvider>

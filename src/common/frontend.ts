@@ -1,14 +1,14 @@
 import Ajv from "ajv";
 import addFormats from 'ajv-formats';
 import addErrors from 'ajv-errors';
-import TPostConfig from "./TPostConfig";
+import TFormConfig from "./TFormConfig";
 
 export const ajv = new Ajv({ allErrors: true });
 addFormats(ajv);
 addErrors(ajv);
 
 export type FrontendClientArgs = {
-  postConfig: TPostConfig;
+  formConfig: TFormConfig;
   baseUrl: string;
   imagesBaseUrl: string;
 }
@@ -16,15 +16,15 @@ export type FrontendClientArgs = {
 export class FrontendClient {
   private _baseUrl: string;
   private _imagesBaseUrl: string;
-  private _postConfig: TPostConfig;
+  private _postConfig: TFormConfig;
 
   constructor(args: FrontendClientArgs) {
     this._baseUrl = args.baseUrl;
     this._imagesBaseUrl = args.imagesBaseUrl;
-    this._postConfig = args.postConfig;
+    this._postConfig = args.formConfig;
   }
 
-  get postConfig() {
+  get formConfig() {
     return this._postConfig;
   }
 

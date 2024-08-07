@@ -1,10 +1,10 @@
-import { PRODUCTLISTING_TYPE } from '../../common/TPostConfig';
+import { PRODUCTLISTING_TYPE } from '../../common/TFormConfig';
 import TPostUIProps from '../../common/TPostUIProps';
 import FormUI from './FormUI';
 import ProductListingUI from './ProductListingUI';
 
 export default function PostUI(props: TPostUIProps) {
-    if (props.postConfig.type === PRODUCTLISTING_TYPE) {
+    if (props.formConfig.type === PRODUCTLISTING_TYPE) {
         return (
             <ProductListingUI {...props} />
         )

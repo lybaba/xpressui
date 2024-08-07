@@ -1,9 +1,9 @@
 import FrontendClient from "./frontend";
-import TPostConfig from "./TPostConfig";
+import TFormConfig from "./TFormConfig";
 import TUser from "./TUser";
 
 export type TPostUIConfig = {
-    rootPostConfig: TPostConfig;
+    rootFormConfig: TFormConfig;
     rootPostName?: string;
     baseUrl: string;
     imagesBaseUrl: string;

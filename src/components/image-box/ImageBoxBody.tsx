@@ -5,10 +5,10 @@ import {
 import { Image } from "@mui/icons-material";
 import { isEmpty } from "lodash";
 import { getMediumImageUrl, getThumbImageUrl } from "../../common/post";
-import { usePostUIContext } from "../postui/PostUIProvider";
-import TPostFieldProps from "../../common/TPostFieldProps";
+import { usePostUIContext } from "../ui/PostUIProvider";
+import TFormFieldProps from "../../common/TFormFieldProps";
 
-export const ImageBoxBody = (props: TPostFieldProps) => {
+export const ImageBoxBody = (props: TFormFieldProps) => {
     const {
         fieldConfig,
     } = props;

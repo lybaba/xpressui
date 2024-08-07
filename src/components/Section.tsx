@@ -1,16 +1,16 @@
 import TFieldConfig from '../common/TFieldConfig';
 import { Stack } from '@mui/joy';
-import { usePostUIContext } from './postui/PostUIProvider';
-import { MULTI_STEP_FORM_TYPE } from '../common/TPostConfig';
-import PostField from './PostField';
-import TPostFieldProps from '../common/TPostFieldProps';
+import { usePostUIContext } from './ui/PostUIProvider';
+import { MULTI_STEP_FORM_TYPE } from '../common/TFormConfig';
+import FormField from './FormField';
+import TFormFieldProps from '../common/TFormFieldProps';
 
 
-function Section(props: TPostFieldProps) {
+function Section(props: TFormFieldProps) {
     const {
         fieldConfig,
         fieldIndex,
-        postConfig,
+        formConfig,
     } = props;
 
     const sectionConfig = fieldConfig;
@@ -21,14 +21,14 @@ function Section(props: TPostFieldProps) {
         currentStepIndex,
     } = postUIContext
 
-    const isMultiStepForm = postConfig.type === MULTI_STEP_FORM_TYPE;
+    const isMultiStepForm = formConfig.type === MULTI_STEP_FORM_TYPE;
 
     const showSection = !isMultiStepForm || currentStepIndex === sectionIndex;
 
-    if (! postConfig.sections || ! postConfig.sections[sectionConfig.name])
+    if (! formConfig.sections || ! formConfig.sections[sectionConfig.name])
         return null;
     
-    const fields = postConfig.sections[sectionConfig.name];
+    const fields = formConfig.sections[sectionConfig.name];
 
     return showSection && (
         <Stack
@@ -37,7 +37,7 @@ function Section(props: TPostFieldProps) {
         >
             {
                 fields.map((fieldConfig: TFieldConfig, index) => (
-                    <PostField
+                    <FormField
                         key={index}
                         {...props}
                         formName={sectionConfig.name}

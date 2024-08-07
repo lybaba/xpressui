@@ -2,11 +2,11 @@ import { Box, Button, ButtonGroup, Stack, Typography } from "@mui/joy";
 
 import { FormRenderProps } from "react-final-form";
 import TPostUIProps from '../common/TPostUIProps';
-import { usePostUIContext } from "./postui/PostUIProvider";
+import { usePostUIContext } from "./ui/PostUIProvider";
 import { MAIN_SECTION } from "../common/Constants";
-import { MULTI_STEP_FORM_TYPE } from "../common/TPostConfig";
+import { MULTI_STEP_FORM_TYPE } from "../common/TFormConfig";
 import TComponentType from "../common/TComponentType";
-import { onNextBtnClick, onPrevBtnClick } from "./postui/Actions";
+import { onNextBtnClick, onPrevBtnClick } from "./ui/Actions";
 
 type OwnProps = {
     componentType: string;
@@ -23,7 +23,7 @@ function HtmlBtnGroup(props: Props) {
         reactNode,
         componentType,
         formProps,
-        postConfig,
+        formConfig,
     } = props;
 
 
@@ -32,10 +32,10 @@ function HtmlBtnGroup(props: Props) {
         currentStepIndex,
     } = postUIContext
 
-    const steps = postConfig.sections[MAIN_SECTION];
+    const steps = formConfig.sections[MAIN_SECTION];
     const nbSteps = steps.length;
 
-    const isMultiStepForm = postConfig.type === MULTI_STEP_FORM_TYPE;
+    const isMultiStepForm = formConfig.type === MULTI_STEP_FORM_TYPE;
     const currentStepNum = currentStepIndex + 1;
 
     const showNextBtn = isMultiStepForm && currentStepNum < nbSteps;
@@ -106,7 +106,7 @@ function HtmlBtnGroup(props: Props) {
                     {...elemProps}
                 >
                     {
-                        postConfig.nextBtnLabel
+                        formConfig.nextBtnLabel
                     }
                     {
                         (reactNode as any).props.children
@@ -120,7 +120,7 @@ function HtmlBtnGroup(props: Props) {
                     {...elemProps}
                 >
                     {
-                        postConfig.prevBtnLabel
+                        formConfig.prevBtnLabel
                     }
                     {
                         (reactNode as any).props.children
@@ -134,7 +134,7 @@ function HtmlBtnGroup(props: Props) {
                     {...elemProps}
                 >
                     {
-                        postConfig.submitBtnLabel
+                        formConfig.submitBtnLabel
                     }
                     {
                         (reactNode as any).props.children

@@ -1,8 +1,8 @@
 import { FormLabel } from '@mui/joy';
 import { SUBMIT_TYPE } from '../common/field';
-import TPostFieldProps from '../common/TPostFieldProps';
+import TFormFieldProps from '../common/TFormFieldProps';
 
-export const CustomFieldLabel = (props: TPostFieldProps) => {
+export const CustomFieldLabel = (props: TFormFieldProps) => {
     const {
         elemProps,
         fieldConfig,

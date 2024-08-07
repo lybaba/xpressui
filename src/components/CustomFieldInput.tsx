@@ -24,7 +24,6 @@ import { isEmpty } from 'lodash';
 import SubmitBtn from './submit-button';
 import ImageBox from './image-box';
 import TFormFieldProps from '../common/TFormFieldProps';
-import TPostFieldProps from '../common/TPostFieldProps';
 
 type InputTemplateProps = {
     input: FieldInputProps<any, HTMLElement>;
@@ -34,7 +33,7 @@ type InputTemplateProps = {
 
 
 type FormInputControlProps = TFormFieldProps & InputTemplateProps;
-type CustomFieldInputProps = TPostFieldProps;
+type CustomFieldInputProps = TFormFieldProps;
 
 export const FormInputControl = (props: FormInputControlProps) => {
     const inputRef: any = useRef(null);

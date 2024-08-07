@@ -10,13 +10,13 @@ import {
     OUTPUT_TYPE,
     SUBMIT_TYPE,
 } from "../common/field";
-import TPostFieldProps from "../common/TPostFieldProps";
+import TFormFieldProps from "../common/TFormFieldProps";
 import FieldTemplate from "./CustomField";
 import FieldLabelTemplate from "./CustomFieldLabel";
 import FieldInputTemplate from "./CustomFieldInput";
 
 
-export const PostField = (props: TPostFieldProps) => {
+export const FormField = (props: TFormFieldProps) => {
     const {
         fieldConfig,
     } = props;
@@ -66,4 +66,4 @@ export const PostField = (props: TPostFieldProps) => {
 }
 
 
-export default PostField;
+export default FormField;

@@ -1,16 +1,16 @@
 import { Dispatch } from "react";
 import IAction from "../../common/IAction";
 
-import TPostConfig from '../../common/TPostConfig'
-import { DEFAULT_FORM_CONFIG } from "../../common/TPostConfig";
+import TFormConfig from '../../common/TFormConfig'
+import { DEFAULT_FORM_CONFIG } from "../../common/TFormConfig";
 import TMediaFile from "../../common/TMediaFile";
 import FrontendClient from "../../common/frontend";
 import TUser from "../../common/TUser";
 import TServerResponse from "../../common/TServerResponse";
 
 export interface TPostUIState {
-    currentPostConfig: TPostConfig;
-    rootPostConfig: TPostConfig;
+    currentFormConfig: TFormConfig;
+    rootFormConfig: TFormConfig;
     currentStepIndex: number;
     mediaFiles: TMediaFile[];
     mediaFilesMap : Record<string, TMediaFile>;
@@ -38,8 +38,8 @@ const DEFAULT_DISPATCH_ACTION: Dispatch<IAction> = (value: IAction) => null
 
 
 export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
-    currentPostConfig: DEFAULT_FORM_CONFIG,
-    rootPostConfig: DEFAULT_FORM_CONFIG,
+    currentFormConfig: DEFAULT_FORM_CONFIG,
+    rootFormConfig: DEFAULT_FORM_CONFIG,
     currentStepIndex: 0,
     mediaFiles: [],
     mediaFilesMap: {},
@@ -48,7 +48,7 @@ export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
     imagesBaseUrl: '',
     baseStorageUrl: '',
     frontend: new FrontendClient({
-        postConfig: DEFAULT_FORM_CONFIG,
+        formConfig: DEFAULT_FORM_CONFIG,
         baseUrl: '',
         imagesBaseUrl: '',
     }),
@@ -65,18 +65,18 @@ export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
 
 export type TDispatchFieldGroupProps = {
     dispatch: Dispatch<IAction>;
-    postConfig: TPostConfig;
+    formConfig: TFormConfig;
     groupName: string;
 }
 
 export type TDispatchConfigProps = {
     dispatch: Dispatch<IAction>;
-    postConfig: TPostConfig;
+    formConfig: TFormConfig;
     mediaFilesMap: Record<string, TMediaFile>;
 }
 
 export type TConfigProps = {
-    postConfig: TPostConfig;
+    formConfig: TFormConfig;
     mediaFilesMap: Record<string, TMediaFile>;
 }
 

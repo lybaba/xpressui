@@ -13,14 +13,14 @@ import { useModalContext } from '../ModalProvider';
 import TMediaFile from '../../common/TMediaFile';
 import MediaFileDetails from './MediaFileDetails';
 import { ChevronLeftOutlined, ChevronRightRounded } from '@mui/icons-material';
-import { usePostUIContext } from '../postui/PostUIProvider';
+import { usePostUIContext } from '../ui/PostUIProvider';
 import { getLargeImageUrl } from '../../common/post';
-import TPostConfig from '../../common/TPostConfig';
+import TFormConfig from '../../common/TFormConfig';
 import TFieldConfig from '../../common/TFieldConfig';
 import { useEffect, useState } from 'react';
 
 type MediaPhotoProps = {
-    postConfig: TPostConfig;
+    formConfig: TFormConfig;
     fieldConfig: TFieldConfig;
     mediaFile: TMediaFile;
     isLivePreview: boolean;

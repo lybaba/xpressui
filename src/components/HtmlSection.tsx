@@ -1,9 +1,9 @@
 import { HTMLReactParserOptions } from 'html-react-parser';
 import React from 'react';
 import { Stack } from '@mui/joy';
-import TPostFieldProps from '../common/TPostFieldProps';
-import { usePostUIContext } from './postui/PostUIProvider';
-import { MULTI_STEP_FORM_TYPE } from '../common/TPostConfig';
+import TFormFieldProps from '../common/TFormFieldProps';
+import { usePostUIContext } from './ui/PostUIProvider';
+import { MULTI_STEP_FORM_TYPE } from '../common/TFormConfig';
 import TPostUIProps from '../common/TPostUIProps';
 
 
@@ -14,14 +14,14 @@ type OwnProps = {
     elemProps: any;
 }
 
-type Props = TPostFieldProps & TPostUIProps & OwnProps;
+type Props = TFormFieldProps & TPostUIProps & OwnProps;
 
 function HtmlSection(props: Props) {
     const {
         reactNode,
         elemProps,
         fieldIndex,
-        postConfig,
+        formConfig,
     } = props;
 
     const elem = reactNode as any;
@@ -31,7 +31,7 @@ function HtmlSection(props: Props) {
         currentStepIndex,
     } = postUIContext
 
-    const isMultiStepForm = postConfig.type === MULTI_STEP_FORM_TYPE;
+    const isMultiStepForm = formConfig.type === MULTI_STEP_FORM_TYPE;
 
     const showSection = !isMultiStepForm || currentStepIndex === fieldIndex;
 

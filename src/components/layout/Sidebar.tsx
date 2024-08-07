@@ -12,7 +12,7 @@ import ColorSchemeToggle from './ColorSchemeToggle';
 import { closeSidebar } from './utils';
 
 //import logo from './logo.jpg';
-import { usePostUIContext } from '../postui/PostUIProvider';
+import { usePostUIContext } from '../ui/PostUIProvider';
 import TAppPage from '../../common/TAppPage';
 
 function Toggler({
@@ -55,7 +55,7 @@ export default function Sidebar(props: any) {
 
   const postUIContext = usePostUIContext();
   const {
-    currentPostConfig
+    currentFormConfig
   } = postUIContext;
 
 

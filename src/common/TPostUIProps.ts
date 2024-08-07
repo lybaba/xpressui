@@ -1,16 +1,16 @@
 import React from "react";
 import TComponentType from "./TComponentType";
 import TFieldConfig from "./TFieldConfig";
-import TPostConfig from "./TPostConfig";
+import TFormConfig from "./TFormConfig";
 import TPostUIEvent from "./TPostUIEvent";
 import TServerResponse from "./TServerResponse";
 
 type TPostUIProps = {
-    postConfig: TPostConfig;
+    formConfig: TFormConfig;
     template?: string;
     baseUrl?: string;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
-    renderComponent?: (postConfig: TPostConfig,
+    renderComponent?: (formConfig: TFormConfig,
                     fieldConfig: TFieldConfig,
                     componentType: TComponentType, 
                     children: React.ReactNode | undefined) => React.ReactNode | undefined

@@ -3,7 +3,7 @@ import parseErrors from '../../common/parse-errors';
 import { ValidateFunction } from 'ajv';
 import { TPostUIContext } from './TPostUIState';
 import { getSectionByIndex } from '../../common/post';
-import TPostConfig from '../../common/TPostConfig';
+import TFormConfig from '../../common/TFormConfig';
 import TFieldConfig from '../../common/TFieldConfig';
 import { getBooleanValue } from '../../common/field';
 
@@ -11,7 +11,7 @@ const REQUIRED_FIELD_MSG = 'This field is required';
 
 export default function validate(
                             context: TPostUIContext,
-                            postConfig: TPostConfig,
+                            formConfig: TFormConfig,
                             validator: ValidateFunction<unknown>,
                             sectionIdex: number,
                             formValues: Record<string, any>) {
@@ -19,10 +19,10 @@ export default function validate(
 
     const errors = parseErrors(validator.errors);
 
-    const currentSection = getSectionByIndex(postConfig, sectionIdex);
+    const currentSection = getSectionByIndex(formConfig, sectionIdex);
     
-    const fields: TFieldConfig[] = currentSection && postConfig.sections.hasOwnProperty(currentSection.name) 
-                                    ? postConfig.sections[currentSection.name] : [];
+    const fields: TFieldConfig[] = currentSection && formConfig.sections.hasOwnProperty(currentSection.name) 
+                                    ? formConfig.sections[currentSection.name] : [];
 
     fields.forEach((fieldConfig: TFieldConfig) => {
         const {

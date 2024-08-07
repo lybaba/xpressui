@@ -12,7 +12,7 @@ function Section(props: TFormFieldProps) {
         fieldConfig,
         fieldIndex,
         formConfig,
-        renderComponent
+        renderField
     } = props;
 
     const sectionConfig = fieldConfig;
@@ -39,8 +39,8 @@ function Section(props: TFormFieldProps) {
         >
             {
                 fields.map((fieldConfig: TFieldConfig, index) => (
-                    isFunction(renderComponent) ? (
-                        renderComponent(
+                    isFunction(renderField) ? (
+                        renderField(
                             {
                             ...props,
                             formName: sectionConfig.name,

@@ -13,7 +13,11 @@ type TPostUIProps = {
     restartForm?: boolean;
     validate?: (values: Record<string, any>) => Record<string, string>;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
-    renderComponent?: (props : TFormFieldProps) => React.ReactNode | undefined
+    renderField?: (props : TFormFieldProps) => React.ReactNode | undefined;
+    renderSection?: (props: TFormFieldProps) => React.ReactNode | undefined;
+    renderBtnGroup?: (props: TPostUIProps) => React.ReactNode | undefined
+    renderStepper?: (props: TPostUIProps) => React.ReactNode | undefined
+
 }
 
 export default TPostUIProps;

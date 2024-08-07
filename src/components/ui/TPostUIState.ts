@@ -1,5 +1,5 @@
 import { Dispatch } from "react";
-import IAction from "../../common/IAction";
+import TAction from "../../common/TAction";
 
 import TFormConfig from '../../common/TFormConfig'
 import { DEFAULT_FORM_CONFIG } from "../../common/TFormConfig";
@@ -26,15 +26,15 @@ export interface TPostUIState {
     isLivePreview: boolean;
 }
 export type TPostUIDispatch = {
-    dispatch: Dispatch<IAction>;
+    dispatch: Dispatch<TAction>;
 }
 
 export type TPostUIContext = TPostUIState & TPostUIDispatch;
 
-export type TPostUIReducer = (state: TPostUIState, action: IAction) => TPostUIState
+export type TPostUIReducer = (state: TPostUIState, action: TAction) => TPostUIState
 
 
-const DEFAULT_DISPATCH_ACTION: Dispatch<IAction> = (value: IAction) => null
+const DEFAULT_DISPATCH_ACTION: Dispatch<TAction> = (value: TAction) => null
 
 
 export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
@@ -64,13 +64,13 @@ export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
 };
 
 export type TDispatchFieldGroupProps = {
-    dispatch: Dispatch<IAction>;
+    dispatch: Dispatch<TAction>;
     formConfig: TFormConfig;
     groupName: string;
 }
 
 export type TDispatchConfigProps = {
-    dispatch: Dispatch<IAction>;
+    dispatch: Dispatch<TAction>;
     formConfig: TFormConfig;
     mediaFilesMap: Record<string, TMediaFile>;
 }

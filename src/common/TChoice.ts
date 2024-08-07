@@ -11,7 +11,10 @@ type TChoice = {
     regularPrice?: number;
     salePrice?: number;
     disabled?: boolean;
-    meta?: Record<string, string>
 }
+
+export type TAdvancedChoice = {
+    id: string;
+} & TChoice;
 
 export default TChoice;

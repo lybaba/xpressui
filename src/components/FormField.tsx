@@ -14,13 +14,16 @@ import TFormFieldProps from "../common/TFormFieldProps";
 import FieldTemplate from "./CustomField";
 import FieldLabelTemplate from "./CustomFieldLabel";
 import FieldInputTemplate from "./CustomFieldInput";
-
+import { shouldRenderField } from "src/common/post";
 
 export const FormField = (props: TFormFieldProps) => {
     const {
         fieldConfig,
+        formConfig
     } = props;
 
+    if (!shouldRenderField(formConfig, fieldConfig))
+        return null;
 
 
     switch (fieldConfig.type) {

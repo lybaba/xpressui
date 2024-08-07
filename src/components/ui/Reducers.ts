@@ -1,5 +1,5 @@
 import { AUTH_CHECKING, FETCH_USER, SERVER_REQUEST, SERVER_RESPONSE } from "../../common/Constants";
-import IAction from "../../common/IAction";
+import TAction from "../../common/TAction";
 
 
 import {
@@ -13,7 +13,7 @@ import TPostUIState, { DEFAULT_POSTUI_CONTEXT, TDispatchFieldGroupProps } from "
 export const INITIAL_STATE: TPostUIState = DEFAULT_POSTUI_CONTEXT;
 
 
-export default function reducer(state: TPostUIState, action: IAction): TPostUIState {
+export default function reducer(state: TPostUIState, action: TAction): TPostUIState {
     switch (action.type) {
         case AUTH_CHECKING:
             return {

@@ -14,6 +14,7 @@ type TFieldConfig = {
     refType?: string;
     desc?: string;
     canDelete?: boolean;
+    canEdit?: boolean;
     required?: boolean;
     unique?: boolean;
     minLen?: number;

@@ -7,6 +7,7 @@ import {
     PASSWORD_TYPE,
     PRICE_TYPE,
     SINGLE_SELECT_TYPE,
+    SLUG_TYPE,
     TEL_TYPE,
     TEXTAREA_TYPE,
     TEXT_TYPE,
@@ -14,7 +15,7 @@ import {
 } from "./field";
 import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
-import TFormConfig from "./TFormConfig";
+import TFormConfig, { CHOICE_FORM_TYPE, PRODUCTFORM_TYPE, RenderingMode } from "./TFormConfig";
 import { MAIN_SECTION } from './Constants';
 import TMediaFile, { TMediaInfo, TMediaFileMetadata } from './TMediaFile';
 import { TPostUIContext } from '../components/ui/TPostUIState';
@@ -211,6 +212,25 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
     return res;
 }
 
+export function shouldRenderField(formConfig: TFormConfig, fieldConfig: TFieldConfig) : boolean {
+    const {
+        renderingMode = RenderingMode.CREATE_ENTRY
+    } = formConfig;
+
+    const {
+        canEdit = true
+    } = fieldConfig;
+
+    if (renderingMode == RenderingMode.MODIFY_ENTRY && (!canEdit || fieldConfig.type === SLUG_TYPE))
+        return false;
+
+    if (formConfig.type === CHOICE_FORM_TYPE || formConfig.type === PRODUCTFORM_TYPE) {
+        if (renderingMode === RenderingMode.CREATE_ENTRY && fieldConfig.name === LABEL_ID)
+            return false;
+    }
+
+    return true;
+}
 
 export function buildSchema(formConfig: TFormConfig, sectionIdex: number): object {
     const currentSection = getSectionByIndex(formConfig, sectionIdex);
@@ -222,8 +242,12 @@ export function buildSchema(formConfig: TFormConfig, sectionIdex: number): objec
     const errorMessage: Record<string, string> = {};
     const properties: Record<string, any> = {};
 
-    fields.forEach((fieldConfig: TFieldConfig) => {
+    for(const fieldConfig of fields)  {
+        if (!shouldRenderField(formConfig, fieldConfig))
+            continue;
+
         const ajvType = toAjvFieldType(fieldConfig);
+
         if (!isEmpty(ajvType)) {
             properties[fieldConfig.name] = ajvType;
 
@@ -233,7 +257,7 @@ export function buildSchema(formConfig: TFormConfig, sectionIdex: number): objec
             if (fieldConfig.errorMsg)
                 errorMessage[fieldConfig.name] = fieldConfig.errorMsg;
         }
-    });
+    }
 
     const requiredProps = !isEmpty(required) ? { required } : {};
 

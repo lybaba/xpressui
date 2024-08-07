@@ -1,12 +1,13 @@
 import { usePostUIContext } from './PostUIProvider';
 import { submitForm } from './Actions';
-import { Form, FormRenderProps } from 'react-final-form';
+import { Form } from 'react-final-form';
 import { useCallback } from 'react';
 import { ajv } from '../../common/frontend';
 import validate from './Validator';
 import { buildSchema } from '../../common/post';
 import TPostUIProps from '../../common/TPostUIProps';
 import BodyContent from './BodyContent';
+import { isEmpty, isFunction } from 'lodash';
 
 
 function FormUI(props: TPostUIProps) {
@@ -18,7 +19,8 @@ function FormUI(props: TPostUIProps) {
 
     const {
         formConfig,
-        template = ''
+        template = '',
+        entry = {}
     } = props;
 
 
@@ -38,13 +40,23 @@ function FormUI(props: TPostUIProps) {
                     console.log("Form Submitted Successfully....");
                 })
             }}
-            validate={(values: any) => validate(
-                postUIContext,
-                formConfig,
-                getValidator(),
-                currentStepIndex,
-                values
-            )}
+            validate={(values: any) => {
+                // internal validation
+                const res = validate(
+                    postUIContext,
+                    formConfig,
+                    getValidator(),
+                    currentStepIndex,
+                    values
+                )
+
+                // custom validation
+                if (isEmpty(res) && isFunction(props.validate)) {
+                    return props.validate(values);
+                }
+
+                return res;
+            }}
             mutators={{
                 setFieldValue: ([fieldName, fieldVal], state, { changeValue }) => {
                     changeValue(state, fieldName, () => fieldVal)
@@ -58,6 +70,7 @@ function FormUI(props: TPostUIProps) {
                     <BodyContent {...props} formProps={formProps} template={template} />
                 </form>
             )}
+            initialValues={entry}
         />
     );
 }

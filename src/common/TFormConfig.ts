@@ -7,10 +7,11 @@ import { TMediaInfo } from "./TMediaFile";
 
 export const CONTACTFORM_TYPE = 'contactform';
 export const ADVANCEDFORM_TYPE = 'advancedform';
-export const PRODUCTLISTING_TYPE = 'productlisting';
+export const PRODUCTFORM_TYPE = 'productform';
 export const MULTI_STEP_FORM_TYPE = 'multistepform';
+export const CHOICE_FORM_TYPE = 'choiceform';
 
-export type TPostSettings = {
+export type TFormSettings = {
     label: string;
     background: string;
     logo: string;
@@ -24,6 +25,13 @@ export type TPostSettings = {
     frontendController: string;
     backendController: string;
 };
+
+export enum RenderingMode {
+    CREATE_ENTRY,
+    MODIFY_ENTRY,
+    VIEW_ENTRY
+}
+
 
 type TFormConfig = {
     id: string;
@@ -42,12 +50,15 @@ type TFormConfig = {
     hero?: string;
     heroInfo?: TMediaInfo;
     submitBtnLabel?: string;
+    addBtnLabel?: string;
+    modifyBtnLabel?: string;
     errorMsg?: string;
     successMsg?: string;
     nextBtnLabel?: string;
     prevBtnLabel?: string;
     choices?: TChoice[];
     backendController: string;
+    renderingMode?: RenderingMode;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {
@@ -63,6 +74,8 @@ export const DEFAULT_FORM_CONFIG: TFormConfig = {
     header: '',
     hero: '',
     submitBtnLabel: 'Submit',
+    addBtnLabel: 'Add',
+    modifyBtnLabel: 'Modify',
     errorMsg: '',
     successMsg: '',
     nextBtnLabel: 'Next',

@@ -24,11 +24,9 @@ type TFormFieldProps =  {
     input?: FieldInputProps<any, HTMLElement>;
     elemProps?: any;
     children?: ReactNode | undefined;
+    componentType?: TComponentType
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
-    renderComponent?: (formConfig: TFormConfig,
-                    fieldConfig: TFieldConfig,
-                    componentType: TComponentType, 
-                    children: React.ReactNode | undefined) => React.ReactNode | undefined
+    renderComponent?: (props: TFormFieldProps) => React.ReactNode | undefined
 }
 
 export default TFormFieldProps;

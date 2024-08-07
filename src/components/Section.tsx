@@ -4,6 +4,7 @@ import { usePostUIContext } from './ui/PostUIProvider';
 import { MULTI_STEP_FORM_TYPE } from '../common/TFormConfig';
 import FormField from './FormField';
 import TFormFieldProps from '../common/TFormFieldProps';
+import { isFunction } from 'lodash';
 
 
 function Section(props: TFormFieldProps) {
@@ -11,6 +12,7 @@ function Section(props: TFormFieldProps) {
         fieldConfig,
         fieldIndex,
         formConfig,
+        renderComponent
     } = props;
 
     const sectionConfig = fieldConfig;
@@ -25,9 +27,9 @@ function Section(props: TFormFieldProps) {
 
     const showSection = !isMultiStepForm || currentStepIndex === sectionIndex;
 
-    if (! formConfig.sections || ! formConfig.sections[sectionConfig.name])
+    if (!formConfig.sections || !formConfig.sections[sectionConfig.name])
         return null;
-    
+
     const fields = formConfig.sections[sectionConfig.name];
 
     return showSection && (
@@ -37,13 +39,23 @@ function Section(props: TFormFieldProps) {
         >
             {
                 fields.map((fieldConfig: TFieldConfig, index) => (
-                    <FormField
-                        key={index}
-                        {...props}
-                        formName={sectionConfig.name}
-                        fieldConfig={fieldConfig}
-                        fieldIndex={index}
-                    />
+                    isFunction(renderComponent) ? (
+                        renderComponent(
+                            {
+                            ...props,
+                            formName: sectionConfig.name,
+                            fieldConfig,
+                            fieldIndex: index
+                        })
+                    ) : (
+                        <FormField
+                            key={index}
+                            {...props}
+                            formName={sectionConfig.name}
+                            fieldConfig={fieldConfig}
+                            fieldIndex={index}
+                        />
+                    )
                 ))
             }
         </Stack>

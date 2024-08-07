@@ -1,8 +1,8 @@
-type TPostCollection = {
+type TDataCollection = {
     id: string;
     label: string;
     type: string;
-    postConfigId?: string;
+    formConfigId?: string;
 }
 
-export default TPostCollection;
+export default TDataCollection;

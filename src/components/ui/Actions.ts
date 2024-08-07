@@ -88,10 +88,7 @@ export async function initPostUI(postUIContext: TPostUIContext, config: TPostUIC
 
     dispatch({
         type: SET_CONFIG,
-        payload: {
-            ...config,
-            currentFormConfig: config.rootFormConfig
-        }
+        payload: config
     });
 }
 

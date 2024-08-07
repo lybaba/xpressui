@@ -31,7 +31,7 @@ export const INPUT_ID = "input";
 export const DATA_FORM_CONTROL_ID = 'data-form-control';
 
 
-export type TPostType = {
+export type TFormType = {
     type: string,
     label: string,
     description: string,

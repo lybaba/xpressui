@@ -27,7 +27,7 @@ type TFormFieldProps =  {
     componentType?: TComponentType
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
     renderField?: (props: TFormFieldProps) => React.ReactNode | undefined
-    renderSection?: (props: TFormFieldProps) => React.ReactNode | undefined
+    renderSection?: (props: TFormFieldProps, fields: TFieldConfig[]) => React.ReactNode | undefined
 }
 
 export default TFormFieldProps;

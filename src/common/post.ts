@@ -15,13 +15,14 @@ import {
 } from "./field";
 import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
-import TFormConfig, { CHOICE_FORM_TYPE, PRODUCTFORM_TYPE, RenderingMode } from "./TFormConfig";
+import TFormConfig, { RenderingMode } from "./TFormConfig";
 import { MAIN_SECTION } from './Constants';
 import TMediaFile, { TMediaInfo, TMediaFileMetadata } from './TMediaFile';
 import { TPostUIContext } from '../components/ui/TPostUIState';
 import { isEmpty } from 'lodash';
 import TChoice from "./TChoice";
 import parseErrors from "./parse-errors";
+import TFormFieldProps from "./TFormFieldProps";
 
 export const FORM_ID = "form";
 export const SECTION_ID = 'attrgroup';
@@ -224,14 +225,19 @@ export function shouldRenderField(formConfig: TFormConfig, fieldConfig: TFieldCo
     if (renderingMode === RenderingMode.MODIFY_ENTRY && (!canEdit || fieldConfig.type === SLUG_TYPE))
         return false;
 
-    
-    if (formConfig.type === CHOICE_FORM_TYPE || formConfig.type === PRODUCTFORM_TYPE) {
-        if (renderingMode === RenderingMode.CREATE_ENTRY && fieldConfig.name === LABEL_ID)
-            return false;
-    }
 
     return true;
 }
+
+export function getHideLabel(props: TFormFieldProps) : boolean {
+    const {
+        fieldConfig,
+        hideLabel = false
+    } = props;
+
+    return hideLabel || fieldConfig.type === CHECKBOX_TYPE;
+}
+
 
 export function buildSchema(formConfig: TFormConfig, sectionIdex: number): object {
     const currentSection = getSectionByIndex(formConfig, sectionIdex);

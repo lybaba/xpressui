@@ -24,6 +24,7 @@ import { isEmpty } from 'lodash';
 import SubmitBtn from './submit-button';
 import ImageBox from './image-box';
 import TFormFieldProps from '../common/TFormFieldProps';
+import { getHideLabel } from '../common/post';
 
 type InputTemplateProps = {
     input: FieldInputProps<any, HTMLElement>;
@@ -55,7 +56,12 @@ export const FormInputControl = (props: FormInputControlProps) => {
 
     const inputProps = input ? input : {};
 
-    const placeholderProps = fieldConfig.placeholder ? { placeholder: fieldConfig.placeholder } : {};
+    let placeholderProps = {};
+    if (fieldConfig.placeholder)
+        placeholderProps = { placeholder: fieldConfig.placeholder }
+    else if (getHideLabel(props)) 
+        placeholderProps = { placeholder: fieldConfig.label }
+
 
     useEffect(() => {
         if (isFirstInputfield && inputRef.current) {

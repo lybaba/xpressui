@@ -3,6 +3,7 @@ import TFormConfig from "./TFormConfig";
 import TPostUIEvent from "./TPostUIEvent";
 import TServerResponse from "./TServerResponse";
 import TFormFieldProps from "./TFormFieldProps";
+import TFieldConfig from "./TFieldConfig";
 
 
 type TPostUIProps = {
@@ -14,7 +15,7 @@ type TPostUIProps = {
     validate?: (values: Record<string, any>) => Record<string, string>;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
     renderField?: (props : TFormFieldProps) => React.ReactNode | undefined;
-    renderSection?: (props: TFormFieldProps) => React.ReactNode | undefined;
+    renderSection?: (props: TFormFieldProps, fields: TFieldConfig[]) => React.ReactNode | undefined;
     renderBtnGroup?: (props: TPostUIProps) => React.ReactNode | undefined
     renderStepper?: (props: TPostUIProps) => React.ReactNode | undefined
 

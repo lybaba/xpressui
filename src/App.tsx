@@ -95,31 +95,289 @@ const CHOICE_GROUP_FORM_NAME = 'choicegroup';
 const CHOICE_GROUP_FORM_LABEL = 'Choice Group';
 
 const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
-  uid: "0",
-  id: "0",
-  type: CHOICE_FORM_TYPE,
-  name: CHOICE_GROUP_FORM_NAME,
-  label: CHOICE_GROUP_FORM_LABEL,
-  submitBtnLabel: "Save",
-  prevBtnLabel: "",
-  nextBtnLabel: "",
-  backendController: "",
-  successMsg: "",
-  errorMsg: "",
-  renderingMode: RenderingMode.CREATE_ENTRY,
-  sections: {
-      main: [
+  "errorMsg": "",
+  "name": "hello-world",
+  "prevBtnLabel": "Previous",
+  "id": "6uyeZKccSGgnaX2jQFiar7",
+  "submitBtnLabel": "Submit",
+  "label": "Hello World",
+  "backendController": "controller-sample.php",
+  "logo": "",
+  "timestamp": 1723029213,
+  "background": "",
+  "sections": {
+    "hello_world": [
+      {
+        "name": "photo",
+        "mediaId": "https://media.istockphoto.com/id/869773236/fr/photo/il-est-%C3%A9pris-de-son-nouveau-jouet.jpg?s=2048x2048&w=is&k=20&c=o_I2F0beKYgrnob9cRS16FijA6UOmM8MHieLEy9fUuA=",
+        "label": "Photo",
+        "type": "image"
+      },
+      {
+        "required": true,
+        "name": "sexe",
+        "choices": [
           {
-              name: CHOICE_GROUP_FORM_NAME,
-              label: CHOICE_GROUP_FORM_LABEL,
-              type: SECTION_TYPE,
+            "label": "Tapha Tine",
+            "name": "baaba-maal"
+          },
+          {
+            "label": "Youssou Ndour",
+            "name": "youssou-ndour"
+          },
+          {
+            "name": "thione-seck",
+            "label": "Thione Seck"
+          },
+          {
+            "name": "gdfg",
+            "label": "gdfg"
+          },
+          {
+            "name": "gdfgdfgdfgg",
+            "label": "gdfgdfgdfgg"
+          },
+          {
+            "name": "kine-lam",
+            "label": "Kiné Lam"
+          },
+          {
+            "label": "Ouza",
+            "name": "ouza"
+          },
+          {
+            "name": "doudou",
+            "label": "Doudou"
+          },
+          {
+            "label": "Mariam",
+            "name": "mariam"
+          },
+          {
+            "name": "tidiane",
+            "label": "Tidiane"
+          },
+          {
+            "label": "Néné",
+            "name": "nene"
+          },
+          {
+            "label": "coucou",
+            "name": "coucou"
+          },
+          {
+            "label": "Kiki",
+            "name": "kiki"
+          },
+          {
+            "name": "fdfds",
+            "label": "fdfds"
+          },
+          {
+            "name": "fsdf",
+            "label": "fsdf"
+          },
+          {
+            "label": "uiuiuyi",
+            "name": "uiuiuyi"
+          },
+          {
+            "label": "uyiuyi",
+            "name": "uyiuyi"
+          },
+          {
+            "label": "iuyi",
+            "name": "iuyi"
+          },
+          {
+            "name": "hfdfdhgfhgf",
+            "label": "hfdfdhgfhgf"
           }
-      ],
-      [CHOICE_GROUP_FORM_NAME]: [
-          NAME,
-          LABEL,
-      ]
-  }
+        ],
+        "label": "Sexe",
+        "type": "single-select"
+      },
+      {
+        "required": true,
+        "label": "Email",
+        "name": "email",
+        "type": "email",
+        "canDelete": false
+      },
+      {
+        "choices": [
+          {
+            "label": "Tapha Tine",
+            "name": "baaba-maal"
+          },
+          {
+            "label": "Youssou Ndour",
+            "name": "youssou-ndour"
+          },
+          {
+            "name": "thione-seck",
+            "label": "Thione Seck"
+          },
+          {
+            "name": "kine-lam",
+            "label": "Kiné Lam"
+          },
+          {
+            "name": "ouza",
+            "label": "Ouza"
+          },
+          {
+            "name": "doudou",
+            "label": "Doudou"
+          },
+          {
+            "name": "mariam",
+            "label": "Mariam"
+          },
+          {
+            "label": "Tidiane",
+            "name": "tidiane"
+          },
+          {
+            "name": "nene",
+            "label": "Néné"
+          },
+          {
+            "name": "coucou",
+            "label": "coucou"
+          },
+          {
+            "label": "Kiki",
+            "name": "kiki"
+          },
+          {
+            "label": "fdfds",
+            "name": "fdfds"
+          },
+          {
+            "name": "fsdf",
+            "label": "fsdf"
+          }
+        ],
+        "name": "choix",
+        "label": "Choix",
+        "type": "single-select"
+      },
+      {
+        "name": "chanteurs",
+        "type": "single-select",
+        "choices": [
+          {
+            "label": "Tapha Tine",
+            "name": "baaba-maal"
+          },
+          {
+            "label": "Youssou Ndour",
+            "name": "youssou-ndour"
+          },
+          {
+            "name": "thione-seck",
+            "label": "Thione Seck"
+          },
+          {
+            "name": "gdfg",
+            "label": "gdfg"
+          },
+          {
+            "label": "gdfgdfgdfgg",
+            "name": "gdfgdfgdfgg"
+          },
+          {
+            "name": "kine-lam",
+            "label": "Kiné Lam"
+          },
+          {
+            "name": "ouza",
+            "label": "Ouza"
+          },
+          {
+            "name": "doudou",
+            "label": "Doudou"
+          },
+          {
+            "label": "Mariam",
+            "name": "mariam"
+          },
+          {
+            "label": "Tidiane",
+            "name": "tidiane"
+          },
+          {
+            "name": "nene",
+            "label": "Néné"
+          },
+          {
+            "label": "coucou",
+            "name": "coucou"
+          },
+          {
+            "name": "kiki",
+            "label": "Kiki"
+          },
+          {
+            "label": "fdfds",
+            "name": "fdfds"
+          },
+          {
+            "label": "fsdf",
+            "name": "fsdf"
+          },
+          {
+            "name": "fsdfsdfsdfsdfsdffsd",
+            "label": "fsdfsdfsdfsdfsdffsd"
+          },
+          {
+            "label": "jhgjg",
+            "name": "jhgjg"
+          },
+          {
+            "name": "yujytu",
+            "label": "yujytu"
+          },
+          {
+            "label": "ytuytutyuytu",
+            "name": "ytuytutyuytu"
+          },
+          {
+            "name": "uiuiuyi",
+            "label": "uiuiuyi"
+          },
+          {
+            "label": "uyiuyi",
+            "name": "uyiuyi"
+          },
+          {
+            "label": "iuyi",
+            "name": "iuyi"
+          },
+          {
+            "name": "hfdfdhgfhgf",
+            "label": "hfdfdhgfhgf"
+          }
+        ],
+        "label": "Chanteurs"
+      }
+    ],
+    "main": [
+      {
+        "name": "hello_world",
+        "type": "section",
+        "canDelete": false,
+        "label": "Hello World"
+      }
+    ]
+  },
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+  "nextBtnLabel": "Next",
+  "header": "",
+  "hero": "",
+  "successMsg": "",
+  "type": "contactform"
 }
 
 

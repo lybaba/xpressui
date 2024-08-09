@@ -7,15 +7,13 @@ import { isEmpty } from "lodash";
 import { getMediumImageUrl, getThumbImageUrl } from "../../common/post";
 import { usePostUIContext } from "../ui/PostUIProvider";
 import TFormFieldProps from "../../common/TFormFieldProps";
+import { TMediaInfo } from "../../common/TMediaFile";
 
 export const ImageBoxBody = (props: TFormFieldProps) => {
     const {
         fieldConfig,
     } = props;
 
-    const {
-        mediaInfo
-    } = fieldConfig;
 
     const postUIContext = usePostUIContext();
 
@@ -23,7 +21,7 @@ export const ImageBoxBody = (props: TFormFieldProps) => {
         isLivePreview
     } = postUIContext;
 
-    if (!mediaInfo)
+    if (isEmpty(fieldConfig.mediaInfo) && isEmpty(fieldConfig.mediaId))
         return (
             <>
                 <Image/>
@@ -32,6 +30,9 @@ export const ImageBoxBody = (props: TFormFieldProps) => {
                 }
             </>
         )
+    
+    const mediaInfo : TMediaInfo = isEmpty(fieldConfig.mediaInfo)
+                                    ? {filePath: fieldConfig.mediaId} : fieldConfig.mediaInfo;
 
     const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, mediaInfo) :
         getMediumImageUrl(postUIContext, mediaInfo);

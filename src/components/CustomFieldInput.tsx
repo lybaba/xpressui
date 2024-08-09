@@ -19,7 +19,6 @@ import MultiSelect from './multi-select';
 import RichEditor from './richeditor';
 import CustomCheckbox from './checkbox';
 import { getErrorText, getHasError } from '../common/validation-errors';
-import { InfoOutlined } from '@mui/icons-material';
 import { isEmpty } from 'lodash';
 import SubmitBtn from './submit-button';
 import ImageBox from './image-box';
@@ -171,13 +170,11 @@ export const CustomFieldInput = (props: CustomFieldInputProps) => {
                                 {
                                     hasError ? (
                                         <FormHelperText>
-                                            <InfoOutlined color="error" />
                                             {errorText}
                                         </FormHelperText>
                                     ) : (
                                         !isEmpty(helpText) ? (
                                             <FormHelperText>
-                                                <InfoOutlined />
                                                 {helpText}
                                             </FormHelperText>
                                         ) : null

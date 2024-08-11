@@ -7,6 +7,8 @@ import BtnGroup from '../BtnGroup';
 import { FormRenderProps } from 'react-final-form';
 import { isFunction } from 'lodash';
 import React from 'react';
+import { PRODUCTFORM_TYPE } from '../../common/TFormConfig';
+import ProductSection from '../ProductSection';
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
@@ -27,7 +29,7 @@ export default function FormSectionList(props: Props) {
             spacing={2}
             gap={2}
         >
-             {
+            {
                 isFunction(renderStepper) ? (
                     renderStepper(props)
                 ) : (
@@ -36,13 +38,23 @@ export default function FormSectionList(props: Props) {
             }
             {
                 sections.map((fieldConfig: TFieldConfig, fieldIndex) => (
-                    <Section
-                        key={fieldIndex}
-                        {...props}
-                        formName={fieldConfig.name}
-                        fieldConfig={fieldConfig}
-                        fieldIndex={fieldIndex}
-                    />
+                    formConfig.type === PRODUCTFORM_TYPE ? (
+                        <ProductSection
+                            key={fieldIndex}
+                            {...props}
+                            formName={fieldConfig.name}
+                            fieldConfig={fieldConfig}
+                            fieldIndex={fieldIndex}
+                        />
+                    ) : (
+                        <Section
+                            key={fieldIndex}
+                            {...props}
+                            formName={fieldConfig.name}
+                            fieldConfig={fieldConfig}
+                            fieldIndex={fieldIndex}
+                        />
+                    )
                 ))
             }
             {

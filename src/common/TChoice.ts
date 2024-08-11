@@ -11,6 +11,9 @@ type TChoice = {
     regularPrice?: number;
     salePrice?: number;
     disabled?: boolean;
+    formConfigId?: string;
+    createdAt?: number;
+    updatedAt?: number;
 }
 
 export default TChoice;

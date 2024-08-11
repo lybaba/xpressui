@@ -32,8 +32,8 @@ type TUser = {
     uid: string;
     name: string;
     email: string;
-    isCustomer?: boolean;
-    emailVerified?: boolean;
+    isCustomer: boolean;
+    emailVerified: boolean;
     photoURL?: string;
 }
 

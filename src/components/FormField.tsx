@@ -6,7 +6,6 @@ import {
 import FormFieldTitle from "./FormFieldTitle";
 import {
     IMAGE_TYPE,
-    IMAGE_URL_TYPE,
     OUTPUT_TYPE,
     SUBMIT_TYPE,
 } from "../common/field";
@@ -42,7 +41,6 @@ export const FormField = (props: TFormFieldProps) => {
 
     
             case IMAGE_TYPE:
-            case IMAGE_URL_TYPE:
             case SUBMIT_TYPE:
                 return (
                     <FieldTemplate

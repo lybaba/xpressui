@@ -10,7 +10,6 @@ type Props = {
     formConfig: TFormConfig;
     fieldConfig: TFieldConfig;
     mediaFile: TMediaFile; 
-    isLivePreview: boolean;
 };
 
 

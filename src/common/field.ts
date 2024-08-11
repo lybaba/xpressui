@@ -15,13 +15,16 @@ export const PRODUCTITEM_TYPE = 'productitem';
 
 export const MEDIA_TYPE = 'media';
 export const CHECKBOX_TYPE = 'checkbox';
+export const DATE_TYPE = 'date';
+export const TIME_TYPE = 'time';
+export const REGEX_TYPE = 'regex';
 export const DATETIME_TYPE = 'datetime';
 export const EMAIL_TYPE = 'email';
 export const UPLOAD_FILE_TYPE = 'file';
 export const UPLOAD_IMAGE_TYPE = 'upload-image';
 export const IMAGE_TYPE = 'image';
-export const IMAGE_URL_TYPE = 'image-url';
 export const NUMBER_TYPE = 'number';
+export const POSITIVE_INTEGER_TYPE = 'integer';
 export const PRICE_TYPE = 'price';
 export const PASSWORD_TYPE = 'password';
 export const SINGLE_SELECT_TYPE = 'single-select';
@@ -55,11 +58,13 @@ export const CHECKBOXES_TYPE_FIELD: TChoice = { name: CHECKBOXES_TYPE, label: 'C
 export const SINGLE_SELECT_TYPE_FIELD: TChoice = { name: SINGLE_SELECT_TYPE, label: 'Single-select List' };
 export const RADIO_BUTTONS_TYPE_FIELD: TChoice = { name: RADIO_BUTTONS_TYPE, label: 'Radio Buttons' };
 export const URL_TYPE_FIELD: TChoice = { name: URL_TYPE, label: 'URL' };
-export const IMAGE_TYPE_FIELD: TChoice = { name: IMAGE_TYPE, label: 'Media File' };
-export const IMAGE_URL_TYPE_FIELD: TChoice = { name: IMAGE_URL_TYPE, label: 'Media URL' };
-export const UPLOAD_IMAGE_TYPE_FIELD: TChoice = { name: UPLOAD_IMAGE_TYPE, label: 'Image Upload' };
-export const UPLOAD_FILE_TYPE_FIELD: TChoice = { name: UPLOAD_FILE_TYPE, label: 'File Upload' };
+export const IMAGE_TYPE_FIELD: TChoice = { name: IMAGE_TYPE, label: 'Insert Picture' };
+export const UPLOAD_IMAGE_TYPE_FIELD: TChoice = { name: UPLOAD_IMAGE_TYPE, label: 'Upload Picture' };
+export const UPLOAD_FILE_TYPE_FIELD: TChoice = { name: UPLOAD_FILE_TYPE, label: 'Upload File' };
 export const DATETIME_TYPE_FIELD: TChoice = { name: DATETIME_TYPE, label: 'Date / Time' };
+export const DATE_TYPE_FIELD: TChoice = { name: DATE_TYPE, label: 'Date' };
+export const TIME_TYPE_FIELD: TChoice = { name: TIME_TYPE, label: 'Time' };
+export const REGEX_TYPE_FIELD: TChoice = { name: REGEX_TYPE, label: 'Regex' };
 
 
 
@@ -72,7 +77,7 @@ export const REQUEST_FORM_FIELD_TYPES: Array<TChoice> = [
     SINGLE_SELECT_TYPE_FIELD,
     MULTI_SELECT_TYPE_FIELD,
     IMAGE_TYPE_FIELD,
-    IMAGE_URL_TYPE_FIELD,
+    UPLOAD_IMAGE_TYPE_FIELD,
     UPLOAD_FILE_TYPE_FIELD
 ];
 

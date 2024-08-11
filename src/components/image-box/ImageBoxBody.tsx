@@ -12,14 +12,12 @@ import { TMediaInfo } from "../../common/TMediaFile";
 export const ImageBoxBody = (props: TFormFieldProps) => {
     const {
         fieldConfig,
+        isLivePreview = false
     } = props;
 
 
     const postUIContext = usePostUIContext();
 
-    const {
-        isLivePreview
-    } = postUIContext;
 
     if (isEmpty(fieldConfig.mediaInfo) && isEmpty(fieldConfig.mediaId))
         return (

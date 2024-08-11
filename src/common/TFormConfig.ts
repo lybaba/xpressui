@@ -13,17 +13,26 @@ export const CHOICE_FORM_TYPE = 'choiceform';
 
 export type TFormSettings = {
     label: string;
-    background: string;
-    logo: string;
-    header: string;
-    hero: string;
+    background?: string;
+    logo?: string;
+    header?: string;
+    hero?: string;
     submitBtnLabel: string;
-    errorMsg: string;
-    successMsg: string;
-    nextBtnLabel: string;
-    prevBtnLabel: string;
-    frontendController: string;
-    backendController: string;
+    errorMsg?: string;
+    successMsg?: string;
+    nextBtnLabel?: string;
+    prevBtnLabel?: string;
+    backendController?: string;
+    cClass?: string;
+    lgClass?: string;
+    lClass?: string;
+    igClass?: string;
+    iClass?: string;
+    cChildClass?: string;
+    lgChildClass?: string;
+    lChildClass?: string;
+    igChildClass?: string;
+    iChildClass?: string;
 };
 
 export enum RenderingMode {
@@ -59,6 +68,16 @@ type TFormConfig = {
     choices?: TChoice[];
     backendController: string;
     renderingMode?: RenderingMode;
+    cClass?: string;
+    lgClass?: string;
+    lClass?: string;
+    igClass?: string;
+    iClass?: string;
+    cChildClass?: string;
+    lgChildClass?: string;
+    lChildClass?: string;
+    igChildClass?: string;
+    iChildClass?: string;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {
@@ -69,18 +88,11 @@ export const DEFAULT_FORM_CONFIG: TFormConfig = {
     name: 'demo',
     label: 'demo',
     sections: {[MAIN_SECTION]: []},
-    background: '',
-    logo: '',
-    header: '',
-    hero: '',
     submitBtnLabel: 'Submit',
     addBtnLabel: 'Add',
     modifyBtnLabel: 'Modify',
-    errorMsg: '',
-    successMsg: '',
     nextBtnLabel: 'Next',
     prevBtnLabel: 'Previous',
-    choices: [],
     backendController: 'controller-sample.php'
 }
 

@@ -1,16 +1,19 @@
 import {
     CHECKBOX_TYPE,
     DATETIME_TYPE,
+    DATE_TYPE,
     EMAIL_TYPE,
     MULTI_SELECT_TYPE,
     NUMBER_TYPE,
     PASSWORD_TYPE,
+    POSITIVE_INTEGER_TYPE,
     PRICE_TYPE,
     SINGLE_SELECT_TYPE,
     SLUG_TYPE,
     TEL_TYPE,
     TEXTAREA_TYPE,
     TEXT_TYPE,
+    TIME_TYPE,
     URL_TYPE
 } from "./field";
 import { ValidateFunction } from "ajv";
@@ -164,41 +167,66 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
 
     switch (fieldConfig.type) {
         case NUMBER_TYPE:
-            res.type = "int32";
+            res.type = "number";
             break;
 
         case PRICE_TYPE:
-            res.type = "float32";
+            res.type = "number";
+            res.minimum = 0;
+            break;
+
+        case POSITIVE_INTEGER_TYPE:
+            res.type = "integer";
+            res.minimum = 0;
             break;
 
         case CHECKBOX_TYPE:
             res.type = "boolean";
             break;
 
-        case SINGLE_SELECT_TYPE:
         case MULTI_SELECT_TYPE:
+            res.type = "array";
+            res.items = {
+                "type": "string"
+            }
+            break;
+
+
+
+        case SINGLE_SELECT_TYPE:
+            res.type = "string"
             if (fieldConfig.choices)
                 res.enum = fieldConfig.choices.map((opt: TChoice) => opt.name);
             break;
 
-
-        case TEXT_TYPE:
-        case TEXTAREA_TYPE:
-        case EMAIL_TYPE:
-        case PASSWORD_TYPE:
-        case TEL_TYPE:
-        case URL_TYPE:
         case DATETIME_TYPE:
             res.type = "string";
+            res.format = "date-time"
             break;
 
+        case DATE_TYPE:
+            res.type = "string";
+            res.format = "date"
+            break;
+
+        case TIME_TYPE:
+            res.type = "string";
+            res.format = "time"
+            break;
+
+
+        case EMAIL_TYPE:
+            res.type = "string";
+            res.format = "email"
+            break;
+
+
         default:
-            return res;
+            res.type = "string";
+            break;
     }
 
 
-    if (fieldConfig.type === EMAIL_TYPE)
-        res.format = "email";
 
     if (fieldConfig.pattern)
         res.pattern = fieldConfig.pattern;
@@ -229,7 +257,7 @@ export function shouldRenderField(formConfig: TFormConfig, fieldConfig: TFieldCo
     return true;
 }
 
-export function getHideLabel(props: TFormFieldProps) : boolean {
+export function getHideLabel(props: TFormFieldProps): boolean {
     const {
         fieldConfig,
         hideLabel = false
@@ -290,4 +318,28 @@ export default function validate(props: ValidatorProps): Record<string, string> 
     console.log("___errors ", errors);
 
     return errors;
+}
+
+
+
+export const getMediaUrlByMediaId = (postUIContext: TPostUIContext, fieldConfig: TFieldConfig, mediaSize: string = 'small'): string => {
+
+    const mediaInfo : TMediaInfo = fieldConfig.mediaInfo ? fieldConfig.mediaInfo : {filePath: fieldConfig.mediaId};
+
+    switch (mediaSize) {
+        case "small":
+            return getSmallImageUrl(postUIContext, mediaInfo);
+
+        case "thumb":
+            return getThumbImageUrl(postUIContext, mediaInfo);
+
+        case "medium":
+            return getMediumImageUrl(postUIContext, mediaInfo);
+
+        case "large":
+            return getLargeImageUrl(postUIContext, mediaInfo);
+
+        default:
+            return '';
+    }
 }

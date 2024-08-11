@@ -4,12 +4,12 @@ import {
     CHECKBOXES_TYPE,
     CHECKBOX_TYPE,
     IMAGE_TYPE,
-    IMAGE_URL_TYPE,
     MULTI_SELECT_TYPE,
     RADIO_BUTTONS_TYPE,
     SINGLE_SELECT_TYPE,
     SUBMIT_TYPE,
     TEXTAREA_TYPE,
+    UPLOAD_IMAGE_TYPE,
     doNormalizeFieldValue
 } from '../common/field';
 
@@ -24,6 +24,7 @@ import SubmitBtn from './submit-button';
 import ImageBox from './image-box';
 import TFormFieldProps from '../common/TFormFieldProps';
 import { getHideLabel } from '../common/post';
+import UploadImage from './upload-image';
 
 type InputTemplateProps = {
     input: FieldInputProps<any, HTMLElement>;
@@ -99,6 +100,13 @@ export const FormInputControl = (props: FormInputControlProps) => {
                     {...props}
                 />
             );
+
+        case UPLOAD_IMAGE_TYPE:
+            return (
+                <UploadImage
+                    {...props}
+                />
+            );
             
         default:
             return (
@@ -142,7 +150,6 @@ export const CustomFieldInput = (props: CustomFieldInputProps) => {
             )
 
         case IMAGE_TYPE:
-        case IMAGE_URL_TYPE:
             return (
                 <ImageBox
                     {...props}

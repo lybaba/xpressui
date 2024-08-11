@@ -23,7 +23,6 @@ export interface TPostUIState {
     isLoading: boolean;
     authChecking: boolean;
     serverResponse: TServerResponse;
-    isLivePreview: boolean;
 }
 export type TPostUIDispatch = {
     dispatch: Dispatch<TAction>;
@@ -52,7 +51,6 @@ export const DEFAULT_POSTUI_CONTEXT: TPostUIContext = {
         baseUrl: '',
         imagesBaseUrl: '',
     }),
-    isLivePreview: false,
     isLoading: false,
     authChecking: false,
     serverResponse: {

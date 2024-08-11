@@ -24,7 +24,8 @@ type TFormFieldProps =  {
     input?: FieldInputProps<any, HTMLElement>;
     elemProps?: any;
     children?: ReactNode | undefined;
-    componentType?: TComponentType
+    componentType?: TComponentType;
+    isLivePreview?: boolean;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
     renderField?: (props: TFormFieldProps) => React.ReactNode | undefined
     renderSection?: (props: TFormFieldProps, fields: TFieldConfig[]) => React.ReactNode | undefined

@@ -23,7 +23,6 @@ type MediaPhotoProps = {
     formConfig: TFormConfig;
     fieldConfig: TFieldConfig;
     mediaFile: TMediaFile;
-    isLivePreview: boolean;
 }
 const MediaPhoto = (props: MediaPhotoProps) => {
     const {

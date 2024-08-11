@@ -2,8 +2,8 @@
 import TFormFieldProps from '../common/TFormFieldProps';
 import {
     IMAGE_TYPE,
-    IMAGE_URL_TYPE,
-    SUBMIT_TYPE
+    SUBMIT_TYPE,
+    UPLOAD_IMAGE_TYPE
 } from '../common/field';
 
 import { Box, FormControl, Stack } from '@mui/joy';
@@ -55,7 +55,6 @@ export const CustomField = (props: TFormFieldProps) => {
             );
 
         case IMAGE_TYPE:
-        case IMAGE_URL_TYPE:
             return (
                 <Stack
                     gap={1}

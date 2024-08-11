@@ -8,6 +8,7 @@ import {
     RADIO_BUTTONS_TYPE,
     SINGLE_SELECT_TYPE,
     SUBMIT_TYPE,
+    SWITCH_TYPE,
     TEXTAREA_TYPE,
     UPLOAD_IMAGE_TYPE,
     doNormalizeFieldValue
@@ -95,6 +96,7 @@ export const FormInputControl = (props: FormInputControlProps) => {
             );
 
         case CHECKBOX_TYPE:
+        case SWITCH_TYPE:
             return (
                 <CustomCheckbox
                     {...props}

@@ -50,9 +50,9 @@ export const SingleSelect = (props: TFormFieldProps) => {
                 <Option value={''}>{' '}</Option>
                 {
                     fieldConfig.choices?.map((opt: TChoice, index: number) => {
-                        const id = opt?.name ? opt.name : `${index}`;
+                        const id = opt?.id ? opt.id : `${index}`;
                         return (
-                            <Option key={id} value={id}>{opt.label}</Option>
+                            <Option key={id} value={id}>{opt.name}</Option>
                         )
                     })
                 }
@@ -64,12 +64,12 @@ export const SingleSelect = (props: TFormFieldProps) => {
             >
                 {
                     fieldConfig.choices?.map((opt: TChoice, index: number) => {
-                        const id = opt?.name ? opt.name : `${index}`;
+                        const id = opt?.id ? opt.id : `${index}`;
                         return (
                             <Radio
                                 key={index}
                                 value={id}
-                                label={opt.label}
+                                label={opt.name}
                                 color="primary"
                                 onChange={() => formProps?.form.mutators.setFieldValue(fieldConfig.name, id)}
                             />

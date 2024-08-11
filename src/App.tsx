@@ -95,48 +95,111 @@ const CHOICE_GROUP_FORM_NAME = 'choicegroup';
 const CHOICE_GROUP_FORM_LABEL = 'Choice Group';
 
 const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
-  "id": "sdQ97nP5SSFY1SSvWzZ3vd",
-  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
-  "type": "contactform",
-  "label": "Hello",
-  "name": "hello",
-  "timestamp": 1723329610,
-  "background": "",
-  "logo": "",
-  "header": "",
-  "hero": "",
-  "submitBtnLabel": "Submit",
-  "errorMsg": "",
-  "successMsg": "",
-  "nextBtnLabel": "Next",
   "prevBtnLabel": "Previous",
+  "type": "productform",
   "sections": {
-    "main": [
+    "general": [
       {
-        "type": "section",
-        "label": "Hello",
-        "name": "hello",
+        "type": "switch",
+        "canDelete": false,
+        "name": "disabled",
+        "label": "Unpublish"
+      },
+      {
+        "required": true,
+        "maxLen": 200,
+        "name": "name",
+        "canDelete": false,
+        "type": "text",
+        "label": "Name"
+      },
+      {
+        "type": "slug",
+        "label": "ID",
+        "canDelete": false,
+        "name": "id",
+        "placeholder": "Product sku or custom identifier",
+        "maxLen": 64,
+        "required": false
+      },
+      {
+        "canDelete": false,
+        "type": "textarea",
+        "name": "desc",
+        "maxLen": 400,
+        "label": "Description"
+      },
+      {
+        "canDelete": false,
+        "type": "textarea",
+        "name": "content",
+        "maxLen": 5000,
+        "label": "Content"
+      },
+      {
+        "type": "upload-image",
+        "label": "Featured Image",
+        "name": "mediaId",
         "canDelete": false
       }
     ],
-    "hello": [
+    "main": [
       {
-        "type": "email",
-        "label": "Email",
-        "name": "email",
-        "canDelete": false,
-        "required": true
+        "name": "general",
+        "type": "section",
+        "label": "General",
+        "canDelete": false
       },
       {
-        "label": "Photo",
-        "name": "photo",
-        "type": "upload-image"
+        "canDelete": false,
+        "name": "pricing",
+        "type": "section",
+        "label": "Pricing"
+      }
+    ],
+    "pricing": [
+      {
+        "label": "Regular price",
+        "type": "price",
+        "name": "regularPrice",
+        "canDelete": false
+      },
+      {
+        "canDelete": false,
+        "label": "Sale price",
+        "type": "price",
+        "name": "salePrice"
+      },
+      {
+        "name": "hasTaxes",
+        "canDelete": false,
+        "type": "switch",
+        "label": "Price includes taxes"
+      },
+      {
+        "label": "Tax (%)",
+        "name": "tax",
+        "type": "tax",
+        "canDelete": false,
+        "placeholder": "% 0.0"
       }
     ]
   },
-  "backendController": "controller-sample.php"
+  "background": "",
+  "name": "produits",
+  "submitBtnLabel": "Submit",
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+  "timestamp": 1723389241,
+  "errorMsg": "",
+  "header": "",
+  "nextBtnLabel": "Next",
+  "hero": "",
+  "successMsg": "",
+  "id": "sQ5CDdcvJxHkJWtgy6C3KX",
+  "backendController": "controller-sample.php",
+  "logo": "",
+  "label": "Produits"
 }
-
 
 // ======================
 

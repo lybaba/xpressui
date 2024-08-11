@@ -1,10 +1,12 @@
 import {
+    Button,
+    Tooltip,
     AspectRatio,
     Input,
     Box,
 } from "@mui/joy";
 
-import { Image } from "@mui/icons-material";
+import { FileUploadRounded, Image } from "@mui/icons-material";
 import { isEmpty } from "lodash";
 import TFormFieldProps from '../../common/TFormFieldProps';
 import { usePostUIContext } from "../ui/PostUIProvider";
@@ -61,6 +63,26 @@ export const UploadImage = (props: TFormFieldProps) => {
                         }
 
                     </AspectRatio>
+                }
+                endDecorator={
+                        <Tooltip title={MESSAGES.uploadImage}>
+                            <Button
+                                variant="plain"
+                                sx={{ gap: 2, p: 1 }}
+                                onClick={(e) => {
+                                }}
+                            >
+                                <AspectRatio
+                                    sx={{
+                                        minWidth: 60,
+                                        maxWidth: 60,
+                                        maxHeight: 60
+                                    }}
+                                >
+                                    <FileUploadRounded />
+                                </AspectRatio>
+                            </Button>
+                        </Tooltip>
                 }
             />
         </Box>

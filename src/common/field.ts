@@ -42,29 +42,33 @@ export const OUTPUT_TYPE = 'output';
 export const RICH_EDITOR_TYPE = 'rich-editor';
 export const FIELDGROUP_SELECT_TYPE = 'section-select';
 export const URL_TYPE = 'url';
+export const TAX_TYPE = 'tax';
+export const SWITCH_TYPE = 'switch';
 
-export const FIELDGROUP_TYPE_FIELD: TChoice = { name: SECTION_TYPE, label: 'Section' };
-export const TEXT_TYPE_FIELD: TChoice = { name: TEXT_TYPE, label: 'Text Field' };
-export const TEXTAREA_TYPE_FIELD: TChoice = { name: TEXTAREA_TYPE, label: 'Text Area' };
-export const NUMBER_TYPE_FIELD: TChoice = { name: NUMBER_TYPE, label: 'Number' };
-export const PRICE_TYPE_FIELD: TChoice = { name: PRICE_TYPE, label: 'Price' };
-export const EMAIL_TYPE_FIELD: TChoice = { name: EMAIL_TYPE, label: 'Email' };
-export const PASSWORD_TYPE_FIELD: TChoice = { name: PASSWORD_TYPE, label: 'Password' };
-export const TEL_TYPE_FIELD: TChoice = { name: TEL_TYPE, label: 'Phone Number' };
-export const SUBMIT_TYPE_FIELD: TChoice = { name: SUBMIT_TYPE, label: 'Submit button' };
-export const CHECKBOX_TYPE_FIELD: TChoice = { name: CHECKBOX_TYPE, label: 'Checkbox' };
-export const MULTI_SELECT_TYPE_FIELD: TChoice = { name: MULTI_SELECT_TYPE, label: 'Multi-select List' };
-export const CHECKBOXES_TYPE_FIELD: TChoice = { name: CHECKBOXES_TYPE, label: 'Checkboxes' };
-export const SINGLE_SELECT_TYPE_FIELD: TChoice = { name: SINGLE_SELECT_TYPE, label: 'Single-select List' };
-export const RADIO_BUTTONS_TYPE_FIELD: TChoice = { name: RADIO_BUTTONS_TYPE, label: 'Radio Buttons' };
-export const URL_TYPE_FIELD: TChoice = { name: URL_TYPE, label: 'URL' };
-export const IMAGE_TYPE_FIELD: TChoice = { name: IMAGE_TYPE, label: 'Insert Picture' };
-export const UPLOAD_IMAGE_TYPE_FIELD: TChoice = { name: UPLOAD_IMAGE_TYPE, label: 'Upload Picture' };
-export const UPLOAD_FILE_TYPE_FIELD: TChoice = { name: UPLOAD_FILE_TYPE, label: 'Upload File' };
-export const DATETIME_TYPE_FIELD: TChoice = { name: DATETIME_TYPE, label: 'Date / Time' };
-export const DATE_TYPE_FIELD: TChoice = { name: DATE_TYPE, label: 'Date' };
-export const TIME_TYPE_FIELD: TChoice = { name: TIME_TYPE, label: 'Time' };
-export const REGEX_TYPE_FIELD: TChoice = { name: REGEX_TYPE, label: 'Regex' };
+export const FIELDGROUP_TYPE_FIELD: TChoice = { id: SECTION_TYPE, name: 'Section' };
+export const TEXT_TYPE_FIELD: TChoice = { id: TEXT_TYPE, name: 'Text Field' };
+export const TEXTAREA_TYPE_FIELD: TChoice = { id: TEXTAREA_TYPE, name: 'Text Area' };
+export const NUMBER_TYPE_FIELD: TChoice = { id: NUMBER_TYPE, name: 'Number' };
+export const PRICE_TYPE_FIELD: TChoice = { id: PRICE_TYPE, name: 'Price' };
+export const EMAIL_TYPE_FIELD: TChoice = { id: EMAIL_TYPE, name: 'Email' };
+export const PASSWORD_TYPE_FIELD: TChoice = { id: PASSWORD_TYPE, name: 'Password' };
+export const TEL_TYPE_FIELD: TChoice = { id: TEL_TYPE, name: 'Phone Number' };
+export const SUBMIT_TYPE_FIELD: TChoice = { id: SUBMIT_TYPE, name: 'Submit button' };
+export const CHECKBOX_TYPE_FIELD: TChoice = { id: CHECKBOX_TYPE, name: 'Checkbox' };
+export const MULTI_SELECT_TYPE_FIELD: TChoice = { id: MULTI_SELECT_TYPE, name: 'Multi-select List' };
+export const CHECKBOXES_TYPE_FIELD: TChoice = { id: CHECKBOXES_TYPE, name: 'Checkboxes' };
+export const SINGLE_SELECT_TYPE_FIELD: TChoice = { id: SINGLE_SELECT_TYPE, name: 'Single-select List' };
+export const RADIO_BUTTONS_TYPE_FIELD: TChoice = { id: RADIO_BUTTONS_TYPE, name: 'Radio Buttons' };
+export const URL_TYPE_FIELD: TChoice = { id: URL_TYPE, name: 'URL' };
+export const IMAGE_TYPE_FIELD: TChoice = { id: IMAGE_TYPE, name: 'Insert Picture' };
+export const UPLOAD_IMAGE_TYPE_FIELD: TChoice = { id: UPLOAD_IMAGE_TYPE, name: 'Upload Picture' };
+export const UPLOAD_FILE_TYPE_FIELD: TChoice = { id: UPLOAD_FILE_TYPE, name: 'Upload File' };
+export const DATETIME_TYPE_FIELD: TChoice = { id: DATETIME_TYPE, name: 'Date / Time' };
+export const DATE_TYPE_FIELD: TChoice = { id: DATE_TYPE, name: 'Date' };
+export const TIME_TYPE_FIELD: TChoice = { id: TIME_TYPE, name: 'Time' };
+export const REGEX_TYPE_FIELD: TChoice = { id: REGEX_TYPE, name: 'Regex' };
+export const TAX_TYPE_FIELD: TChoice = { id: TAX_TYPE, name: 'Tax' };
+export const SWITCH_TYPE_FIELD: TChoice = { id: SWITCH_TYPE, name: 'Switch' };
 
 
 
@@ -153,7 +157,7 @@ export const getIsChoiceField = (type: string): boolean => {
     return type === MULTI_SELECT_TYPE || type === SINGLE_SELECT_TYPE;
 }
 
-export const buildOptionName = (name: string) => {
+export const buildSlug = (name: string) => {
     return slugify(lowerCase(name), { replacement: '-' });
 }
 
@@ -192,6 +196,7 @@ export const getFieldTypes = (formConfig: TFormConfig): Array<TChoice> => {
 export const doNormalizeFieldValue = (fieldConfig: TFieldConfig, value: any) : any => {
     switch (fieldConfig.type) {
         case CHECKBOX_TYPE:
+        case SWITCH_TYPE:
             return getBooleanValue(value);
 
         default:

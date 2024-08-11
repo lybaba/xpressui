@@ -1,5 +1,5 @@
 import { FormLabel } from '@mui/joy';
-import { CHECKBOX_TYPE, SUBMIT_TYPE } from '../common/field';
+import { SUBMIT_TYPE } from '../common/field';
 import TFormFieldProps from '../common/TFormFieldProps';
 import { getHideLabel } from '../common/post';
 

@@ -55,9 +55,9 @@ export const MultiSelect = (props: TFormFieldProps) => {
         >
             {
                 fieldConfig.choices?.map((opt: TChoice, index: number) => {
-                    const id = opt?.name ? opt.name : `${index}`;
+                    const id = opt?.id ? opt.id : `${index}`;
                     return (
-                        <Option key={id} value={id}>{opt.label}</Option>
+                        <Option key={id} value={id}>{opt.name}</Option>
                     )
                 })
             }

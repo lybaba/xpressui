@@ -10,6 +10,8 @@ import {
     PRICE_TYPE,
     SINGLE_SELECT_TYPE,
     SLUG_TYPE,
+    SWITCH_TYPE,
+    TAX_TYPE,
     TEL_TYPE,
     TEXTAREA_TYPE,
     TEXT_TYPE,
@@ -175,12 +177,19 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
             res.minimum = 0;
             break;
 
+        case TAX_TYPE:
+            res.type = "number";
+            res.minimum = 0;
+            res.maximum = 1;
+            break;
+
         case POSITIVE_INTEGER_TYPE:
             res.type = "integer";
             res.minimum = 0;
             break;
 
         case CHECKBOX_TYPE:
+        case SWITCH_TYPE:
             res.type = "boolean";
             break;
 
@@ -196,7 +205,7 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
         case SINGLE_SELECT_TYPE:
             res.type = "string"
             if (fieldConfig.choices)
-                res.enum = fieldConfig.choices.map((opt: TChoice) => opt.name);
+                res.enum = fieldConfig.choices.map((opt: TChoice) => opt.id);
             break;
 
         case DATETIME_TYPE:
@@ -262,8 +271,11 @@ export function getHideLabel(props: TFormFieldProps): boolean {
         fieldConfig,
         hideLabel = false
     } = props;
+    
 
-    return hideLabel || fieldConfig.type === CHECKBOX_TYPE;
+    return hideLabel ||
+        fieldConfig.type === CHECKBOX_TYPE || 
+        fieldConfig.type === SWITCH_TYPE;
 }
 
 
@@ -324,7 +336,7 @@ export default function validate(props: ValidatorProps): Record<string, string> 
 
 export const getMediaUrlByMediaId = (postUIContext: TPostUIContext, fieldConfig: TFieldConfig, mediaSize: string = 'small'): string => {
 
-    const mediaInfo : TMediaInfo = fieldConfig.mediaInfo ? fieldConfig.mediaInfo : {filePath: fieldConfig.mediaId};
+    const mediaInfo: TMediaInfo = fieldConfig.mediaInfo ? fieldConfig.mediaInfo : { filePath: fieldConfig.mediaId };
 
     switch (mediaSize) {
         case "small":

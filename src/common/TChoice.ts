@@ -1,8 +1,8 @@
 import { TMediaInfo } from "./TMediaFile";
 
 type TChoice = {
+    id: string;
     name: string;
-    label: string;
     desc?: string;
     mediaId?: string;
     mediaInfo?: TMediaInfo;
@@ -12,9 +12,5 @@ type TChoice = {
     salePrice?: number;
     disabled?: boolean;
 }
-
-export type TAdvancedChoice = {
-    id: string;
-} & TChoice;
 
 export default TChoice;

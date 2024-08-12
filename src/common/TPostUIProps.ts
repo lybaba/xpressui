@@ -16,9 +16,6 @@ type TPostUIProps = {
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
     renderField?: (props : TFormFieldProps) => React.ReactNode | undefined;
     renderSection?: (props: TFormFieldProps, fields: TFieldConfig[]) => React.ReactNode | undefined;
-    renderBtnGroup?: (props: TPostUIProps) => React.ReactNode | undefined
-    renderStepper?: (props: TPostUIProps) => React.ReactNode | undefined
-
 }
 
 export default TPostUIProps;

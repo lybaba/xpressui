@@ -37,6 +37,13 @@ export const INPUT_ID = "input";
 
 export const DATA_FORM_CONTROL_ID = 'data-form-control';
 
+export const TOP_ALIGNED_LABELS = 'tal';
+export const LEFT_ALIGNED_LABELS = 'lal';
+export const RIGHT_ALIGNED_LABELS = 'ral';
+export const BOTTOM_ALIGNED_LABELS = 'bal';
+export const LABELS_WITHIN_INPUTS = 'lwi';
+
+
 
 export type TFormType = {
     type: string,
@@ -323,11 +330,9 @@ export default function validate(props: ValidatorProps): Record<string, string> 
         validator,
         values
     } = props;
-    console.log("___validator ", validator);
-    console.log("___values ", values);
+
     validator(values);
     const errors = parseErrors(validator.errors);
-    console.log("___errors ", errors);
 
     return errors;
 }
@@ -354,4 +359,23 @@ export const getMediaUrlByMediaId = (postUIContext: TPostUIContext, fieldConfig:
         default:
             return '';
     }
+}
+
+export function getBodyFormConfig(formConfig: TFormConfig) : TFormConfig {
+    const mainSections : TFieldConfig[] = [];
+    
+    formConfig.sections[MAIN_SECTION].forEach((sectionConfig: TFieldConfig) => {
+        const {
+            shouldRender = true
+        } = sectionConfig
+
+        if (shouldRender)
+            mainSections.push(sectionConfig);
+    });
+
+    return {
+        ...formConfig,
+        sections: {...formConfig.sections, [MAIN_SECTION]: mainSections}
+    };
+
 }

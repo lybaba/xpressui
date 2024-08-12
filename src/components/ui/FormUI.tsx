@@ -2,16 +2,18 @@ import { usePostUIContext } from './PostUIProvider';
 import { submitForm } from './Actions';
 import { Form } from 'react-final-form';
 import { FormApi } from 'final-form';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ajv } from '../../common/frontend';
 import validate from './Validator';
 import { buildSchema } from '../../common/post';
 import TPostUIProps from '../../common/TPostUIProps';
-import BodyContent from './BodyContent';
 import { isEmpty, isFunction } from 'lodash';
+import { ValidateFunction } from 'ajv';
+import FormSectionList from './FormSectionList';
 
 
 function FormUI(props: TPostUIProps) {
+    const [validators, setValidators] = useState<Record<string, ValidateFunction<unknown>>>({})
     const postUIContext = usePostUIContext();
 
     const {
@@ -25,11 +27,8 @@ function FormUI(props: TPostUIProps) {
         restartForm = true
     } = props;
 
-
     const getValidator = useCallback(() => {
         const schema = buildSchema(formConfig, currentStepIndex);
-        console.log("___validator______schema ", schema);
-
         const validator = ajv.compile(schema);
         return validator;
     },[currentStepIndex])
@@ -72,7 +71,7 @@ function FormUI(props: TPostUIProps) {
                     onSubmit={formProps.handleSubmit}
                     noValidate
                 >
-                    <BodyContent {...props} formProps={formProps} template={template} />
+                    <FormSectionList {...props} formProps={formProps} />
                 </form>
             )}
             initialValues={entry}

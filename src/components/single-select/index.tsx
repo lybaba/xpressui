@@ -21,10 +21,10 @@ export const SingleSelect = (props: TFormFieldProps) => {
     const placeholderProps = fieldConfig.placeholder ? { placeholder: fieldConfig.placeholder } : {};
 
 
-    const values = formProps ? formProps.values : {};
+    const values = formProps  && formProps.values ? formProps.values : {};
 
     const valueProps = values.hasOwnProperty(fieldConfig.name) ?
-        { value: values[fieldConfig.name] } : { value: '' };
+        { value: values[fieldConfig.name] } : { };
 
     
     return (
@@ -47,7 +47,6 @@ export const SingleSelect = (props: TFormFieldProps) => {
                 {...placeholderProps}
                 {...elemProps}
             >
-                <Option value={''}>{' '}</Option>
                 {
                     fieldConfig.choices?.map((opt: TChoice, index: number) => {
                         const id = opt?.id ? opt.id : `${index}`;

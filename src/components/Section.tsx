@@ -1,14 +1,19 @@
 import TFieldConfig from '../common/TFieldConfig';
 import { Stack } from '@mui/joy';
 import { usePostUIContext } from './ui/PostUIProvider';
-import { MULTI_STEP_FORM_TYPE } from '../common/TFormConfig';
+import TFormConfig, { MULTI_STEP_FORM_TYPE } from '../common/TFormConfig';
 import FormField from './FormField';
 import TFormFieldProps from '../common/TFormFieldProps';
 import { isFunction } from 'lodash';
 import React from 'react';
 
+type OwnProps = {
+    rootFormConfig: TFormConfig;
+}
 
-function Section(props: TFormFieldProps) {
+type Props = OwnProps & TFormFieldProps;
+
+function Section(props: Props) {
     const {
         fieldConfig,
         fieldIndex,

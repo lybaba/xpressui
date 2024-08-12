@@ -44,6 +44,8 @@ export const FIELDGROUP_SELECT_TYPE = 'section-select';
 export const URL_TYPE = 'url';
 export const TAX_TYPE = 'tax';
 export const SWITCH_TYPE = 'switch';
+export const GRID_SIZE_TYPE = 'grid-size';
+export const SLIDER_TYPE = 'slider';
 
 export const FIELDGROUP_TYPE_FIELD: TChoice = { id: SECTION_TYPE, name: 'Section' };
 export const TEXT_TYPE_FIELD: TChoice = { id: TEXT_TYPE, name: 'Text Field' };
@@ -69,8 +71,8 @@ export const TIME_TYPE_FIELD: TChoice = { id: TIME_TYPE, name: 'Time' };
 export const REGEX_TYPE_FIELD: TChoice = { id: REGEX_TYPE, name: 'Regex' };
 export const TAX_TYPE_FIELD: TChoice = { id: TAX_TYPE, name: 'Tax' };
 export const SWITCH_TYPE_FIELD: TChoice = { id: SWITCH_TYPE, name: 'Switch' };
-
-
+export const GRID_SIZE_TYPE_FIELD: TChoice = { id: GRID_SIZE_TYPE, name: 'Grid Size' };
+export const SLIDER_TYPE_FIELD: TChoice = { id: SLIDER_TYPE, name: 'Slider' };
 
 export const REQUEST_FORM_FIELD_TYPES: Array<TChoice> = [
     TEXT_TYPE_FIELD,
@@ -103,7 +105,6 @@ export const getFieldSubTypes = (type: string): Array<TChoice> => {
             return [
                 TEXT_TYPE_FIELD,
                 EMAIL_TYPE_FIELD,
-                PASSWORD_TYPE_FIELD,
                 TEL_TYPE_FIELD,
                 URL_TYPE_FIELD
             ];
@@ -204,4 +205,57 @@ export const doNormalizeFieldValue = (fieldConfig: TFieldConfig, value: any) : a
 
     }
 };
+
+
+const TEXT_TYPES : string[] = [
+    TEXT_TYPE,
+    EMAIL_TYPE,
+    TEL_TYPE,
+    URL_TYPE,
+    SLUG_TYPE
+]
+
+export function isTextField(fieldType: string) : boolean {
+    return TEXT_TYPES.includes(fieldType);
+}
+
+
+const NUMBER_TYPES : string[] = [
+    NUMBER_TYPE,
+    PRICE_TYPE,
+    TAX_TYPE,
+]
+
+export function isNumberField(fieldType: string) : boolean {
+    return NUMBER_TYPES.includes(fieldType);
+}
+
+export function isBooleanField(fieldType: string) : boolean {
+    return fieldType === CHECKBOX_TYPE || fieldType === SWITCH_TYPE;
+}
+
+export function isDateTimeField(fieldType: string) : boolean {
+    return fieldType === DATETIME_TYPE;
+}
+
+export function isDateField(fieldType: string) : boolean {
+    return fieldType === DATE_TYPE;
+}
+
+export function isTimeField(fieldType: string) : boolean {
+    return fieldType === TIME_TYPE;
+}
+
+export function isImageField(fieldType: string) : boolean {
+    return fieldType === UPLOAD_IMAGE_TYPE;
+}
+
+export function isSingleSelectField(fieldType: string) : boolean {
+    return fieldType === SINGLE_SELECT_TYPE || fieldType == RADIO_BUTTONS_TYPE;
+}
+
+
+export function isMultiSelectField(fieldType: string) : boolean {
+    return fieldType === MULTI_SELECT_TYPE || fieldType == CHECKBOXES_TYPE;
+}
 

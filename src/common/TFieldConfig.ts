@@ -36,16 +36,18 @@ type TFieldConfig = {
     choices?: Array<TChoice>;
     mediaInfo?: TMediaInfo;
     mediaInfoList?: TMediaInfo[];
-    cClass?: string;
-    lgClass?: string;
-    lClass?: string;
-    igClass?: string;
-    iClass?: string;
-    cChildClass?: string;
-    lgChildClass?: string;
-    lChildClass?: string;
-    igChildClass?: string;
-    iChildClass?: string;
+    cLayout?: string;
+    cClasses?: string;
+    cSxProps?: string;
+    igClasses?: string;
+    igSxProps?: string;
+    iClasses?: string;
+    iSxProps?: string;
+    lgClasses?: string;
+    lgSxProps?: string;
+    lClasses?: string;
+    lSxProps?: string;
+    shouldRender?: boolean;
 };
 
 export type TFieldConfigInfo = {

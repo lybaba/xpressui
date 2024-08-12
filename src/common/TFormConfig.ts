@@ -22,17 +22,9 @@ export type TFormSettings = {
     successMsg?: string;
     nextBtnLabel?: string;
     prevBtnLabel?: string;
-    backendController?: string;
-    cClass?: string;
-    lgClass?: string;
-    lClass?: string;
-    igClass?: string;
-    iClass?: string;
-    cChildClass?: string;
-    lgChildClass?: string;
-    lChildClass?: string;
-    igChildClass?: string;
-    iChildClass?: string;
+    cLayout?: string;
+    cClasses?: string;
+    cSxProps?: string;
 };
 
 export enum RenderingMode {
@@ -68,16 +60,8 @@ type TFormConfig = {
     choices?: TChoice[];
     backendController: string;
     renderingMode?: RenderingMode;
-    cClass?: string;
-    lgClass?: string;
-    lClass?: string;
-    igClass?: string;
-    iClass?: string;
-    cChildClass?: string;
-    lgChildClass?: string;
-    lChildClass?: string;
-    igChildClass?: string;
-    iChildClass?: string;
+    cClasses?: string;
+    cSxProps?: string;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {

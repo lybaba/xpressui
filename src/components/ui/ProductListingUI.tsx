@@ -1,5 +1,5 @@
 import TPostUIProps from '../../common/TPostUIProps';
-import BodyContent from './BodyContent';
+import FormSectionList from './FormSectionList';
 
 
 function ProductListingUI(props: TPostUIProps) {
@@ -8,7 +8,7 @@ function ProductListingUI(props: TPostUIProps) {
     } = props;
 
     return (
-        <BodyContent {...props} template={template} />
+        <FormSectionList {...props}  />
     );
 }
 

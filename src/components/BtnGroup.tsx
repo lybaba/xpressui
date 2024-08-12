@@ -6,11 +6,12 @@ import {
 import { usePostUIContext } from "./ui/PostUIProvider";
 import { FormRenderProps } from "react-final-form";
 import { onNextBtnClick, onPrevBtnClick } from "./ui/Actions";
-import { MULTI_STEP_FORM_TYPE } from "../common/TFormConfig";
+import TFormConfig, { MULTI_STEP_FORM_TYPE } from "../common/TFormConfig";
 import TPostUIProps from "../common/TPostUIProps";
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
+    rootFormConfig: TFormConfig;
 }
 
 type Props = OwnProps & TPostUIProps;

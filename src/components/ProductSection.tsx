@@ -1,14 +1,20 @@
 import TFieldConfig from '../common/TFieldConfig';
 import { Box, Card, CardContent, Divider, Stack, Typography } from '@mui/joy';
 import { usePostUIContext } from './ui/PostUIProvider';
-import { MULTI_STEP_FORM_TYPE } from '../common/TFormConfig';
+import TFormConfig, { MULTI_STEP_FORM_TYPE } from '../common/TFormConfig';
 import FormField from './FormField';
 import TFormFieldProps from '../common/TFormFieldProps';
 import { isFunction } from 'lodash';
 import React from 'react';
 
 
-function ProductSection(props: TFormFieldProps) {
+type OwnProps = {
+    rootFormConfig: TFormConfig;
+}
+
+type Props = OwnProps & TFormFieldProps;
+
+function ProductSection(props: Props) {
     const {
         fieldConfig,
         fieldIndex,

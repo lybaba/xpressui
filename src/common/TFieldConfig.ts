@@ -9,6 +9,7 @@ export type ImageSize = {
 type TFieldConfig = {
     type: string;
     label: string;
+    adminLabel?: string;
     name: string;
     subType?: string;
     refType?: string;
@@ -47,7 +48,7 @@ type TFieldConfig = {
     lgSxProps?: string;
     lClasses?: string;
     lSxProps?: string;
-    shouldRender?: boolean;
+    isAdminField?: boolean;
 };
 
 export type TFieldConfigInfo = {

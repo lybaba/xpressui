@@ -366,10 +366,10 @@ export function getBodyFormConfig(formConfig: TFormConfig) : TFormConfig {
     
     formConfig.sections[MAIN_SECTION].forEach((sectionConfig: TFieldConfig) => {
         const {
-            shouldRender = true
+            isAdminField = false
         } = sectionConfig
 
-        if (shouldRender)
+        if (!isAdminField)
             mainSections.push(sectionConfig);
     });
 

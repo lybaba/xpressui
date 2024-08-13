@@ -1,6 +1,6 @@
 {
   "name": "@lybaba/xpressui",
-  "version": "0.54.0",
+  "version": "0.56.0",
   "repository": "https://github.com/lybaba/xpressui",
   "description": "IAKPress Frontend Post UI Components",
   "main": "dist/index.js",
@@ -32,7 +32,6 @@
     "ajv": "^8.17.1",
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^3.0.1",
-    "html-react-parser": "^5.1.12",
     "lodash": "^4.17.21",
     "next": "14.2.5",
     "react": "^18",

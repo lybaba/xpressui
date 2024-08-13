@@ -1,5 +1,5 @@
 
-import TFieldConfig, { CssClassesProp } from './TFieldConfig';
+import TFieldConfig, { CssClassesProps, SxPropsProps } from './TFieldConfig';
 
 import slugify from 'slugify';
 import { isEmpty, isObject, lowerCase } from 'lodash';
@@ -260,7 +260,7 @@ export function isMultiSelectField(fieldType: string) : boolean {
 }
 
 
-export function strToClasses(str: string | Record<string, any> | undefined | null) : CssClassesProp | {} {
+export function strToClasses(str: string | Record<string, any> | undefined | null) : CssClassesProps {
     if (!str)
         return {}
 
@@ -271,7 +271,7 @@ export function strToClasses(str: string | Record<string, any> | undefined | nul
     return res;
 }
 
-export function strToSxProps(str: string | Record<string, any> | undefined | null) : any {
+export function strToSxProps(str: string | Record<string, any> | undefined | null) : SxPropsProps {
     if (!str)
         return {}
 
@@ -290,16 +290,12 @@ export function strToSxProps(str: string | Record<string, any> | undefined | nul
 
 
 export function getFieldConfigWithCssProps(fieldConfig: TFieldConfig) : TFieldConfig {
-    const res = {...fieldConfig};
+    fieldConfig.cSxPropsProps = strToSxProps(fieldConfig.cSxProps);
+    fieldConfig.cClassesProps = strToClasses(fieldConfig.cClasses);
+    fieldConfig.iSxPropsProps = strToSxProps(fieldConfig.iSxProps);
+    fieldConfig.iClassesProps = strToClasses(fieldConfig.iClasses);
+    fieldConfig.lSxPropsProps = strToSxProps(fieldConfig.lSxProps);
+    fieldConfig.lClassesProps = strToClasses(fieldConfig.lClasses);
 
-    res.cSxProps = strToSxProps(fieldConfig.cSxProps);
-    res.cClasses = strToClasses(fieldConfig.cClasses);
-
-    res.iSxProps = strToSxProps(fieldConfig.iSxProps);
-    res.iClasses = strToClasses(fieldConfig.iClasses);
-
-    res.lSxProps = strToSxProps(fieldConfig.lSxProps);
-    res.lClasses = strToClasses(fieldConfig.lClasses);
-
-    return res;
+    return fieldConfig;
 }

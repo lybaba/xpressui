@@ -8,13 +8,15 @@ import { FormRenderProps } from 'react-final-form';
 import React from 'react';
 import { PRODUCTFORM_TYPE } from '../../common/TFormConfig';
 import ProductSection from '../ProductSection';
-import { getBodyFormConfig } from '../../common/post';
-import { getFieldConfigWithCssProps, strToClasses, strToSxProps } from '../../common/field';
+import { getFieldConfigWithCssProps } from '../../common/field';
 
-import getFooterConfig from '../../common/footer';
+import { TFooterConfig } from '../../common/footer';
+import { THeadingConfig } from '../../common/heading';
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
+    footerConfig: TFooterConfig
+    headingConfig: THeadingConfig;
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -24,27 +26,16 @@ export default function FormSectionList(props: Props) {
         formConfig,
     } = props;
 
-    const {
-        fClasses = null,
-        fSxProps = null
-    } = formConfig;
 
-    const cssClassesProps = strToClasses(fClasses);
-    const cSxProps = strToSxProps(fSxProps);
-
-    const bodyFormConfig = getBodyFormConfig(formConfig);
-
-    const footerConfig = getFooterConfig(formConfig);
-
-    const sections = bodyFormConfig.sections[MAIN_SECTION];
+    const sections = formConfig.sections[MAIN_SECTION];
 
 
     return (
         <Stack
             spacing={2}
             gap={2}
-            {...cssClassesProps}
-            {...cSxProps}
+            {...formConfig.fClassesProps}
+            {...formConfig.fSxPropsProps}
         >
             {/*
                 Stepper
@@ -59,8 +50,6 @@ export default function FormSectionList(props: Props) {
                             <ProductSection
                                 key={fieldIndex}
                                 {...props}
-                                rootFormConfig={formConfig}
-                                formConfig={bodyFormConfig}
                                 formName={fieldConfig.name}
                                 fieldConfig={fieldConfig}
                                 fieldIndex={fieldIndex}
@@ -69,8 +58,6 @@ export default function FormSectionList(props: Props) {
                             <Section
                                 key={fieldIndex}
                                 {...props}
-                                rootFormConfig={formConfig}
-                                formConfig={bodyFormConfig}
                                 formName={fieldConfig.name}
                                 fieldConfig={fieldConfig}
                                 fieldIndex={fieldIndex}
@@ -82,7 +69,6 @@ export default function FormSectionList(props: Props) {
             {
                 <BtnGroup
                     {...props}
-                    footerConfig={footerConfig}
                 />
             }
         </Stack>

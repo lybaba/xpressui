@@ -8,13 +8,8 @@ import { isFunction } from 'lodash';
 import React from 'react';
 import { getFieldConfigWithCssProps } from '../common/field';
 
-type OwnProps = {
-    rootFormConfig: TFormConfig;
-}
 
-type Props = OwnProps & TFormFieldProps;
-
-function Section(props: Props) {
+function Section(props: TFormFieldProps) {
     const {
         fieldConfig,
         fieldIndex,

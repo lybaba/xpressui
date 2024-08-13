@@ -1,7 +1,7 @@
 import TFieldConfig from '../common/TFieldConfig';
-import { Box, Card, CardContent, Divider, Stack, Typography } from '@mui/joy';
+import { Card, CardContent, Divider, Stack, Typography } from '@mui/joy';
 import { usePostUIContext } from './ui/PostUIProvider';
-import TFormConfig, { MULTI_STEP_FORM_TYPE } from '../common/TFormConfig';
+import { MULTI_STEP_FORM_TYPE } from '../common/TFormConfig';
 import FormField from './FormField';
 import TFormFieldProps from '../common/TFormFieldProps';
 import { isFunction } from 'lodash';
@@ -9,13 +9,7 @@ import React from 'react';
 import { getFieldConfigWithCssProps } from '../common/field';
 
 
-type OwnProps = {
-    rootFormConfig: TFormConfig;
-}
-
-type Props = OwnProps & TFormFieldProps;
-
-function ProductSection(props: Props) {
+function ProductSection(props: TFormFieldProps) {
     const {
         fieldConfig,
         fieldIndex,

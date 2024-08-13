@@ -6,6 +6,8 @@ import { ReactNode } from "react";
 import TPostUIEvent from "./TPostUIEvent";
 import TServerResponse from "./TServerResponse";
 import TComponentType from "./TComponentType";
+import { TFooterConfig } from "./footer";
+import { THeadingConfig } from "./heading";
 
 type TFormFieldProps =  {
     formConfig: TFormConfig;
@@ -26,6 +28,8 @@ type TFormFieldProps =  {
     children?: ReactNode | undefined;
     componentType?: TComponentType;
     isLivePreview?: boolean;
+    footerConfig: TFooterConfig;
+    headingConfig: THeadingConfig;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;
     renderField?: (props: TFormFieldProps) => React.ReactNode | undefined
     renderSection?: (props: TFormFieldProps, fields: TFieldConfig[]) => React.ReactNode | undefined

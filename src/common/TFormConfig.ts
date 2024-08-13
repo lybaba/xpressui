@@ -1,5 +1,5 @@
 import TChoice from "./TChoice";
-import TFieldConfig from "./TFieldConfig";
+import TFieldConfig, { CssClassesProps, SxPropsProps } from "./TFieldConfig";
 import shortUUID from "short-uuid";
 import { MAIN_SECTION } from "./Constants";
 
@@ -38,11 +38,17 @@ type TFormConfig = {
     choices?: TChoice[];
     renderingMode?: RenderingMode;
     bClasses?: string;
-    bSxProps?: string | Record<string, any>
+    bClassesProps?: CssClassesProps;
+    bSxProps?: string;
+    bSxPropsProps?: SxPropsProps;
     fClasses?: string;
-    fSxProps?: string | Record<string, any>
+    fClassesProps?: CssClassesProps;
+    fSxProps?: string;
+    fSxPropsProps?: SxPropsProps;
     tClasses?: string;
-    tSxProps?: string | Record<string, any>
+    tClassesProps?: CssClassesProps;
+    tSxProps?: string;
+    tSxPropsProps?: SxPropsProps;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {

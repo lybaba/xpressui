@@ -89,102 +89,125 @@ const CHOICE_GROUP_FORM_NAME = 'choicegroup';
 const CHOICE_GROUP_FORM_LABEL = 'Choice Group';
 
 const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
-  "type": "productform",
+  "id": "ccCvGhe5NssQzwFmA4nCb8",
+  "uid": "fAru4JzmgMpMYRiGjZwnqf",
+  "type": "multistepform",
+  "label": "Foo",
+  "name": "foo",
+  "timestamp": 1723574473,
   "sections": {
-    "general": [
-      {
-        "type": "switch",
-        "canDelete": false,
-        "name": "disabled",
-        "label": "Unpublish"
-      },
-      {
-        "required": true,
-        "maxLen": 200,
-        "name": "name",
-        "canDelete": false,
-        "type": "text",
-        "label": "Name"
-      },
-      {
-        "type": "slug",
-        "label": "ID",
-        "canDelete": false,
-        "name": "id",
-        "placeholder": "Product sku or custom identifier",
-        "maxLen": 64,
-        "required": false
-      },
-      {
-        "canDelete": false,
-        "type": "textarea",
-        "name": "desc",
-        "maxLen": 400,
-        "label": "Description"
-      },
-      {
-        "canDelete": false,
-        "type": "textarea",
-        "name": "content",
-        "maxLen": 5000,
-        "label": "Content"
-      },
-      {
-        "type": "upload-image",
-        "label": "Featured Image",
-        "name": "mediaId",
-        "canDelete": false
-      }
-    ],
     "main": [
       {
-        "name": "general",
         "type": "section",
-        "label": "General",
-        "canDelete": false
+        "label": "Heading",
+        "adminLabel": "Heading",
+        "name": "heading",
+        "canDelete": false,
+        "isAdminField": true,
+        "cSxProps": "{\"border\": \"1px solid'\"}"
       },
       {
-        "canDelete": false,
-        "name": "pricing",
         "type": "section",
-        "label": "Pricing"
+        "label": "Footer",
+        "adminLabel": "Footer",
+        "name": "footer",
+        "canDelete": false,
+        "isAdminField": true,
+        "cSxProps": "{\"bgcolor\": \"neutral.800\", \"p\": 5}",
+        "cClasses": "fdsdfdf"
+      },
+      {
+        "label": "Inscription",
+        "name": "inscription",
+        "type": "section"
+      },
+      {
+        "label": "Paiement",
+        "name": "paiement",
+        "type": "section"
       }
     ],
-    "pricing": [
+    "heading": [
       {
-        "label": "Regular price",
-        "type": "price",
-        "name": "regularPrice",
+        "type": "image",
+        "name": "logo",
+        "label": "Logo Image",
+        "adminLabel": "Logo Image",
         "canDelete": false
       },
       {
-        "canDelete": false,
-        "label": "Sale price",
-        "type": "price",
-        "name": "salePrice"
+        "type": "image",
+        "name": "background",
+        "label": "Background Image",
+        "adminLabel": "Background Image",
+        "canDelete": false
       },
       {
-        "name": "hasTaxes",
-        "canDelete": false,
-        "type": "switch",
-        "label": "Price includes taxes"
+        "type": "image",
+        "name": "header",
+        "label": "Banner Image",
+        "adminLabel": "Banner Image",
+        "canDelete": false
       },
       {
-        "label": "Tax (%)",
-        "name": "tax",
-        "type": "tax",
-        "canDelete": false,
-        "placeholder": "% 0.0"
+        "type": "image",
+        "name": "hero",
+        "label": "Hero Image",
+        "adminLabel": "Hero Image",
+        "canDelete": false
+      }
+    ],
+    "footer": [
+      {
+        "type": "submit",
+        "name": "submitBtn",
+        "label": "Envoyer",
+        "adminLabel": "Submit",
+        "desc": "Hello World",
+        "cSxProps": "{\"bgcolor\": \"neutral.800\"}",
+        "canDelete": false
+      },
+      {
+        "type": "submit",
+        "name": "nextBtn",
+        "label": "Suivant",
+        "adminLabel": "Next",
+        "canDelete": false
+      },
+      {
+        "type": "submit",
+        "name": "prevBtn",
+        "label": "Précédent",
+        "adminLabel": "Previous",
+        "canDelete": false
+      }
+    ],
+    "inscription": [
+      {
+        "label": "Prénom",
+        "name": "prenom",
+        "type": "text"
+      },
+      {
+        "label": "Nom",
+        "name": "nom",
+        "type": "text"
+      },
+      {
+        "label": "Age",
+        "name": "age",
+        "type": "number"
+      }
+    ],
+    "paiement": [
+      {
+        "label": "Titi",
+        "name": "titi",
+        "type": "text"
       }
     ]
-  },
-  "name": "produits",
-  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
-  "timestamp": 1723389241,
-  "id": "sQ5CDdcvJxHkJWtgy6C3KX",
-  "label": "Produits"
+  }
 }
-
 // ======================
 
 // callback for sending data to server.  

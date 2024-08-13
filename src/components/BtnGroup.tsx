@@ -9,11 +9,12 @@ import { onNextBtnClick, onPrevBtnClick } from "./ui/Actions";
 import { MULTI_STEP_FORM_TYPE } from "../common/TFormConfig";
 import TPostUIProps from "../common/TPostUIProps";
 import { TFooterConfig } from "../common/footer";
-import { isObject } from "lodash";
+import { THeadingConfig } from "../common/heading";
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
     footerConfig: TFooterConfig;
+    headingConfig: THeadingConfig;
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -41,16 +42,15 @@ function BtnGroup(props: Props) {
 
     const showSubmitBtn = !isMultiStepForm || currentStepNum === nbSteps;
 
-
     return (
         <Stack
-            {...(isObject(footerConfig.footer.cClasses) ? footerConfig.footer.cClasses : {})}
-            {...(isObject(footerConfig.footer.cSxProps) ? footerConfig.footer.cSxProps : {})}
+            {...footerConfig.footer.cClassesProps}
+            {...footerConfig.footer.cSxPropsProps}
         >
             <Box
                 component={'p'}
-                {...(isObject(footerConfig.footer.lClasses) ? footerConfig.footer.lClasses : {})}
-                {...(isObject(footerConfig.footer.lSxProps) ? footerConfig.footer.lSxProps : {})}
+                {...footerConfig.footer.lClassesProps}
+                {...footerConfig.footer.lSxPropsProps}
             >
                 { footerConfig.footer.desc }
             </Box>
@@ -60,14 +60,14 @@ function BtnGroup(props: Props) {
                 direction={'row'}
                 justifyContent={'space-between'}
                 spacing="1.25rem"
-                {...(isObject(footerConfig.footer.iClasses) ? footerConfig.footer.iClasses : {})}
-                {...(isObject(footerConfig.footer.iSxProps) ? footerConfig.footer.iSxProps : {})}
+                {...footerConfig.footer.iClassesProps}
+                {...footerConfig.footer.iSxPropsProps}
             >
                 {
                     isMultiStepForm ? (
                         <Box
-                            {...(isObject(footerConfig.prevBtn.cClasses) ? footerConfig.prevBtn.cClasses : {})}
-                            {...(isObject(footerConfig.prevBtn.cSxProps) ? footerConfig.prevBtn.cSxProps : {})}
+                            {...footerConfig.prevBtn.cClassesProps}
+                            {...footerConfig.prevBtn.cSxPropsProps}
                         >
                             <Button
                                 onClick={(e) => {
@@ -75,12 +75,12 @@ function BtnGroup(props: Props) {
                                     onPrevBtnClick(postUIContext, props, formProps)
                                 }}
                                 disabled={!showPrevBtn}
-                                {...(isObject(footerConfig.prevBtn.iClasses) ? footerConfig.prevBtn.iClasses : {})}
-                                {...(isObject(footerConfig.prevBtn.iSxProps) ? footerConfig.prevBtn.iSxProps : {})}
+                                {...footerConfig.prevBtn.iClassesProps}
+                                {...footerConfig.prevBtn.iSxPropsProps}
                             >
                                 <span
-                                    {...(isObject(footerConfig.prevBtn.lClasses) ? footerConfig.prevBtn.lClasses : {})}
-                                    {...(isObject(footerConfig.prevBtn.lSxProps) ? footerConfig.prevBtn.lSxProps : {})}
+                                    {...footerConfig.prevBtn.lClassesProps}
+                                    {...footerConfig.prevBtn.lSxPropsProps}
                                 >
                                     {
                                         footerConfig.prevBtn.label
@@ -93,8 +93,8 @@ function BtnGroup(props: Props) {
                 {
                     isMultiStepForm && showNextBtn && (
                         <Box
-                            {...(isObject(footerConfig.nextBtn.cClasses) ? footerConfig.nextBtn.cClasses : {})}
-                            {...(isObject(footerConfig.nextBtn.cSxProps) ? footerConfig.nextBtn.cSxProps : {})}
+                            {...footerConfig.nextBtn.cClassesProps}
+                            {...footerConfig.nextBtn.cSxPropsProps}
                         >
                             <Button
                                 color="primary"
@@ -102,13 +102,12 @@ function BtnGroup(props: Props) {
                                     e.preventDefault();
                                     onNextBtnClick(postUIContext, props, formProps)
                                 }}
-                                disabled={!showPrevBtn}
-                                {...(isObject(footerConfig.nextBtn.iClasses) ? footerConfig.nextBtn.iClasses : {})}
-                                {...(isObject(footerConfig.nextBtn.iSxProps) ? footerConfig.nextBtn.iSxProps : {})}
+                                {...footerConfig.nextBtn.iClassesProps}
+                                {...footerConfig.nextBtn.iSxPropsProps}
                             >
                                 <span
-                                    {...(isObject(footerConfig.nextBtn.lClasses) ? footerConfig.nextBtn.lClasses : {})}
-                                    {...(isObject(footerConfig.nextBtn.lSxProps) ? footerConfig.nextBtn.lSxProps : {})}
+                                    {...footerConfig.nextBtn.lClassesProps}
+                                    {...footerConfig.nextBtn.lSxPropsProps}
                                 >
                                     {
                                         footerConfig.nextBtn.label
@@ -121,19 +120,19 @@ function BtnGroup(props: Props) {
                 {
                     showSubmitBtn && (
                         <Box
-                            {...(isObject(footerConfig.submitBtn.cClasses) ? footerConfig.submitBtn.cClasses : {})}
-                            {...(isObject(footerConfig.submitBtn.cSxProps) ? footerConfig.submitBtn.cSxProps : {})}
+                            {...footerConfig.submitBtn.cClassesProps}
+                            {...footerConfig.submitBtn.cSxPropsProps}
                         >
                             <Button
                                 type="submit"
                                 color="primary"
                                 variant="solid"
-                                {...(isObject(footerConfig.submitBtn.iClasses) ? footerConfig.submitBtn.iClasses : {})}
-                                {...(isObject(footerConfig.submitBtn.iSxProps) ? footerConfig.submitBtn.iSxProps : {})}
+                                {...footerConfig.submitBtn.iClassesProps}
+                                {...footerConfig.submitBtn.iSxPropsProps}
                             >
                                 <span
-                                    {...(isObject(footerConfig.submitBtn.lClasses) ? footerConfig.submitBtn.lClasses : {})}
-                                    {...(isObject(footerConfig.submitBtn.lSxProps) ? footerConfig.submitBtn.lSxProps : {})}
+                                    {...footerConfig.submitBtn.lClassesProps}
+                                    {...footerConfig.submitBtn.lSxPropsProps}
                                 >
                                     {
                                         footerConfig.submitBtn.label

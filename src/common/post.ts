@@ -12,9 +12,11 @@ import {
     SWITCH_TYPE,
     TAX_TYPE,
     TIME_TYPE,
+    strToClasses,
+    strToSxProps,
 } from "./field";
 import { ValidateFunction } from "ajv";
-import TFieldConfig, { CssClassesProp } from "./TFieldConfig";
+import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { RenderingMode } from "./TFormConfig";
 import { MAIN_SECTION } from './Constants';
 import TMediaFile, { TMediaInfo, TMediaFileMetadata } from './TMediaFile';
@@ -23,7 +25,6 @@ import { isEmpty, isObject } from 'lodash';
 import TChoice from "./TChoice";
 import parseErrors from "./parse-errors";
 import TFormFieldProps from "./TFormFieldProps";
-import { SxProps } from "@mui/joy/styles/types";
 
 export const FORM_ID = "form";
 export const SECTION_ID = 'attrgroup';
@@ -369,10 +370,19 @@ export function getBodyFormConfig(formConfig: TFormConfig) : TFormConfig {
             mainSections.push(sectionConfig);
     });
 
-    return {
+    const res = {
         ...formConfig,
         sections: {...formConfig.sections, [MAIN_SECTION]: mainSections}
     };
+
+    res.bClassesProps = strToClasses(res.bClasses);
+    res.bSxPropsProps = strToSxProps(res.bSxProps);
+    res.fClassesProps = strToClasses(res.fClasses);
+    res.fSxPropsProps = strToSxProps(res.fSxProps);
+    res.tClassesProps = strToClasses(res.tClasses);
+    res.tSxPropsProps = strToSxProps(res.tSxProps);
+
+    return res;
 
 }
 

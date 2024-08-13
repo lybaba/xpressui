@@ -1,3 +1,4 @@
+import { SxProps } from "@mui/joy/styles/types";
 import TChoice from "./TChoice";
 import { TMediaInfo } from "./TMediaFile";
 
@@ -6,9 +7,13 @@ export type ImageSize = {
     height: number;
 };
 
-export type CssClassesProp = {
-    className: string
+export type CssClassesProps = {
+    className?: string
 };
+
+export type SxPropsProps = {
+    sx?: SxProps
+}
 
 type TFieldConfig = {
     type: string;
@@ -42,12 +47,18 @@ type TFieldConfig = {
     mediaInfo?: TMediaInfo;
     mediaInfoList?: TMediaInfo[];
     cLayout?: string;
-    cClasses?: string | CssClassesProp | {} 
-    cSxProps?: string | Record<string, any>;
-    iClasses?: string | CssClassesProp | {} 
-    iSxProps?: string | Record<string, any>;
-    lClasses?: string | CssClassesProp | {} ;
-    lSxProps?: string | Record<string, any>;
+    cClasses?: string
+    cClassesProps?: CssClassesProps
+    cSxProps?: string;
+    cSxPropsProps?: SxPropsProps;
+    iClasses?: string
+    iClassesProps?: CssClassesProps 
+    iSxProps?: string;
+    iSxPropsProps?: SxPropsProps;
+    lClasses?: string
+    lClassesProps?: CssClassesProps
+    lSxProps?: string;
+    lSxPropsProps?: SxPropsProps;
     isAdminField?: boolean;
 };
 

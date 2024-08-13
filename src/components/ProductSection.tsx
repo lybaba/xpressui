@@ -6,6 +6,7 @@ import FormField from './FormField';
 import TFormFieldProps from '../common/TFormFieldProps';
 import { isFunction } from 'lodash';
 import React from 'react';
+import { getFieldConfigWithCssProps } from '../common/field';
 
 
 type OwnProps = {
@@ -61,32 +62,36 @@ function ProductSection(props: Props) {
                     <Stack
                         spacing={2}
                         gap={2}
-      
+
                     >
                         {
-                            fields.map((fieldConfig: TFieldConfig, index) => (
-                                isFunction(renderField) ? (
-                                    <React.Fragment key={fieldIndex}>
-                                        {
-                                            renderField(
-                                                {
-                                                    ...props,
-                                                    formName: sectionConfig.name,
-                                                    fieldConfig,
-                                                    fieldIndex: index
-                                                })
-                                        }
-                                    </React.Fragment>
-                                ) : (
-                                    <FormField
-                                        key={index}
-                                        {...props}
-                                        formName={sectionConfig.name}
-                                        fieldConfig={fieldConfig}
-                                        fieldIndex={index}
-                                    />
+                            fields.map((tmpFieldConfig: TFieldConfig, index) => {
+                                const fieldConfig = getFieldConfigWithCssProps(tmpFieldConfig);
+
+                                return (
+                                    isFunction(renderField) ? (
+                                        <React.Fragment key={fieldIndex}>
+                                            {
+                                                renderField(
+                                                    {
+                                                        ...props,
+                                                        formName: sectionConfig.name,
+                                                        fieldConfig,
+                                                        fieldIndex: index
+                                                    })
+                                            }
+                                        </React.Fragment>
+                                    ) : (
+                                        <FormField
+                                            key={index}
+                                            {...props}
+                                            formName={sectionConfig.name}
+                                            fieldConfig={fieldConfig}
+                                            fieldIndex={index}
+                                        />
+                                    )
                                 )
-                            ))
+                            })
                         }
                     </Stack>
                 </CardContent>

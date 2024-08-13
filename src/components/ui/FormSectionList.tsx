@@ -9,6 +9,9 @@ import React from 'react';
 import { PRODUCTFORM_TYPE } from '../../common/TFormConfig';
 import ProductSection from '../ProductSection';
 import { getBodyFormConfig } from '../../common/post';
+import { getFieldConfigWithCssProps, strToClasses, strToSxProps } from '../../common/field';
+
+import getFooterConfig from '../../common/footer';
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
@@ -21,49 +24,65 @@ export default function FormSectionList(props: Props) {
         formConfig,
     } = props;
 
+    const {
+        fClasses = null,
+        fSxProps = null
+    } = formConfig;
+
+    const cssClassesProps = strToClasses(fClasses);
+    const cSxProps = strToSxProps(fSxProps);
+
     const bodyFormConfig = getBodyFormConfig(formConfig);
 
+    const footerConfig = getFooterConfig(formConfig);
+
     const sections = bodyFormConfig.sections[MAIN_SECTION];
+
 
     return (
         <Stack
             spacing={2}
             gap={2}
+            {...cssClassesProps}
+            {...cSxProps}
         >
             {/*
                 Stepper
                 <Box></Box>
             */}
             {
-                sections.map((fieldConfig: TFieldConfig, fieldIndex) => (
-                    formConfig.type === PRODUCTFORM_TYPE ? (
-                        <ProductSection
-                            key={fieldIndex}
-                            {...props}
-                            rootFormConfig={formConfig}
-                            formConfig={bodyFormConfig}
-                            formName={fieldConfig.name}
-                            fieldConfig={fieldConfig}
-                            fieldIndex={fieldIndex}
-                        />
-                    ) : (
-                        <Section
-                            key={fieldIndex}
-                            {...props}
-                            rootFormConfig={formConfig}
-                            formConfig={bodyFormConfig}
-                            formName={fieldConfig.name}
-                            fieldConfig={fieldConfig}
-                            fieldIndex={fieldIndex}
-                        />
+                sections.map((tmpFieldConfig: TFieldConfig, fieldIndex) => {
+                    const fieldConfig = getFieldConfigWithCssProps(tmpFieldConfig);
+
+                    return (
+                        formConfig.type === PRODUCTFORM_TYPE ? (
+                            <ProductSection
+                                key={fieldIndex}
+                                {...props}
+                                rootFormConfig={formConfig}
+                                formConfig={bodyFormConfig}
+                                formName={fieldConfig.name}
+                                fieldConfig={fieldConfig}
+                                fieldIndex={fieldIndex}
+                            />
+                        ) : (
+                            <Section
+                                key={fieldIndex}
+                                {...props}
+                                rootFormConfig={formConfig}
+                                formConfig={bodyFormConfig}
+                                formName={fieldConfig.name}
+                                fieldConfig={fieldConfig}
+                                fieldIndex={fieldIndex}
+                            />
+                        )
                     )
-                ))
+                })
             }
             {
                 <BtnGroup
                     {...props}
-                    formConfig={bodyFormConfig}
-                    rootFormConfig={formConfig}
+                    footerConfig={footerConfig}
                 />
             }
         </Stack>

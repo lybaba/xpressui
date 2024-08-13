@@ -1,8 +1,8 @@
 
-import TFieldConfig from './TFieldConfig';
+import TFieldConfig, { CssClassesProp } from './TFieldConfig';
 
 import slugify from 'slugify';
-import { lowerCase } from 'lodash';
+import { isEmpty, isObject, lowerCase } from 'lodash';
 import TFormConfig from './TFormConfig';
 import TChoice from './TChoice';
 
@@ -259,3 +259,47 @@ export function isMultiSelectField(fieldType: string) : boolean {
     return fieldType === MULTI_SELECT_TYPE || fieldType == CHECKBOXES_TYPE;
 }
 
+
+export function strToClasses(str: string | Record<string, any> | undefined | null) : CssClassesProp | {} {
+    if (!str)
+        return {}
+
+    if (isObject(str))
+        return str;
+    
+    const res = str ? {className: str} : {};
+    return res;
+}
+
+export function strToSxProps(str: string | Record<string, any> | undefined | null) : any {
+    if (!str)
+        return {}
+
+    if (isObject(str))
+        return str;
+
+    try {
+        const obj = JSON.parse(str);
+        if(isObject(obj) && !isEmpty(obj)) 
+            return {sx: obj}
+    } catch (e) {
+    }
+
+    return {}
+}
+
+
+export function getFieldConfigWithCssProps(fieldConfig: TFieldConfig) : TFieldConfig {
+    const res = {...fieldConfig};
+
+    res.cSxProps = strToSxProps(fieldConfig.cSxProps);
+    res.cClasses = strToClasses(fieldConfig.cClasses);
+
+    res.iSxProps = strToSxProps(fieldConfig.iSxProps);
+    res.iClasses = strToClasses(fieldConfig.iClasses);
+
+    res.lSxProps = strToSxProps(fieldConfig.lSxProps);
+    res.lClasses = strToClasses(fieldConfig.lClasses);
+
+    return res;
+}

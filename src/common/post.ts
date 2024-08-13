@@ -5,29 +5,25 @@ import {
     EMAIL_TYPE,
     MULTI_SELECT_TYPE,
     NUMBER_TYPE,
-    PASSWORD_TYPE,
     POSITIVE_INTEGER_TYPE,
     PRICE_TYPE,
     SINGLE_SELECT_TYPE,
     SLUG_TYPE,
     SWITCH_TYPE,
     TAX_TYPE,
-    TEL_TYPE,
-    TEXTAREA_TYPE,
-    TEXT_TYPE,
     TIME_TYPE,
-    URL_TYPE
 } from "./field";
 import { ValidateFunction } from "ajv";
-import TFieldConfig from "./TFieldConfig";
+import TFieldConfig, { CssClassesProp } from "./TFieldConfig";
 import TFormConfig, { RenderingMode } from "./TFormConfig";
 import { MAIN_SECTION } from './Constants';
 import TMediaFile, { TMediaInfo, TMediaFileMetadata } from './TMediaFile';
 import { TPostUIContext } from '../components/ui/TPostUIState';
-import { isEmpty } from 'lodash';
+import { isEmpty, isObject } from 'lodash';
 import TChoice from "./TChoice";
 import parseErrors from "./parse-errors";
 import TFormFieldProps from "./TFormFieldProps";
+import { SxProps } from "@mui/joy/styles/types";
 
 export const FORM_ID = "form";
 export const SECTION_ID = 'attrgroup';
@@ -379,3 +375,39 @@ export function getBodyFormConfig(formConfig: TFormConfig) : TFormConfig {
     };
 
 }
+
+
+export function isJSON(str: string) {
+    try {
+        const obj = JSON.parse(str);
+        return isObject(obj);
+    } catch (e) {
+        return false;
+    }
+}
+
+
+
+
+
+// ======================================================
+
+export function getFieldConfigByName(formConfig: TFormConfig, sectionName: string, fieldName: string) : TFieldConfig | null {
+    if (formConfig.sections[sectionName]) {
+        let fieldIndex = -1;
+        const fields =  formConfig.sections[sectionName];
+        fields.every((tmpFieldConfig: TFieldConfig, index: number) => {
+            if (tmpFieldConfig.name === fieldName) {
+                fieldIndex = index;
+                return false;
+            }
+    
+            return true;
+        });
+    
+        return fieldIndex >=0 ? fields[fieldIndex] : null;
+    }
+
+    return null;
+}
+

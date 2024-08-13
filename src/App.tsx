@@ -15,12 +15,6 @@ const MULTI_STEP_FORM_CONFIG: TFormConfig = {
   "type": "multistepform",
   "name": "multi-step-form",
   "label": "MultiStep Form",
-  "submitBtnLabel": "Submit",
-  "prevBtnLabel": "Previous",
-  "nextBtnLabel": "Next",
-  "backendController": "controller.php",
-  "successMsg": "Form successfully submited.",
-  "errorMsg": "Submission failed.",
   "sections": {
       "main": [
         {
@@ -95,7 +89,6 @@ const CHOICE_GROUP_FORM_NAME = 'choicegroup';
 const CHOICE_GROUP_FORM_LABEL = 'Choice Group';
 
 const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
-  "prevBtnLabel": "Previous",
   "type": "productform",
   "sections": {
     "general": [
@@ -185,19 +178,10 @@ const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
       }
     ]
   },
-  "background": "",
   "name": "produits",
-  "submitBtnLabel": "Submit",
   "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
   "timestamp": 1723389241,
-  "errorMsg": "",
-  "header": "",
-  "nextBtnLabel": "Next",
-  "hero": "",
-  "successMsg": "",
   "id": "sQ5CDdcvJxHkJWtgy6C3KX",
-  "backendController": "controller-sample.php",
-  "logo": "",
   "label": "Produits"
 }
 
@@ -210,36 +194,7 @@ async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
 
   // add logic to post the data (event.data) to the server
   if (event.eventType === TPostUIEventType.SubmitFormEvent) {
-    const response = await fetch(event.frontend.formConfig.backendController, {
-      method: "POST", 
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(event.data.formData), 
-    });
 
-    const {
-      errorMsg = 'Submission failed.',
-      successMsg = 'Form has been successfully submitted.'
-    } = event.frontend.formConfig;
-
-    if (!response.ok) {
-      const serverRes: TServerResponse = {
-        success: false,
-        message: errorMsg,
-        statusCode: response.status
-      };
-
-      return serverRes;
-    }
-    const data = response.json();
-    const serverRes: TServerResponse = {
-      success: true,
-      message: successMsg,
-      data
-    };
-
-    return serverRes;
   }
 
   const serverRes: TServerResponse = {

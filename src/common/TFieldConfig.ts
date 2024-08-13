@@ -6,6 +6,10 @@ export type ImageSize = {
     height: number;
 };
 
+export type CssClassesProp = {
+    className: string
+};
+
 type TFieldConfig = {
     type: string;
     label: string;
@@ -38,16 +42,12 @@ type TFieldConfig = {
     mediaInfo?: TMediaInfo;
     mediaInfoList?: TMediaInfo[];
     cLayout?: string;
-    cClasses?: string;
-    cSxProps?: string;
-    igClasses?: string;
-    igSxProps?: string;
-    iClasses?: string;
-    iSxProps?: string;
-    lgClasses?: string;
-    lgSxProps?: string;
-    lClasses?: string;
-    lSxProps?: string;
+    cClasses?: string | CssClassesProp | {} 
+    cSxProps?: string | Record<string, any>;
+    iClasses?: string | CssClassesProp | {} 
+    iSxProps?: string | Record<string, any>;
+    lClasses?: string | CssClassesProp | {} ;
+    lSxProps?: string | Record<string, any>;
     isAdminField?: boolean;
 };
 

@@ -1,8 +1,9 @@
-import { StoreMallDirectory } from "@mui/icons-material";
+
+export const MEDIA_FILE_PREFIX = "iak://";
 
 export type TMediaFileMetadata = {
-    width: number;
-    height: number;
+    width?: number;
+    height?: number;
     filePath: string;
     label?: string;
 };
@@ -17,10 +18,10 @@ export enum MediaSizeType {
 export type TMediaInfo = {
     filePath?: string;
     label?: string;
-    smallMeta?: TMediaFileMetadata;
-    thumbMeta?: TMediaFileMetadata;
-    mediumMeta?: TMediaFileMetadata; 
-    largeMeta?: TMediaFileMetadata; 
+    small?: TMediaFileMetadata;
+    thumb?: TMediaFileMetadata;
+    medium?: TMediaFileMetadata; 
+    large?: TMediaFileMetadata; 
 }
 
 type TMediaFile = TMediaInfo & {

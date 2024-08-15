@@ -13,7 +13,8 @@ import { TMediaInfo } from "../../common/TMediaFile";
 export const ImageBoxBody = (props: TFormFieldProps) => {
     const {
         fieldConfig,
-        isLivePreview = false
+        isLivePreview = false,
+        formConfig
     } = props;
 
 
@@ -33,8 +34,8 @@ export const ImageBoxBody = (props: TFormFieldProps) => {
     const mediaInfo: TMediaInfo = isEmpty(fieldConfig.mediaInfo)
         ? { filePath: fieldConfig.mediaId } : fieldConfig.mediaInfo;
 
-    const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, mediaInfo) :
-        getMediumImageUrl(postUIContext, mediaInfo);
+    const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, formConfig, mediaInfo) :
+        getMediumImageUrl(postUIContext, formConfig, mediaInfo);
 
     return (
         <>

@@ -18,13 +18,14 @@ export const UploadImage = (props: TFormFieldProps) => {
     const {
         fieldConfig,
         input = null,
+        formConfig
     } = props;
 
     const inputProps = input ? input : {};
 
     const postUIContext = usePostUIContext();
 
-    const url = getMediaUrlByMediaId(postUIContext, { ...fieldConfig, mediaId: input?.value });
+    const url = getMediaUrlByMediaId(postUIContext, formConfig, { ...fieldConfig, mediaId: input?.value });
 
 
     return (

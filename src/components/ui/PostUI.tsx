@@ -18,7 +18,7 @@ export default function PostUI(props: Props) {
     const formConfig = getBodyFormConfig(props.formConfig);
 
     const postUIContext = usePostUIContext();
-    const bgMediaUrl = getMediaUrlByMediaId(postUIContext, formStyling.background, MediaSizeType.Large);
+    const bgMediaUrl = getMediaUrlByMediaId(postUIContext, formConfig, formStyling.background, MediaSizeType.Large);
     const bgProps = bgMediaUrl ? {
         sx: {
             background: `url(${bgMediaUrl})`,

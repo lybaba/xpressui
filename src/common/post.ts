@@ -19,7 +19,7 @@ import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { RenderingMode } from "./TFormConfig";
 import { MAIN_SECTION } from './Constants';
-import TMediaFile, { TMediaInfo, TMediaFileMetadata } from './TMediaFile';
+import TMediaFile, { TMediaInfo, TMediaFileMetadata, MediaSizeType } from './TMediaFile';
 import { TPostUIContext } from '../components/ui/TPostUIState';
 import { isEmpty, isObject } from 'lodash';
 import TChoice from "./TChoice";
@@ -336,21 +336,21 @@ export default function validate(props: ValidatorProps): Record<string, string> 
 
 
 
-export const getMediaUrlByMediaId = (postUIContext: TPostUIContext, fieldConfig: TFieldConfig, mediaSize: string = 'small'): string => {
+export const getMediaUrlByMediaId = (postUIContext: TPostUIContext, fieldConfig: TFieldConfig, mediaSize: MediaSizeType = MediaSizeType.Small): string => {
 
     const mediaInfo: TMediaInfo = fieldConfig.mediaInfo ? fieldConfig.mediaInfo : { filePath: fieldConfig.mediaId };
 
     switch (mediaSize) {
-        case "small":
+        case MediaSizeType.Small:
             return getSmallImageUrl(postUIContext, mediaInfo);
 
-        case "thumb":
+        case MediaSizeType.Thumb:
             return getThumbImageUrl(postUIContext, mediaInfo);
 
-        case "medium":
+        case MediaSizeType.Medium:
             return getMediumImageUrl(postUIContext, mediaInfo);
 
-        case "large":
+        case MediaSizeType.Large:
             return getLargeImageUrl(postUIContext, mediaInfo);
 
         default:
@@ -376,7 +376,9 @@ export function getBodyFormConfig(formConfig: TFormConfig) : TFormConfig {
     };
 
     res.bClassesProps = strToClasses(res.bClasses);
+    
     res.bSxPropsProps = strToSxProps(res.bSxProps);
+
     res.fClassesProps = strToClasses(res.fClasses);
     res.fSxPropsProps = strToSxProps(res.fSxProps);
     res.tClassesProps = strToClasses(res.tClasses);
@@ -395,9 +397,6 @@ export function isJSON(str: string) {
         return false;
     }
 }
-
-
-
 
 
 // ======================================================

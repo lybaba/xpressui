@@ -4,7 +4,8 @@ import TFieldConfig, { CssClassesProps, SxPropsProps } from './TFieldConfig';
 import slugify from 'slugify';
 import { isEmpty, isObject, lowerCase } from 'lodash';
 import TFormConfig from './TFormConfig';
-import TChoice from './TChoice';
+import TFieldType from './TFieldType';
+import { MAIN_SECTION } from './Constants';
 
 export const SECTION_TYPE = 'section';
 export const FIELDGROUP_TYPE = 'fieldgroup';
@@ -34,6 +35,7 @@ export const MULTI_SELECT_TYPE = 'multi-select';
 export const CHECKBOXES_TYPE = 'checkboxes';
 
 export const SUBMIT_TYPE = 'submit';
+export const BTN_TYPE = 'btn';
 export const TEXT_TYPE = 'text';
 export const SLUG_TYPE = 'slug';
 export const TEXTAREA_TYPE = 'textarea';
@@ -47,34 +49,66 @@ export const SWITCH_TYPE = 'switch';
 export const GRID_SIZE_TYPE = 'grid-size';
 export const SLIDER_TYPE = 'slider';
 
-export const FIELDGROUP_TYPE_FIELD: TChoice = { id: SECTION_TYPE, name: 'Section' };
-export const TEXT_TYPE_FIELD: TChoice = { id: TEXT_TYPE, name: 'Text Field' };
-export const TEXTAREA_TYPE_FIELD: TChoice = { id: TEXTAREA_TYPE, name: 'Text Area' };
-export const NUMBER_TYPE_FIELD: TChoice = { id: NUMBER_TYPE, name: 'Number' };
-export const PRICE_TYPE_FIELD: TChoice = { id: PRICE_TYPE, name: 'Price' };
-export const EMAIL_TYPE_FIELD: TChoice = { id: EMAIL_TYPE, name: 'Email' };
-export const PASSWORD_TYPE_FIELD: TChoice = { id: PASSWORD_TYPE, name: 'Password' };
-export const TEL_TYPE_FIELD: TChoice = { id: TEL_TYPE, name: 'Phone Number' };
-export const SUBMIT_TYPE_FIELD: TChoice = { id: SUBMIT_TYPE, name: 'Submit button' };
-export const CHECKBOX_TYPE_FIELD: TChoice = { id: CHECKBOX_TYPE, name: 'Checkbox' };
-export const MULTI_SELECT_TYPE_FIELD: TChoice = { id: MULTI_SELECT_TYPE, name: 'Multi-select List' };
-export const CHECKBOXES_TYPE_FIELD: TChoice = { id: CHECKBOXES_TYPE, name: 'Checkboxes' };
-export const SINGLE_SELECT_TYPE_FIELD: TChoice = { id: SINGLE_SELECT_TYPE, name: 'Single-select List' };
-export const RADIO_BUTTONS_TYPE_FIELD: TChoice = { id: RADIO_BUTTONS_TYPE, name: 'Radio Buttons' };
-export const URL_TYPE_FIELD: TChoice = { id: URL_TYPE, name: 'URL' };
-export const IMAGE_TYPE_FIELD: TChoice = { id: IMAGE_TYPE, name: 'Insert Picture' };
-export const UPLOAD_IMAGE_TYPE_FIELD: TChoice = { id: UPLOAD_IMAGE_TYPE, name: 'Upload Picture' };
-export const UPLOAD_FILE_TYPE_FIELD: TChoice = { id: UPLOAD_FILE_TYPE, name: 'Upload File' };
-export const DATETIME_TYPE_FIELD: TChoice = { id: DATETIME_TYPE, name: 'Date / Time' };
-export const DATE_TYPE_FIELD: TChoice = { id: DATE_TYPE, name: 'Date' };
-export const TIME_TYPE_FIELD: TChoice = { id: TIME_TYPE, name: 'Time' };
-export const REGEX_TYPE_FIELD: TChoice = { id: REGEX_TYPE, name: 'Regex' };
-export const TAX_TYPE_FIELD: TChoice = { id: TAX_TYPE, name: 'Tax' };
-export const SWITCH_TYPE_FIELD: TChoice = { id: SWITCH_TYPE, name: 'Switch' };
-export const GRID_SIZE_TYPE_FIELD: TChoice = { id: GRID_SIZE_TYPE, name: 'Grid Size' };
-export const SLIDER_TYPE_FIELD: TChoice = { id: SLIDER_TYPE, name: 'Slider' };
+export const LOGO_TYPE = 'logo';
+export const BODY_TYPE = 'body';
+export const HEADER_TYPE = 'header';
+export const HERO_TYPE = 'hero';
+export const FORM_SUBMIT_TYPE = 'formsubmit';
+export const FOOTER_TYPE = 'footer';
+export const NAVIGATION_TYPE = 'nav';
+export const TITLE_TYPE = 'title';
+export const HTML_TYPE = 'html';
 
-export const REQUEST_FORM_FIELD_TYPES: Array<TChoice> = [
+export const FORM_SECTION_LABEL = 'Form Section';
+export const LOGO_LABEL = 'Logo';
+export const BODY_LABEL = 'Body';
+export const HEADER_LABEL = 'Header';
+export const HERO_LABEL = 'Hero';
+export const FORM_SUBMIT_LABEL = 'Form Submit';
+export const FOOTER_LABEL = 'Footer';
+export const NAV_LABEL = 'Navigation';
+
+
+export const FIELDGROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: SECTION_TYPE, name: FORM_SECTION_LABEL };
+export const LOGO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: LOGO_TYPE, name: LOGO_LABEL, adminLabel: LOGO_LABEL };
+export const BODY_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: BODY_TYPE, name: BODY_LABEL, adminLabel: BODY_LABEL };
+export const HEADER_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_TYPE, name: HEADER_LABEL, adminLabel: HEADER_LABEL };
+export const HERO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HERO_TYPE, name: HERO_LABEL, adminLabel: HERO_LABEL };
+export const FORM_SUBMIT_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FORM_SUBMIT_TYPE, name: FORM_SUBMIT_LABEL, adminLabel: FORM_SUBMIT_LABEL };
+export const FOOTER_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FOOTER_TYPE, name: FOOTER_LABEL, adminLabel: FOOTER_LABEL };
+export const NAVIGATION_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: NAVIGATION_TYPE, name: NAV_LABEL, adminLabel: NAV_LABEL };
+
+
+
+export const TEXT_TYPE_FIELD: TFieldType = { type: TEXT_TYPE, name: 'Text Field' };
+export const TEXTAREA_TYPE_FIELD: TFieldType = { type: TEXTAREA_TYPE, name: 'Text Area' };
+export const NUMBER_TYPE_FIELD: TFieldType = { type: NUMBER_TYPE, name: 'Number' };
+export const PRICE_TYPE_FIELD: TFieldType = { type: PRICE_TYPE, name: 'Price' };
+export const EMAIL_TYPE_FIELD: TFieldType = { type: EMAIL_TYPE, name: 'Email' };
+export const PASSWORD_TYPE_FIELD: TFieldType = { type: PASSWORD_TYPE, name: 'Password' };
+export const TEL_TYPE_FIELD: TFieldType = { type: TEL_TYPE, name: 'Phone Number' };
+export const SUBMIT_TYPE_FIELD: TFieldType = { type: SUBMIT_TYPE, name: 'Submit button' };
+export const CHECKBOX_TYPE_FIELD: TFieldType = { type: CHECKBOX_TYPE, name: 'Checkbox' };
+export const MULTI_SELECT_TYPE_FIELD: TFieldType = { type: MULTI_SELECT_TYPE, name: 'Multi-select List' };
+export const CHECKBOXES_TYPE_FIELD: TFieldType = { type: CHECKBOXES_TYPE, name: 'Checkboxes' };
+export const SINGLE_SELECT_TYPE_FIELD: TFieldType = { type: SINGLE_SELECT_TYPE, name: 'Single-select List' };
+export const RADIO_BUTTONS_TYPE_FIELD: TFieldType = { type: RADIO_BUTTONS_TYPE, name: 'Radio Buttons' };
+export const URL_TYPE_FIELD: TFieldType = { type: URL_TYPE, name: 'URL' };
+export const IMAGE_TYPE_FIELD: TFieldType = { type: IMAGE_TYPE, name: 'Insert Picture' };
+export const UPLOAD_IMAGE_TYPE_FIELD: TFieldType = { type: UPLOAD_IMAGE_TYPE, name: 'Upload Picture' };
+export const UPLOAD_FILE_TYPE_FIELD: TFieldType = { type: UPLOAD_FILE_TYPE, name: 'Upload File' };
+export const DATETIME_TYPE_FIELD: TFieldType = { type: DATETIME_TYPE, name: 'Date / Time' };
+export const DATE_TYPE_FIELD: TFieldType = { type: DATE_TYPE, name: 'Date' };
+export const TIME_TYPE_FIELD: TFieldType = { type: TIME_TYPE, name: 'Time' };
+export const REGEX_TYPE_FIELD: TFieldType = { type: REGEX_TYPE, name: 'Regex' };
+export const TAX_TYPE_FIELD: TFieldType = { type: TAX_TYPE, name: 'Tax' };
+export const SWITCH_TYPE_FIELD: TFieldType = { type: SWITCH_TYPE, name: 'Switch' };
+export const GRID_SIZE_TYPE_FIELD: TFieldType = { type: GRID_SIZE_TYPE, name: 'Grid Size' };
+export const SLIDER_TYPE_FIELD: TFieldType = { type: SLIDER_TYPE, name: 'Slider' };
+export const HTML_TYPE_FIELD: TFieldType = { type: HTML_TYPE, name: 'Html Content' };
+export const BTN_TYPE_FIELD: TFieldType = { type: BTN_TYPE, name: 'Button' };
+
+export const REQUEST_FORM_FIELD_TYPES: Array<TFieldType> = [
     TEXT_TYPE_FIELD,
     TEXTAREA_TYPE_FIELD,
     NUMBER_TYPE_FIELD,
@@ -84,22 +118,18 @@ export const REQUEST_FORM_FIELD_TYPES: Array<TChoice> = [
     MULTI_SELECT_TYPE_FIELD,
     IMAGE_TYPE_FIELD,
     UPLOAD_IMAGE_TYPE_FIELD,
-    UPLOAD_FILE_TYPE_FIELD
+    UPLOAD_FILE_TYPE_FIELD,
 ];
 
-export const DATA_TABLE_FIELD_TYPES: Array<TChoice> = [
-    TEXT_TYPE_FIELD,
-    TEXTAREA_TYPE_FIELD,
-    NUMBER_TYPE_FIELD,
-    CHECKBOX_TYPE_FIELD,
-    DATETIME_TYPE_FIELD,
-    SINGLE_SELECT_TYPE_FIELD,
-    MULTI_SELECT_TYPE_FIELD,
-    UPLOAD_FILE_TYPE_FIELD
+export const LAYOUT_SECTION_TYPES: Array<TFieldType> = [
+    HEADER_TYPE_FIELD,
+    HERO_TYPE_FIELD,
+    NAVIGATION_TYPE_FIELD,
+    FOOTER_TYPE_FIELD,
 ];
 
 
-export const getFieldSubTypes = (type: string): Array<TChoice> => {
+export const getFieldSubTypes = (type: string): Array<TFieldType> => {
     switch (type) {
         case TEXT_TYPE:
             return [
@@ -189,10 +219,6 @@ export const getBooleanValue  = (value: any) : boolean => {
     return false;
   }
 
-
-export const getFieldTypes = (formConfig: TFormConfig): Array<TChoice> => {
-    return REQUEST_FORM_FIELD_TYPES;
-}
 
 export const doNormalizeFieldValue = (fieldConfig: TFieldConfig, value: any) : any => {
     switch (fieldConfig.type) {

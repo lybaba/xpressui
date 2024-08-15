@@ -5,7 +5,6 @@ import TServerResponse from "./TServerResponse";
 import TFormFieldProps from "./TFormFieldProps";
 import TFieldConfig from "./TFieldConfig";
 
-
 type TPostUIProps = {
     formConfig: TFormConfig;
     template?: string;

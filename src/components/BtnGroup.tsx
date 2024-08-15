@@ -8,13 +8,13 @@ import { FormRenderProps } from "react-final-form";
 import { onNextBtnClick, onPrevBtnClick } from "./ui/Actions";
 import { MULTI_STEP_FORM_TYPE } from "../common/TFormConfig";
 import TPostUIProps from "../common/TPostUIProps";
-import { TFooterConfig } from "../common/footer";
-import { THeadingConfig } from "../common/heading";
+import { TFormSubmit } from "../common/formsubmit";
+import { TFormStyling } from "../common/formstyling";
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
-    footerConfig: TFooterConfig;
-    headingConfig: THeadingConfig;
+    formSubmit: TFormSubmit;
+    formStyling: TFormStyling;
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -22,7 +22,7 @@ function BtnGroup(props: Props) {
     const {
         formProps,
         formConfig,
-        footerConfig
+        formSubmit
     } = props;
 
     const postUIContext = usePostUIContext();
@@ -44,15 +44,15 @@ function BtnGroup(props: Props) {
 
     return (
         <Stack
-            {...footerConfig.footer.cClassesProps}
-            {...footerConfig.footer.cSxPropsProps}
+            {...formSubmit.section.cClassesProps}
+            {...formSubmit.section.cSxPropsProps}
         >
             <Box
                 component={'p'}
-                {...footerConfig.footer.lClassesProps}
-                {...footerConfig.footer.lSxPropsProps}
+                {...formSubmit.section.lClassesProps}
+                {...formSubmit.section.lSxPropsProps}
             >
-                { footerConfig.footer.desc }
+                { formSubmit.section.desc }
             </Box>
             <Stack
                 component={ButtonGroup}
@@ -60,14 +60,14 @@ function BtnGroup(props: Props) {
                 direction={'row'}
                 justifyContent={'space-between'}
                 spacing="1.25rem"
-                {...footerConfig.footer.iClassesProps}
-                {...footerConfig.footer.iSxPropsProps}
+                {...formSubmit.section.iClassesProps}
+                {...formSubmit.section.iSxPropsProps}
             >
                 {
                     isMultiStepForm ? (
                         <Box
-                            {...footerConfig.prevBtn.cClassesProps}
-                            {...footerConfig.prevBtn.cSxPropsProps}
+                            {...formSubmit.prevBtn.cClassesProps}
+                            {...formSubmit.prevBtn.cSxPropsProps}
                         >
                             <Button
                                 onClick={(e) => {
@@ -75,15 +75,15 @@ function BtnGroup(props: Props) {
                                     onPrevBtnClick(postUIContext, props, formProps)
                                 }}
                                 disabled={!showPrevBtn}
-                                {...footerConfig.prevBtn.iClassesProps}
-                                {...footerConfig.prevBtn.iSxPropsProps}
+                                {...formSubmit.prevBtn.iClassesProps}
+                                {...formSubmit.prevBtn.iSxPropsProps}
                             >
                                 <span
-                                    {...footerConfig.prevBtn.lClassesProps}
-                                    {...footerConfig.prevBtn.lSxPropsProps}
+                                    {...formSubmit.prevBtn.lClassesProps}
+                                    {...formSubmit.prevBtn.lSxPropsProps}
                                 >
                                     {
-                                        footerConfig.prevBtn.label
+                                        formSubmit.prevBtn.label
                                     }
                                 </span>
                             </Button>
@@ -93,8 +93,8 @@ function BtnGroup(props: Props) {
                 {
                     isMultiStepForm && showNextBtn && (
                         <Box
-                            {...footerConfig.nextBtn.cClassesProps}
-                            {...footerConfig.nextBtn.cSxPropsProps}
+                            {...formSubmit.nextBtn.cClassesProps}
+                            {...formSubmit.nextBtn.cSxPropsProps}
                         >
                             <Button
                                 color="primary"
@@ -102,15 +102,15 @@ function BtnGroup(props: Props) {
                                     e.preventDefault();
                                     onNextBtnClick(postUIContext, props, formProps)
                                 }}
-                                {...footerConfig.nextBtn.iClassesProps}
-                                {...footerConfig.nextBtn.iSxPropsProps}
+                                {...formSubmit.nextBtn.iClassesProps}
+                                {...formSubmit.nextBtn.iSxPropsProps}
                             >
                                 <span
-                                    {...footerConfig.nextBtn.lClassesProps}
-                                    {...footerConfig.nextBtn.lSxPropsProps}
+                                    {...formSubmit.nextBtn.lClassesProps}
+                                    {...formSubmit.nextBtn.lSxPropsProps}
                                 >
                                     {
-                                        footerConfig.nextBtn.label
+                                        formSubmit.nextBtn.label
                                     }
                                 </span>
                             </Button>
@@ -120,22 +120,22 @@ function BtnGroup(props: Props) {
                 {
                     showSubmitBtn && (
                         <Box
-                            {...footerConfig.submitBtn.cClassesProps}
-                            {...footerConfig.submitBtn.cSxPropsProps}
+                            {...formSubmit.submitBtn.cClassesProps}
+                            {...formSubmit.submitBtn.cSxPropsProps}
                         >
                             <Button
                                 type="submit"
                                 color="primary"
                                 variant="solid"
-                                {...footerConfig.submitBtn.iClassesProps}
-                                {...footerConfig.submitBtn.iSxPropsProps}
+                                {...formSubmit.submitBtn.iClassesProps}
+                                {...formSubmit.submitBtn.iSxPropsProps}
                             >
                                 <span
-                                    {...footerConfig.submitBtn.lClassesProps}
-                                    {...footerConfig.submitBtn.lSxPropsProps}
+                                    {...formSubmit.submitBtn.lClassesProps}
+                                    {...formSubmit.submitBtn.lSxPropsProps}
                                 >
                                     {
-                                        footerConfig.submitBtn.label
+                                        formSubmit.submitBtn.label
                                     }
                                 </span>
                             </Button>

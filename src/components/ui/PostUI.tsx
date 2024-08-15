@@ -1,116 +1,57 @@
-import { getBodyFormConfig } from 'src/common/post';
-import { strToSxProps } from '../../common/field';
+import { getBodyFormConfig, getMediaUrlByMediaId } from '../../common/post';
 import { usePostUIContext } from './PostUIProvider';
-import { submitForm } from './Actions';
-import { Form } from 'react-final-form';
-import { FormApi } from 'final-form';
-import { useCallback, useEffect, useState } from 'react';
-import { ajv } from '../../common/frontend';
-import validate from './Validator';
-import { buildSchema } from '../../common/post';
-import { isEmpty, isFunction } from 'lodash';
-import { ValidateFunction } from 'ajv';
-import { TFooterConfig } from '../../common/footer';
-import { THeadingConfig } from '../../common/heading';
+import { PropsWithChildren } from 'react';
 
-import { Box } from '@mui/joy';
-import getFooterConfig from '../../common/footer';
-import getHeadingConfig from '../../common/heading';
-import FormSectionList from './FormSectionList';
+import { Box, Stack } from '@mui/joy';
+import getFormSubmitConfig from '../../common/formsubmit';
+import getFormStylingConfig from '../../common/formstyling';
 import TPostUIProps from '../../common/TPostUIProps';
+import PostContent from './PostContent';
+import { MediaSizeType } from '../../common/TMediaFile';
 
 
-type OwnProps = {
-    footerConfig: TFooterConfig
-    headingConfig: THeadingConfig;
-}
+type Props = TPostUIProps & PropsWithChildren;
 
-type Props = OwnProps & TPostUIProps
+export default function PostUI(props: Props) {
+    const formSubmit = getFormSubmitConfig(props.formConfig);
+    const formStyling = getFormStylingConfig(props.formConfig);
+    const formConfig = getBodyFormConfig(props.formConfig);
 
-function FormUI(props: Props) {
-    const [validators, setValidators] = useState<Record<string, ValidateFunction<unknown>>>({})
     const postUIContext = usePostUIContext();
+    const bgMediaUrl = getMediaUrlByMediaId(postUIContext, formStyling.background, MediaSizeType.Large);
+    const bgProps = bgMediaUrl ? {
+        sx: {
+            background: `url(${bgMediaUrl})`,
+            backgroundAttachment: 'fixed',
+            backgroundPosition: 'right center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover',
+            paddingBottom: '1em',
+            maxWidth: '100vw',
+            height: '100vh',
+        }
+    } : {}
 
-    const {
-        currentStepIndex
-    } = postUIContext;
-
-    const {
-        formConfig,
-        template = '',
-        entry = {},
-        restartForm = true
-    } = props;
-
-    const getValidator = useCallback(() => {
-        const schema = buildSchema(formConfig, currentStepIndex);
-        const validator = ajv.compile(schema);
-        return validator;
-    },[currentStepIndex])
 
     return (
-        <Form
-            onSubmit={(formValues: any,  form: FormApi<any, any>) => {
-                console.log("submitForm : ", formValues);
-                submitForm(postUIContext, props, formValues).then((data) => {
-                    console.log("Form Submitted Successfully....");
-                    if (restartForm) {
-                        form.restart();
-                    }
-                })
-            }}
-            validate={(values: any) => {
-                // internal validation
-                const res = validate(
-                    postUIContext,
-                    formConfig,
-                    getValidator(),
-                    currentStepIndex,
-                    values
-                )
-
-                // custom validation
-                if (isEmpty(res) && isFunction(props.validate)) {
-                    return props.validate(values);
-                }
-
-                return res;
-            }}
-            mutators={{
-                setFieldValue: ([fieldName, fieldVal], state, { changeValue }) => {
-                    changeValue(state, fieldName, () => fieldVal)
-                }
-            }}
-            render={(formProps) => (
-                <form
-                    onSubmit={formProps.handleSubmit}
-                    noValidate
-                >
-                    <FormSectionList {...props} formProps={formProps} />
-                </form>
-            )}
-            initialValues={entry}
-        />
-    );
-}
-
-
-export default function PostUI(props: TPostUIProps) {
-    const formConfig = getBodyFormConfig(props.formConfig);
-    const footerConfig = getFooterConfig(props.formConfig);
-    const headingConfig = getHeadingConfig(props.formConfig);
-
-    return  (
         <Box
-            {...formConfig.bClassesProps}
-            {...formConfig.bSxPropsProps}
+            {...bgProps}
         >
-            <FormUI 
-                {...props}
-                formConfig={formConfig}
-                footerConfig={footerConfig}
-                headingConfig={headingConfig}
-            />
+            <Stack
+                {...formStyling.section.cClassesProps}
+                sx={{
+                    p: 2,
+                    ...formStyling.section.cSxPropsProps?.sx,
+                    alignItems: 'center',
+                }}
+            >
+                <PostContent
+                    {...props}
+                    formConfig={formConfig}
+                    formStyling={formStyling}
+                    formSubmit={formSubmit}
+                />
+            </Stack>
         </Box>
     );
 }

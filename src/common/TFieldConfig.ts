@@ -1,4 +1,3 @@
-import { SxProps } from "@mui/joy/styles/types";
 import TChoice from "./TChoice";
 import { TMediaInfo } from "./TMediaFile";
 
@@ -12,7 +11,7 @@ export type CssClassesProps = {
 };
 
 export type SxPropsProps = {
-    sx?: SxProps
+    sx?: any
 }
 
 type TFieldConfig = {
@@ -32,6 +31,10 @@ type TFieldConfig = {
     placeholder?: string;
     pattern?: string;
     mediaId?: string;
+    background?: string;
+    logo?: string;
+    hero?: string;
+    header?: string;
     minValue?: number;
     maxValue?: number;
     stepValue?: number;

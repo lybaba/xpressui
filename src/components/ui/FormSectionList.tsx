@@ -10,13 +10,13 @@ import { PRODUCTFORM_TYPE } from '../../common/TFormConfig';
 import ProductSection from '../ProductSection';
 import { getFieldConfigWithCssProps } from '../../common/field';
 
-import { TFooterConfig } from '../../common/footer';
-import { THeadingConfig } from '../../common/heading';
+import { TFormSubmit } from '../../common/formsubmit';
+import { TFormStyling } from '../../common/formstyling';
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
-    footerConfig: TFooterConfig
-    headingConfig: THeadingConfig;
+    formSubmit: TFormSubmit
+    formStyling: TFormStyling;
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -24,6 +24,7 @@ type Props = OwnProps & TPostUIProps;
 export default function FormSectionList(props: Props) {
     const {
         formConfig,
+        formStyling
     } = props;
 
 
@@ -34,8 +35,9 @@ export default function FormSectionList(props: Props) {
         <Stack
             spacing={2}
             gap={2}
-            {...formConfig.fClassesProps}
-            {...formConfig.fSxPropsProps}
+            minWidth={{md: 800}}
+            {...formStyling.section.iClassesProps}
+            {...formStyling.section.iSxPropsProps}
         >
             {/*
                 Stepper

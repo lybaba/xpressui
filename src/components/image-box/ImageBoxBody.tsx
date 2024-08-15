@@ -1,5 +1,6 @@
 import {
     Box,
+    AspectRatio
 } from "@mui/joy";
 
 import { Image } from "@mui/icons-material";
@@ -22,15 +23,15 @@ export const ImageBoxBody = (props: TFormFieldProps) => {
     if (isEmpty(fieldConfig.mediaInfo) && isEmpty(fieldConfig.mediaId))
         return (
             <>
-                <Image/>
+                <Image />
                 {
                     props.children
                 }
             </>
         )
-    
-    const mediaInfo : TMediaInfo = isEmpty(fieldConfig.mediaInfo)
-                                    ? {filePath: fieldConfig.mediaId} : fieldConfig.mediaInfo;
+
+    const mediaInfo: TMediaInfo = isEmpty(fieldConfig.mediaInfo)
+        ? { filePath: fieldConfig.mediaId } : fieldConfig.mediaInfo;
 
     const photoURL = isLivePreview ? getThumbImageUrl(postUIContext, mediaInfo) :
         getMediumImageUrl(postUIContext, mediaInfo);
@@ -40,20 +41,46 @@ export const ImageBoxBody = (props: TFormFieldProps) => {
             <>
                 {
                     !isEmpty(photoURL) ? (
-                        <Box
-                            component={'img'}
-                            src={`${photoURL}`}
-                            loading="lazy"
-                            alt={fieldConfig.label}
+                        isLivePreview ? (
+                            <Box
+                                sx={{
+                                    width: 200
+                                }}
+                            >
+                            <AspectRatio
+                                minHeight={120}
+                                maxHeight={200}
+                            >
+                                <Box
+                                    component={'img'}
+                                    src={`${photoURL}`}
+                                    loading="lazy"
+                                    alt={fieldConfig.label}
+                                    sx={{
+                                        maxWidth: '100%',
+                                        height: 'auto'
+                                    }}
 
-                            sx={{
-                                maxWidth: '100%',
-                                height: 'auto'
-                            }}
+                                />
+                            </AspectRatio>
+                            </Box>
+                        ) : (
+                            <Box
+                                component={'img'}
+                                src={`${photoURL}`}
+                                loading="lazy"
+                                alt={fieldConfig.label}
 
-                        />
+                                sx={{
+                                    maxWidth: '100%',
+                                    height: 'auto'
+                                }}
+
+                            />
+                        )
+
                     ) : (
-                        <Image/>
+                        <Image />
                     )
                 }
             </>

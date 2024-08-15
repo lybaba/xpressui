@@ -11,8 +11,8 @@ import { getFieldConfigByName, getSectionByName } from "./post";
 
 // ========================================================
 
-export const FOOTER_SECTION_NAME = 'footer';
-export const FOOTER_SECTION_LABEL = 'Footer';
+export const FORMSUBMIT_SECTION_NAME = 'formsubmit';
+export const FORMSUBMIT_SECTION_LABEL = 'Form Submit';
 
 export const SUBMIT_BTN_NAME = 'submitBtn';
 export const SUBMIT_BTN_LABEL = 'Submit';
@@ -31,8 +31,8 @@ export const ERROR_MSG_FIELD_NAME = 'errorMsg';
 export const ERROR_MSG_FIELD_LABEL = 'Error Message';
 
 
-export type TFooterConfig = {
-    footer: TFieldConfig;
+export type TFormSubmit = {
+    section: TFieldConfig;
     submitBtn: TFieldConfig;
     nextBtn: TFieldConfig;
     prevBtn: TFieldConfig;
@@ -43,14 +43,14 @@ export type TFooterConfig = {
 // ==========================================================
 
 export function getFooterSectionConfig(formConfig: TFormConfig) : TFieldConfig {
-    const res = getSectionByName(formConfig, FOOTER_SECTION_NAME);
+    const res = getSectionByName(formConfig, FORMSUBMIT_SECTION_NAME);
     if (res)
         return getFieldConfigWithCssProps(res);
     
     return {
         type: SECTION_TYPE,
-        name: FOOTER_SECTION_NAME,
-        label: FOOTER_SECTION_LABEL
+        name: FORMSUBMIT_SECTION_NAME,
+        label: FORMSUBMIT_SECTION_LABEL
     };
 }
 
@@ -64,7 +64,7 @@ const SUBMITBTN_FIELD: TFieldConfig = {
 
 export function getSubmitBtnConfig(formConfig: TFormConfig) : TFieldConfig {
     
-    const res = getFieldConfigByName(formConfig, FOOTER_SECTION_NAME, SUBMITBTN_FIELD.name);
+    const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, SUBMITBTN_FIELD.name);
 
     if (res)
         return getFieldConfigWithCssProps(res);
@@ -81,7 +81,7 @@ const NEXTBTN_FIELD: TFieldConfig = {
 };
 export function getNextBtnConfig(formConfig: TFormConfig) : TFieldConfig {
     
-    const res = getFieldConfigByName(formConfig, FOOTER_SECTION_NAME, NEXTBTN_FIELD.name);
+    const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, NEXTBTN_FIELD.name);
 
     if (res)
         return getFieldConfigWithCssProps(res);
@@ -98,7 +98,7 @@ const PREVBTN_FIELD: TFieldConfig = {
 };
 export function getPrevBtnConfig(formConfig: TFormConfig) : TFieldConfig {
     
-    const res = getFieldConfigByName(formConfig, FOOTER_SECTION_NAME, PREVBTN_FIELD.name);
+    const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, PREVBTN_FIELD.name);
 
     if (res)
         return getFieldConfigWithCssProps(res);
@@ -115,7 +115,7 @@ const ERROR_MSG_FIELD: TFieldConfig = {
 };
 export function getErrorMsgConfig(formConfig: TFormConfig) : TFieldConfig {
     
-    const res = getFieldConfigByName(formConfig, FOOTER_SECTION_NAME, ERROR_MSG_FIELD.name);
+    const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, ERROR_MSG_FIELD.name);
 
     if (res)
         return getFieldConfigWithCssProps(res);
@@ -134,7 +134,7 @@ const SUCCESS_MSG_FIELD: TFieldConfig = {
  };
 export function getSuccessMsgConfig(formConfig: TFormConfig) : TFieldConfig {
     
-    const res = getFieldConfigByName(formConfig, FOOTER_SECTION_NAME, SUCCESS_MSG_FIELD.name);
+    const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, SUCCESS_MSG_FIELD.name);
 
     if (res)
         return getFieldConfigWithCssProps(res);
@@ -144,9 +144,9 @@ export function getSuccessMsgConfig(formConfig: TFormConfig) : TFieldConfig {
 
 // ==========================================================
 
-export default function getFooterConfig(formConfig: TFormConfig) : TFooterConfig {
+export default function getFormSubmitConfig(formConfig: TFormConfig) : TFormSubmit {
     const res = {
-        [FOOTER_SECTION_NAME]: getFooterSectionConfig(formConfig),
+        section: getFooterSectionConfig(formConfig),
         [SUBMIT_BTN_NAME]: getSubmitBtnConfig(formConfig),
         [NEXT_BTN_NAME]: getNextBtnConfig(formConfig),
         [PREV_BTN_NAME]: getPrevBtnConfig(formConfig),

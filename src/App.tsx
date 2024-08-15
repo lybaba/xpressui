@@ -140,7 +140,8 @@ const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
         "name": "background",
         "label": "Background Image",
         "adminLabel": "Background Image",
-        "canDelete": false
+        "canDelete": false,
+        "mediaId": "https://images.pexels.com/photos/289268/pexels-photo-289268.jpeg?auto=compress&cs=tinysrgb&w=600"
       },
       {
         "type": "image",
@@ -233,19 +234,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <PostUIProvider>
-      <Stack
-        gap={4}
-        spacing={4}
-        sx={{
-          display: 'flex',
-          maxWidth: '800px',
-          mx: 'auto',
-          px: { xs: 2, md: 6 },
-          py: { xs: 2, md: 3 }
-        }}
-      >
         <PostUI formConfig={CHOICEGROUP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
-        </Stack>
       </PostUIProvider>
     </ThemeProvider>
   )

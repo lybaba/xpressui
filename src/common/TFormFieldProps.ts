@@ -6,7 +6,7 @@ import { ReactNode } from "react";
 import TPostUIEvent from "./TPostUIEvent";
 import TServerResponse from "./TServerResponse";
 import TComponentType from "./TComponentType";
-import { TFormSubmit } from "./formsubmit";
+import { TFormButtons } from "./formsubmit";
 import { TFormStyling } from "./formstyling";
 
 
@@ -28,8 +28,8 @@ type TFormFieldProps =  {
     children?: ReactNode | undefined;
     componentType?: TComponentType;
     isLivePreview?: boolean;
-    formSubmitConfig?: TFormSubmit;
-    formStylingConfig?: TFormStyling;
+    formButtons?: TFormButtons;
+    formStyling?: TFormStyling;
     cssProps?: TCssProps;
     onClickEvent?: () => void;
     onPostUIEvent?: (event: TPostUIEvent) => Promise<TServerResponse>;

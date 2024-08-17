@@ -8,7 +8,7 @@ import validate from './Validator';
 import { buildSchema } from '../../common/post';
 import { isEmpty, isFunction } from 'lodash';
 import { ValidateFunction } from 'ajv';
-import { TFormSubmit } from '../../common/formsubmit';
+import { TFormButtons } from '../../common/formsubmit';
 import { TFormStyling } from '../../common/formstyling';
 
 import FormSectionList from './FormSectionList';
@@ -17,7 +17,7 @@ import { TCssProps } from '../../common/TFieldConfig';
 
 
 type OwnProps = {
-    formSubmit: TFormSubmit
+    formButtons: TFormButtons
     formStyling: TFormStyling;
     cssProps: TCssProps;
 }

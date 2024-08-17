@@ -1,6 +1,7 @@
 
 import TFormFieldProps from '../common/TFormFieldProps';
 import {
+    BTN_TYPE,
     IMAGE_TYPE,
     SUBMIT_TYPE,
     UPLOAD_IMAGE_TYPE
@@ -45,6 +46,7 @@ export const CustomField = (props: TFormFieldProps) => {
                 </Stack>
             );*/
 
+        case BTN_TYPE:    
         case SUBMIT_TYPE:
             return (
                 <Box

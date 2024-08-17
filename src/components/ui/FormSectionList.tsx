@@ -3,18 +3,19 @@ import TPostUIProps from '../../common/TPostUIProps';
 import { Stack } from '@mui/joy';
 import TFieldConfig, { TCssProps } from '../../common/TFieldConfig';
 import Section from '../Section';
-import BtnGroup from '../BtnGroup';
+import BtnGroup from '../button-group';
 import { FormRenderProps } from 'react-final-form';
 import React from 'react';
 import { PRODUCTFORM_TYPE } from '../../common/TFormConfig';
 import ProductSection from '../ProductSection';
 
-import { TFormSubmit } from '../../common/formsubmit';
+import { TFormButtons } from '../../common/formsubmit';
 import { TFormStyling } from '../../common/formstyling';
+import FormField from '../FormField';
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
-    formSubmit: TFormSubmit
+    formButtons: TFormButtons
     formStyling: TFormStyling;
     cssProps: TCssProps;
 }
@@ -24,7 +25,6 @@ type Props = OwnProps & TPostUIProps;
 export default function FormSectionList(props: Props) {
     const {
         formConfig,
-        formStyling,
         cssProps
     } = props;
 
@@ -67,8 +67,9 @@ export default function FormSectionList(props: Props) {
                 })
             }
             {
-                <BtnGroup
+                <FormField
                     {...props}
+                    fieldConfig={props.formButtons.btnGroup}
                 />
             }
         </Stack>

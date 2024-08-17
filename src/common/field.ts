@@ -27,7 +27,7 @@ export const PRICE_TYPE = 'price';
 export const PASSWORD_TYPE = 'password';
 export const SINGLE_SELECT_TYPE = 'single-select';
 export const RADIO_BUTTONS_TYPE = 'radio-buttons';
-
+export const BTNGROUP_TYPE = 'btn-group';
 export const MULTI_SELECT_TYPE = 'multi-select';
 export const CHECKBOXES_TYPE = 'checkboxes';
 
@@ -64,9 +64,12 @@ export const HERO_LABEL = 'Hero';
 export const FORM_SUBMIT_LABEL = 'Form Submit';
 export const FOOTER_LABEL = 'Footer';
 export const NAV_LABEL = 'Navigation';
-
+export const BTNGROUP_TYPE_LABEL = 'Form Buttons';
 
 export const FIELDGROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: SECTION_TYPE, name: FORM_SECTION_LABEL };
+export const BTNGROUP_TYPE_FIELD: TFieldType = { type: BTNGROUP_TYPE, name: BTNGROUP_TYPE_LABEL };
+
+
 export const LOGO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: LOGO_TYPE, name: LOGO_LABEL, adminLabel: LOGO_LABEL };
 export const BODY_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: BODY_TYPE, name: BODY_LABEL, adminLabel: BODY_LABEL };
 export const HEADER_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_TYPE, name: HEADER_LABEL, adminLabel: HEADER_LABEL };

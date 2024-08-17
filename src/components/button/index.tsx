@@ -6,7 +6,7 @@ import TFormFieldProps from "../../common/TFormFieldProps";
 import { isFunction } from "lodash";
 
 
-export const SubmitBtn = (props: TFormFieldProps) => {
+export const CustomButton = (props: TFormFieldProps) => {
     const {
         disabled = false
     } = props;
@@ -31,4 +31,4 @@ export const SubmitBtn = (props: TFormFieldProps) => {
 
 }
 
-export default SubmitBtn;
+export default CustomButton;

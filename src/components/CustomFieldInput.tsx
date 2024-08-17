@@ -27,6 +27,7 @@ import ImageBox from './image-box';
 import TFormFieldProps from '../common/TFormFieldProps';
 import { getHideLabel } from '../common/post';
 import UploadImage from './upload-image';
+import CustomButton from './button';
 
 type InputTemplateProps = {
     input: FieldInputProps<any, HTMLElement>;
@@ -148,7 +149,7 @@ export const CustomFieldInput = (props: CustomFieldInputProps) => {
     switch (fieldConfig.type) {
         case BTN_TYPE:
             return (
-                <SubmitBtn
+                <CustomButton
                     {...props}
                 />
             )

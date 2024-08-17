@@ -3,7 +3,7 @@ import { usePostUIContext } from './PostUIProvider';
 import { PropsWithChildren } from 'react';
 
 import { Box, Stack } from '@mui/joy';
-import getFormSubmitConfig from '../../common/formsubmit';
+import getFormButtonsConfig from '../../common/formsubmit';
 import getFormStylingConfig from '../../common/formstyling';
 import TPostUIProps from '../../common/TPostUIProps';
 import PostContent from './PostContent';
@@ -14,7 +14,7 @@ import { getCssProps } from '../../common/field';
 type Props = TPostUIProps & PropsWithChildren;
 
 export default function PostUI(props: Props) {
-    const formSubmit = getFormSubmitConfig(props.formConfig);
+    const formButtons = getFormButtonsConfig(props.formConfig);
     const formStyling = getFormStylingConfig(props.formConfig);
     const formConfig = getBodyFormConfig(props.formConfig);
 
@@ -51,7 +51,7 @@ export default function PostUI(props: Props) {
                     {...props}
                     formConfig={formConfig}
                     formStyling={formStyling}
-                    formSubmit={formSubmit}
+                    formButtons={formButtons}
                     cssProps={cssProps}
                 />
             </Box>

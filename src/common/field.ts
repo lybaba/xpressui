@@ -52,33 +52,30 @@ export const HEADER_TYPE = 'header';
 export const HERO_TYPE = 'hero';
 export const FORM_SUBMIT_TYPE = 'formsubmit';
 export const FOOTER_TYPE = 'footer';
-export const NAVIGATION_TYPE = 'nav';
+export const NAVBAR_TYPE = 'nav';
 export const TITLE_TYPE = 'title';
 export const HTML_TYPE = 'html';
 
-export const FORM_SECTION_LABEL = 'Form Section';
+export const NAVIGATION_MENU_TYPE = 'navigation-menu';
+
+export const FORM_SECTION_LABEL = 'Section';
 export const LOGO_LABEL = 'Logo';
 export const BODY_LABEL = 'Body';
 export const HEADER_LABEL = 'Header';
 export const HERO_LABEL = 'Hero';
 export const FORM_SUBMIT_LABEL = 'Form Submit';
 export const FOOTER_LABEL = 'Footer';
-export const NAV_LABEL = 'Navigation';
+export const NAVBAR_LABEL = 'Navigation';
 export const BTNGROUP_TYPE_LABEL = 'Form Buttons';
+export const NAVIGATION_MENU_LABEL = 'Navigation Menu';
 
 export const FIELDGROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: SECTION_TYPE, name: FORM_SECTION_LABEL };
 export const BTNGROUP_TYPE_FIELD: TFieldType = { type: BTNGROUP_TYPE, name: BTNGROUP_TYPE_LABEL };
 
 
-export const LOGO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: LOGO_TYPE, name: LOGO_LABEL, adminLabel: LOGO_LABEL };
 export const BODY_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: BODY_TYPE, name: BODY_LABEL, adminLabel: BODY_LABEL };
-export const HEADER_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_TYPE, name: HEADER_LABEL, adminLabel: HEADER_LABEL };
-export const HERO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HERO_TYPE, name: HERO_LABEL, adminLabel: HERO_LABEL };
 export const FORM_SUBMIT_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FORM_SUBMIT_TYPE, name: FORM_SUBMIT_LABEL, adminLabel: FORM_SUBMIT_LABEL };
-export const FOOTER_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FOOTER_TYPE, name: FOOTER_LABEL, adminLabel: FOOTER_LABEL };
-export const NAVIGATION_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: NAVIGATION_TYPE, name: NAV_LABEL, adminLabel: NAV_LABEL };
-
-
+export const NAVBAR_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: NAVBAR_TYPE, name: NAVBAR_LABEL, adminLabel: NAVBAR_LABEL };
 
 export const TEXT_TYPE_FIELD: TFieldType = { type: TEXT_TYPE, name: 'Text Field' };
 export const TEXTAREA_TYPE_FIELD: TFieldType = { type: TEXTAREA_TYPE, name: 'Text Area' };
@@ -107,6 +104,8 @@ export const GRID_SIZE_TYPE_FIELD: TFieldType = { type: GRID_SIZE_TYPE, name: 'G
 export const SLIDER_TYPE_FIELD: TFieldType = { type: SLIDER_TYPE, name: 'Slider' };
 export const HTML_TYPE_FIELD: TFieldType = { type: HTML_TYPE, name: 'Html Content' };
 export const BTN_TYPE_FIELD: TFieldType = { type: BTN_TYPE, name: 'Button' };
+export const NAVIGATION_MENU_FIELD: TFieldType = { type: NAVIGATION_MENU_TYPE, name: NAVIGATION_MENU_LABEL };
+
 
 export const REQUEST_FORM_FIELD_TYPES: Array<TFieldType> = [
     TEXT_TYPE_FIELD,
@@ -120,14 +119,6 @@ export const REQUEST_FORM_FIELD_TYPES: Array<TFieldType> = [
     UPLOAD_IMAGE_TYPE_FIELD,
     UPLOAD_FILE_TYPE_FIELD,
 ];
-
-export const LAYOUT_SECTION_TYPES: Array<TFieldType> = [
-    HEADER_TYPE_FIELD,
-    HERO_TYPE_FIELD,
-    NAVIGATION_TYPE_FIELD,
-    FOOTER_TYPE_FIELD,
-];
-
 
 export const getFieldSubTypes = (type: string): Array<TFieldType> => {
     switch (type) {
@@ -185,7 +176,9 @@ export const PRICING_DECIMAL_VALUES = [
 
 
 export const getIsChoiceField = (type: string): boolean => {
-    return type === MULTI_SELECT_TYPE || type === SINGLE_SELECT_TYPE;
+    return type === MULTI_SELECT_TYPE ||
+          type === SINGLE_SELECT_TYPE ||
+          type === NAVIGATION_MENU_TYPE
 }
 
 export const buildSlug = (name: string) => {
@@ -277,7 +270,9 @@ export function isImageField(fieldType: string) : boolean {
 }
 
 export function isSingleSelectField(fieldType: string) : boolean {
-    return fieldType === SINGLE_SELECT_TYPE || fieldType == RADIO_BUTTONS_TYPE;
+    return fieldType === SINGLE_SELECT_TYPE ||
+           fieldType === RADIO_BUTTONS_TYPE ||
+           fieldType === NAVIGATION_MENU_TYPE
 }
 
 

@@ -42,17 +42,10 @@ function CustomButtonGroup(props: TFormFieldProps) {
 
    
     return (
-        <Stack
+        <Box
             {...cssProps?.cClassesProps}
             {...cssProps?.cElemProps}
         >
-            <Box
-                component={'p'}
-                {...cssProps?.lClassesProps}
-                {...cssProps?.lElemProps}
-            >
-                {formButtons.section.desc}
-            </Box>
             <Stack
                 component={ButtonGroup}
                 gap={2}
@@ -94,7 +87,7 @@ function CustomButtonGroup(props: TFormFieldProps) {
                     )
                 }
             </Stack>
-        </Stack>
+        </Box>
     );
 }
 

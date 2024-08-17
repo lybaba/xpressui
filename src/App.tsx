@@ -89,125 +89,65 @@ const CHOICE_GROUP_FORM_NAME = 'choicegroup';
 const CHOICE_GROUP_FORM_LABEL = 'Choice Group';
 
 const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
-  "id": "ccCvGhe5NssQzwFmA4nCb8",
-  "uid": "fAru4JzmgMpMYRiGjZwnqf",
-  "type": "multistepform",
-  "label": "Foo",
-  "name": "foo",
-  "timestamp": 1723574473,
+  "label": "Hello",
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
   "sections": {
+    "hello": [
+      {
+        "required": true,
+        "name": "email",
+        "type": "email",
+        "label": "Email",
+        "canDelete": false
+      }
+    ],
     "main": [
       {
-        "type": "section",
-        "label": "Heading",
-        "adminLabel": "Heading",
-        "name": "heading",
-        "canDelete": false,
+        "adminLabel": "Form Styling",
         "isAdminField": true,
-        "cElemProps": "{\"border\": \"1px solid'\"}"
+        "name": "body",
+        "type": "section",
+        "subType": "body",
+        "canDelete": false,
+        "label": "Form Styling"
       },
       {
         "type": "section",
-        "label": "Footer",
-        "adminLabel": "Footer",
-        "name": "footer",
+        "adminLabel": "Form Submit",
+        "subType": "formsubmit",
+        "label": "Form Submit",
+        "name": "formsubmit",
         "canDelete": false,
-        "isAdminField": true,
-        "cElemProps": "{\"bgcolor\": \"neutral.800\", \"p\": 5}",
-        "cClasses": "fdsdfdf"
+        "isAdminField": true
       },
       {
-        "label": "Inscription",
-        "name": "inscription",
-        "type": "section"
-      },
-      {
-        "label": "Paiement",
-        "name": "paiement",
-        "type": "section"
+        "label": "Hello",
+        "canDelete": false,
+        "type": "section",
+        "name": "hello"
       }
     ],
-    "heading": [
+    "formsubmit": [
       {
-        "type": "image",
-        "name": "logo",
-        "label": "Logo Image",
-        "adminLabel": "Logo Image",
-        "canDelete": false
-      },
-      {
-        "type": "image",
-        "name": "background",
-        "label": "Background Image",
-        "adminLabel": "Background Image",
+        "label": "Button Group",
         "canDelete": false,
-        "mediaId": "https://images.pexels.com/photos/289268/pexels-photo-289268.jpeg?auto=compress&cs=tinysrgb&w=600"
+        "type": "btn-group",
+        "name": "btnGroup",
+        "adminLabel": "Button Group"
       },
       {
-        "type": "image",
-        "name": "header",
-        "label": "Banner Image",
-        "adminLabel": "Banner Image",
-        "canDelete": false
-      },
-      {
-        "type": "image",
-        "name": "hero",
-        "label": "Hero Image",
-        "adminLabel": "Hero Image",
-        "canDelete": false
-      }
-    ],
-    "footer": [
-      {
-        "type": "submit",
-        "name": "submitBtn",
-        "label": "Envoyer",
         "adminLabel": "Submit",
-        "desc": "Hello World",
-        "cElemProps": "{\"bgcolor\": \"neutral.800\"}",
-        "canDelete": false
-      },
-      {
+        "label": "Commander",
+        "canDelete": false,
         "type": "submit",
-        "name": "nextBtn",
-        "label": "Suivant",
-        "adminLabel": "Next",
-        "canDelete": false
-      },
-      {
-        "type": "submit",
-        "name": "prevBtn",
-        "label": "Précédent",
-        "adminLabel": "Previous",
-        "canDelete": false
-      }
-    ],
-    "inscription": [
-      {
-        "label": "Prénom",
-        "name": "prenom",
-        "type": "text"
-      },
-      {
-        "label": "Nom",
-        "name": "nom",
-        "type": "text"
-      },
-      {
-        "label": "Age",
-        "name": "age",
-        "type": "number"
-      }
-    ],
-    "paiement": [
-      {
-        "label": "Titi",
-        "name": "titi",
-        "type": "text"
+        "name": "submitBtn"
       }
     ]
-  }
+  },
+  "type": "contactform",
+  "name": "hello",
+  "timestamp": 1723891379,
+  "id": "1MoaPuxHL4LToMPWc6u5Ke"
 }
 // ======================
 

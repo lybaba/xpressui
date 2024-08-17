@@ -1,4 +1,5 @@
 import {
+    BODY_TYPE,
     IMAGE_TYPE,
     SECTION_TYPE,
 } from "./field";
@@ -45,6 +46,7 @@ export function getBodySectionConfig(formConfig: TFormConfig) : TFieldConfig {
     
     return {
         type: SECTION_TYPE,
+        subType: BODY_TYPE,
         name: BODY_SECTION_NAME,
         label: BODY_SECTION_LABEL
     };

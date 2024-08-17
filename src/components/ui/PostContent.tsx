@@ -14,11 +14,13 @@ import { TFormStyling } from '../../common/formstyling';
 import FormSectionList from './FormSectionList';
 import TPostUIProps from '../../common/TPostUIProps';
 import { TCssProps } from '../../common/TFieldConfig';
+import { TNavBar } from '../../common/navbar';
 
 
 type OwnProps = {
     formButtons: TFormButtons
     formStyling: TFormStyling;
+    navBar?: TNavBar;
     cssProps: TCssProps;
 }
 

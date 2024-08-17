@@ -9,6 +9,7 @@ import TPostUIProps from '../../common/TPostUIProps';
 import PostContent from './PostContent';
 import { MediaSizeType } from '../../common/TMediaFile';
 import { getCssProps } from '../../common/field';
+import getNavBarConfig from '../../common/navbar';
 
 
 type Props = TPostUIProps & PropsWithChildren;
@@ -16,6 +17,8 @@ type Props = TPostUIProps & PropsWithChildren;
 export default function PostUI(props: Props) {
     const formButtons = getFormButtonsConfig(props.formConfig);
     const formStyling = getFormStylingConfig(props.formConfig);
+    const navBar = getNavBarConfig(props.formConfig);
+
     const formConfig = getBodyFormConfig(props.formConfig);
 
     const postUIContext = usePostUIContext();
@@ -52,6 +55,7 @@ export default function PostUI(props: Props) {
                     formConfig={formConfig}
                     formStyling={formStyling}
                     formButtons={formButtons}
+                    navBar={navBar}
                     cssProps={cssProps}
                 />
             </Box>

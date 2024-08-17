@@ -1,5 +1,6 @@
 import {
     BTNGROUP_TYPE,
+    FORM_SUBMIT_TYPE,
     OUTPUT_TYPE,
     SECTION_TYPE,
     SUBMIT_TYPE,
@@ -53,6 +54,7 @@ export function getFooterSectionConfig(formConfig: TFormConfig) : TFieldConfig {
     
     return {
         type: SECTION_TYPE,
+        subType: FORM_SUBMIT_TYPE,
         name: FORMSUBMIT_SECTION_NAME,
         label: FORMSUBMIT_SECTION_LABEL
     };

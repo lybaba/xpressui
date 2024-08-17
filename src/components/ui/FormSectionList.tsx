@@ -1,6 +1,6 @@
 import { MAIN_SECTION } from '../../common/Constants';
 import TPostUIProps from '../../common/TPostUIProps';
-import { Stack } from '@mui/joy';
+import { Container, Stack } from '@mui/joy';
 import TFieldConfig, { TCssProps } from '../../common/TFieldConfig';
 import Section from '../Section';
 import BtnGroup from '../button-group';
@@ -12,11 +12,13 @@ import ProductSection from '../ProductSection';
 import { TFormButtons } from '../../common/formsubmit';
 import { TFormStyling } from '../../common/formstyling';
 import FormField from '../FormField';
+import { TNavBar } from '../../common/navbar';
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
     formButtons: TFormButtons
     formStyling: TFormStyling;
+    navBar?: TNavBar;
     cssProps: TCssProps;
 }
 
@@ -34,7 +36,8 @@ export default function FormSectionList(props: Props) {
 
     return (
         <Stack
-            spacing={2}
+            component={Container}
+            spacing={1}
             gap={2}
             {...cssProps.iClassesProps}
             {...cssProps.iElemProps}

@@ -1,14 +1,13 @@
 import { MAIN_SECTION } from '../../common/Constants';
 import TPostUIProps from '../../common/TPostUIProps';
 import { Stack } from '@mui/joy';
-import TFieldConfig from '../../common/TFieldConfig';
+import TFieldConfig, { TCssProps } from '../../common/TFieldConfig';
 import Section from '../Section';
 import BtnGroup from '../BtnGroup';
 import { FormRenderProps } from 'react-final-form';
 import React from 'react';
 import { PRODUCTFORM_TYPE } from '../../common/TFormConfig';
 import ProductSection from '../ProductSection';
-import { getFieldConfigWithCssProps } from '../../common/field';
 
 import { TFormSubmit } from '../../common/formsubmit';
 import { TFormStyling } from '../../common/formstyling';
@@ -17,6 +16,7 @@ type OwnProps = {
     formProps?: FormRenderProps<any, any>;
     formSubmit: TFormSubmit
     formStyling: TFormStyling;
+    cssProps: TCssProps;
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -24,7 +24,8 @@ type Props = OwnProps & TPostUIProps;
 export default function FormSectionList(props: Props) {
     const {
         formConfig,
-        formStyling
+        formStyling,
+        cssProps
     } = props;
 
 
@@ -35,18 +36,15 @@ export default function FormSectionList(props: Props) {
         <Stack
             spacing={2}
             gap={2}
-            minWidth={{md: 800}}
-            {...formStyling.section.iClassesProps}
-            {...formStyling.section.iSxPropsProps}
+            {...cssProps.iClassesProps}
+            {...cssProps.iElemProps}
         >
             {/*
                 Stepper
                 <Box></Box>
             */}
             {
-                sections.map((tmpFieldConfig: TFieldConfig, fieldIndex) => {
-                    const fieldConfig = getFieldConfigWithCssProps(tmpFieldConfig);
-
+                sections.map((fieldConfig: TFieldConfig, fieldIndex) => {
                     return (
                         formConfig.type === PRODUCTFORM_TYPE ? (
                             <ProductSection

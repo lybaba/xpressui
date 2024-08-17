@@ -10,8 +10,15 @@ export type CssClassesProps = {
     className?: string
 };
 
-export type SxPropsProps = {
-    sx?: any
+export type CssElemProps = Record<string, any>;
+
+export type TCssProps = {
+    cClassesProps?: CssClassesProps
+    cElemProps?: CssElemProps;
+    iClassesProps?: CssClassesProps 
+    iElemProps?: CssElemProps;
+    lClassesProps?: CssClassesProps
+    lElemProps?: CssElemProps;
 }
 
 type TFieldConfig = {
@@ -51,17 +58,11 @@ type TFieldConfig = {
     mediaInfoList?: TMediaInfo[];
     cLayout?: string;
     cClasses?: string
-    cClassesProps?: CssClassesProps
-    cSxProps?: string;
-    cSxPropsProps?: SxPropsProps;
+    cElemProps?: string;
     iClasses?: string
-    iClassesProps?: CssClassesProps 
-    iSxProps?: string;
-    iSxPropsProps?: SxPropsProps;
+    iElemProps?: string;
     lClasses?: string
-    lClassesProps?: CssClassesProps
-    lSxProps?: string;
-    lSxPropsProps?: SxPropsProps;
+    lElemProps?: string;
     isAdminField?: boolean;
 };
 

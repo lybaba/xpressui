@@ -1,5 +1,4 @@
 import {
-    getFieldConfigWithCssProps,
     IMAGE_TYPE,
     SECTION_TYPE,
 } from "./field";
@@ -42,7 +41,7 @@ export type TFormStyling = {
 export function getBodySectionConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getSectionByName(formConfig, BODY_SECTION_NAME);
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
     
     return {
         type: SECTION_TYPE,
@@ -63,7 +62,7 @@ export function getLogoImageConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getFieldConfigByName(formConfig, BODY_SECTION_NAME, LOGO_IMAGE_FIELD.name);
 
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
 
     return LOGO_IMAGE_FIELD;
 }
@@ -81,7 +80,7 @@ export function getBackgroundImageConfig(formConfig: TFormConfig) : TFieldConfig
     const res = getFieldConfigByName(formConfig, BODY_SECTION_NAME, BACKGROUND_IMAGE_FIELD.name);
 
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
 
     return BACKGROUND_IMAGE_FIELD;
 }
@@ -98,7 +97,7 @@ export function getHeaderImageConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getFieldConfigByName(formConfig, BODY_SECTION_NAME, HEADER_IMAGE_FIELD.name);
 
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
 
     return HEADER_IMAGE_FIELD;
 }
@@ -116,7 +115,7 @@ export function getHeroImageConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getFieldConfigByName(formConfig, BODY_SECTION_NAME, HERO_IMAGE_FIELD.name);
 
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
 
     return HERO_IMAGE_FIELD;
 }

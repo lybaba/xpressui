@@ -9,7 +9,7 @@ export const CustomCheckbox = (props: TFormFieldProps) => {
     fieldConfig,
     input,
     formProps,
-    elemProps
+    cssProps
   } = props;
 
   return (
@@ -19,7 +19,9 @@ export const CustomCheckbox = (props: TFormFieldProps) => {
       }}
       checked={getBooleanValue(input?.value)}
       label={<FormFieldTitle {...props} />}
-      {...elemProps}
+
+      {...cssProps?.iClassesProps}
+      {...cssProps?.iElemProps}
     />
   )
 }

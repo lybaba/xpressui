@@ -15,18 +15,18 @@ export const SingleSelect = (props: TFormFieldProps) => {
     const {
         fieldConfig,
         formProps,
-        elemProps
+        cssProps
     } = props;
 
     const placeholderProps = fieldConfig.placeholder ? { placeholder: fieldConfig.placeholder } : {};
 
 
-    const values = formProps  && formProps.values ? formProps.values : {};
+    const values = formProps && formProps.values ? formProps.values : {};
 
     const valueProps = values.hasOwnProperty(fieldConfig.name) ?
-        { value: values[fieldConfig.name] } : { };
+        { value: values[fieldConfig.name] } : {};
 
-    
+
     return (
         fieldConfig.type === SINGLE_SELECT_TYPE ? (
             <Select
@@ -45,7 +45,8 @@ export const SingleSelect = (props: TFormFieldProps) => {
                     formProps?.form.mutators.setFieldValue(fieldConfig.name, value)
                 }}
                 {...placeholderProps}
-                {...elemProps}
+                {...cssProps?.iClassesProps}
+                {...cssProps?.iElemProps}
             >
                 {
                     fieldConfig.choices?.map((opt: TChoice, index: number) => {
@@ -57,9 +58,10 @@ export const SingleSelect = (props: TFormFieldProps) => {
                 }
             </Select>
         ) : (
-            <RadioGroup 
+            <RadioGroup
                 {...valueProps}
-                {...elemProps}    
+                {...cssProps?.iClassesProps}
+                {...cssProps?.iElemProps}
             >
                 {
                     fieldConfig.choices?.map((opt: TChoice, index: number) => {

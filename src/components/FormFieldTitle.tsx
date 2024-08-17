@@ -6,12 +6,17 @@ import TFormFieldProps from "../common/TFormFieldProps";
 const FormFieldTitle = (props: TFormFieldProps) => {
   const {
     fieldConfig,
+    cssProps
   } = props;
 
   switch(fieldConfig.type) {
     case SECTION_TYPE:
       return (
-        <Typography level="title-sm">
+        <Typography
+          level="title-sm"
+          {...cssProps?.lClassesProps}
+          {...cssProps?.lElemProps}
+        >
           {
             fieldConfig.label
           }
@@ -21,7 +26,10 @@ const FormFieldTitle = (props: TFormFieldProps) => {
 
     default:
       return (
-        <FormLabel>
+        <FormLabel
+        {...cssProps?.lClassesProps}
+        {...cssProps?.lElemProps}
+        >
           {
             fieldConfig.label
           }

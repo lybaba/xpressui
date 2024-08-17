@@ -12,8 +12,6 @@ import {
     SWITCH_TYPE,
     TAX_TYPE,
     TIME_TYPE,
-    strToClasses,
-    strToSxProps,
 } from "./field";
 import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
@@ -404,15 +402,6 @@ export function getBodyFormConfig(formConfig: TFormConfig) : TFormConfig {
         ...formConfig,
         sections: {...formConfig.sections, [MAIN_SECTION]: mainSections}
     };
-
-    res.bClassesProps = strToClasses(res.bClasses);
-    
-    res.bSxPropsProps = strToSxProps(res.bSxProps);
-
-    res.fClassesProps = strToClasses(res.fClasses);
-    res.fSxPropsProps = strToSxProps(res.fSxProps);
-    res.tClassesProps = strToClasses(res.tClasses);
-    res.tSxPropsProps = strToSxProps(res.tSxProps);
 
     return res;
 

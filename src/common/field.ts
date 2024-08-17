@@ -1,14 +1,11 @@
 
-import TFieldConfig, { CssClassesProps, SxPropsProps } from './TFieldConfig';
+import TFieldConfig, { CssClassesProps, CssElemProps, TCssProps } from './TFieldConfig';
 
 import slugify from 'slugify';
 import { isEmpty, isObject, lowerCase } from 'lodash';
-import TFormConfig from './TFormConfig';
 import TFieldType from './TFieldType';
-import { MAIN_SECTION } from './Constants';
 
 export const SECTION_TYPE = 'section';
-export const FIELDGROUP_TYPE = 'fieldgroup';
 export const PRODUCTFORM_TYPE = 'productform';
 export const PRODUCTLIST_TYPE = 'productlist';
 export const PRODUCTITEM_TYPE = 'productitem';
@@ -297,7 +294,7 @@ export function strToClasses(str: string | Record<string, any> | undefined | nul
     return res;
 }
 
-export function strToSxProps(str: string | Record<string, any> | undefined | null) : SxPropsProps {
+export function strToSxProps(str: string | Record<string, any> | undefined | null) : CssElemProps {
     if (!str)
         return {}
 
@@ -307,7 +304,7 @@ export function strToSxProps(str: string | Record<string, any> | undefined | nul
     try {
         const obj = JSON.parse(str);
         if(isObject(obj) && !isEmpty(obj)) 
-            return {sx: obj}
+            return obj
     } catch (e) {
     }
 
@@ -315,13 +312,16 @@ export function strToSxProps(str: string | Record<string, any> | undefined | nul
 }
 
 
-export function getFieldConfigWithCssProps(fieldConfig: TFieldConfig) : TFieldConfig {
-    fieldConfig.cSxPropsProps = strToSxProps(fieldConfig.cSxProps);
-    fieldConfig.cClassesProps = strToClasses(fieldConfig.cClasses);
-    fieldConfig.iSxPropsProps = strToSxProps(fieldConfig.iSxProps);
-    fieldConfig.iClassesProps = strToClasses(fieldConfig.iClasses);
-    fieldConfig.lSxPropsProps = strToSxProps(fieldConfig.lSxProps);
-    fieldConfig.lClassesProps = strToClasses(fieldConfig.lClasses);
+export function getCssProps(fieldConfig: TFieldConfig) : TCssProps {
+    
+    const res: TCssProps = {
+        cClassesProps: strToClasses(fieldConfig.cClasses),
+        cElemProps: strToSxProps(fieldConfig.cElemProps),
+        iClassesProps: strToClasses(fieldConfig.iClasses),
+        iElemProps: strToSxProps(fieldConfig.iElemProps),
+        lClassesProps: strToClasses(fieldConfig.lClasses),
+        lElemProps: strToSxProps(fieldConfig.lElemProps),
+    }
 
-    return fieldConfig;
+    return res;
 }

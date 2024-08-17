@@ -104,7 +104,7 @@ const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
         "name": "heading",
         "canDelete": false,
         "isAdminField": true,
-        "cSxProps": "{\"border\": \"1px solid'\"}"
+        "cElemProps": "{\"border\": \"1px solid'\"}"
       },
       {
         "type": "section",
@@ -113,7 +113,7 @@ const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
         "name": "footer",
         "canDelete": false,
         "isAdminField": true,
-        "cSxProps": "{\"bgcolor\": \"neutral.800\", \"p\": 5}",
+        "cElemProps": "{\"bgcolor\": \"neutral.800\", \"p\": 5}",
         "cClasses": "fdsdfdf"
       },
       {
@@ -165,7 +165,7 @@ const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
         "label": "Envoyer",
         "adminLabel": "Submit",
         "desc": "Hello World",
-        "cSxProps": "{\"bgcolor\": \"neutral.800\"}",
+        "cElemProps": "{\"bgcolor\": \"neutral.800\"}",
         "canDelete": false
       },
       {

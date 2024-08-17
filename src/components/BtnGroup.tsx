@@ -10,11 +10,14 @@ import { MULTI_STEP_FORM_TYPE } from "../common/TFormConfig";
 import TPostUIProps from "../common/TPostUIProps";
 import { TFormSubmit } from "../common/formsubmit";
 import { TFormStyling } from "../common/formstyling";
+import FormField from "./FormField";
+import { getCssProps } from "../common/field";
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
     formSubmit: TFormSubmit;
     formStyling: TFormStyling;
+
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -42,17 +45,19 @@ function BtnGroup(props: Props) {
 
     const showSubmitBtn = !isMultiStepForm || currentStepNum === nbSteps;
 
+    const formSubmitCssProps = getCssProps(formSubmit.section);
+
     return (
         <Stack
-            {...formSubmit.section.cClassesProps}
-            {...formSubmit.section.cSxPropsProps}
+            {...formSubmitCssProps.cClassesProps}
+            {...formSubmitCssProps.cElemProps}
         >
             <Box
                 component={'p'}
-                {...formSubmit.section.lClassesProps}
-                {...formSubmit.section.lSxPropsProps}
+                {...formSubmitCssProps.lClassesProps}
+                {...formSubmitCssProps.lElemProps}
             >
-                { formSubmit.section.desc }
+                {formSubmit.section.desc}
             </Box>
             <Stack
                 component={ButtonGroup}
@@ -60,86 +65,38 @@ function BtnGroup(props: Props) {
                 direction={'row'}
                 justifyContent={'space-between'}
                 spacing="1.25rem"
-                {...formSubmit.section.iClassesProps}
-                {...formSubmit.section.iSxPropsProps}
+                {...formSubmitCssProps.iClassesProps}
+                {...formSubmitCssProps.iElemProps}
             >
                 {
                     isMultiStepForm ? (
-                        <Box
-                            {...formSubmit.prevBtn.cClassesProps}
-                            {...formSubmit.prevBtn.cSxPropsProps}
-                        >
-                            <Button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    onPrevBtnClick(postUIContext, props, formProps)
-                                }}
-                                disabled={!showPrevBtn}
-                                {...formSubmit.prevBtn.iClassesProps}
-                                {...formSubmit.prevBtn.iSxPropsProps}
-                            >
-                                <span
-                                    {...formSubmit.prevBtn.lClassesProps}
-                                    {...formSubmit.prevBtn.lSxPropsProps}
-                                >
-                                    {
-                                        formSubmit.prevBtn.label
-                                    }
-                                </span>
-                            </Button>
-                        </Box>
+                        <FormField
+                            {...props}
+                            cssProps={getCssProps(formSubmit.prevBtn)}
+                            fieldConfig={formSubmit.prevBtn}
+                            disabled={!showPrevBtn}
+                            onClickEvent={() => onPrevBtnClick(postUIContext, props, formProps)}
+                        />
+
                     ) : null
                 }
                 {
                     isMultiStepForm && showNextBtn && (
-                        <Box
-                            {...formSubmit.nextBtn.cClassesProps}
-                            {...formSubmit.nextBtn.cSxPropsProps}
-                        >
-                            <Button
-                                color="primary"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    onNextBtnClick(postUIContext, props, formProps)
-                                }}
-                                {...formSubmit.nextBtn.iClassesProps}
-                                {...formSubmit.nextBtn.iSxPropsProps}
-                            >
-                                <span
-                                    {...formSubmit.nextBtn.lClassesProps}
-                                    {...formSubmit.nextBtn.lSxPropsProps}
-                                >
-                                    {
-                                        formSubmit.nextBtn.label
-                                    }
-                                </span>
-                            </Button>
-                        </Box>
+                        <FormField
+                            {...props}
+                            cssProps={getCssProps(formSubmit.nextBtn)}
+                            fieldConfig={formSubmit.nextBtn}
+                            onClickEvent={() => onNextBtnClick(postUIContext, props, formProps)}
+                        />
                     )
                 }
                 {
                     showSubmitBtn && (
-                        <Box
-                            {...formSubmit.submitBtn.cClassesProps}
-                            {...formSubmit.submitBtn.cSxPropsProps}
-                        >
-                            <Button
-                                type="submit"
-                                color="primary"
-                                variant="solid"
-                                {...formSubmit.submitBtn.iClassesProps}
-                                {...formSubmit.submitBtn.iSxPropsProps}
-                            >
-                                <span
-                                    {...formSubmit.submitBtn.lClassesProps}
-                                    {...formSubmit.submitBtn.lSxPropsProps}
-                                >
-                                    {
-                                        formSubmit.submitBtn.label
-                                    }
-                                </span>
-                            </Button>
-                        </Box>
+                        <FormField
+                            {...props}
+                            cssProps={getCssProps(formSubmit.submitBtn)}
+                            fieldConfig={formSubmit.submitBtn}
+                        />
                     )
                 }
             </Stack>

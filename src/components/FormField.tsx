@@ -5,17 +5,19 @@ import {
 
 import FormFieldTitle from "./FormFieldTitle";
 import {
+    BTN_TYPE,
+    getCssProps,
     IMAGE_TYPE,
     OUTPUT_TYPE,
     SUBMIT_TYPE,
 } from "../common/field";
 import TFormFieldProps from "../common/TFormFieldProps";
-import FieldTemplate from "./CustomField";
-import FieldLabelTemplate from "./CustomFieldLabel";
-import FieldInputTemplate from "./CustomFieldInput";
+import CustomField from "./CustomField";
+import CustomFieldLabel from "./CustomFieldLabel";
+import CustomFieldInput from "./CustomFieldInput";
 import { shouldRenderField } from "../common/post";
 
-export const FormField = (props: TFormFieldProps) => {
+export const FormFieldBody = (props: TFormFieldProps) => {
     const {
         fieldConfig,
         formConfig
@@ -42,29 +44,38 @@ export const FormField = (props: TFormFieldProps) => {
     
             case IMAGE_TYPE:
             case SUBMIT_TYPE:
+            case BTN_TYPE:
                 return (
-                    <FieldTemplate
+                    <CustomField
                        {...props}
                     >
-                         <FieldInputTemplate {...props}>
-                            <FieldLabelTemplate {...props} />
-                        </FieldInputTemplate>
-                    </FieldTemplate>
+                         <CustomFieldInput {...props}>
+                            <CustomFieldLabel {...props} />
+                        </CustomFieldInput>
+                    </CustomField>
                 );
 
 
         default:
             return (
-                <FieldTemplate
+                <CustomField
                    {...props}
                 >
-                     <FieldLabelTemplate {...props} />
-                     <FieldInputTemplate {...props} />
-                </FieldTemplate>
+                     <CustomFieldLabel {...props} />
+                     <CustomFieldInput {...props} />
+                </CustomField>
             );
     }
 
 }
 
+export const FormField = (props: TFormFieldProps) => {
+    const cssProps = getCssProps(props.fieldConfig);
 
+    console.log("FormField....... ", props.fieldConfig.name, "   ", cssProps)
+
+    return (
+        <FormFieldBody {...props} cssProps={cssProps}/>
+    )
+}
 export default FormField;

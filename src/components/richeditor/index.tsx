@@ -25,7 +25,7 @@ export const RichEditor = (props: TFormFieldProps) => {
   const {
     fieldConfig,
     input,
-    elemProps
+    cssProps
   } = props;
 
   const {
@@ -43,7 +43,8 @@ export const RichEditor = (props: TFormFieldProps) => {
       }}
       {...input}
       placeholder={placeholder}
-      {...elemProps}
+      {...cssProps?.iClassesProps}
+      {...cssProps?.iElemProps}
     />
   )
 }

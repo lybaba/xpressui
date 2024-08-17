@@ -8,6 +8,7 @@ import getFormStylingConfig from '../../common/formstyling';
 import TPostUIProps from '../../common/TPostUIProps';
 import PostContent from './PostContent';
 import { MediaSizeType } from '../../common/TMediaFile';
+import { getCssProps } from '../../common/field';
 
 
 type Props = TPostUIProps & PropsWithChildren;
@@ -32,26 +33,28 @@ export default function PostUI(props: Props) {
         }
     } : {}
 
+    const cssProps = getCssProps(formStyling.section);
 
     return (
         <Box
             {...bgProps}
         >
-            <Stack
-                {...formStyling.section.cClassesProps}
+            <Box
+                {...cssProps.cClassesProps}
                 sx={{
                     p: 2,
-                    ...formStyling.section.cSxPropsProps?.sx,
                     alignItems: 'center',
                 }}
+                {...cssProps?.cElemProps}
             >
                 <PostContent
                     {...props}
                     formConfig={formConfig}
                     formStyling={formStyling}
                     formSubmit={formSubmit}
+                    cssProps={cssProps}
                 />
-            </Stack>
+            </Box>
         </Box>
     );
 }

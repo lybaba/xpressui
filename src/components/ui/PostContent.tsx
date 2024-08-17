@@ -13,11 +13,13 @@ import { TFormStyling } from '../../common/formstyling';
 
 import FormSectionList from './FormSectionList';
 import TPostUIProps from '../../common/TPostUIProps';
+import { TCssProps } from '../../common/TFieldConfig';
 
 
 type OwnProps = {
     formSubmit: TFormSubmit
     formStyling: TFormStyling;
+    cssProps: TCssProps;
 }
 
 type FormUIProps = OwnProps & TPostUIProps

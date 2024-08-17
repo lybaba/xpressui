@@ -13,7 +13,7 @@ export const MultiSelect = (props: TFormFieldProps) => {
         formProps,
         fieldConfig,
         input,
-        elemProps
+        cssProps
     } = props;
 
     /*const {
@@ -51,7 +51,8 @@ export const MultiSelect = (props: TFormFieldProps) => {
                 formProps?.form.mutators.setFieldValue(fieldConfig.name, value)
             }}
             {...placeholderProps}
-            {...elemProps}
+            {...cssProps?.iClassesProps}
+            {...cssProps?.iElemProps}
         >
             {
                 fieldConfig.choices?.map((opt: TChoice, index: number) => {

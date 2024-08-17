@@ -1,6 +1,7 @@
 import { Field, FieldInputProps, FieldMetaState } from 'react-final-form';
 import { useEffect, useRef } from 'react';
 import {
+    BTN_TYPE,
     CHECKBOXES_TYPE,
     CHECKBOX_TYPE,
     IMAGE_TYPE,
@@ -41,12 +42,12 @@ export const FormInputControl = (props: FormInputControlProps) => {
     const inputRef: any = useRef(null);
 
     const {
-        elemProps,
         fieldConfig,
         input,
         hasError,
         isFirstInputfield,
-        formProps
+        formProps,
+        cssProps
     } = props;
 
     const submitting = formProps ? formProps.submitting : false;
@@ -122,7 +123,8 @@ export const FormInputControl = (props: FormInputControlProps) => {
                     }}
                     error={hasError}
                     {...placeholderProps}
-                    {...elemProps}
+                    {...cssProps?.iClassesProps}
+                    {...cssProps?.iElemProps}
                 >
                     {
                         props.children
@@ -144,6 +146,13 @@ export const CustomFieldInput = (props: CustomFieldInputProps) => {
     } = fieldConfig;
 
     switch (fieldConfig.type) {
+        case BTN_TYPE:
+            return (
+                <SubmitBtn
+                    {...props}
+                />
+            )
+
         case SUBMIT_TYPE:
             return (
                 <SubmitBtn

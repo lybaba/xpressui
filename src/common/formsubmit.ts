@@ -1,5 +1,4 @@
 import {
-    getFieldConfigWithCssProps,
     OUTPUT_TYPE,
     SECTION_TYPE,
     SUBMIT_TYPE,
@@ -45,7 +44,7 @@ export type TFormSubmit = {
 export function getFooterSectionConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getSectionByName(formConfig, FORMSUBMIT_SECTION_NAME);
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
     
     return {
         type: SECTION_TYPE,
@@ -67,7 +66,7 @@ export function getSubmitBtnConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, SUBMITBTN_FIELD.name);
 
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
 
     return SUBMITBTN_FIELD;
 }
@@ -84,7 +83,7 @@ export function getNextBtnConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, NEXTBTN_FIELD.name);
 
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
 
     return NEXTBTN_FIELD;
 }
@@ -101,7 +100,7 @@ export function getPrevBtnConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, PREVBTN_FIELD.name);
 
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
 
     return PREVBTN_FIELD;
 }
@@ -118,7 +117,7 @@ export function getErrorMsgConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, ERROR_MSG_FIELD.name);
 
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
 
     return ERROR_MSG_FIELD;
 }
@@ -137,7 +136,7 @@ export function getSuccessMsgConfig(formConfig: TFormConfig) : TFieldConfig {
     const res = getFieldConfigByName(formConfig, FORMSUBMIT_SECTION_NAME, SUCCESS_MSG_FIELD.name);
 
     if (res)
-        return getFieldConfigWithCssProps(res);
+        return res;
 
     return SUCCESS_MSG_FIELD;
 }

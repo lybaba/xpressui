@@ -6,7 +6,7 @@ import FormField from './FormField';
 import TFormFieldProps from '../common/TFormFieldProps';
 import { isFunction } from 'lodash';
 import React from 'react';
-import { getFieldConfigWithCssProps } from '../common/field';
+import { getCssProps } from '../common/field';
 
 
 function ProductSection(props: TFormFieldProps) {
@@ -59,9 +59,7 @@ function ProductSection(props: TFormFieldProps) {
 
                     >
                         {
-                            fields.map((tmpFieldConfig: TFieldConfig, index) => {
-                                const fieldConfig = getFieldConfigWithCssProps(tmpFieldConfig);
-
+                            fields.map((fieldConfig: TFieldConfig, index) => {
                                 return (
                                     isFunction(renderField) ? (
                                         <React.Fragment key={fieldIndex}>
@@ -69,6 +67,7 @@ function ProductSection(props: TFormFieldProps) {
                                                 renderField(
                                                     {
                                                         ...props,
+                                                        cssProps: getCssProps(fieldConfig),
                                                         formName: sectionConfig.name,
                                                         fieldConfig,
                                                         fieldIndex: index

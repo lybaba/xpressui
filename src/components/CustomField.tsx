@@ -11,7 +11,7 @@ import { Box, FormControl, Stack } from '@mui/joy';
 export const CustomField = (props: TFormFieldProps) => {
     const {
         fieldConfig,
-        elemProps,
+        cssProps
     } = props;
 
 
@@ -48,7 +48,8 @@ export const CustomField = (props: TFormFieldProps) => {
         case SUBMIT_TYPE:
             return (
                 <Box
-                    {...elemProps}
+                    {...cssProps?.cClassesProps}
+                    {...cssProps?.cElemProps}
                 >
                    {props.children}
                 </Box>
@@ -62,7 +63,8 @@ export const CustomField = (props: TFormFieldProps) => {
                     sx={{
                         alignItems: 'center',
                     }}
-                    {...elemProps}
+                    {...cssProps?.cClassesProps}
+                    {...cssProps?.cElemProps}
                 >
                     {props.children}
                 </Stack>
@@ -71,7 +73,8 @@ export const CustomField = (props: TFormFieldProps) => {
         default:
             return (
                 <FormControl
-                    {...elemProps}
+                    {...cssProps?.cClassesProps}
+                    {...cssProps?.cElemProps}
                 >
                     {props.children}
                 </FormControl>

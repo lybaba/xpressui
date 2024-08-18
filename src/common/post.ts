@@ -1,9 +1,12 @@
 import {
+    BODY_TYPE,
     CHECKBOX_TYPE,
     DATETIME_TYPE,
     DATE_TYPE,
     EMAIL_TYPE,
+    FORM_SUBMIT_TYPE,
     MULTI_SELECT_TYPE,
+    NAVBAR_TYPE,
     NUMBER_TYPE,
     POSITIVE_INTEGER_TYPE,
     PRICE_TYPE,
@@ -16,7 +19,7 @@ import {
 import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { RenderingMode } from "./TFormConfig";
-import { MAIN_SECTION } from './Constants';
+import { GLOBAL_SECTION, CUSTOM_SECTION } from './Constants';
 import TMediaFile, { TMediaInfo, TMediaFileMetadata, MediaSizeType, MEDIA_FILE_PREFIX } from './TMediaFile';
 import { TPostUIContext } from '../components/ui/TPostUIState';
 import { isEmpty, isObject } from 'lodash';
@@ -133,9 +136,14 @@ export const getMediumImageUrl = (postUIContext: TPostUIContext,  formConfig: TF
 }
 
 
-export const getSectionList = (formConfig: TFormConfig): Array<TFieldConfig> => {
-    return formConfig.sections.hasOwnProperty(MAIN_SECTION) ? formConfig.sections[MAIN_SECTION] : []
+export const getCustomSectionList = (formConfig: TFormConfig): Array<TFieldConfig> => {
+    return formConfig.sections.hasOwnProperty(CUSTOM_SECTION) ? formConfig.sections[CUSTOM_SECTION] : []
 }
+
+export const getGlobalSectionList = (formConfig: TFormConfig): Array<TFieldConfig> => {
+    return formConfig.sections.hasOwnProperty(GLOBAL_SECTION) ? formConfig.sections[GLOBAL_SECTION] : []
+}
+
 
 export const getSectionFields = (formConfig: TFormConfig, sectionName: string): Array<TFieldConfig> => {
     return formConfig.sections.hasOwnProperty(sectionName) ? formConfig.sections[sectionName] : [];
@@ -147,11 +155,13 @@ export const getSectionHasFields = (formConfig: TFormConfig, sectionName: string
 }
 
 
-export const getSectionByIndex = (formConfig: TFormConfig, index: number): TFieldConfig | null => {
-    if (!formConfig || index < 0 || index >= formConfig.sections[MAIN_SECTION].length)
+export const getSectionByIndex = (formConfig: TFormConfig, index: number, isGlobalSection: boolean = false): TFieldConfig | null => {
+    const mainSection = isGlobalSection ? GLOBAL_SECTION : CUSTOM_SECTION;
+
+    if (!formConfig || index < 0 || index >= formConfig.sections[mainSection].length)
         return null;
 
-    return formConfig.sections[MAIN_SECTION][index];
+    return formConfig.sections[mainSection][index];
 }
 
 
@@ -168,13 +178,14 @@ export const getFieldConfigByIndex = (formConfig: TFormConfig, sectionIndex: num
     return null;
 }
 
-export const getSectionByName = (formConfig: TFormConfig, groupName: string) => {
+export const getSectionByName = (formConfig: TFormConfig, sectionName: string, isGlobalSection: boolean = false) => {
     let groupIndex = -1;
+    const mainSection = isGlobalSection ? GLOBAL_SECTION : CUSTOM_SECTION;
 
-    if (formConfig.sections[MAIN_SECTION]) {
-        formConfig.sections[MAIN_SECTION].every((tmp: TFieldConfig, index: number) => {
+    if (formConfig.sections[mainSection]) {
+        formConfig.sections[mainSection].every((tmp: TFieldConfig, index: number) => {
 
-            if (tmp.name === groupName) {
+            if (tmp.name === sectionName) {
                 groupIndex = index;
                 return false;
             }
@@ -183,7 +194,7 @@ export const getSectionByName = (formConfig: TFormConfig, groupName: string) => 
         });
     }
 
-    return groupIndex >= 0 ? formConfig.sections[MAIN_SECTION][groupIndex] : null;
+    return groupIndex >= 0 ? formConfig.sections[mainSection][groupIndex] : null;
 }
 
 
@@ -389,7 +400,7 @@ export const getMediaUrlByMediaId = (postUIContext: TPostUIContext,  formConfig:
 export function getBodyFormConfig(formConfig: TFormConfig) : TFormConfig {
     const mainSections : TFieldConfig[] = [];
     
-    formConfig.sections[MAIN_SECTION].forEach((sectionConfig: TFieldConfig) => {
+    formConfig.sections[CUSTOM_SECTION].forEach((sectionConfig: TFieldConfig) => {
         const {
             isAdminField = false
         } = sectionConfig
@@ -400,7 +411,7 @@ export function getBodyFormConfig(formConfig: TFormConfig) : TFormConfig {
 
     const res = {
         ...formConfig,
-        sections: {...formConfig.sections, [MAIN_SECTION]: mainSections}
+        sections: {...formConfig.sections, [CUSTOM_SECTION]: mainSections}
     };
 
     return res;
@@ -439,3 +450,34 @@ export function getFieldConfigByName(formConfig: TFormConfig, sectionName: strin
     return null;
 }
 
+
+export function getFirstSectionIndexBySubType(formConfig: TFormConfig, subType: string, isGlobalSection: boolean = false): number {
+    const mainSection = isGlobalSection ? GLOBAL_SECTION : CUSTOM_SECTION;
+
+    const sections = formConfig.sections.hasOwnProperty(mainSection) ? formConfig.sections[mainSection] : [];
+
+    let fieldIndex = -1;
+    sections.every((tmpFieldConfig: TFieldConfig, index: number) => {
+        if (tmpFieldConfig.subType === subType) {
+            fieldIndex = index;
+            return false;
+        }
+
+        return true;
+    });
+
+
+    return fieldIndex;
+}
+
+export function getFormStylingSectionIndex(formConfig: TFormConfig): number {
+    return getFirstSectionIndexBySubType(formConfig, BODY_TYPE, true);
+}
+
+export function getFormSubmitSectionIndex(formConfig: TFormConfig): number {
+    return getFirstSectionIndexBySubType(formConfig, FORM_SUBMIT_TYPE, true);
+}
+
+export function getFormNavSectionIndex(formConfig: TFormConfig): number {
+    return getFirstSectionIndexBySubType(formConfig, NAVBAR_TYPE, true);
+}

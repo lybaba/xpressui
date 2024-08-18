@@ -1,7 +1,7 @@
 import { Box, ButtonGroup, Stack } from "@mui/joy";
 
 import {
-    MAIN_SECTION,
+    CUSTOM_SECTION,
 } from '../../common/Constants';
 import { usePostUIContext } from "../ui/PostUIProvider";
 import { onNextBtnClick, onPrevBtnClick } from "../ui/Actions";
@@ -28,7 +28,7 @@ function CustomButtonGroup(props: TFormFieldProps) {
         currentStepIndex,
     } = postUIContext
 
-    const steps = formConfig.sections[MAIN_SECTION];
+    const steps = formConfig.sections[CUSTOM_SECTION];
     const nbSteps = steps.length;
 
     const isMultiStepForm = formConfig.type === MULTI_STEP_FORM_TYPE;

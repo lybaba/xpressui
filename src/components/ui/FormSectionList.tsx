@@ -1,4 +1,4 @@
-import { MAIN_SECTION } from '../../common/Constants';
+import { CUSTOM_SECTION } from '../../common/Constants';
 import TPostUIProps from '../../common/TPostUIProps';
 import { Container, Stack } from '@mui/joy';
 import TFieldConfig, { TCssProps } from '../../common/TFieldConfig';
@@ -31,7 +31,7 @@ export default function FormSectionList(props: Props) {
     } = props;
 
 
-    const sections = formConfig.sections[MAIN_SECTION];
+    const sections = formConfig.sections[CUSTOM_SECTION];
 
 
     return (

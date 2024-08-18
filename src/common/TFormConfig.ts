@@ -1,7 +1,7 @@
 import TChoice from "./TChoice";
 import TFieldConfig, { CssClassesProps, CssElemProps } from "./TFieldConfig";
 import shortUUID from "short-uuid";
-import { MAIN_SECTION } from "./Constants";
+import { CUSTOM_SECTION } from "./Constants";
 
 
 export const CONTACTFORM_TYPE = 'contactform';
@@ -40,7 +40,7 @@ export const DEFAULT_FORM_CONFIG: TFormConfig = {
     type: CONTACTFORM_TYPE,
     name: 'demo',
     label: 'demo',
-    sections: {[MAIN_SECTION]: []},
+    sections: {[CUSTOM_SECTION]: []},
 }
 
 export default TFormConfig;

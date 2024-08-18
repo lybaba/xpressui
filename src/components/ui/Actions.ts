@@ -4,7 +4,7 @@ import TPostConfigState,
     TPostUIContext,
 } from "./TPostUIState";
 import TPostUIEvent, { TPostUIEventType } from "../../common/TPostUIEvent";
-import { MAIN_SECTION, SERVER_REQUEST, SERVER_RESPONSE } from "../../common/Constants";
+import { CUSTOM_SECTION, SERVER_REQUEST, SERVER_RESPONSE } from "../../common/Constants";
 import { FormRenderProps } from "react-final-form";
 import { TPostUIConfig } from "../../common/TPostUIConfigProps";
 import TPostUIProps from "../../common/TPostUIProps";
@@ -157,7 +157,7 @@ export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUI
         formConfig,
     } = postProps;
 
-    const steps = formConfig.sections[MAIN_SECTION];
+    const steps = formConfig.sections[CUSTOM_SECTION];
     const nbSteps = steps.length;
 
     const currentStepNum = currentStepIndex + 1;
@@ -217,7 +217,7 @@ export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUI
         formConfig,
     } = postProps;
 
-    const steps = formConfig.sections[MAIN_SECTION];
+    const steps = formConfig.sections[CUSTOM_SECTION];
 
     const currentStepNum = currentStepIndex + 1;
 

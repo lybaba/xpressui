@@ -22,7 +22,7 @@ export type TNavBar = {
 // ==========================================================
 
 export function getNavBarSectionConfig(formConfig: TFormConfig) : TFieldConfig {
-    const res = getSectionByName(formConfig, NAVBAR_NAME);
+    const res = getSectionByName(formConfig, NAVBAR_NAME, true);
     if (res)
         return res;
     

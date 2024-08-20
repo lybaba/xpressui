@@ -44,7 +44,7 @@ const MULTI_STEP_FORM_CONFIG: TFormConfig = {
             "type": "image-url",
             "name": "xpressui",
             mediaInfo: {
-              filePath: '/images/new_product.jpg'
+              publicUrl: '/images/new_product.jpg'
             }
         }
     ],
@@ -89,65 +89,118 @@ const CHOICE_GROUP_FORM_NAME = 'choicegroup';
 const CHOICE_GROUP_FORM_LABEL = 'Choice Group';
 
 const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
-  "label": "Hello",
-  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+  "id": "5J3KZP9EnsV3S25jHETDNg",
+  "label": "My APP",
   "sections": {
-    "hello": [
+    "section1": [
       {
-        "required": true,
-        "name": "email",
-        "type": "email",
-        "label": "Email",
-        "canDelete": false
+        "name": "content_1",
+        "type": "html",
+        "label": "content1sdsd"
+      },
+      {
+        "name": "un_autre_boutton",
+        "type": "btn",
+        "label": "Un autre bouttonfdfds"
+      },
+      {
+        "name": "i_want_it",
+        "label": "I want Itttttttt",
+        "type": "btn"
       }
     ],
-    "main": [
+    "nav": [
       {
-        "adminLabel": "Form Styling",
+        "name": "navMenu",
+        "label": "Navigation Menu",
+        "type": "navigation-menu",
+        "adminLabel": "Navigation Menu",
+        "canDelete": false,
+        "choices": [
+          {
+            "id": "5qzjT5Dhq6AXxsdQirEYZN",
+            "name": "SuperForm"
+          },
+          {
+            "id": "4kauuE6198mDtSzwSecc4S",
+            "name": "FooBar"
+          },
+          {
+            "name": "Produits",
+            "id": "bswHHfSrPL5nHmHqZeMwb4"
+          },
+          {
+            "id": "sNx9CSrahaTrDoeagujVRY",
+            "name": "Hello"
+          }
+        ]
+      }
+    ],
+    "global": [
+      {
         "isAdminField": true,
-        "name": "body",
         "type": "section",
+        "label": "Styles",
+        "canDelete": false,
+        "adminLabel": "Styles",
         "subType": "body",
+        "name": "body"
+      },
+      {
         "canDelete": false,
-        "label": "Form Styling"
+        "isAdminField": true,
+        "adminLabel": "Navigation Menu",
+        "name": "nav",
+        "subType": "nav",
+        "label": "Navigation Menu",
+        "type": "section"
       },
       {
         "type": "section",
-        "adminLabel": "Form Submit",
+        "label": "Buttons",
+        "canDelete": false,
         "subType": "formsubmit",
-        "label": "Form Submit",
+        "adminLabel": "Buttons",
         "name": "formsubmit",
-        "canDelete": false,
         "isAdminField": true
+      }
+    ],
+    "custom": [
+      {
+        "canDelete": false,
+        "name": "section1",
+        "label": "Section 0000",
+        "type": "section",
+        "hero": "https://storage.googleapis.com/joosorolstore.appspot.com/static/rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1/pqWvNheiqZDRZsUBvA1Xy3-large.jpeg"
       },
       {
-        "label": "Hello",
-        "canDelete": false,
+        "subType": "section",
         "type": "section",
-        "name": "hello"
+        "label": "ytry",
+        "name": "ytry"
       }
     ],
     "formsubmit": [
       {
-        "label": "Button Group",
         "canDelete": false,
-        "type": "btn-group",
+        "label": "Buttons",
         "name": "btnGroup",
-        "adminLabel": "Button Group"
+        "adminLabel": "Buttons",
+        "type": "btn-group"
       },
       {
-        "adminLabel": "Submit",
-        "label": "Commander",
-        "canDelete": false,
         "type": "submit",
-        "name": "submitBtn"
+        "adminLabel": "Submit button",
+        "name": "submitBtn",
+        "label": "Submit",
+        "canDelete": false
       }
     ]
   },
-  "type": "contactform",
-  "name": "hello",
-  "timestamp": 1723891379,
-  "id": "1MoaPuxHL4LToMPWc6u5Ke"
+  "name": "my-app",
+  "timestamp": 1724093752,
+  "type": "webapp",
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1"
 }
 // ======================
 

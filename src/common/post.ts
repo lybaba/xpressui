@@ -20,7 +20,7 @@ import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { RenderingMode } from "./TFormConfig";
 import { GLOBAL_SECTION, CUSTOM_SECTION } from './Constants';
-import TMediaFile, { TMediaInfo, TMediaFileMetadata, MediaSizeType, MEDIA_FILE_PREFIX } from './TMediaFile';
+import TMediaFile, { TMediaInfo, MediaSizeType } from './TMediaFile';
 import { TPostUIContext } from '../components/ui/TPostUIState';
 import { isEmpty, isObject } from 'lodash';
 import TChoice from "./TChoice";
@@ -55,84 +55,53 @@ export type TGetPostAssetsResult = {
     mediaFilesMap: Record<string, TMediaFile>;
 }
 
-function storageURL(storageUrl: string, relativePath: string) {
-    return storageUrl + relativePath + '?alt=media'
+
+export const getLargeImageUrl = (mediaFile: TMediaInfo): string => {
+    if (!isEmpty(mediaFile.large))
+        return mediaFile.large.publicUrl;
+
+
+    return mediaFile.publicUrl ? mediaFile.publicUrl : '';
 }
 
-export const buildImageUrl = (postUIContext: TPostUIContext, formConfig: TFormConfig, fileMeta: TMediaFileMetadata): string => {
-    const {
-        baseStorageUrl = '',
-        user
-    } = postUIContext;
-
-    let filePath = fileMeta.filePath
-
-    if (!isEmpty(baseStorageUrl) && user) {
-        return storageURL(baseStorageUrl, `static%2F${user.uid}%2F${fileMeta.filePath}`);
-    } else {
-        const baseUrl = postUIContext.frontend.imagesBaseUrl;
-        if (baseUrl.endsWith('/'))
-            return `${baseUrl}static${formConfig.uid}/${fileMeta.filePath}`;
-        else
-            return `${baseUrl}/static/${formConfig.uid}/${fileMeta.filePath}`;
-
-    }
-}
-
-function parseFilePath(postUIContext: TPostUIContext,  formConfig: TFormConfig, filePath: string) {
-    if (filePath.startsWith(MEDIA_FILE_PREFIX)) {
-        const fp = filePath.substring(MEDIA_FILE_PREFIX.length);
-        return buildImageUrl(postUIContext, formConfig, {filePath: fp})
-    }
-
-    return filePath;
-}
-
-export const getLargeImageUrl = (postUIContext: TPostUIContext,  formConfig: TFormConfig, mediaFile: TMediaInfo): string => {
-    if (isEmpty(mediaFile.large))
-        return mediaFile.filePath ? parseFilePath(postUIContext, formConfig, mediaFile.filePath) : '';
-
-    return buildImageUrl(postUIContext, formConfig, mediaFile.large);
-}
-
-export const getSmallImageUrl = (postUIContext: TPostUIContext,  formConfig: TFormConfig, mediaFile: TMediaInfo): string => {
+export const getSmallImageUrl = (mediaFile: TMediaInfo): string => {
     if (!isEmpty(mediaFile.small))
-        return buildImageUrl(postUIContext, formConfig, mediaFile.small);
+        return mediaFile.small.publicUrl
 
     if (!isEmpty(mediaFile.thumb))
-        return buildImageUrl(postUIContext, formConfig, mediaFile.thumb);
+        return mediaFile.thumb.publicUrl
 
     if (!isEmpty(mediaFile.medium))
-        return buildImageUrl(postUIContext, formConfig, mediaFile.medium);
+        return mediaFile.medium.publicUrl;
 
     if (!isEmpty(mediaFile.large))
-        return buildImageUrl(postUIContext, formConfig, mediaFile.large);
+        return mediaFile.large.publicUrl;
 
 
-    return mediaFile.filePath ? parseFilePath(postUIContext, formConfig, mediaFile.filePath) : '';
+    return mediaFile.publicUrl ? mediaFile.publicUrl : '';
 }
 
-export const getThumbImageUrl = (postUIContext: TPostUIContext,  formConfig: TFormConfig, mediaFile: TMediaInfo): string => {
+export const getThumbImageUrl = (mediaFile: TMediaInfo): string => {
     if (!isEmpty(mediaFile.thumb))
-        return buildImageUrl(postUIContext, formConfig, mediaFile.thumb);
+        return mediaFile.thumb.publicUrl
 
     if (!isEmpty(mediaFile.medium))
-        return buildImageUrl(postUIContext, formConfig, mediaFile.medium);
+        return mediaFile.medium.publicUrl;
 
     if (!isEmpty(mediaFile.large))
-        return buildImageUrl(postUIContext, formConfig, mediaFile.large);
+        return mediaFile.large.publicUrl;
 
-    return mediaFile.filePath ? parseFilePath(postUIContext, formConfig, mediaFile.filePath) : '';
+    return mediaFile.publicUrl ? mediaFile.publicUrl : '';
 }
 
-export const getMediumImageUrl = (postUIContext: TPostUIContext,  formConfig: TFormConfig, mediaFile: TMediaInfo): string => {
+export const getMediumImageUrl = (mediaFile: TMediaInfo): string => {
     if (!isEmpty(mediaFile.medium))
-        return buildImageUrl(postUIContext, formConfig, mediaFile.medium);
+        return mediaFile.medium.publicUrl;
 
     if (!isEmpty(mediaFile.large))
-        return buildImageUrl(postUIContext, formConfig, mediaFile.large);
+        return mediaFile.large.publicUrl;
 
-    return mediaFile.filePath ? parseFilePath(postUIContext, formConfig, mediaFile.filePath) : '';
+    return mediaFile.publicUrl ? mediaFile.publicUrl : '';
 }
 
 
@@ -196,8 +165,6 @@ export const getSectionByName = (formConfig: TFormConfig, sectionName: string, i
 
     return groupIndex >= 0 ? formConfig.sections[mainSection][groupIndex] : null;
 }
-
-
 
 
 type ValidatorProps = {
@@ -377,47 +344,25 @@ export default function validate(props: ValidatorProps): Record<string, string> 
 
 export const getMediaUrlByMediaId = (postUIContext: TPostUIContext,  formConfig: TFormConfig, fieldConfig: TFieldConfig, mediaSize: MediaSizeType = MediaSizeType.Small): string => {
 
-    const mediaInfo: TMediaInfo = fieldConfig.mediaInfo ? fieldConfig.mediaInfo : { filePath: fieldConfig.mediaId };
+    const mediaInfo: TMediaInfo = fieldConfig.mediaInfo ? fieldConfig.mediaInfo : { publicUrl: fieldConfig.mediaId };
 
     switch (mediaSize) {
         case MediaSizeType.Small:
-            return getSmallImageUrl(postUIContext, formConfig, mediaInfo);
+            return getSmallImageUrl(mediaInfo);
 
         case MediaSizeType.Thumb:
-            return getThumbImageUrl(postUIContext, formConfig, mediaInfo);
+            return getThumbImageUrl(mediaInfo);
 
         case MediaSizeType.Medium:
-            return getMediumImageUrl(postUIContext, formConfig, mediaInfo);
+            return getMediumImageUrl(mediaInfo);
 
         case MediaSizeType.Large:
-            return getLargeImageUrl(postUIContext, formConfig, mediaInfo);
+            return getLargeImageUrl(mediaInfo);
 
         default:
             return '';
     }
 }
-
-export function getBodyFormConfig(formConfig: TFormConfig) : TFormConfig {
-    const mainSections : TFieldConfig[] = [];
-    
-    formConfig.sections[CUSTOM_SECTION].forEach((sectionConfig: TFieldConfig) => {
-        const {
-            isAdminField = false
-        } = sectionConfig
-
-        if (!isAdminField)
-            mainSections.push(sectionConfig);
-    });
-
-    const res = {
-        ...formConfig,
-        sections: {...formConfig.sections, [CUSTOM_SECTION]: mainSections}
-    };
-
-    return res;
-
-}
-
 
 export function isJSON(str: string) {
     try {

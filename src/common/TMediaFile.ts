@@ -1,10 +1,8 @@
 
-export const MEDIA_FILE_PREFIX = "iak://";
-
 export type TMediaFileMetadata = {
     width?: number;
     height?: number;
-    filePath: string;
+    publicUrl: string;
     label?: string;
 };
 
@@ -16,7 +14,7 @@ export enum MediaSizeType {
 }
 
 export type TMediaInfo = {
-    filePath?: string;
+    publicUrl?: string;
     label?: string;
     small?: TMediaFileMetadata;
     thumb?: TMediaFileMetadata;

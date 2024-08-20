@@ -20,10 +20,9 @@ type Props = OwnProps & PropsWithChildren;
 const PostUIProvider: React.FC<Props> = (props: Props) => {
   const {
     children,
-    baseStorageUrl = '',
   } = props;
 
-  const [state, dispatch] = useReducer<TPostUIReducer, TPostUIState>(reducer, {...INITIAL_STATE, baseStorageUrl}, init);
+  const [state, dispatch] = useReducer<TPostUIReducer, TPostUIState>(reducer, INITIAL_STATE, init);
 
   const value = {
     ...state,

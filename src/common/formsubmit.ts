@@ -48,7 +48,7 @@ export type TFormButtons = {
 // ==========================================================
 
 export function getFooterSectionConfig(formConfig: TFormConfig) : TFieldConfig {
-    const res = getSectionByName(formConfig, FORMSUBMIT_SECTION_NAME);
+    const res = getSectionByName(formConfig, FORMSUBMIT_SECTION_NAME, true);
     if (res)
         return res;
     

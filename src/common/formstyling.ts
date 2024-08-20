@@ -40,7 +40,7 @@ export type TFormStyling = {
 // ==========================================================
 
 export function getBodySectionConfig(formConfig: TFormConfig) : TFieldConfig {
-    const res = getSectionByName(formConfig, BODY_SECTION_NAME);
+    const res = getSectionByName(formConfig, BODY_SECTION_NAME, true);
     if (res)
         return res;
     
@@ -105,22 +105,6 @@ export function getHeaderImageConfig(formConfig: TFormConfig) : TFieldConfig {
 }
 
 
-
-// ==========================================================
-const HERO_IMAGE_FIELD: TFieldConfig = {
-    type: IMAGE_TYPE,
-    name: HERO_FIELD_NAME,
-    label: HERO_FIELD_LABEL
-};
-export function getHeroImageConfig(formConfig: TFormConfig) : TFieldConfig {
-    
-    const res = getFieldConfigByName(formConfig, BODY_SECTION_NAME, HERO_IMAGE_FIELD.name);
-
-    if (res)
-        return res;
-
-    return HERO_IMAGE_FIELD;
-}
 
 export default function getFormStylingConfig(formConfig: TFormConfig) : TFormStyling {
     const fields = formConfig.sections.hasOwnProperty(BODY_SECTION_NAME) ? formConfig.sections[BODY_SECTION_NAME] : [];

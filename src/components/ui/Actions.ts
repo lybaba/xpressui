@@ -106,13 +106,8 @@ async function handlePostUIEvent(event: TPostUIEvent): Promise<TServerResponse> 
 // ====================================================================
 
 export async function submitForm(context: TPostUIContext, postProps: TPostUIProps, formData: Record<string, any>) {
-    const {
-        frontend,
-    } = context;
-
     const eventType = TPostUIEventType.SubmitFormEvent;
     const event : TPostUIEvent = {
-        frontend,
         eventType,
         data: {
             formData
@@ -150,7 +145,6 @@ export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUI
 
     const {
         currentStepIndex,
-        frontend
     } = context
 
     const {
@@ -167,7 +161,6 @@ export async function onNextBtnClick(context: TPostUIContext, postProps: TPostUI
         const eventType = TPostUIEventType.SelectStepEvent;
 
         const event: TPostUIEvent = {
-            frontend,
             eventType,
             data: {
                 currentStepIndex,
@@ -210,7 +203,6 @@ export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUI
 
     const {
         currentStepIndex,
-        frontend
     } = context;
 
     const {
@@ -225,7 +217,6 @@ export async function onPrevBtnClick(context: TPostUIContext, postProps: TPostUI
         const eventType = TPostUIEventType.SelectStepEvent;
 
         const event: TPostUIEvent = {
-            frontend,
             eventType,
             data: {
                 currentStepIndex,

@@ -41,7 +41,6 @@ type TFieldConfig = {
     background?: string;
     logo?: string;
     hero?: string;
-    header?: string;
     minValue?: number;
     maxValue?: number;
     stepValue?: number;
@@ -61,9 +60,10 @@ type TFieldConfig = {
     cElemProps?: string;
     iClasses?: string
     iElemProps?: string;
-    lClasses?: string
+    lClasses?: string;
     lElemProps?: string;
     isAdminField?: boolean;
+    parent?: TFieldConfig;
 };
 
 export type TFieldConfigInfo = {

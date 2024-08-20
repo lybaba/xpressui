@@ -2,12 +2,11 @@ import { usePostUIContext } from './PostUIProvider';
 import { submitForm } from './Actions';
 import { Form } from 'react-final-form';
 import { FormApi } from 'final-form';
-import { PropsWithChildren, useCallback, useState } from 'react';
+import { PropsWithChildren, useCallback } from 'react';
 import { ajv } from '../../common/frontend';
 import validate from './Validator';
 import { buildSchema } from '../../common/post';
 import { isEmpty, isFunction } from 'lodash';
-import { ValidateFunction } from 'ajv';
 import { TFormButtons } from '../../common/formsubmit';
 import { TFormStyling } from '../../common/formstyling';
 
@@ -15,6 +14,7 @@ import FormSectionList from './FormSectionList';
 import TPostUIProps from '../../common/TPostUIProps';
 import { TCssProps } from '../../common/TFieldConfig';
 import { TNavBar } from '../../common/navbar';
+import { Box } from '@mui/joy';
 
 
 type OwnProps = {
@@ -27,7 +27,6 @@ type OwnProps = {
 type FormUIProps = OwnProps & TPostUIProps
 
 function FormUI(props: FormUIProps) {
-    const [validators, setValidators] = useState<Record<string, ValidateFunction<unknown>>>({})
     const postUIContext = usePostUIContext();
 
     const {
@@ -36,8 +35,8 @@ function FormUI(props: FormUIProps) {
 
     const {
         formConfig,
-        template = '',
         entry = {},
+        cssProps,
         restartForm = true
     } = props;
 
@@ -81,12 +80,21 @@ function FormUI(props: FormUIProps) {
                 }
             }}
             render={(formProps) => (
+                <Box
+                {...cssProps.cClassesProps}
+                sx={{
+                    p: 2,
+                    alignItems: 'center',
+                }}
+                {...cssProps?.cElemProps}
+            >
                 <form
                     onSubmit={formProps.handleSubmit}
                     noValidate
                 >
                     <FormSectionList {...props} formProps={formProps} />
                 </form>
+                </Box>
             )}
             initialValues={entry}
         />
@@ -95,7 +103,7 @@ function FormUI(props: FormUIProps) {
 
 type Props = OwnProps & TPostUIProps & PropsWithChildren;
 
-export default function PostContent(props: Props) {
+export default function FormContent(props: Props) {
     return props.children ? (
         props.children
     ) : (

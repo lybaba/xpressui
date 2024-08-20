@@ -1,27 +1,34 @@
-import { getBodyFormConfig, getMediaUrlByMediaId } from '../../common/post';
+import { getMediaUrlByMediaId } from '../../common/post';
 import { usePostUIContext } from './PostUIProvider';
 import { PropsWithChildren } from 'react';
 
-import { Box, Stack } from '@mui/joy';
+import { Box } from '@mui/joy';
 import getFormButtonsConfig from '../../common/formsubmit';
 import getFormStylingConfig from '../../common/formstyling';
 import TPostUIProps from '../../common/TPostUIProps';
-import PostContent from './PostContent';
+import FormContent from './FormContent';
 import { MediaSizeType } from '../../common/TMediaFile';
 import { getCssProps } from '../../common/field';
 import getNavBarConfig from '../../common/navbar';
+import { WEBAPP_TYPE } from '../../common/TFormConfig';
+import WebAppUI from './WebAppUI';
 
 
 type Props = TPostUIProps & PropsWithChildren;
 
 export default function PostUI(props: Props) {
+    const {
+        formConfig
+    } = props;
+
     const formButtons = getFormButtonsConfig(props.formConfig);
     const formStyling = getFormStylingConfig(props.formConfig);
     const navBar = getNavBarConfig(props.formConfig);
 
-    const formConfig = getBodyFormConfig(props.formConfig);
 
     const postUIContext = usePostUIContext();
+
+
     const bgMediaUrl = getMediaUrlByMediaId(postUIContext, formConfig, formStyling.background, MediaSizeType.Large);
     const bgProps = bgMediaUrl ? {
         sx: {
@@ -42,23 +49,26 @@ export default function PostUI(props: Props) {
         <Box
             {...bgProps}
         >
-            <Box
-                {...cssProps.cClassesProps}
-                sx={{
-                    p: 2,
-                    alignItems: 'center',
-                }}
-                {...cssProps?.cElemProps}
-            >
-                <PostContent
+            {
+                formConfig.type === WEBAPP_TYPE ? (
+                    <WebAppUI
+                        {...props} 
+                        formStyling={formStyling}
+                        formButtons={formButtons}
+                        navBar={navBar}
+                        cssProps={cssProps}
+                    />
+                ) : (
+                    <FormContent
                     {...props}
-                    formConfig={formConfig}
-                    formStyling={formStyling}
-                    formButtons={formButtons}
-                    navBar={navBar}
-                    cssProps={cssProps}
-                />
-            </Box>
+                        formStyling={formStyling}
+                        formButtons={formButtons}
+                        navBar={navBar}
+                        cssProps={cssProps}
+                    />
+                )
+            }
+           
         </Box>
     );
 }

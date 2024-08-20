@@ -6,9 +6,6 @@ import { isEmpty, isObject, lowerCase } from 'lodash';
 import TFieldType from './TFieldType';
 
 export const SECTION_TYPE = 'section';
-export const PRODUCTFORM_TYPE = 'productform';
-export const PRODUCTLIST_TYPE = 'productlist';
-export const PRODUCTITEM_TYPE = 'productitem';
 
 
 export const MEDIA_TYPE = 'media';
@@ -45,10 +42,10 @@ export const TAX_TYPE = 'tax';
 export const SWITCH_TYPE = 'switch';
 export const GRID_SIZE_TYPE = 'grid-size';
 export const SLIDER_TYPE = 'slider';
+export const MENU_ITEMS_TYPE = 'menu-items';
 
 export const LOGO_TYPE = 'logo';
 export const BODY_TYPE = 'body';
-export const HEADER_TYPE = 'header';
 export const HERO_TYPE = 'hero';
 export const FORM_SUBMIT_TYPE = 'formsubmit';
 export const FOOTER_TYPE = 'footer';
@@ -104,6 +101,8 @@ export const GRID_SIZE_TYPE_FIELD: TFieldType = { type: GRID_SIZE_TYPE, name: 'G
 export const SLIDER_TYPE_FIELD: TFieldType = { type: SLIDER_TYPE, name: 'Slider' };
 export const HTML_TYPE_FIELD: TFieldType = { type: HTML_TYPE, name: 'Html Content' };
 export const BTN_TYPE_FIELD: TFieldType = { type: BTN_TYPE, name: 'Button' };
+
+
 export const NAVIGATION_MENU_FIELD: TFieldType = { type: NAVIGATION_MENU_TYPE, name: NAVIGATION_MENU_LABEL };
 
 

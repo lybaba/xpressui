@@ -1,5 +1,3 @@
-import FrontendClient from "./frontend";
-
 export enum TPostUIEventType {
     InitEvent = "init-event",
     SubmitFormEvent = "submit-form-event",
@@ -23,7 +21,6 @@ export enum TPostUIEventType {
 };
 
 type TPostUIEvent = {
-    frontend: FrontendClient;
     eventType: string;
     data: Record<string, any>;
 }

@@ -27,12 +27,9 @@ type MediaPhotoProps = {
 const MediaPhoto = (props: MediaPhotoProps) => {
     const {
         mediaFile,
-        formConfig
     } = props;
 
-    const postUIContext = usePostUIContext();
-
-    const photoURL = getLargeImageUrl(postUIContext, formConfig, mediaFile);
+    const photoURL = getLargeImageUrl(mediaFile);
 
     return (
         <Box

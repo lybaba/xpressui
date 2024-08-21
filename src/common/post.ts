@@ -5,7 +5,7 @@ import {
     EMAIL_TYPE,
     FORM_SUBMIT_TYPE,
     MULTI_SELECT_TYPE,
-    NAVBAR_TYPE,
+    NAV_MENU_TYPE,
     NUMBER_TYPE,
     POSITIVE_INTEGER_TYPE,
     PRICE_TYPE,
@@ -419,5 +419,5 @@ export function getFormSubmitSectionIndex(formConfig: TFormConfig): number {
 }
 
 export function getFormNavSectionIndex(formConfig: TFormConfig): number {
-    return getFirstSectionIndexBySubType(formConfig, NAVBAR_TYPE, true);
+    return getFirstSectionIndexBySubType(formConfig, NAV_MENU_TYPE, true);
 }

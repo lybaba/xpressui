@@ -1,8 +1,8 @@
 import {
-    NAVBAR_LABEL,
-    NAVBAR_TYPE,
-    NAVIGATION_MENU_LABEL,
-    NAVIGATION_MENU_TYPE,
+    NAV_MENU_LABEL,
+    NAV_MENU_TYPE,
+    NAV_MENU_ITEM_LABEL,
+    NAV_MENU_ITEM_TYPE,
     SECTION_TYPE,
 } from "./field";
 import TFieldConfig from "./TFieldConfig";
@@ -11,7 +11,7 @@ import { getFieldConfigByName, getSectionByName } from "./post";
 
 // ========================================================
 
-export const NAVBAR_NAME = NAVBAR_TYPE;
+export const NAVBAR_NAME = NAV_MENU_TYPE;
 export const NAVIGATION_MENU_NAME = 'navMenu';
 
 export type TNavBar = {
@@ -28,17 +28,17 @@ export function getNavBarSectionConfig(formConfig: TFormConfig) : TFieldConfig {
     
     return {
         type: SECTION_TYPE,
-        subType: NAVBAR_TYPE,
+        subType: NAV_MENU_TYPE,
         name: NAVBAR_NAME,
-        label: NAVBAR_LABEL
+        label: NAV_MENU_LABEL
     };
 }
 
 // ==========================================================
 const NAVIGATION_MENU_FIELD: TFieldConfig = {
-    type: NAVIGATION_MENU_TYPE,
+    type: NAV_MENU_ITEM_TYPE,
     name: NAVIGATION_MENU_NAME,
-    label: NAVIGATION_MENU_LABEL,
+    label: NAV_MENU_ITEM_LABEL,
 };
 
 export function getNavMenuConfig(formConfig: TFormConfig) : TFieldConfig {

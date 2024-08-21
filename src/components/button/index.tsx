@@ -13,8 +13,8 @@ export const CustomButton = (props: TFormFieldProps) => {
 
     return (
         <Button
-            {...props.cssProps?.iClassesProps}
-            {...props.cssProps?.iElemProps}
+            {...props.cssProps?.inputClasses}
+            {...props.cssProps?.inputProps}
             onClick={(e) => {
                 e.preventDefault();
                 if (isFunction(props.onClickEvent)) {

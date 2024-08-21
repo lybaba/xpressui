@@ -124,8 +124,8 @@ export const FormInputControl = (props: FormInputControlProps) => {
                     }}
                     error={hasError}
                     {...placeholderProps}
-                    {...cssProps?.iClassesProps}
-                    {...cssProps?.iElemProps}
+                    {...cssProps?.inputClasses}
+                    {...cssProps?.inputProps}
                 >
                     {
                         props.children

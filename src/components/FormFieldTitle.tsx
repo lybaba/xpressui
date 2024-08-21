@@ -11,8 +11,8 @@ const FormFieldTitle = (props: TFormFieldProps) => {
   return (
     <Typography
       level="title-sm"
-      {...cssProps?.lClassesProps}
-      {...cssProps?.lElemProps}
+      {...cssProps?.labelClasses}
+      {...cssProps?.labelProps}
     >
       {
         fieldConfig.adminLabel ? fieldConfig.adminLabel : fieldConfig.label

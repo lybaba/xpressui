@@ -45,8 +45,8 @@ export const SingleSelect = (props: TFormFieldProps) => {
                     formProps?.form.mutators.setFieldValue(fieldConfig.name, value)
                 }}
                 {...placeholderProps}
-                {...cssProps?.iClassesProps}
-                {...cssProps?.iElemProps}
+                {...cssProps?.inputClasses}
+                {...cssProps?.inputProps}
             >
                 {
                     fieldConfig.choices?.map((opt: TChoice, index: number) => {
@@ -60,8 +60,8 @@ export const SingleSelect = (props: TFormFieldProps) => {
         ) : (
             <RadioGroup
                 {...valueProps}
-                {...cssProps?.iClassesProps}
-                {...cssProps?.iElemProps}
+                {...cssProps?.inputClasses}
+                {...cssProps?.inputProps}
             >
                 {
                     fieldConfig.choices?.map((opt: TChoice, index: number) => {

@@ -43,8 +43,8 @@ function CustomButtonGroup(props: TFormFieldProps) {
    
     return (
         <Box
-            {...cssProps?.cClassesProps}
-            {...cssProps?.cElemProps}
+            {...cssProps?.fieldClasses}
+            {...cssProps?.fieldProps}
         >
             <Stack
                 component={ButtonGroup}
@@ -52,8 +52,8 @@ function CustomButtonGroup(props: TFormFieldProps) {
                 direction={'row'}
                 justifyContent={'space-between'}
                 spacing="1.25rem"
-                {...cssProps?.iClassesProps}
-                {...cssProps?.iElemProps}
+                {...cssProps?.inputClasses}
+                {...cssProps?.inputProps}
             >
                 {
                     isMultiStepForm ? (

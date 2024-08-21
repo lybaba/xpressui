@@ -9,8 +9,8 @@ export const SubmitBtn = (props: TFormFieldProps) => {
     return (
         <Button
             type="submit"
-            {...props.cssProps?.iClassesProps}
-            {...props.cssProps?.iElemProps}
+            {...props.cssProps?.inputClasses}
+            {...props.cssProps?.inputProps}
         >
            {
              props.children

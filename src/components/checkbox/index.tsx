@@ -20,8 +20,8 @@ export const CustomCheckbox = (props: TFormFieldProps) => {
       checked={getBooleanValue(input?.value)}
       label={<FormFieldTitle {...props} />}
 
-      {...cssProps?.iClassesProps}
-      {...cssProps?.iElemProps}
+      {...cssProps?.inputClasses}
+      {...cssProps?.inputProps}
     />
   )
 }

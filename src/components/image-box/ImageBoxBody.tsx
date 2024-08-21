@@ -56,8 +56,8 @@ export const ImageBoxBody = (props: TFormFieldProps) => {
                                         maxWidth: '100%',
                                         height: 'auto',
                                     }}
-                                    {...cssProps?.iClassesProps}
-                                    {...cssProps?.iElemProps}
+                                    {...cssProps?.inputClasses}
+                                    {...cssProps?.inputProps}
                                 />
                             </AspectRatio>
                             </Box>
@@ -72,8 +72,8 @@ export const ImageBoxBody = (props: TFormFieldProps) => {
                                     maxWidth: '100%',
                                     height: 'auto',
                                 }}
-                                {...cssProps?.iClassesProps}
-                                {...cssProps?.iElemProps}
+                                {...cssProps?.inputClasses}
+                                {...cssProps?.inputProps}
                             />
                         )
 

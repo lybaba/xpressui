@@ -45,6 +45,7 @@ export type TFormSettings = {
     [BG_FIELD_NAME]?: string;
     [BG_CSS_CLASSES_FIELD_NAME]?: string;
     [BG_SX_PROPS_FIELD_NAME]?: string;
+    subforms?: TChoice[];
 };
 
 export enum RenderingMode {
@@ -69,7 +70,8 @@ type TFormConfig = {
     [BG_CSS_CLASSES_FIELD_NAME]?: string;
     [BG_SX_PROPS_FIELD_NAME]?: string;
     timestamp?: number;
-    sections: Record<string, TFieldConfig[]>;   
+    sections: Record<string, TFieldConfig[]>;
+    subforms?: TChoice[];
     choices?: TChoice[];
     renderingMode?: RenderingMode;
 }

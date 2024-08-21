@@ -48,28 +48,29 @@ export const TAX_TYPE = 'tax';
 export const SWITCH_TYPE = 'switch';
 export const GRID_SIZE_TYPE = 'grid-size';
 export const SLIDER_TYPE = 'slider';
-export const MENU_ITEMS_TYPE = 'menu-items';
+export const SUBFORMS_TYPE = 'subforms';
 
 export const LOGO_TYPE = 'logo';
 export const HERO_TYPE = 'hero';
 export const FORM_SUBMIT_TYPE = 'formsubmit';
 export const FOOTER_TYPE = 'footer';
-export const NAVBAR_TYPE = 'nav';
+export const NAV_MENU_TYPE = 'nav';
 export const TITLE_TYPE = 'title';
 export const HTML_TYPE = 'html';
+export const FORM_TYPE = 'form';
 
-export const NAVIGATION_MENU_TYPE = 'navigation-menu';
+export const NAV_MENU_ITEM_TYPE = 'nav-menu-item';
 
-export const FORM_SECTION_LABEL = 'Content Section';
+export const FORM_SECTION_LABEL = 'Section';
 export const LOGO_LABEL = 'Logo';
 export const BODY_LABEL = 'Body';
 export const HEADER_LABEL = 'Header';
 export const HERO_LABEL = 'Hero Section';
 export const FORM_SUBMIT_LABEL = 'Form Submit';
 export const FOOTER_LABEL = 'Footer';
-export const NAVBAR_LABEL = 'Navigation';
+export const NAV_MENU_LABEL = 'Navigation Menu';
 export const BTNGROUP_TYPE_LABEL = 'Form Buttons';
-export const NAVIGATION_MENU_LABEL = 'Navigation Menu';
+export const NAV_MENU_ITEM_LABEL = 'Menu Item';
 export const CALL2ACTION_GROUP_TYPE_LABEL = 'Call To Action Buttons';
 export const CALL2ACTION_TYPE_LABEL = 'Call To Action';
 
@@ -83,7 +84,7 @@ export const CALL2ACTION_GROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, su
 export const CALL2ACTION_TYPE_FIELD: TFieldType = { type: CALL2ACTION_TYPE, name: CALL2ACTION_TYPE_LABEL };
 
 export const FORM_SUBMIT_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FORM_SUBMIT_TYPE, name: FORM_SUBMIT_LABEL, adminLabel: FORM_SUBMIT_LABEL };
-export const NAVBAR_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: NAVBAR_TYPE, name: NAVBAR_LABEL, adminLabel: NAVBAR_LABEL };
+export const NAV_MENU_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: NAV_MENU_TYPE, name: NAV_MENU_LABEL, adminLabel: NAV_MENU_LABEL };
 
 export const TEXT_TYPE_FIELD: TFieldType = { type: TEXT_TYPE, name: 'Text Field' };
 export const TEXTAREA_TYPE_FIELD: TFieldType = { type: TEXTAREA_TYPE, name: 'Text Area' };
@@ -99,8 +100,8 @@ export const CHECKBOXES_TYPE_FIELD: TFieldType = { type: CHECKBOXES_TYPE, name: 
 export const SINGLE_SELECT_TYPE_FIELD: TFieldType = { type: SINGLE_SELECT_TYPE, name: 'Single-select List' };
 export const RADIO_BUTTONS_TYPE_FIELD: TFieldType = { type: RADIO_BUTTONS_TYPE, name: 'Radio Buttons' };
 export const URL_TYPE_FIELD: TFieldType = { type: URL_TYPE, name: 'URL' };
-export const IMAGE_TYPE_FIELD: TFieldType = { type: IMAGE_TYPE, name: 'Insert Picture' };
-export const UPLOAD_IMAGE_TYPE_FIELD: TFieldType = { type: UPLOAD_IMAGE_TYPE, name: 'Upload Picture' };
+export const IMAGE_TYPE_FIELD: TFieldType = { type: IMAGE_TYPE, name: 'Image' };
+export const UPLOAD_IMAGE_TYPE_FIELD: TFieldType = { type: UPLOAD_IMAGE_TYPE, name: 'Upload Image' };
 export const UPLOAD_FILE_TYPE_FIELD: TFieldType = { type: UPLOAD_FILE_TYPE, name: 'Upload File' };
 export const DATETIME_TYPE_FIELD: TFieldType = { type: DATETIME_TYPE, name: 'Date / Time' };
 export const DATE_TYPE_FIELD: TFieldType = { type: DATE_TYPE, name: 'Date' };
@@ -111,10 +112,12 @@ export const SWITCH_TYPE_FIELD: TFieldType = { type: SWITCH_TYPE, name: 'Switch'
 export const GRID_SIZE_TYPE_FIELD: TFieldType = { type: GRID_SIZE_TYPE, name: 'Grid Size' };
 export const SLIDER_TYPE_FIELD: TFieldType = { type: SLIDER_TYPE, name: 'Slider' };
 export const HTML_TYPE_FIELD: TFieldType = { type: HTML_TYPE, name: 'Html Content' };
+export const FORM_TYPE_FIELD: TFieldType = { type: FORM_TYPE, name: 'Form Content' };
+
 export const BTN_TYPE_FIELD: TFieldType = { type: BTN_TYPE, name: 'Button' };
 
 
-export const NAVIGATION_MENU_FIELD: TFieldType = { type: NAVIGATION_MENU_TYPE, name: NAVIGATION_MENU_LABEL };
+export const NAV_MENU_ITEM_FIELD: TFieldType = { type: NAV_MENU_ITEM_TYPE, name: NAV_MENU_ITEM_LABEL };
 
 
 export const REQUEST_FORM_FIELD_TYPES: Array<TFieldType> = [
@@ -187,8 +190,7 @@ export const PRICING_DECIMAL_VALUES = [
 
 export const getIsChoiceField = (type: string): boolean => {
     return type === MULTI_SELECT_TYPE ||
-          type === SINGLE_SELECT_TYPE ||
-          type === NAVIGATION_MENU_TYPE
+          type === SINGLE_SELECT_TYPE
 }
 
 export const buildSlug = (name: string) => {
@@ -282,7 +284,7 @@ export function isImageField(fieldType: string) : boolean {
 export function isSingleSelectField(fieldType: string) : boolean {
     return fieldType === SINGLE_SELECT_TYPE ||
            fieldType === RADIO_BUTTONS_TYPE ||
-           fieldType === NAVIGATION_MENU_TYPE
+           fieldType === NAV_MENU_ITEM_TYPE
 }
 
 
@@ -323,12 +325,18 @@ export function strToSxProps(str: string | Record<string, any> | undefined | nul
 export function getCssProps(fieldConfig: TFieldConfig) : TCssProps {
     
     const res: TCssProps = {
-        cClassesProps: strToClasses(fieldConfig.cClasses),
-        cElemProps: strToSxProps(fieldConfig.cElemProps),
-        iClassesProps: strToClasses(fieldConfig.iClasses),
-        iElemProps: strToSxProps(fieldConfig.iElemProps),
-        lClassesProps: strToClasses(fieldConfig.lClasses),
-        lElemProps: strToSxProps(fieldConfig.lElemProps),
+        fieldClasses: strToClasses(fieldConfig.fieldClasses),
+        fieldProps: strToSxProps(fieldConfig.fieldProps),
+        inputClasses: strToClasses(fieldConfig.inputClasses),
+        inputProps: strToSxProps(fieldConfig.inputProps),
+        labelClasses: strToClasses(fieldConfig.labelClasses),
+        labelProps: strToSxProps(fieldConfig.labelProps),
+        heroClasses: strToSxProps(fieldConfig.heroClasses),
+        heroProps: strToSxProps(fieldConfig.heroProps),
+        listItemClasses: strToSxProps(fieldConfig.listItemClasses),
+        listItemProps: strToSxProps(fieldConfig.listItemProps),
+        selectedClasses: strToSxProps(fieldConfig.selectedClasses),
+        selectedProps: strToSxProps(fieldConfig.selectedProps)
     }
 
     return res;

@@ -20,8 +20,8 @@ export const CustomFieldLabel = (props: TFormFieldProps) => {
         case BTN_TYPE:
             return (
                 <Box
-                    {...cssProps?.lClassesProps}
-                    {...cssProps?.lElemProps}
+                    {...cssProps?.labelClasses}
+                    {...cssProps?.labelProps}
                 >
                     {
                         fieldConfig.label
@@ -36,8 +36,8 @@ export const CustomFieldLabel = (props: TFormFieldProps) => {
             return (
                 <Typography
                     component={FormLabel}
-                    {...cssProps?.lClassesProps}
-                    {...cssProps?.lElemProps}
+                    {...cssProps?.labelClasses}
+                    {...cssProps?.labelProps}
                 >
                     {
                         props.children

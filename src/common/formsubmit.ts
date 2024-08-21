@@ -1,5 +1,5 @@
 import {
-    BTNGROUP_TYPE,
+    BTN_GROUP_TYPE,
     FORM_SUBMIT_TYPE,
     OUTPUT_TYPE,
     SECTION_TYPE,
@@ -62,7 +62,7 @@ export function getFooterSectionConfig(formConfig: TFormConfig) : TFieldConfig {
 
 // ==========================================================
 const BTNGROUP_FIELD: TFieldConfig = {
-    type: BTNGROUP_TYPE,
+    type: BTN_GROUP_TYPE,
     name: BTNGROUP_NAME,
     label: BTNGROUP_LABEL,
 };

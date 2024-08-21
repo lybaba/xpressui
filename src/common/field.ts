@@ -24,7 +24,13 @@ export const PRICE_TYPE = 'price';
 export const PASSWORD_TYPE = 'password';
 export const SINGLE_SELECT_TYPE = 'single-select';
 export const RADIO_BUTTONS_TYPE = 'radio-buttons';
-export const BTNGROUP_TYPE = 'btn-group';
+export const BTN_GROUP_TYPE = 'btn-group';
+export const CALL2ACTION_GROUP_TYPE = 'call2action-group';
+export const CALL2ACTION_TYPE = 'call2action';
+
+export const ACTION_TYPE_TYPE= 'action-type';
+export const ACTION_TARGET_TYPE= 'action-target';
+
 export const MULTI_SELECT_TYPE = 'multi-select';
 export const CHECKBOXES_TYPE = 'checkboxes';
 
@@ -45,7 +51,6 @@ export const SLIDER_TYPE = 'slider';
 export const MENU_ITEMS_TYPE = 'menu-items';
 
 export const LOGO_TYPE = 'logo';
-export const BODY_TYPE = 'body';
 export const HERO_TYPE = 'hero';
 export const FORM_SUBMIT_TYPE = 'formsubmit';
 export const FOOTER_TYPE = 'footer';
@@ -55,22 +60,28 @@ export const HTML_TYPE = 'html';
 
 export const NAVIGATION_MENU_TYPE = 'navigation-menu';
 
-export const FORM_SECTION_LABEL = 'Section';
+export const FORM_SECTION_LABEL = 'Content Section';
 export const LOGO_LABEL = 'Logo';
 export const BODY_LABEL = 'Body';
 export const HEADER_LABEL = 'Header';
-export const HERO_LABEL = 'Hero';
+export const HERO_LABEL = 'Hero Section';
 export const FORM_SUBMIT_LABEL = 'Form Submit';
 export const FOOTER_LABEL = 'Footer';
 export const NAVBAR_LABEL = 'Navigation';
 export const BTNGROUP_TYPE_LABEL = 'Form Buttons';
 export const NAVIGATION_MENU_LABEL = 'Navigation Menu';
+export const CALL2ACTION_GROUP_TYPE_LABEL = 'Call To Action Buttons';
+export const CALL2ACTION_TYPE_LABEL = 'Call To Action';
 
 export const FIELDGROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: SECTION_TYPE, name: FORM_SECTION_LABEL };
-export const BTNGROUP_TYPE_FIELD: TFieldType = { type: BTNGROUP_TYPE, name: BTNGROUP_TYPE_LABEL };
+export const BTNGROUP_TYPE_FIELD: TFieldType = { type: BTN_GROUP_TYPE, name: BTNGROUP_TYPE_LABEL };
+
+export const HERO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HERO_TYPE, name: HERO_LABEL };
 
 
-export const BODY_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: BODY_TYPE, name: BODY_LABEL, adminLabel: BODY_LABEL };
+export const CALL2ACTION_GROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: CALL2ACTION_GROUP_TYPE, name: CALL2ACTION_GROUP_TYPE_LABEL };
+export const CALL2ACTION_TYPE_FIELD: TFieldType = { type: CALL2ACTION_TYPE, name: CALL2ACTION_TYPE_LABEL };
+
 export const FORM_SUBMIT_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FORM_SUBMIT_TYPE, name: FORM_SUBMIT_LABEL, adminLabel: FORM_SUBMIT_LABEL };
 export const NAVBAR_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: NAVBAR_TYPE, name: NAVBAR_LABEL, adminLabel: NAVBAR_LABEL };
 

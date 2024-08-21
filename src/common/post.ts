@@ -1,5 +1,4 @@
 import {
-    BODY_TYPE,
     CHECKBOX_TYPE,
     DATETIME_TYPE,
     DATE_TYPE,
@@ -413,10 +412,6 @@ export function getFirstSectionIndexBySubType(formConfig: TFormConfig, subType: 
 
 
     return fieldIndex;
-}
-
-export function getFormStylingSectionIndex(formConfig: TFormConfig): number {
-    return getFirstSectionIndexBySubType(formConfig, BODY_TYPE, true);
 }
 
 export function getFormSubmitSectionIndex(formConfig: TFormConfig): number {

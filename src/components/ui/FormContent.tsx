@@ -8,7 +8,6 @@ import validate from './Validator';
 import { buildSchema } from '../../common/post';
 import { isEmpty, isFunction } from 'lodash';
 import { TFormButtons } from '../../common/formsubmit';
-import { TFormStyling } from '../../common/formstyling';
 
 import FormSectionList from './FormSectionList';
 import TPostUIProps from '../../common/TPostUIProps';
@@ -19,9 +18,7 @@ import { Box } from '@mui/joy';
 
 type OwnProps = {
     formButtons: TFormButtons
-    formStyling: TFormStyling;
     navBar?: TNavBar;
-    cssProps: TCssProps;
 }
 
 type FormUIProps = OwnProps & TPostUIProps
@@ -36,7 +33,6 @@ function FormUI(props: FormUIProps) {
     const {
         formConfig,
         entry = {},
-        cssProps,
         restartForm = true
     } = props;
 
@@ -81,12 +77,10 @@ function FormUI(props: FormUIProps) {
             }}
             render={(formProps) => (
                 <Box
-                {...cssProps.cClassesProps}
                 sx={{
                     p: 2,
                     alignItems: 'center',
                 }}
-                {...cssProps?.cElemProps}
             >
                 <form
                     onSubmit={formProps.handleSubmit}

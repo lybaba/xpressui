@@ -7,7 +7,6 @@ import TPostUIEvent from "./TPostUIEvent";
 import TServerResponse from "./TServerResponse";
 import TComponentType from "./TComponentType";
 import { TFormButtons } from "./formsubmit";
-import { TFormStyling } from "./formstyling";
 import { TNavBar } from "./navbar";
 
 
@@ -30,7 +29,6 @@ type TFormFieldProps =  {
     componentType?: TComponentType;
     isLivePreview?: boolean;
     formButtons?: TFormButtons;
-    formStyling?: TFormStyling;
     navBar?: TNavBar;
     cssProps?: TCssProps;
     onClickEvent?: () => void;

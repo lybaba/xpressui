@@ -10,16 +10,13 @@ import { PRODUCTFORM_TYPE } from '../../common/TFormConfig';
 import ProductSection from '../ProductSection';
 
 import { TFormButtons } from '../../common/formsubmit';
-import { TFormStyling } from '../../common/formstyling';
 import FormField from '../FormField';
 import { TNavBar } from '../../common/navbar';
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
     formButtons: TFormButtons
-    formStyling: TFormStyling;
     navBar?: TNavBar;
-    cssProps: TCssProps;
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -27,7 +24,6 @@ type Props = OwnProps & TPostUIProps;
 export default function FormSectionList(props: Props) {
     const {
         formConfig,
-        cssProps
     } = props;
 
 
@@ -39,8 +35,6 @@ export default function FormSectionList(props: Props) {
             component={Container}
             spacing={1}
             gap={2}
-            {...cssProps.iClassesProps}
-            {...cssProps.iElemProps}
         >
             {/*
                 Stepper

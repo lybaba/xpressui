@@ -1,4 +1,4 @@
-import { FormLabel, Typography } from '@mui/joy';
+import { Box, FormLabel, Typography } from '@mui/joy';
 import { BTN_TYPE, SUBMIT_TYPE } from '../common/field';
 import TFormFieldProps from '../common/TFormFieldProps';
 import { getHideLabel } from '../common/post';
@@ -19,7 +19,7 @@ export const CustomFieldLabel = (props: TFormFieldProps) => {
         case SUBMIT_TYPE:
         case BTN_TYPE:
             return (
-                <Typography
+                <Box
                     {...cssProps?.lClassesProps}
                     {...cssProps?.lElemProps}
                 >
@@ -29,7 +29,7 @@ export const CustomFieldLabel = (props: TFormFieldProps) => {
                     {
                         props.children
                     }
-                </Typography>
+                </Box>
             );
 
         default:

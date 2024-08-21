@@ -6,7 +6,7 @@ import {
 import FormFieldTitle from "./FormFieldTitle";
 import {
     BTN_TYPE,
-    BTNGROUP_TYPE,
+    BTN_GROUP_TYPE,
     getCssProps,
     IMAGE_TYPE,
     OUTPUT_TYPE,
@@ -31,7 +31,7 @@ export const FormFieldBody = (props: TFormFieldProps) => {
 
 
     switch (fieldConfig.type) {
-        case BTNGROUP_TYPE:
+        case BTN_GROUP_TYPE:
             return (
                     isLivePreview ? (
                         <Stack

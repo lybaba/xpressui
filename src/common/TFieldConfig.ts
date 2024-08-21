@@ -12,6 +12,12 @@ export type CssClassesProps = {
 
 export type CssElemProps = Record<string, any>;
 
+
+export const HERO_CSS_CLASSES_FIELD_NAME = 'heroClasses';
+export const HERO_SX_PROPS_FIELD_NAME = 'heroSxProps';
+export const HERO_FIELD_NAME = 'hero';
+export const HERO_FIELD_LABEL = 'Hero Image';
+
 export type TCssProps = {
     cClassesProps?: CssClassesProps
     cElemProps?: CssElemProps;
@@ -19,6 +25,8 @@ export type TCssProps = {
     iElemProps?: CssElemProps;
     lClassesProps?: CssClassesProps
     lElemProps?: CssElemProps;
+    heroClassesProps?: CssClassesProps
+    heroSxProps?: CssElemProps;
 }
 
 type TFieldConfig = {
@@ -40,7 +48,6 @@ type TFieldConfig = {
     mediaId?: string;
     background?: string;
     logo?: string;
-    hero?: string;
     minValue?: number;
     maxValue?: number;
     stepValue?: number;
@@ -62,8 +69,13 @@ type TFieldConfig = {
     iElemProps?: string;
     lClasses?: string;
     lElemProps?: string;
+    [HERO_FIELD_NAME]?: string;
+    [HERO_CSS_CLASSES_FIELD_NAME]?: string;
+    [HERO_SX_PROPS_FIELD_NAME]?: string;
     isAdminField?: boolean;
     parent?: TFieldConfig;
+    actionType?: string;
+    actionTarget?: string;
 };
 
 export type TFieldConfigInfo = {

@@ -1,5 +1,3 @@
-import { BODY_TYPE, FORM_SUBMIT_TYPE, NAVBAR_TYPE } from "./field";
-
 export const CUSTOM_SECTION = 'custom';
 export const GLOBAL_SECTION = 'global';
 export const SERVER_REQUEST = 'server_request';

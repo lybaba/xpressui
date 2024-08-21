@@ -1,7 +1,6 @@
 import { usePostUIContext } from './PostUIProvider';
 import { PropsWithChildren, useCallback, useState } from 'react';
 import { TFormButtons } from '../../common/formsubmit';
-import { HERO_FIELD_LABEL, HERO_FIELD_NAME, TFormStyling } from '../../common/formstyling';
 
 import TPostUIProps from '../../common/TPostUIProps';
 import TFieldConfig, { TCssProps } from '../../common/TFieldConfig';
@@ -16,9 +15,7 @@ import { MediaSizeType } from '../../common/TMediaFile';
 
 type OwnProps = {
     formButtons: TFormButtons
-    formStyling: TFormStyling;
     navBar?: TNavBar;
-    cssProps: TCssProps;
 }
 
 
@@ -26,7 +23,7 @@ type Props = OwnProps & TPostUIProps & PropsWithChildren;
 
 
 // ==========================================================
-export function getHeroImageUrl(formConfig: TFormConfig): string | null {
+/*export function getHeroImageUrl(formConfig: TFormConfig): string | null {
     const postUIContext = usePostUIContext();
 
     if (formConfig.sections[CUSTOM_SECTION] && formConfig.sections[CUSTOM_SECTION].length) {
@@ -44,16 +41,15 @@ export function getHeroImageUrl(formConfig: TFormConfig): string | null {
     }
 
     return null;
-}
+}*/
 
 
 export default function WebAppUI(props: Props) {
     const {
         formConfig,
-        cssProps
     } = props;
 
-    const heroImageUrl = getHeroImageUrl(formConfig);
+    const heroImageUrl =''
     console.log(444444444444, heroImageUrl, " ", formConfig.sections[CUSTOM_SECTION][0])
 
 
@@ -69,11 +65,9 @@ export default function WebAppUI(props: Props) {
                 }}
             >
                 <Box
-                    {...cssProps.cClassesProps}
                     sx={{
                         p: 2,
                     }}
-                    {...cssProps?.cElemProps}
                 >
                     <Typography component={'h1'} level='h1' textColor="#fff">Welcome</Typography>
                     <Typography component={'h2'} level='h4' textColor="#fff">Are you ready to see Toronto in a entirely new way ?</Typography>

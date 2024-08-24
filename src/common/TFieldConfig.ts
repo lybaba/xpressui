@@ -12,15 +12,12 @@ export type CssClassesProps = {
 
 export type CssElemProps = Record<string, any>;
 
-
-
 export const HERO_FIELD_NAME = 'hero';
 export const HERO_FIELD_LABEL = 'Hero Image';
 
-
 export const LAYOUT_PROP = 'layout';
-export const FIELD_CLASSES_PROP = 'fieldClasses';
-export const FIELD_PROPS_PROP = 'fieldProps';
+export const BLOCK_CLASSES_PROP = 'blockClasses';
+export const BLOCK_PROPS_PROP = 'blockProps';
 
 export const LABEL_CLASSES_PROP = 'labelClasses';
 export const LABEL_PROPS_PROP = 'labelProps';
@@ -34,22 +31,38 @@ export const LIST_ITEM_PROPS_PROP = 'listItemProps';
 export const SELECTED_CLASSES_PROP = 'selectedClasses';
 export const SELECTED_PROPS_PROP = 'selectedProps';
 
-export const HERO_CLASSES_PROP = 'heroClasses';
-export const HERO_PROPS_PROP = 'heroProps';
+export const MEDIA_CLASSES_PROP = 'mediaClasses';
+export const MEDIA_PROPS_PROP = 'mediaProps';
+
+export const BTNGROUP_CLASSES_PROP = 'btnGroupClasses';
+export const BTNGROUP_PROPS_PROP = 'btnGroupProps';
+
+export const LOGO_FIELD_NAME = 'logo';
+export const LOGO_CSS_CLASSES_FIELD_NAME = 'logoClasses';
+export const LOGO_SX_PROPS_FIELD_NAME = 'logoSxProps';
+export const LOGO_FIELD_LABEL = 'Logo Image';
+
+export const BG_FIELD_NAME = 'background';
+export const BG_FIELD_LABEL = 'Background Image';
+export const BG_CSS_CLASSES_FIELD_NAME = 'bgClasses';
+export const BG_SX_PROPS_FIELD_NAME = 'bgSxProps';
+
 
 export type TCssProps = {
-    [FIELD_CLASSES_PROP]?: CssClassesProps
-    [FIELD_PROPS_PROP]?: CssElemProps;
-    [INPUT_CLASSES_PROP]?: CssClassesProps 
-    [INPUT_PROPS_PROP]?: CssElemProps;
-    [LABEL_CLASSES_PROP]?: CssClassesProps
-    [LABEL_PROPS_PROP]?: CssElemProps;
-    [HERO_CLASSES_PROP]?: CssClassesProps
-    [HERO_PROPS_PROP]?: CssElemProps;
-    [LIST_ITEM_CLASSES_PROP]?: CssClassesProps;
-    [LIST_ITEM_PROPS_PROP]?: CssElemProps;
-    [SELECTED_CLASSES_PROP]?: CssClassesProps;
-    [SELECTED_PROPS_PROP]?: CssElemProps;
+    blockClasses?: CssClassesProps
+    blockProps?: CssElemProps;
+    inputClasses?: CssClassesProps 
+    inputProps?: CssElemProps;
+    labelClasses?: CssClassesProps
+    labelProps?: CssElemProps;
+    mediaClasses?: CssClassesProps
+    mediaProps?: CssElemProps;
+    listItemClasses?: CssClassesProps;
+    listItemProps?: CssElemProps;
+    selectedClasses?: CssClassesProps;
+    selectedProps?: CssElemProps;
+    btnGroupClasses?: CssClassesProps;
+    btnGroupProps?: CssElemProps;
 }
 
 type TFieldConfig = {
@@ -87,22 +100,24 @@ type TFieldConfig = {
     mediaInfoList?: TMediaInfo[];
     [HERO_FIELD_NAME]?: string;
     [LAYOUT_PROP]?: string;
-    [FIELD_CLASSES_PROP]?: CssClassesProps
-    [FIELD_PROPS_PROP]?: CssElemProps;
-    [INPUT_CLASSES_PROP]?: CssClassesProps 
-    [INPUT_PROPS_PROP]?: CssElemProps;
-    [LABEL_CLASSES_PROP]?: CssClassesProps
-    [LABEL_PROPS_PROP]?: CssElemProps;
-    [HERO_CLASSES_PROP]?: CssClassesProps
-    [HERO_PROPS_PROP]?: CssElemProps;
-    [LIST_ITEM_CLASSES_PROP]?: CssClassesProps;
-    [LIST_ITEM_PROPS_PROP]?: CssElemProps;
-    [SELECTED_CLASSES_PROP]?: CssClassesProps;
-    [SELECTED_PROPS_PROP]?: CssElemProps;
+    [BLOCK_CLASSES_PROP]?: string
+    [BLOCK_PROPS_PROP]?: string;
+    [INPUT_CLASSES_PROP]?: string 
+    [INPUT_PROPS_PROP]?: string;
+    [LABEL_CLASSES_PROP]?: string
+    [LABEL_PROPS_PROP]?: string;
+    [MEDIA_CLASSES_PROP]?: string
+    [MEDIA_PROPS_PROP]?: string;
+    [LIST_ITEM_CLASSES_PROP]?: string;
+    [LIST_ITEM_PROPS_PROP]?: string;
+    [SELECTED_CLASSES_PROP]?: string;
+    [SELECTED_PROPS_PROP]?: string;
+    [BTNGROUP_CLASSES_PROP]?: string;
+    [BTNGROUP_PROPS_PROP]?: string;
     isAdminField?: boolean;
     parent?: TFieldConfig;
-    menuType?: string;
-    menuLink?: string;
+    linkType?: string;
+    linkPath?: string;
 };
 
 export type TFieldConfigInfo = {

@@ -7,23 +7,16 @@ import { ajv } from '../../common/frontend';
 import validate from './Validator';
 import { buildSchema } from '../../common/post';
 import { isEmpty, isFunction } from 'lodash';
-import { TFormButtons } from '../../common/formsubmit';
+import getFormButtonsConfig from '../../common/formsubmit';
 
 import FormSectionList from './FormSectionList';
 import TPostUIProps from '../../common/TPostUIProps';
-import { TCssProps } from '../../common/TFieldConfig';
-import { TNavBar } from '../../common/navbar';
-import { Box } from '@mui/joy';
 
-
-type OwnProps = {
-    formButtons: TFormButtons
-    navBar?: TNavBar;
-}
-
-type FormUIProps = OwnProps & TPostUIProps
+type FormUIProps = TPostUIProps
 
 function FormUI(props: FormUIProps) {
+    const formButtons = getFormButtonsConfig(props.formConfig);
+
     const postUIContext = usePostUIContext();
 
     const {
@@ -76,28 +69,22 @@ function FormUI(props: FormUIProps) {
                 }
             }}
             render={(formProps) => (
-                <Box
-                sx={{
-                    p: 2,
-                    alignItems: 'center',
-                }}
-            >
                 <form
                     onSubmit={formProps.handleSubmit}
                     noValidate
                 >
-                    <FormSectionList {...props} formProps={formProps} />
+                    <FormSectionList {...props} formProps={formProps} formButtons={formButtons} />
                 </form>
-                </Box>
             )}
             initialValues={entry}
         />
     );
 }
 
-type Props = OwnProps & TPostUIProps & PropsWithChildren;
+type Props = TPostUIProps & PropsWithChildren;
 
 export default function FormContent(props: Props) {
+
     return props.children ? (
         props.children
     ) : (

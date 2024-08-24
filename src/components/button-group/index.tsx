@@ -43,8 +43,8 @@ function CustomButtonGroup(props: TFormFieldProps) {
    
     return (
         <Box
-            {...cssProps?.fieldClasses}
-            {...cssProps?.fieldProps}
+            {...cssProps?.blockClasses}
+            {...cssProps?.blockProps}
         >
             <Stack
                 component={ButtonGroup}

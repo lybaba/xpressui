@@ -1,25 +1,11 @@
-import { usePostUIContext } from './PostUIProvider';
 import { PropsWithChildren, useCallback, useState } from 'react';
-import { TFormButtons } from '../../common/formsubmit';
-
 import TPostUIProps from '../../common/TPostUIProps';
-import TFieldConfig, { TCssProps } from '../../common/TFieldConfig';
-import { TNavBar } from '../../common/navbar';
 import { Box, Typography } from '@mui/joy';
-import { IMAGE_TYPE } from '../../common/field';
-import TFormConfig from '../../common/TFormConfig';
-import { CUSTOM_SECTION } from '../../common/Constants';
-import { getMediaUrlByMediaId } from '../../common/post';
-import { MediaSizeType } from '../../common/TMediaFile';
+import getPageConfig from '../../common/page';
+import { strToClasses, strToSxProps } from '../../common/field';
+import HeaderSection from './header';
 
-
-type OwnProps = {
-    formButtons: TFormButtons
-    navBar?: TNavBar;
-}
-
-
-type Props = OwnProps & TPostUIProps & PropsWithChildren;
+type Props = TPostUIProps & PropsWithChildren;
 
 
 // ==========================================================
@@ -49,34 +35,22 @@ export default function WebAppUI(props: Props) {
         formConfig,
     } = props;
 
-    const heroImageUrl =''
-    console.log(444444444444, heroImageUrl, " ", formConfig.sections[CUSTOM_SECTION][0])
+
+    const bClassesProp = strToClasses(formConfig.bClasses);
+    const bSxProps = strToSxProps(formConfig.bSxProps);
 
 
-    if (heroImageUrl) {
-        return (
-            <Box
-                sx={{
-                    width: '100vw',
-                    height: '100vh',
-                    backgroundImage: `url(${heroImageUrl})`,
-                    backgroundPosition: 'center center',
-                    backgroundSize: 'cover'
-                }}
-            >
-                <Box
-                    sx={{
-                        p: 2,
-                    }}
-                >
-                    <Typography component={'h1'} level='h1' textColor="#fff">Welcome</Typography>
-                    <Typography component={'h2'} level='h4' textColor="#fff">Are you ready to see Toronto in a entirely new way ?</Typography>
-                </Box>
-            </Box>
-        )
-    } else {
-        return (
-            <Box>Hello World....</Box>
-        )
-    }
+    const pageConfig = getPageConfig(formConfig);
+
+
+
+
+    return (
+        <Box
+            {...bClassesProp}
+            {...bSxProps}
+        >
+          <HeaderSection {...props} pageConfig={pageConfig} />
+        </Box>
+    )
 }

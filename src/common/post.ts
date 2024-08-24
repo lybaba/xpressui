@@ -5,7 +5,7 @@ import {
     EMAIL_TYPE,
     FORM_SUBMIT_TYPE,
     MULTI_SELECT_TYPE,
-    NAV_MENU_TYPE,
+    HEADER_NAV_TYPE,
     NUMBER_TYPE,
     POSITIVE_INTEGER_TYPE,
     PRICE_TYPE,
@@ -146,7 +146,15 @@ export const getFieldConfigByIndex = (formConfig: TFormConfig, sectionIndex: num
     return null;
 }
 
+
+
 export const getSectionByName = (formConfig: TFormConfig, sectionName: string, isGlobalSection: boolean = false) => {
+    const groupIndex = getSectionIndex(formConfig, sectionName, isGlobalSection);
+    const mainSection = isGlobalSection ? GLOBAL_SECTION : CUSTOM_SECTION;
+    return groupIndex >= 0 ? formConfig.sections[mainSection][groupIndex] : null;
+}
+
+export const getSectionIndex = (formConfig: TFormConfig, sectionName: string, isGlobalSection: boolean = false) => {
     let groupIndex = -1;
     const mainSection = isGlobalSection ? GLOBAL_SECTION : CUSTOM_SECTION;
 
@@ -162,7 +170,7 @@ export const getSectionByName = (formConfig: TFormConfig, sectionName: string, i
         });
     }
 
-    return groupIndex >= 0 ? formConfig.sections[mainSection][groupIndex] : null;
+    return groupIndex;
 }
 
 
@@ -419,5 +427,5 @@ export function getFormSubmitSectionIndex(formConfig: TFormConfig): number {
 }
 
 export function getFormNavSectionIndex(formConfig: TFormConfig): number {
-    return getFirstSectionIndexBySubType(formConfig, NAV_MENU_TYPE, true);
+    return getFirstSectionIndexBySubType(formConfig, HEADER_NAV_TYPE, true);
 }

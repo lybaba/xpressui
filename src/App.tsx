@@ -88,119 +88,108 @@ const DISABLED: TFieldConfig = { type: CHECKBOX_TYPE, name: 'disabled', label: "
 const CHOICE_GROUP_FORM_NAME = 'choicegroup';
 const CHOICE_GROUP_FORM_LABEL = 'Choice Group';
 
-const CHOICEGROUP_FORM_CONFIG: TFormConfig = {
-  "id": "5J3KZP9EnsV3S25jHETDNg",
-  "label": "My APP",
+const CHOICEGROUP_FORM_CONFIG: TFormConfig ={
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
+  "label": "HelloWorld",
+  "timestamp": 1724371019,
+  "name": "hello-world",
+  "type": "webapp",
+  "id": "snwkd619yXH5FX7ReqZL9X",
   "sections": {
-    "section1": [
+    "hero": [
       {
-        "name": "content_1",
         "type": "html",
-        "label": "content1sdsd"
+        "label": "a666",
+        "name": "a_666"
       },
       {
-        "name": "un_autre_boutton",
-        "type": "btn",
-        "label": "Un autre bouttonfdfds"
-      },
-      {
-        "name": "i_want_it",
-        "label": "I want Itttttttt",
-        "type": "btn"
+        "type": "link",
+        "linkPath": "bswHHfSrPL5nHmHqZeMwb4",
+        "name": "acheter",
+        "linkType": "view-page",
+        "label": "Acheter"
       }
     ],
-    "nav": [
+    "call2action-group": [
       {
-        "name": "navMenu",
-        "label": "Navigation Menu",
-        "type": "navigation-menu",
-        "adminLabel": "Navigation Menu",
-        "canDelete": false,
-        "choices": [
-          {
-            "id": "5qzjT5Dhq6AXxsdQirEYZN",
-            "name": "SuperForm"
-          },
-          {
-            "id": "4kauuE6198mDtSzwSecc4S",
-            "name": "FooBar"
-          },
-          {
-            "name": "Produits",
-            "id": "bswHHfSrPL5nHmHqZeMwb4"
-          },
-          {
-            "id": "sNx9CSrahaTrDoeagujVRY",
-            "name": "Hello"
-          }
-        ]
+        "type": "call2action",
+        "label": "Acheter",
+        "name": "acheter",
+        "linkPath": "bswHHfSrPL5nHmHqZeMwb4",
+        "linkType": "view-page"
+      }
+    ],
+    "custom": [
+      {
+        "type": "section",
+        "subType": "header-title",
+        "name": "header-title",
+        "adminLabel": "Header Title",
+        "label": "Header Title",
+        "isAdminField": true,
+        "logo": "https://storage.googleapis.com/joosorolstore.appspot.com/static/rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1/p2yjnGwb1mR9zXHB8jm7WG-large.jpeg"
+      },
+      {
+        "type": "section",
+        "subType": "header-nav",
+        "name": "header-nav",
+        "adminLabel": "Header Menu",
+        "label": "Header Menu",
+        "isAdminField": true
       }
     ],
     "global": [
       {
         "isAdminField": true,
-        "type": "section",
-        "label": "Styles",
-        "canDelete": false,
-        "adminLabel": "Styles",
-        "subType": "body",
-        "name": "body"
-      },
-      {
-        "canDelete": false,
-        "isAdminField": true,
-        "adminLabel": "Navigation Menu",
-        "name": "nav",
-        "subType": "nav",
-        "label": "Navigation Menu",
-        "type": "section"
-      },
-      {
-        "type": "section",
-        "label": "Buttons",
-        "canDelete": false,
-        "subType": "formsubmit",
-        "adminLabel": "Buttons",
+        "adminLabel": "Actions",
+        "label": "Actions",
         "name": "formsubmit",
-        "isAdminField": true
-      }
-    ],
-    "custom": [
-      {
-        "canDelete": false,
-        "name": "section1",
-        "label": "Section 0000",
+        "subType": "formsubmit",
         "type": "section",
-        "hero": "https://storage.googleapis.com/joosorolstore.appspot.com/static/rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1/pqWvNheiqZDRZsUBvA1Xy3-large.jpeg"
-      },
-      {
-        "subType": "section",
-        "type": "section",
-        "label": "ytry",
-        "name": "ytry"
+        "canDelete": false
       }
     ],
     "formsubmit": [
       {
-        "canDelete": false,
-        "label": "Buttons",
+        "label": "Button Group",
         "name": "btnGroup",
-        "adminLabel": "Buttons",
-        "type": "btn-group"
+        "canDelete": false,
+        "type": "btn-group",
+        "adminLabel": "Button Group"
       },
       {
-        "type": "submit",
+        "canDelete": false,
         "adminLabel": "Submit button",
         "name": "submitBtn",
         "label": "Submit",
-        "canDelete": false
+        "type": "submit"
       }
-    ]
-  },
-  "name": "my-app",
-  "timestamp": 1724093752,
-  "type": "webapp",
-  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1"
+    ],
+    "header-nav": [
+      {
+        "label": "Home",
+        "name": "acheter",
+        "type": "link",
+        "linkType": "view-page",
+        "linkPath": "5qzjT5Dhq6AXxsdQirEYZN"
+      },
+      {
+        "type": "link",
+        "name": "nav_1",
+        "label": "Nav1"
+      },
+      {
+        "type": "link",
+        "name": "nav_2",
+        "label": "Nav 2"
+      },
+      {
+        "type": "link",
+        "name": "nav_3",
+        "label": "Nav 3"
+      }
+    ],
+  }
 }
 // ======================
 

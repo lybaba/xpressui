@@ -50,8 +50,8 @@ export const CustomField = (props: TFormFieldProps) => {
         case SUBMIT_TYPE:
             return (
                 <Box
-                    {...cssProps?.fieldClasses}
-                    {...cssProps?.fieldProps}
+                    {...cssProps?.blockClasses}
+                    {...cssProps?.blockProps}
                 >
                    {props.children}
                 </Box>
@@ -65,8 +65,8 @@ export const CustomField = (props: TFormFieldProps) => {
                     sx={{
                         alignItems: 'center',
                     }}
-                    {...cssProps?.fieldClasses}
-                    {...cssProps?.fieldProps}
+                    {...cssProps?.blockClasses}
+                    {...cssProps?.blockProps}
                 >
                     {props.children}
                 </Stack>
@@ -75,8 +75,8 @@ export const CustomField = (props: TFormFieldProps) => {
         default:
             return (
                 <FormControl
-                    {...cssProps?.fieldClasses}
-                    {...cssProps?.fieldProps}
+                    {...cssProps?.blockClasses}
+                    {...cssProps?.blockProps}
                 >
                     {props.children}
                 </FormControl>

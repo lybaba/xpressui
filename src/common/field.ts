@@ -54,37 +54,40 @@ export const LOGO_TYPE = 'logo';
 export const HERO_TYPE = 'hero';
 export const FORM_SUBMIT_TYPE = 'formsubmit';
 export const FOOTER_TYPE = 'footer';
-export const NAV_MENU_TYPE = 'nav';
+export const HEADER_NAV_TYPE = 'header-nav';
 export const TITLE_TYPE = 'title';
 export const HTML_TYPE = 'html';
 export const FORM_TYPE = 'form';
+export const HEADER_TITLE_TYPE = 'header-title';
 
-export const NAV_MENU_ITEM_TYPE = 'nav-menu-item';
+export const LINK_TYPE = 'link';
 
-export const FORM_SECTION_LABEL = 'Section';
+export const FORM_SECTION_LABEL = 'Custom Section';
 export const LOGO_LABEL = 'Logo';
 export const BODY_LABEL = 'Body';
-export const HEADER_LABEL = 'Header';
+export const HEADER_TITLE_LABEL = 'Header Title';
 export const HERO_LABEL = 'Hero Section';
 export const FORM_SUBMIT_LABEL = 'Form Submit';
 export const FOOTER_LABEL = 'Footer';
-export const NAV_MENU_LABEL = 'Navigation Menu';
+export const HEADER_NAV_LABEL = 'Header Menu';
 export const BTNGROUP_TYPE_LABEL = 'Form Buttons';
-export const NAV_MENU_ITEM_LABEL = 'Menu Item';
-export const CALL2ACTION_GROUP_TYPE_LABEL = 'Call To Action Buttons';
-export const CALL2ACTION_TYPE_LABEL = 'Call To Action';
+export const LINK_TYPE_LABEL = 'Website/URL';
+export const CALL2ACTION_GROUP_TYPE_LABEL = 'Hero Actions';
+export const CALL2ACTION_TYPE_LABEL = 'Call-To-Action Button';
 
 export const FIELDGROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: SECTION_TYPE, name: FORM_SECTION_LABEL };
 export const BTNGROUP_TYPE_FIELD: TFieldType = { type: BTN_GROUP_TYPE, name: BTNGROUP_TYPE_LABEL };
 
-export const HERO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HERO_TYPE, name: HERO_LABEL };
+export const HERO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HERO_TYPE, name: HERO_LABEL, adminLabel: HERO_LABEL  };
 
 
-export const CALL2ACTION_GROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: CALL2ACTION_GROUP_TYPE, name: CALL2ACTION_GROUP_TYPE_LABEL };
+export const CALL2ACTION_GROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: CALL2ACTION_GROUP_TYPE, name: CALL2ACTION_GROUP_TYPE_LABEL, adminLabel: CALL2ACTION_GROUP_TYPE_LABEL };
 export const CALL2ACTION_TYPE_FIELD: TFieldType = { type: CALL2ACTION_TYPE, name: CALL2ACTION_TYPE_LABEL };
 
 export const FORM_SUBMIT_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FORM_SUBMIT_TYPE, name: FORM_SUBMIT_LABEL, adminLabel: FORM_SUBMIT_LABEL };
-export const NAV_MENU_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: NAV_MENU_TYPE, name: NAV_MENU_LABEL, adminLabel: NAV_MENU_LABEL };
+export const HEADER_NAV_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_NAV_TYPE, name: HEADER_NAV_LABEL, adminLabel: HEADER_NAV_LABEL };
+export const HEADER_TITLE_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_TITLE_TYPE, name: HEADER_TITLE_LABEL, adminLabel: HEADER_TITLE_LABEL };
+export const FOOTER_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FOOTER_TYPE, name: FOOTER_LABEL, adminLabel: FOOTER_LABEL };
 
 export const TEXT_TYPE_FIELD: TFieldType = { type: TEXT_TYPE, name: 'Text Field' };
 export const TEXTAREA_TYPE_FIELD: TFieldType = { type: TEXTAREA_TYPE, name: 'Text Area' };
@@ -117,7 +120,7 @@ export const FORM_TYPE_FIELD: TFieldType = { type: FORM_TYPE, name: 'Form Conten
 export const BTN_TYPE_FIELD: TFieldType = { type: BTN_TYPE, name: 'Button' };
 
 
-export const NAV_MENU_ITEM_FIELD: TFieldType = { type: NAV_MENU_ITEM_TYPE, name: NAV_MENU_ITEM_LABEL };
+export const NAV_MENU_ITEM_FIELD: TFieldType = { type: LINK_TYPE, name: LINK_TYPE_LABEL };
 
 
 export const REQUEST_FORM_FIELD_TYPES: Array<TFieldType> = [
@@ -284,7 +287,7 @@ export function isImageField(fieldType: string) : boolean {
 export function isSingleSelectField(fieldType: string) : boolean {
     return fieldType === SINGLE_SELECT_TYPE ||
            fieldType === RADIO_BUTTONS_TYPE ||
-           fieldType === NAV_MENU_ITEM_TYPE
+           fieldType === LINK_TYPE
 }
 
 
@@ -293,23 +296,17 @@ export function isMultiSelectField(fieldType: string) : boolean {
 }
 
 
-export function strToClasses(str: string | Record<string, any> | undefined | null) : CssClassesProps {
+export function strToClasses(str: string | undefined | null) : CssClassesProps {
     if (!str)
         return {}
-
-    if (isObject(str))
-        return str;
     
     const res = str ? {className: str} : {};
     return res;
 }
 
-export function strToSxProps(str: string | Record<string, any> | undefined | null) : CssElemProps {
+export function strToSxProps(str: string | undefined | null) : CssElemProps {
     if (!str)
         return {}
-
-    if (isObject(str))
-        return str;
 
     try {
         const obj = JSON.parse(str);
@@ -325,14 +322,14 @@ export function strToSxProps(str: string | Record<string, any> | undefined | nul
 export function getCssProps(fieldConfig: TFieldConfig) : TCssProps {
     
     const res: TCssProps = {
-        fieldClasses: strToClasses(fieldConfig.fieldClasses),
-        fieldProps: strToSxProps(fieldConfig.fieldProps),
+        blockClasses: strToClasses(fieldConfig.blockClasses),
+        blockProps: strToSxProps(fieldConfig.blockProps),
         inputClasses: strToClasses(fieldConfig.inputClasses),
         inputProps: strToSxProps(fieldConfig.inputProps),
         labelClasses: strToClasses(fieldConfig.labelClasses),
         labelProps: strToSxProps(fieldConfig.labelProps),
-        heroClasses: strToSxProps(fieldConfig.heroClasses),
-        heroProps: strToSxProps(fieldConfig.heroProps),
+        mediaClasses: strToSxProps(fieldConfig.mediaClasses),
+        mediaProps: strToSxProps(fieldConfig.mediaProps),
         listItemClasses: strToSxProps(fieldConfig.listItemClasses),
         listItemProps: strToSxProps(fieldConfig.listItemProps),
         selectedClasses: strToSxProps(fieldConfig.selectedClasses),

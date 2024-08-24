@@ -3,7 +3,6 @@ import TPostUIProps from '../../common/TPostUIProps';
 import { Container, Stack } from '@mui/joy';
 import TFieldConfig, { TCssProps } from '../../common/TFieldConfig';
 import Section from '../Section';
-import BtnGroup from '../button-group';
 import { FormRenderProps } from 'react-final-form';
 import React from 'react';
 import { PRODUCTFORM_TYPE } from '../../common/TFormConfig';
@@ -11,12 +10,11 @@ import ProductSection from '../ProductSection';
 
 import { TFormButtons } from '../../common/formsubmit';
 import FormField from '../FormField';
-import { TNavBar } from '../../common/navbar';
+import { strToClasses, strToSxProps } from '../../common/field';
 
 type OwnProps = {
     formProps?: FormRenderProps<any, any>;
     formButtons: TFormButtons
-    navBar?: TNavBar;
 }
 
 type Props = OwnProps & TPostUIProps;
@@ -25,6 +23,9 @@ export default function FormSectionList(props: Props) {
     const {
         formConfig,
     } = props;
+
+    const bClassesProp = strToClasses(formConfig.bClasses);
+    const bSxProps = strToSxProps(formConfig.bSxProps);
 
 
     const sections = formConfig.sections[CUSTOM_SECTION];
@@ -35,6 +36,8 @@ export default function FormSectionList(props: Props) {
             component={Container}
             spacing={1}
             gap={2}
+            {...bClassesProp}
+            {...bSxProps}
         >
             {/*
                 Stepper

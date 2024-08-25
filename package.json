@@ -16,6 +16,15 @@
     "build": "tsc && vite build && tsc --project ./lib.tsconfig.json",
     "preview": "vite preview"
   },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-errors": "^3.0.0",
+    "ajv-formats": "^3.0.1",
+    "final-form": "^4.20.10",
+    "lodash": "^4.17.21",
+    "short-uuid": "^5.2.0",
+    "slugify": "^1.6.6"
+  },
   "devDependencies": {
     "@types/lodash": "^4.17.7",
     "typescript": "^5.5.4",
@@ -32,14 +41,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "dependencies": {
-    "ajv": "^8.17.1",
-    "ajv-errors": "^3.0.0",
-    "ajv-formats": "^3.0.1",
-    "final-form": "^4.20.10",
-    "lodash": "^4.17.21",
-    "short-uuid": "^5.2.0",
-    "slugify": "^1.6.6"
   }
 }

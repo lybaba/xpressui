@@ -1,4 +1,4 @@
-interface TFieldType {
+type TFieldType = {
     type: string;
     subType?: string;
     name: string;

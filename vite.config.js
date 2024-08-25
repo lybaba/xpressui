@@ -9,7 +9,7 @@ export default defineConfig({
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'xpressui',
       // the proper extensions will be added
-      fileName: 'xpressui',
+      fileName: 'xpressui-0.1.0',
     },
   },
 })

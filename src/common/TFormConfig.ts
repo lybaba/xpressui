@@ -24,27 +24,12 @@ export const CHOICE_FORM_TYPE = 'choiceform';
 export const BODY_CSS_CLASSES_FIELD_NAME = 'bClasses';
 export const BODY_SX_PROPS_FIELD_NAME = 'bSxProps';
 
-export const LOGO_FIELD_NAME = 'logo';
-export const LOGO_CSS_CLASSES_FIELD_NAME = 'logoClasses';
-export const LOGO_SX_PROPS_FIELD_NAME = 'logoSxProps';
-export const LOGO_FIELD_LABEL = 'Logo Image';
-
-export const BG_FIELD_NAME = 'background';
-export const BG_FIELD_LABEL = 'Background Image';
-export const BG_CSS_CLASSES_FIELD_NAME = 'bgClasses';
-export const BG_SX_PROPS_FIELD_NAME = 'bgSxProps';
 
 
 export type TFormSettings = {
     label: string;
     [BODY_CSS_CLASSES_FIELD_NAME]?: string;
     [BODY_SX_PROPS_FIELD_NAME]?: string;
-    [LOGO_FIELD_NAME]?: string;
-    [LOGO_CSS_CLASSES_FIELD_NAME]?: string;
-    [LOGO_SX_PROPS_FIELD_NAME]?: string;
-    [BG_FIELD_NAME]?: string;
-    [BG_CSS_CLASSES_FIELD_NAME]?: string;
-    [BG_SX_PROPS_FIELD_NAME]?: string;
     subforms?: TChoice[];
 };
 
@@ -61,14 +46,8 @@ type TFormConfig = {
     type: string;
     name: string;
     label: string;
-    [BODY_CSS_CLASSES_FIELD_NAME]?: string;
-    [BODY_SX_PROPS_FIELD_NAME]?: string;
-    [LOGO_FIELD_NAME]?: string;
-    [LOGO_CSS_CLASSES_FIELD_NAME]?: string;
-    [LOGO_SX_PROPS_FIELD_NAME]?: string;
-    [BG_FIELD_NAME]?: string;
-    [BG_CSS_CLASSES_FIELD_NAME]?: string;
-    [BG_SX_PROPS_FIELD_NAME]?: string;
+    bClasses?: string;
+    bSxProps?: string;
     timestamp?: number;
     sections: Record<string, TFieldConfig[]>;
     subforms?: TChoice[];

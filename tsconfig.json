@@ -26,6 +26,6 @@
   },
  "include": [
     "src/**/*"
-, "src/index.tsx"  ],
+, "src/main.ts"  ],
   "exclude": ["node_modules"]
 }

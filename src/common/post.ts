@@ -20,7 +20,6 @@ import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { RenderingMode } from "./TFormConfig";
 import { GLOBAL_SECTION, CUSTOM_SECTION } from './Constants';
 import TMediaFile, { TMediaInfo, MediaSizeType } from './TMediaFile';
-import { TPostUIContext } from '../components/ui/TPostUIState';
 import { isEmpty, isObject } from 'lodash';
 import TChoice from "./TChoice";
 import parseErrors from "./parse-errors";
@@ -56,7 +55,7 @@ export type TGetPostAssetsResult = {
 
 
 export const getLargeImageUrl = (mediaFile: TMediaInfo): string => {
-    if (!isEmpty(mediaFile.large))
+    if (mediaFile.large)
         return mediaFile.large.publicUrl;
 
 
@@ -64,16 +63,16 @@ export const getLargeImageUrl = (mediaFile: TMediaInfo): string => {
 }
 
 export const getSmallImageUrl = (mediaFile: TMediaInfo): string => {
-    if (!isEmpty(mediaFile.small))
+    if (mediaFile.small)
         return mediaFile.small.publicUrl
 
-    if (!isEmpty(mediaFile.thumb))
+    if (mediaFile.thumb)
         return mediaFile.thumb.publicUrl
 
-    if (!isEmpty(mediaFile.medium))
+    if (mediaFile.medium)
         return mediaFile.medium.publicUrl;
 
-    if (!isEmpty(mediaFile.large))
+    if (mediaFile.large)
         return mediaFile.large.publicUrl;
 
 
@@ -81,23 +80,23 @@ export const getSmallImageUrl = (mediaFile: TMediaInfo): string => {
 }
 
 export const getThumbImageUrl = (mediaFile: TMediaInfo): string => {
-    if (!isEmpty(mediaFile.thumb))
+    if (mediaFile.thumb)
         return mediaFile.thumb.publicUrl
 
-    if (!isEmpty(mediaFile.medium))
+    if (mediaFile.medium)
         return mediaFile.medium.publicUrl;
 
-    if (!isEmpty(mediaFile.large))
+    if (mediaFile.large)
         return mediaFile.large.publicUrl;
 
     return mediaFile.publicUrl ? mediaFile.publicUrl : '';
 }
 
 export const getMediumImageUrl = (mediaFile: TMediaInfo): string => {
-    if (!isEmpty(mediaFile.medium))
+    if (mediaFile.medium)
         return mediaFile.medium.publicUrl;
 
-    if (!isEmpty(mediaFile.large))
+    if (mediaFile.large)
         return mediaFile.large.publicUrl;
 
     return mediaFile.publicUrl ? mediaFile.publicUrl : '';
@@ -349,7 +348,7 @@ export default function validate(props: ValidatorProps): Record<string, string> 
 
 
 
-export const getMediaUrlByMediaId = (postUIContext: TPostUIContext,  formConfig: TFormConfig, fieldConfig: TFieldConfig, mediaSize: MediaSizeType = MediaSizeType.Small): string => {
+export const getMediaUrlByMediaId = (fieldConfig: TFieldConfig, mediaSize: MediaSizeType = MediaSizeType.Small): string => {
 
     const mediaInfo: TMediaInfo = fieldConfig.mediaInfo ? fieldConfig.mediaInfo : { publicUrl: fieldConfig.mediaId };
 

@@ -89,80 +89,73 @@ const CHOICE_GROUP_FORM_NAME = 'choicegroup';
 const CHOICE_GROUP_FORM_LABEL = 'Choice Group';
 
 const CHOICEGROUP_FORM_CONFIG: TFormConfig ={
-  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
   "label": "HelloWorld",
-  "timestamp": 1724371019,
-  "name": "hello-world",
+  "uid": "rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1",
   "type": "webapp",
+  "name": "hello-world",
   "id": "snwkd619yXH5FX7ReqZL9X",
+  "timestamp": 1724371019,
   "sections": {
+    "call2action-group": [
+      {
+        "label": "Acheter",
+        "type": "call2action",
+        "linkPath": "bswHHfSrPL5nHmHqZeMwb4",
+        "name": "acheter",
+        "linkType": "view-page"
+      }
+    ],
     "hero": [
       {
-        "type": "html",
         "label": "a666",
+        "type": "html",
         "name": "a_666"
       },
       {
         "type": "link",
-        "linkPath": "bswHHfSrPL5nHmHqZeMwb4",
-        "name": "acheter",
-        "linkType": "view-page",
-        "label": "Acheter"
-      }
-    ],
-    "call2action-group": [
-      {
-        "type": "call2action",
         "label": "Acheter",
         "name": "acheter",
-        "linkPath": "bswHHfSrPL5nHmHqZeMwb4",
-        "linkType": "view-page"
+        "linkType": "view-page",
+        "linkPath": "bswHHfSrPL5nHmHqZeMwb4"
       }
     ],
     "custom": [
       {
-        "type": "section",
         "subType": "header-title",
-        "name": "header-title",
-        "adminLabel": "Header Title",
         "label": "Header Title",
+        "logo": "https://storage.googleapis.com/joosorolstore.appspot.com/static/rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1/p2yjnGwb1mR9zXHB8jm7WG-large.jpeg",
+        "type": "section",
         "isAdminField": true,
-        "logo": "https://storage.googleapis.com/joosorolstore.appspot.com/static/rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1/p2yjnGwb1mR9zXHB8jm7WG-large.jpeg"
+        "name": "header-title",
+        "adminLabel": "Header Title"
+      },
+      {
+        "name": "header-nav",
+        "label": "Header Menu",
+        "adminLabel": "Header Menu",
+        "isAdminField": true,
+        "type": "section",
+        "subType": "header-nav"
       },
       {
         "type": "section",
-        "subType": "header-nav",
-        "name": "header-nav",
-        "adminLabel": "Header Menu",
-        "label": "Header Menu",
-        "isAdminField": true
+        "subType": "hero",
+        "name": "hero",
+        "adminLabel": "Hero Section",
+        "label": "Hero Section",
+        "isAdminField": true,
+        "hero": "https://storage.googleapis.com/joosorolstore.appspot.com/static/rSjDHThhZ6dJ7lK3Mr5UCZdLaUv1/kZTAgAVHamwQiH2qzaxuQV-large.jpeg"
       }
     ],
     "global": [
       {
-        "isAdminField": true,
-        "adminLabel": "Actions",
-        "label": "Actions",
         "name": "formsubmit",
-        "subType": "formsubmit",
+        "canDelete": false,
+        "label": "Actions",
+        "isAdminField": true,
         "type": "section",
-        "canDelete": false
-      }
-    ],
-    "formsubmit": [
-      {
-        "label": "Button Group",
-        "name": "btnGroup",
-        "canDelete": false,
-        "type": "btn-group",
-        "adminLabel": "Button Group"
-      },
-      {
-        "canDelete": false,
-        "adminLabel": "Submit button",
-        "name": "submitBtn",
-        "label": "Submit",
-        "type": "submit"
+        "subType": "formsubmit",
+        "adminLabel": "Actions"
       }
     ],
     "header-nav": [
@@ -189,6 +182,31 @@ const CHOICEGROUP_FORM_CONFIG: TFormConfig ={
         "label": "Nav 3"
       }
     ],
+    "formsubmit": [
+      {
+        "adminLabel": "Button Group",
+        "label": "Button Group",
+        "type": "btn-group",
+        "name": "btnGroup",
+        "canDelete": false
+      },
+      {
+        "adminLabel": "Submit button",
+        "canDelete": false,
+        "type": "submit",
+        "name": "submitBtn",
+        "label": "Submit"
+      }
+    ],
+    "nav": [
+      {
+        "name": "visiter",
+        "linkType": "view-page",
+        "type": "link",
+        "linkPath": "bswHHfSrPL5nHmHqZeMwb4",
+        "label": "Visiter"
+      }
+    ]
   }
 }
 // ======================

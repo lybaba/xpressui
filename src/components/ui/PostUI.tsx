@@ -3,7 +3,7 @@ import { PropsWithChildren } from 'react';
 import TPostUIProps from '../../common/TPostUIProps';
 import FormContent from './FormContent';
 import { WEBAPP_TYPE } from '../../common/TFormConfig';
-import WebAppUI from './WebAppUI';
+import WebAppUI from './AppPage';
 
 
 type Props = TPostUIProps & PropsWithChildren;

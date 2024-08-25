@@ -30,8 +30,10 @@ export default function HeroSection(props: Props) {
 
 
     return (
-       <Box>
-        Header
+       <Box
+        {...heroImageProps}
+       >
+        Hero Section
        </Box>
     )
 }

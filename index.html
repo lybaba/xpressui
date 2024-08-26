@@ -8,10 +8,146 @@
       name="description"
       content="XPressUI, Form Builder, Post UI Builder"
     />
+    <link href="./index.css" rel="stylesheet">
     <title>IAKPress</title>
+
+    <script>
+      const formConfigMap = {
+        "hello": {
+    "id": "5VQBjeow4axxrbmAEQhCye",
+    "label": "Hello",
+    "name": "hello",
+    "sections": {
+      "custom": [
+        {
+          "canDelete": false,
+          "label": "Section 1",
+          "name": "section1",
+          "type": "section"
+        }
+      ],
+      "formsubmit": [
+        {
+          "adminLabel": "Button Group",
+          "canDelete": false,
+          "label": "Button Group",
+          "name": "btnGroup",
+          "type": "btn-group"
+        },
+        {
+          "adminLabel": "Submit button",
+          "canDelete": false,
+          "label": "Submit",
+          "name": "submitBtn",
+          "type": "submit"
+        }
+      ],
+      "global": [
+        {
+          "adminLabel": "Actions",
+          "canDelete": false,
+          "isAdminField": true,
+          "label": "Actions",
+          "name": "formsubmit",
+          "subType": "formsubmit",
+          "type": "section"
+        }
+      ],
+      "section1": [
+        {
+          "canDelete": false,
+          "label": "Email",
+          "name": "email",
+          "required": true,
+          "type": "email"
+        },
+        {
+          "label": "Nom",
+          "name": "nom",
+          "type": "text"
+        },
+        {
+          "label": "Message",
+          "name": "message",
+          "type": "textarea"
+        }
+      ]
+    },
+    "timestamp": 1724590502,
+    "type": "contactform",
+    "uid": "Fk2msUTYlR37enZObgNP5hownfFq"
+  }
+      }
+    </script>
+  
   </head>
   <body>
+  <!-- post-hello start -->
+  <div>
+
+    <!-- post template -->
+    <!-- Don't remove attribe id, data-type required for the WebComponent iak-post-ui to work properly -->
+    <template id="hello">
+
+      
+      <form id="hello_form">
+  
+        <!-- Sections -->
+        <div id="section1" class="flex flex-col justify-center gap-3 px-9">
+            <div class="flex gap-1 flex-col">
+              <label for="email">Email</label>
+              <input 
+                class="input input-bordered input-sm w-full max-w-md" 
+                id="email"
+                name="email"
+                type="email"
+              />
+              <span id="email_error" ></span>
+            </div>
+            <div class="flex gap-1 flex-col">
+              <label for="nom">Nom</label>
+              <input 
+                class="input input-bordered input-sm w-full max-w-md" 
+                id="nom"
+                name="nom"
+                type="text"
+              />
+              <span id="nom_error" ></span>
+            </div>
+            <div class="flex gap-1 flex-col">
+              <label for="message">Message</label>
+              <textarea 
+                class="textarea textarea-bordered textarea-sm w-full max-w-md"
+                id="message"
+                name="message"
+                type="textarea"
+              >
+              </textarea>
+              <span id="message_error" ></span></div>
+        </div>
+      
+      
+      
+        <!-- Form Buttons -->
+        <div 
+          class="flex flex-col justify-center gap-3 px-9 mt-5"
+          id="btnGroup"
+        >
+            <button 
+              class="btn btn-primary btn-block max-w-max"
+              id="submitBtn"
+              type="submit">
+              Submit
+            </button>
+            <span id="submitBtn_error" ></span>
+        </div>
+      
+      </form>
+    </template>
+
     <div id="app"></div>
     <script type="module" src="/src/index.ts"></script>
+
+    <form-ui name="hello" ></form-ui>
   </body>
 </html>

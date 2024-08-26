@@ -15,7 +15,6 @@ import {
     TAX_TYPE,
     TIME_TYPE,
 } from "./field";
-import { ValidateFunction } from "ajv";
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { RenderingMode } from "./TFormConfig";
 import { GLOBAL_SECTION, CUSTOM_SECTION } from './Constants';
@@ -173,13 +172,6 @@ export const getSectionIndex = (formConfig: TFormConfig, sectionName: string, is
 }
 
 
-type ValidatorProps = {
-    validator: ValidateFunction<any>;
-    formConfig: TFormConfig;
-    values: Record<string, any>;
-}
-
-
 function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
     const res: any = {};
 
@@ -295,11 +287,25 @@ export function getHideLabel(props: TFormFieldProps): boolean {
 }
 
 
-export function buildSchema(formConfig: TFormConfig, sectionIdex: number): object {
-    const currentSection = getSectionByIndex(formConfig, sectionIdex);
+export function buildSchema(formConfig: TFormConfig, sectionIdex?: number): object {
+    let fields: TFieldConfig[] = [];
 
-    const fields: TFieldConfig[] = currentSection && formConfig.sections.hasOwnProperty(currentSection.name)
-        ? formConfig.sections[currentSection.name] : [];
+    if (sectionIdex) {
+        const currentSection = getSectionByIndex(formConfig, sectionIdex);
+
+        fields = currentSection && formConfig.sections.hasOwnProperty(currentSection.name)
+            ? formConfig.sections[currentSection.name] : [];
+    } else { // get all fields
+        const sectionList = getCustomSectionList(formConfig);
+        sectionList.forEach((sectionConfig: TFieldConfig) => {
+            if (!sectionConfig.subType) {
+                const currentFields = formConfig.sections.hasOwnProperty(sectionConfig.name)
+                                    ? formConfig.sections[sectionConfig.name] : [];
+                fields.push(...currentFields);
+            }
+        })
+    }
+
 
     const required: string[] = [];
     const errorMessage: Record<string, string> = {};
@@ -333,19 +339,6 @@ export function buildSchema(formConfig: TFormConfig, sectionIdex: number): objec
         ...errorMessageProps
     };
 }
-
-export default function validate(props: ValidatorProps): Record<string, string> {
-    const {
-        validator,
-        values
-    } = props;
-
-    validator(values);
-    const errors = parseErrors(validator.errors);
-
-    return errors;
-}
-
 
 
 export const getMediaUrlByMediaId = (fieldConfig: TFieldConfig, mediaSize: MediaSizeType = MediaSizeType.Small): string => {

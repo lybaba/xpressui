@@ -21,8 +21,6 @@ import { GLOBAL_SECTION, CUSTOM_SECTION } from './Constants';
 import TMediaFile, { TMediaInfo, MediaSizeType } from './TMediaFile';
 import { isEmpty, isObject } from 'lodash';
 import TChoice from "./TChoice";
-import parseErrors from "./parse-errors";
-import TFormFieldProps from "./TFormFieldProps";
 
 export const FORM_ID = "form";
 export const SECTION_ID = 'attrgroup';
@@ -274,17 +272,6 @@ export function shouldRenderField(formConfig: TFormConfig, fieldConfig: TFieldCo
     return true;
 }
 
-export function getHideLabel(props: TFormFieldProps): boolean {
-    const {
-        fieldConfig,
-        hideLabel = false
-    } = props;
-    
-
-    return hideLabel ||
-        fieldConfig.type === CHECKBOX_TYPE || 
-        fieldConfig.type === SWITCH_TYPE;
-}
 
 
 export function buildSchema(formConfig: TFormConfig, sectionIdex?: number): object {

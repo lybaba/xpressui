@@ -2,6 +2,7 @@ import { createForm, FormApi } from "final-form";
 import TFormConfig from "./common/TFormConfig";
 import { ValidateFunction } from "ajv";
 import validate, { getValidators } from "./common/Validator";
+import { isEmpty } from "lodash";
 
 declare var formConfigMap : Record<string, TFormConfig>;
 
@@ -65,7 +66,12 @@ class FormUI extends HTMLElement {
   }
 
   onSubmit = (values: Record<string, any>) => {
-    window.alert(JSON.stringify(values, undefined, 2));
+    const errors = this.validateForm(values);
+    if (isEmpty(errors)) {
+      window.alert(JSON.stringify(values, undefined, 2));
+    } else {
+      window.alert("Please Fill the Required Fields.");
+    }
   }
 
   registerField = (input: HTMLInputElement | HTMLTextAreaElement) => {

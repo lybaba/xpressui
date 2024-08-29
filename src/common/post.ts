@@ -3,13 +3,13 @@ import {
     DATETIME_TYPE,
     DATE_TYPE,
     EMAIL_TYPE,
-    FORM_SUBMIT_TYPE,
-    MULTI_SELECT_TYPE,
+    BTNGROUP_TYPE,
+    SELECT_MULTIPLE_TYPE,
     HEADER_NAV_TYPE,
     NUMBER_TYPE,
     POSITIVE_INTEGER_TYPE,
     PRICE_TYPE,
-    SINGLE_SELECT_TYPE,
+    SELECT_ONE_TYPE,
     SLUG_TYPE,
     SWITCH_TYPE,
     TAX_TYPE,
@@ -21,6 +21,7 @@ import { GLOBAL_SECTION, CUSTOM_SECTION } from './Constants';
 import TMediaFile, { TMediaInfo, MediaSizeType } from './TMediaFile';
 import { isEmpty, isObject } from 'lodash';
 import TChoice from "./TChoice";
+import TSchema from "./TSchema";
 
 export const FORM_ID = "form";
 export const SECTION_ID = 'attrgroup';
@@ -199,7 +200,7 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
             res.type = "boolean";
             break;
 
-        case MULTI_SELECT_TYPE:
+        case SELECT_MULTIPLE_TYPE:
             res.type = "array";
             res.items = {
                 "type": "string"
@@ -208,7 +209,7 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
 
 
 
-        case SINGLE_SELECT_TYPE:
+        case SELECT_ONE_TYPE:
             res.type = "string"
             if (fieldConfig.choices)
                 res.enum = fieldConfig.choices.map((opt: TChoice) => opt.id);
@@ -274,7 +275,7 @@ export function shouldRenderField(formConfig: TFormConfig, fieldConfig: TFieldCo
 
 
 
-export function buildSchema(formConfig: TFormConfig, sectionIdex?: number): object {
+export function buildSchema(formConfig: TFormConfig, sectionIdex?: number): TSchema {
     let fields: TFieldConfig[] = [];
 
     if (sectionIdex) {
@@ -298,11 +299,15 @@ export function buildSchema(formConfig: TFormConfig, sectionIdex?: number): obje
     const errorMessage: Record<string, string> = {};
     const properties: Record<string, any> = {};
 
+    const fieldMap: Record<string, TFieldConfig> = {};
+
     for (const fieldConfig of fields) {
         if (shouldRenderField(formConfig, fieldConfig)) {
             const ajvType = toAjvFieldType(fieldConfig);
 
             if (!isEmpty(ajvType)) {
+                fieldMap[fieldConfig.name] = fieldConfig;
+
                 properties[fieldConfig.name] = ajvType;
 
                 if (fieldConfig.required)
@@ -318,12 +323,17 @@ export function buildSchema(formConfig: TFormConfig, sectionIdex?: number): obje
 
     const errorMessageProps = !isEmpty(errorMessage) ? { errorMessage: { properties: errorMessage } } : {}
 
-    return {
+    const ajvSchema =  {
         type: "object",
         properties,
         ...requiredProps,
         additionalProperties: true,
         ...errorMessageProps
+    };
+
+    return {
+        ajvSchema,
+        fieldMap
     };
 }
 
@@ -402,7 +412,7 @@ export function getFirstSectionIndexBySubType(formConfig: TFormConfig, subType: 
 }
 
 export function getFormSubmitSectionIndex(formConfig: TFormConfig): number {
-    return getFirstSectionIndexBySubType(formConfig, FORM_SUBMIT_TYPE, true);
+    return getFirstSectionIndexBySubType(formConfig, BTNGROUP_TYPE, true);
 }
 
 export function getFormNavSectionIndex(formConfig: TFormConfig): number {

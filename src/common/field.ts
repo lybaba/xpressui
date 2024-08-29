@@ -1,8 +1,8 @@
 
-import TFieldConfig, { CssClassesProps, CssElemProps, TCssProps } from './TFieldConfig';
+import TFieldConfig from './TFieldConfig';
 
 import slugify from 'slugify';
-import { isEmpty, isObject, lowerCase } from 'lodash';
+import { lowerCase } from 'lodash';
 import TFieldType from './TFieldType';
 
 export const SECTION_TYPE = 'section';
@@ -22,16 +22,16 @@ export const NUMBER_TYPE = 'number';
 export const POSITIVE_INTEGER_TYPE = 'integer';
 export const PRICE_TYPE = 'price';
 export const PASSWORD_TYPE = 'password';
-export const SINGLE_SELECT_TYPE = 'single-select';
+export const SELECT_ONE_TYPE = 'select-one';
 export const RADIO_BUTTONS_TYPE = 'radio-buttons';
-export const BTN_GROUP_TYPE = 'btn-group';
+export const BTNGROUP_TYPE = 'btngroup';
 export const CALL2ACTION_GROUP_TYPE = 'call2action-group';
 export const CALL2ACTION_TYPE = 'call2action';
 
 export const ACTION_TYPE_TYPE= 'action-type';
 export const ACTION_TARGET_TYPE= 'action-target';
 
-export const MULTI_SELECT_TYPE = 'multi-select';
+export const SELECT_MULTIPLE_TYPE = 'select-multiple';
 export const CHECKBOXES_TYPE = 'checkboxes';
 
 export const SUBMIT_TYPE = 'submit';
@@ -52,7 +52,6 @@ export const SUBFORMS_TYPE = 'subforms';
 
 export const LOGO_TYPE = 'logo';
 export const HERO_TYPE = 'hero';
-export const FORM_SUBMIT_TYPE = 'formsubmit';
 export const FOOTER_TYPE = 'footer';
 export const HEADER_NAV_TYPE = 'header-nav';
 export const TITLE_TYPE = 'title';
@@ -61,13 +60,13 @@ export const FORM_TYPE = 'form';
 export const HEADER_TITLE_TYPE = 'header-title';
 
 export const LINK_TYPE = 'link';
+export const UNKNOWN_TYPE = 'unknown';
 
 export const FORM_SECTION_LABEL = 'Custom Section';
 export const LOGO_LABEL = 'Logo';
 export const BODY_LABEL = 'Body';
-export const HEADER_TITLE_LABEL = 'Header Title';
+export const HEADER_TITLE_LABEL = 'Header';
 export const HERO_LABEL = 'Hero Section';
-export const FORM_SUBMIT_LABEL = 'Form Submit';
 export const FOOTER_LABEL = 'Footer';
 export const HEADER_NAV_LABEL = 'Header Menu';
 export const BTNGROUP_TYPE_LABEL = 'Form Buttons';
@@ -76,7 +75,7 @@ export const CALL2ACTION_GROUP_TYPE_LABEL = 'Hero Actions';
 export const CALL2ACTION_TYPE_LABEL = 'Call-To-Action Button';
 
 export const FIELDGROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: SECTION_TYPE, name: FORM_SECTION_LABEL };
-export const BTNGROUP_TYPE_FIELD: TFieldType = { type: BTN_GROUP_TYPE, name: BTNGROUP_TYPE_LABEL };
+export const BTNGROUP_TYPE_FIELD: TFieldType = { type: BTNGROUP_TYPE, name: BTNGROUP_TYPE_LABEL };
 
 export const HERO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HERO_TYPE, name: HERO_LABEL, adminLabel: HERO_LABEL  };
 
@@ -84,7 +83,6 @@ export const HERO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HERO_T
 export const CALL2ACTION_GROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: CALL2ACTION_GROUP_TYPE, name: CALL2ACTION_GROUP_TYPE_LABEL, adminLabel: CALL2ACTION_GROUP_TYPE_LABEL };
 export const CALL2ACTION_TYPE_FIELD: TFieldType = { type: CALL2ACTION_TYPE, name: CALL2ACTION_TYPE_LABEL };
 
-export const FORM_SUBMIT_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FORM_SUBMIT_TYPE, name: FORM_SUBMIT_LABEL, adminLabel: FORM_SUBMIT_LABEL };
 export const HEADER_NAV_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_NAV_TYPE, name: HEADER_NAV_LABEL, adminLabel: HEADER_NAV_LABEL };
 export const HEADER_TITLE_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_TITLE_TYPE, name: HEADER_TITLE_LABEL, adminLabel: HEADER_TITLE_LABEL };
 export const FOOTER_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FOOTER_TYPE, name: FOOTER_LABEL, adminLabel: FOOTER_LABEL };
@@ -98,9 +96,9 @@ export const PASSWORD_TYPE_FIELD: TFieldType = { type: PASSWORD_TYPE, name: 'Pas
 export const TEL_TYPE_FIELD: TFieldType = { type: TEL_TYPE, name: 'Phone Number' };
 export const SUBMIT_TYPE_FIELD: TFieldType = { type: SUBMIT_TYPE, name: 'Submit button' };
 export const CHECKBOX_TYPE_FIELD: TFieldType = { type: CHECKBOX_TYPE, name: 'Checkbox' };
-export const MULTI_SELECT_TYPE_FIELD: TFieldType = { type: MULTI_SELECT_TYPE, name: 'Multi-select List' };
+export const MULTI_SELECT_TYPE_FIELD: TFieldType = { type: SELECT_MULTIPLE_TYPE, name: 'Multi-select List' };
 export const CHECKBOXES_TYPE_FIELD: TFieldType = { type: CHECKBOXES_TYPE, name: 'Checkboxes' };
-export const SINGLE_SELECT_TYPE_FIELD: TFieldType = { type: SINGLE_SELECT_TYPE, name: 'Single-select List' };
+export const SINGLE_SELECT_TYPE_FIELD: TFieldType = { type: SELECT_ONE_TYPE, name: 'Single-select List' };
 export const RADIO_BUTTONS_TYPE_FIELD: TFieldType = { type: RADIO_BUTTONS_TYPE, name: 'Radio Buttons' };
 export const URL_TYPE_FIELD: TFieldType = { type: URL_TYPE, name: 'URL' };
 export const IMAGE_TYPE_FIELD: TFieldType = { type: IMAGE_TYPE, name: 'Image' };
@@ -136,46 +134,6 @@ export const REQUEST_FORM_FIELD_TYPES: Array<TFieldType> = [
     UPLOAD_FILE_TYPE_FIELD,
 ];
 
-export const getFieldSubTypes = (type: string): Array<TFieldType> => {
-    switch (type) {
-        case TEXT_TYPE:
-            return [
-                TEXT_TYPE_FIELD,
-                EMAIL_TYPE_FIELD,
-                TEL_TYPE_FIELD,
-                URL_TYPE_FIELD
-            ];
-
-        case NUMBER_TYPE:
-            return [
-                NUMBER_TYPE_FIELD,
-                PRICE_TYPE_FIELD,
-            ];
-            
-
-        case SINGLE_SELECT_TYPE:
-            return [
-                SINGLE_SELECT_TYPE_FIELD,
-                RADIO_BUTTONS_TYPE_FIELD,
-            ];
-
-        case MULTI_SELECT_TYPE:
-            return [
-                MULTI_SELECT_TYPE_FIELD,
-                CHECKBOXES_TYPE_FIELD,
-            ];
-
-        case UPLOAD_FILE_TYPE:
-            return [
-                UPLOAD_FILE_TYPE_FIELD,
-                UPLOAD_IMAGE_TYPE_FIELD,
-            ];
-
-
-        default:
-            return [];
-    }
-}
 
 export const PRICING_DECIMAL_VALUES = [
     { value: "0", label: "0" },
@@ -192,8 +150,8 @@ export const PRICING_DECIMAL_VALUES = [
 
 
 export const getIsChoiceField = (type: string): boolean => {
-    return type === MULTI_SELECT_TYPE ||
-          type === SINGLE_SELECT_TYPE
+    return type === SELECT_MULTIPLE_TYPE ||
+          type === SELECT_ONE_TYPE
 }
 
 export const buildSlug = (name: string) => {
@@ -239,102 +197,3 @@ export const doNormalizeFieldValue = (fieldConfig: TFieldConfig, value: any) : a
 
     }
 };
-
-
-const TEXT_TYPES : string[] = [
-    TEXT_TYPE,
-    EMAIL_TYPE,
-    TEL_TYPE,
-    URL_TYPE,
-    SLUG_TYPE
-]
-
-export function isTextField(fieldType: string) : boolean {
-    return TEXT_TYPES.includes(fieldType);
-}
-
-
-const NUMBER_TYPES : string[] = [
-    NUMBER_TYPE,
-    PRICE_TYPE,
-    TAX_TYPE,
-]
-
-export function isNumberField(fieldType: string) : boolean {
-    return NUMBER_TYPES.includes(fieldType);
-}
-
-export function isBooleanField(fieldType: string) : boolean {
-    return fieldType === CHECKBOX_TYPE || fieldType === SWITCH_TYPE;
-}
-
-export function isDateTimeField(fieldType: string) : boolean {
-    return fieldType === DATETIME_TYPE;
-}
-
-export function isDateField(fieldType: string) : boolean {
-    return fieldType === DATE_TYPE;
-}
-
-export function isTimeField(fieldType: string) : boolean {
-    return fieldType === TIME_TYPE;
-}
-
-export function isImageField(fieldType: string) : boolean {
-    return fieldType === UPLOAD_IMAGE_TYPE;
-}
-
-export function isSingleSelectField(fieldType: string) : boolean {
-    return fieldType === SINGLE_SELECT_TYPE ||
-           fieldType === RADIO_BUTTONS_TYPE ||
-           fieldType === LINK_TYPE
-}
-
-
-export function isMultiSelectField(fieldType: string) : boolean {
-    return fieldType === MULTI_SELECT_TYPE || fieldType == CHECKBOXES_TYPE;
-}
-
-
-export function strToClasses(str: string | undefined | null) : CssClassesProps {
-    if (!str)
-        return {}
-    
-    const res = str ? {className: str} : {};
-    return res;
-}
-
-export function strToSxProps(str: string | undefined | null) : CssElemProps {
-    if (!str)
-        return {}
-
-    try {
-        const obj = JSON.parse(str);
-        if(isObject(obj) && !isEmpty(obj)) 
-            return obj
-    } catch (e) {
-    }
-
-    return {}
-}
-
-
-export function getCssProps(fieldConfig: TFieldConfig) : TCssProps {
-    
-    const res: TCssProps = {
-        blockClasses: strToClasses(fieldConfig.blockClasses),
-        blockProps: strToSxProps(fieldConfig.blockProps),
-        inputClasses: strToClasses(fieldConfig.inputClasses),
-        inputProps: strToSxProps(fieldConfig.inputProps),
-        labelClasses: strToClasses(fieldConfig.labelClasses),
-        labelProps: strToSxProps(fieldConfig.labelProps),
-        mediaClasses: strToSxProps(fieldConfig.mediaClasses),
-        mediaProps: strToSxProps(fieldConfig.mediaProps),
-        listItemClasses: strToSxProps(fieldConfig.listItemClasses),
-        listItemProps: strToSxProps(fieldConfig.listItemProps),
-        selectedClasses: strToSxProps(fieldConfig.selectedClasses),
-        selectedProps: strToSxProps(fieldConfig.selectedProps)
-    }
-
-    return res;
-}

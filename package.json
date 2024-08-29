@@ -1,6 +1,6 @@
 {
   "name": "@lybaba/xpressui",
-  "version": "0.54.0",
+  "version": "0.64.0",
   "repository": "https://github.com/lybaba/xpressui",
   "description": "IAKPress Frontend Post UI Components",
   "main": "dist/index.ts",

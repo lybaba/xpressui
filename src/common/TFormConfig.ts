@@ -21,15 +21,9 @@ export const SIGNUPFORM_TYPE = 'signupform';
 export const MULTI_STEP_FORM_TYPE = 'multistepform';
 export const CHOICE_FORM_TYPE = 'choiceform';
 
-export const BODY_CSS_CLASSES_FIELD_NAME = 'bClasses';
-export const BODY_SX_PROPS_FIELD_NAME = 'bSxProps';
-
-
 
 export type TFormSettings = {
     label: string;
-    [BODY_CSS_CLASSES_FIELD_NAME]?: string;
-    [BODY_SX_PROPS_FIELD_NAME]?: string;
     subforms?: TChoice[];
 };
 
@@ -46,8 +40,6 @@ type TFormConfig = {
     type: string;
     name: string;
     label: string;
-    bClasses?: string;
-    bSxProps?: string;
     timestamp?: number;
     sections: Record<string, TFieldConfig[]>;
     subforms?: TChoice[];

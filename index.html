@@ -8,128 +8,156 @@
   <meta name="description" content="XPressUI, Form Builder, Post UI Builder" />
   <link href="./index.css" rel="stylesheet">
   <title>IAKPress</title>
-
-  <script>
-    const formConfigMap = {
-      "hello": {
-        "id": "5VQBjeow4axxrbmAEQhCye",
-        "label": "Hello",
-        "name": "hello",
-        "sections": {
-          "custom": [
-            {
-              "canDelete": false,
-              "label": "Section 1",
-              "name": "section1",
-              "type": "section"
-            }
-          ],
-          "formsubmit": [
-            {
-              "adminLabel": "Button Group",
-              "canDelete": false,
-              "label": "Button Group",
-              "name": "btnGroup",
-              "type": "btn-group"
-            },
-            {
-              "adminLabel": "Submit button",
-              "canDelete": false,
-              "label": "Submit",
-              "name": "submitBtn",
-              "type": "submit"
-            }
-          ],
-          "global": [
-            {
-              "adminLabel": "Actions",
-              "canDelete": false,
-              "isAdminField": true,
-              "label": "Actions",
-              "name": "formsubmit",
-              "subType": "formsubmit",
-              "type": "section"
-            }
-          ],
-          "section1": [
-            {
-              "canDelete": false,
-              "label": "Email",
-              "name": "email",
-              "required": true,
-              "type": "email"
-            },
-            {
-              "label": "Nom",
-              "name": "nom",
-              "type": "text"
-            },
-            {
-              "label": "Message",
-              "name": "message",
-              "type": "textarea"
-            }
-          ]
-        },
-        "timestamp": 1724590502,
-        "type": "contactform",
-        "uid": "Fk2msUTYlR37enZObgNP5hownfFq"
-      }
-    }
-  </script>
-
 </head>
 
 <body>
-  <!-- post template -->
-  <!-- Don't remove attribe id, data-type required for the WebComponent iak-post-ui to work properly -->
-  <template id="hello">
+  
+    <!-- post template -->
+    <!-- Don't remove attribe id, data-type required for the WebComponent iak-post-ui to work properly -->
 
-
-    <form id="hello_form">
+    <template id="hello">
+    
+      <form
+        id="hello_form"
+        data-type="contactform"
+        data-name="hello"
+        data-label="Hello"
+        data-id="fWEa1utBxSnB8VvDVWozeZ"
+        data-uid="HLo1ocq1TSVlxSNPBxmLQqQO1kHH"
+        data-timestamp="1724860707"
+      >
       <div class="grid justify-items-center">
-        <div class="p-4 w-full max-w-[700px]">
+        <div class="p-4 w-full max-w-3xl">
+          
           <!-- Sections -->
-          <div id="section1" class="flex flex-col justify-center gap-3 px-9">
-            <div class="flex gap-1 flex-col">
-              <label for="email">Email</label>
-              <input class="input input-bordered input-sm w-full" id="email" name="email" type="email" />
-              <span id="email_error"></span>
+          <div 
+            id="section1"
+            class="flex flex-col justify-center gap-3 px-9"
+            data-name="section1"
+            data-can-delete="False"
+            data-type="section"
+            data-label="Section 1"
+          >
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Email</span>
             </div>
-            <div class="flex gap-1 flex-col">
-              <label for="nom">Nom</label>
-              <input class="input input-bordered input-sm w-full" id="nom" name="nom" type="text" />
-              <span id="nom_error"></span>
+            <input 
+                class="input input-bordered input-sm w-full" 
+                id="email"
+                name="email"
+                type="email"
+                data-name="email"
+                data-can-delete="False"
+                data-type="email"
+                data-required="True"
+                data-label="Email"
+                data-section-name="section1"
+                data-error-msg="Email Invalide"
+            />
+            <div class="label">
+              <span
+                class="label-text-alt" 
+                id="email_error" >
+              </span>
             </div>
-            <div class="flex gap-1 flex-col">
-              <label for="message">Message</label>
-              <textarea class="textarea textarea-bordered textarea-sm w-full" id="message" name="message"
-                type="textarea">
-            </textarea>
-              <span id="message_error"></span>
-            </div>
+          </label>
+              <div class="flex gap-1 flex-col">
+    <label for="region">Region</label>
+    <select
+        class="select select-bordered select-sm w-full"
+        id="region"
+        name="region"
+        type="single-select"
+        data-label="Region"
+        data-type="single-select"
+        data-name="region"
+        data-section-name="section1"
+        data-required="True"
+    >
+        <option disabled selected></option>
+        <option 
+            value="dakar"
+            data-id="dakar"
+            data-name="Dakar"
+            data-field-name="region"
+        >
+            Dakar
+        </option>
+        <option 
+            value="thies"
+            data-id="thies"
+            data-name="Thies"
+            data-field-name="region"
+        >
+            Thies
+        </option>
+        <option 
+            value="matam"
+            data-id="matam"
+            data-name="Matam"
+            data-field-name="region"
+        >
+            Matam
+        </option>
+        <option 
+            value="kolda"
+            data-id="kolda"
+            data-name="Kolda"
+            data-field-name="region"
+        >
+            Kolda
+        </option>
+    </select>
+    <span id="region_error" ></span>
+</div><div class="flex gap-1 flex-col">
+    <label for="message">Message</label>
+    <textarea 
+        class="textarea textarea-bordered textarea-sm w-full"
+        id="message"
+        name="message"
+        type="textarea"
+        data-label="Message"
+        data-type="textarea"
+        data-name="message"
+        data-section-name="section1"
+        data-required="True"
+    >
+    </textarea>
+    <span id="message_error" ></span>
+</div>
           </div>
 
-
-
-          <!-- Form Buttons -->
-          <div class="flex flex-col justify-center gap-3 px-9 mt-5" id="btnGroup">
-            <button class="btn btn-primary btn-block max-w-max" id="submitBtn" type="submit">
-              Submit
-            </button>
-            <span id="submitBtn_error"></span>
-          </div>
+        <!-- Form Buttons -->
+          <div 
+            class="flex flex-col justify-center gap-3 px-9 mt-5"
+          >
+              <button 
+                class="btn btn-primary btn-block max-w-max"
+                id="submitbtn"
+                type="submit"
+                data-label="Submit"
+                data-can-delete="False"
+                data-type="submit"
+                data-admin-label="Submit button"
+                data-name="submitbtn"
+                data-section-name="btngroup">
+                Submit
+              </button>
+              <span id="submitbtn_error" ></span></div></div>
         </div>
-      </div>
+      </form>
+    
+    </template>
 
-
-    </form>
-  </template>
+    <!-- Please Don't Change the name attribute value. it is used to get the post configuration -->
+    <form-ui name="hello" >
+    </form-ui>
+  <!-- post- end -->
 
   <div id="app"></div>
   <script type="module" src="/src/index.ts"></script>
 
-  <form-ui name="hello"></form-ui>
 </body>
 
 </html>

@@ -1,9 +1,9 @@
 import { createForm, FormApi } from "final-form";
 import TFormConfig from "./common/TFormConfig";
-import { ValidateFunction } from "ajv";
 import validate, { getValidators, TValidator } from "./common/Validator";
-import { isEmpty } from "lodash";
-import getFormConfig, { getErrorClass } from "./dom-utils";
+import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
+import TFieldConfig from "./common/TFieldConfig";
+import { normalizeFormValues } from "./common/field";
 
 
 class FormUI extends HTMLElement {
@@ -11,6 +11,7 @@ class FormUI extends HTMLElement {
   registered: Record<string, boolean>;
   validators: TValidator[];
   formConfig: TFormConfig | null;
+  inputFields: Record<string, TFieldConfig>;
   errors: Record<string, boolean>;
 
   constructor() {
@@ -18,6 +19,7 @@ class FormUI extends HTMLElement {
     this.formConfig = null;
     this.validators = [];
     this.registered = {};
+    this.inputFields = {};
     this.errors = {}
     this.form = null;
 
@@ -44,7 +46,8 @@ class FormUI extends HTMLElement {
       this.form = createForm({
         onSubmit: this.onSubmit,
         initialValues: {},
-        validate: (values: Record<string, any>) => this.validateForm(values)
+        validate: (values: Record<string, any>) => this.validateForm(values),
+
       });
 
 
@@ -54,7 +57,8 @@ class FormUI extends HTMLElement {
       });
 
       Array.from(formElem.elements).forEach(input => {
-        this.registerField(input);
+        const fieldConfig = getFieldConfig(input);
+        this.registerField(fieldConfig, input);
       });
     }
   }
@@ -62,84 +66,79 @@ class FormUI extends HTMLElement {
   validateForm = (values: Record<string, any>) => {
     if (this.validators.length) {
       const validator = this.validators[0];
-      return validate(validator, values);
+      const formValues = normalizeFormValues(this.inputFields, values);
+      return validate(validator, formValues);
     }
 
     return {}
   }
 
   onSubmit = (values: Record<string, any>) => {
-    const errors = this.validateForm(values);
-    if (isEmpty(errors)) {
-      window.alert(JSON.stringify(values, undefined, 2));
-    } else {
-      window.alert("Please Fill the Required Fields.");
-    }
+    const formValues = normalizeFormValues(this.inputFields, values);
+    window.alert(JSON.stringify(formValues, undefined, 2));
   }
 
-  registerField = (input: any) => {
+  registerField = (fieldConfig: TFieldConfig, input: any) => {
     const {
-      name = null
-    } = input;
+      name
+    } = fieldConfig;
 
-    if (name) {
-      this.form?.registerField(
-        name,
-        (fieldState) => {
-          const { blur, change, error, focus, touched, value } = fieldState;
-          const errorElement = document.getElementById(name + "_error");
-          const inputElement = document.getElementById(name);
+    this.form?.registerField(
+      name,
+      (fieldState) => {
+        const { blur, change, error, focus, touched, value } = fieldState;
+        const errorElement = document.getElementById(name + "_error");
+        const inputElement = document.getElementById(name);
 
-  
-          if (!this.registered[name]) {
-            // first time, register event listeners
-            input.addEventListener("blur", () => blur());
-            input.addEventListener("input", (event : any) =>
-              change(
-                input.type === "checkbox"
-                  ? (<HTMLInputElement>event.target)?.checked
-                  : (<HTMLInputElement>event.target)?.value,
-              ),
-            );
-            input.addEventListener("focus", () => focus());
-            this.registered[name] = true;
-          }
-  
-          // update value
-          if (input.type === "checkbox") {
-            (<HTMLInputElement>input).checked = value;
-          } else {
-            input.value = value === undefined ? "" : value;
-          }
-  
-          // show/hide errors
-          if (errorElement && inputElement) {
-            if (touched && error) {
-              const errorClass = getErrorClass(inputElement)
-              errorElement.innerHTML = error;
-              errorElement.style.display = "block";
-              inputElement.classList.add(errorClass);
-              this.errors[name] = true;
-            } else {
-              if (this.errors[name]) {
-                errorElement.innerHTML = "";
-                errorElement.style.display = "none";
-                const errorClass = getErrorClass(inputElement)
-                inputElement.classList.remove(errorClass);
-              }
-              this.errors[name] = false;
-            }
-          }
-        },
-        {
-          value: true,
-          error: true,
-          touched: true,
+
+        if (!this.registered[name]) {
+          // first time, register event listeners
+          input.addEventListener("blur", () => blur());
+          input.addEventListener("input", (event: any) =>
+            change(
+              input.type === "checkbox"
+                ? (<HTMLInputElement>event.target)?.checked
+                : (<HTMLInputElement>event.target)?.value
+            ),
+          );
+          input.addEventListener("focus", () => focus());
+          this.registered[name] = true;
+          this.inputFields[name] = fieldConfig;
         }
-      )
-    }
 
+        // update value
+        if (input.type === "checkbox") {
+          (<HTMLInputElement>input).checked = value;
+        } else {
+          input.value = value === undefined ? "" : value;
+        }
 
+        // show/hide errors
+        if (errorElement && inputElement) {
+          if (touched && error) {
+            const errorClass = getErrorClass(inputElement)
+            console.log("errrrrrrrrrrrrror ", error)
+            errorElement.innerHTML = (error as TValidationError).errorMessage;
+            errorElement.style.display = "block";
+            inputElement.classList.add(errorClass);
+            this.errors[name] = true;
+          } else {
+            if (this.errors[name]) {
+              errorElement.innerHTML = "";
+              errorElement.style.display = "none";
+              const errorClass = getErrorClass(inputElement)
+              inputElement.classList.remove(errorClass);
+            }
+            this.errors[name] = false;
+          }
+        }
+      },
+      {
+        value: true,
+        error: true,
+        touched: true,
+      }
+    )
   }
 }
 

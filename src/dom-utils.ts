@@ -25,9 +25,9 @@ export const ATTR_MEDIA_ID = "mediaId"
 export const ATTR_BACKGROUND = "background"
 export const ATTR_LOGO = "logo"
 export const ATTR_HERO = "hero"
-export const ATTR_MIN_VALUE = "minValue"
-export const ATTR_MAX_VALUE = "maxValue"
-export const ATTR_STEP_VALUE = "stepValue"
+export const ATTR_MIN_VALUE = "min"
+export const ATTR_MAX_VALUE = "max"
+export const ATTR_STEP_VALUE = "step"
 export const ATTR_DEFAULT_VALUE = "defaultValue"
 export const ATTR_MIN_NUM_OF_CHOICES = "minNumOfChoices"
 export const ATTR_MAX_NUM_OF_CHOICES = "maxNumOfChoices"
@@ -70,9 +70,9 @@ export const HTML_ATTR_MEDIA_ID = `${HTML_ATTR_PREFIX}media-id`
 export const HTML_ATTR_BACKGROUND = `${HTML_ATTR_PREFIX}background`
 export const HTML_ATTR_LOGO = `${HTML_ATTR_PREFIX}logo`
 export const HTML_ATTR_HERO = `${HTML_ATTR_PREFIX}hero`
-export const HTML_ATTR_MIN_VALUE = `${HTML_ATTR_PREFIX}min-value`
-export const HTML_ATTR_MAX_VALUE = `${HTML_ATTR_PREFIX}max-value`
-export const HTML_ATTR_STEP_VALUE = `${HTML_ATTR_PREFIX}step-value`
+export const HTML_ATTR_MIN_VALUE = `${HTML_ATTR_PREFIX}min`
+export const HTML_ATTR_MAX_VALUE = `${HTML_ATTR_PREFIX}max`
+export const HTML_ATTR_STEP_VALUE = `${HTML_ATTR_PREFIX}step`
 export const HTML_ATTR_DEFAULT_VALUE = `${HTML_ATTR_PREFIX}default-value`
 export const HTML_ATTR_MIN_NUM_OF_CHOICES = `${HTML_ATTR_PREFIX}min-num-of-choices`
 export const HTML_ATTR_MAX_NUM_OF_CHOICES = `${HTML_ATTR_PREFIX}max-num-of-choices`
@@ -144,28 +144,33 @@ export const ATTR_MAP = {
 
 
 
-function getFieldConfigList(sectionNodes: NodeListOf<Element>): TFieldConfig[] {
-    const res : TFieldConfig[] = [];
+function getFieldConfigList(nodes: NodeListOf<Element>): TFieldConfig[] {
+    const res: TFieldConfig[] = [];
 
-    sectionNodes.forEach((sectionNode) => {
-        const randomId = shortUUID.generate();
-        const fieldConfig : TFieldConfig = {type: UNKNOWN_TYPE, name: randomId, label: randomId}
-        for (const [dashKey, camelKey] of Object.entries(ATTR_MAP)) {
-            const attrValue = sectionNode.getAttribute(dashKey)
-            if (attrValue) {
-                (fieldConfig as any)[camelKey] = attrValue;
-            }
-        }
-
+    nodes.forEach((node) => {
+        const fieldConfig: TFieldConfig = getFieldConfig(node);
         res.push(fieldConfig)
     })
 
     return res;
 }
 
+export function getFieldConfig(node: Element): TFieldConfig {
+    const randomId = shortUUID.generate();
+    const fieldConfig: TFieldConfig = { type: UNKNOWN_TYPE, name: randomId, label: randomId }
+    for (const [dashKey, camelKey] of Object.entries(ATTR_MAP)) {
+        const attrValue = node.getAttribute(dashKey)
+        if (attrValue) {
+            (fieldConfig as any)[camelKey] = attrValue;
+        }
+    }
+
+    return fieldConfig;
+}
+
 
 export default function getFormConfig(node: Element): TFormConfig {
-    const formConfig : TFormConfig = DEFAULT_FORM_CONFIG;
+    const formConfig: TFormConfig = DEFAULT_FORM_CONFIG;
 
     for (const [dashKey, camelKey] of Object.entries(ATTR_MAP)) {
         const attrValue = node.getAttribute(dashKey)
@@ -183,13 +188,13 @@ export default function getFormConfig(node: Element): TFormConfig {
         const fieldList = getFieldConfigList(fieldNodes);
         formConfig.sections[sectionConfig.name] = fieldList;
     })
-    
+
 
     return formConfig;
 }
 
 
-export function getErrorClass(input: any) : string {
+export function getErrorClass(input: any): string {
     switch (input.type) {
         case 'textarea':
             return 'textarea-error'

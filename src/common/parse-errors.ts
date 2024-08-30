@@ -42,48 +42,30 @@ export function parseServerErrors(errors: Record<string, string>) : Record<strin
 
 
 
-export default function parseErrors(errors : null | undefined | ErrorObject[], fieldMap?: Record<string, TFieldConfig>) : Record<string, string>  {
-    const res : Record<string, string> = {};
+export default function parseErrors(errors : null | undefined | ErrorObject[], fieldMap?: Record<string, TFieldConfig>) : Record<string, TValidationError>  {
+    const res : Record<string, TValidationError> = {};
 
     if (errors) {
         errors.forEach(error => {
             let fieldName : string | null = null;
-            let errorMsg : string | null = null;
+            let errorMessage : string | null = null;
+            console.log(error.keyword, "   ", error)
 
-            switch (error.keyword) {
-                case 'required':
-                    fieldName= error.params.missingProperty;
-                    errorMsg = getErrorLabel(error.keyword);
-                    break;
-
-                case 'format':
-                    fieldName = error.instancePath.slice(1);
-                    errorMsg = getErrorLabel(error.keyword, error.message);
-                    break;
-        
-                case 'minLength':
-                    fieldName = error.instancePath.slice(1);
-                    errorMsg = getErrorLabel(error.keyword, error.message, error.params.limit);
-                    break;
-
-                case 'maxLength':
-                    fieldName = error.instancePath.slice(1);
-                    errorMsg = getErrorLabel(error.keyword, error.message, error.params.limit);
-                    break;
-
-                
-                case 'errorMessage':
-                    fieldName = error.instancePath.slice(1);
-                    errorMsg = getErrorLabel(error.keyword, error.message);
-                    break;
-                default:
-                    break;
+            if (error.keyword === 'required') {
+                fieldName= error.params.missingProperty;
+                errorMessage = getErrorLabel(error.keyword);
+            } else {
+                fieldName = error.instancePath.slice(1);
+                errorMessage = error.message || '';
             }
 
-            if (fieldName && errorMsg) {
+            if (fieldName && errorMessage) {
                 const fieldConfig = fieldMap && fieldMap.hasOwnProperty(fieldName) ? fieldMap[fieldName] : null;
-                errorMsg = fieldConfig ? fieldConfig.errorMsg || errorMsg : errorMsg;
-                res[fieldName] = errorMsg;
+                errorMessage = fieldConfig ? fieldConfig.errorMsg || errorMessage : errorMessage;
+                res[fieldName] = {
+                    errorMessage,
+                    errorData: error
+                }
             }
 
         })

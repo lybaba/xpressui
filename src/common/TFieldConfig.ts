@@ -36,10 +36,10 @@ type TFieldConfig = {
     background?: string;
     logo?: string;
     hero?: string;
-    minValue?: number;
-    maxValue?: number;
-    stepValue?: number;
-    defaultValue?: string;
+    min?: any;
+    max?: any;
+    step?: any;
+    defaultValue?: any;
     minNumOfChoices?: number;
     maxNumOfChoices?: number;
     helpText?: string;

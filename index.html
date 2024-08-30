@@ -12,9 +12,8 @@
 
 <body>
   
-    <!-- post template -->
+   <!-- post template -->
     <!-- Don't remove attribe id, data-type required for the WebComponent iak-post-ui to work properly -->
-
     <template id="hello">
     
       <form
@@ -22,9 +21,10 @@
         data-type="contactform"
         data-name="hello"
         data-label="Hello"
-        data-id="fWEa1utBxSnB8VvDVWozeZ"
-        data-uid="HLo1ocq1TSVlxSNPBxmLQqQO1kHH"
-        data-timestamp="1724860707"
+        data-id="2UbHEhWLytv1M1qrdCvo7G"
+        data-uid="7X0ICRD51opVUiqbIugv3UY2Kev6"
+        data-timestamp="1724902038"
+        novalidate
       >
       <div class="grid justify-items-center">
         <div class="p-4 w-full max-w-3xl">
@@ -32,48 +32,24 @@
           <!-- Sections -->
           <div 
             id="section1"
-            class="flex flex-col justify-center gap-3 px-9"
+            class="flex flex-col justify-center"
             data-name="section1"
             data-can-delete="False"
             data-type="section"
             data-label="Section 1"
-          >
-          <label class="form-control w-full">
-            <div class="label">
-              <span class="label-text">Email</span>
-            </div>
-            <input 
-                class="input input-bordered input-sm w-full" 
-                id="email"
-                name="email"
-                type="email"
-                data-name="email"
-                data-can-delete="False"
-                data-type="email"
-                data-required="True"
-                data-label="Email"
-                data-section-name="section1"
-                data-error-msg="Email Invalide"
-            />
-            <div class="label">
-              <span
-                class="label-text-alt" 
-                id="email_error" >
-              </span>
-            </div>
-          </label>
-              <div class="flex gap-1 flex-col">
-    <label for="region">Region</label>
+          ><label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Region</span>
+    </div>
     <select
         class="select select-bordered select-sm w-full"
         id="region"
         name="region"
-        type="single-select"
+        type="select-one"
         data-label="Region"
-        data-type="single-select"
+        data-type="select-one"
         data-name="region"
         data-section-name="section1"
-        data-required="True"
     >
         <option disabled selected></option>
         <option 
@@ -109,9 +85,204 @@
             Kolda
         </option>
     </select>
-    <span id="region_error" ></span>
-</div><div class="flex gap-1 flex-col">
-    <label for="message">Message</label>
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="region_error"
+        >
+        </span>
+    </div>
+</label><label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Choix</span>
+    </div>
+    <select
+        class="select select-bordered select-sm w-full"
+        id="choix"
+        name="choix"
+        type="select-one"
+        data-label="Choix"
+        data-type="select-one"
+        data-name="choix"
+        data-section-name="section1"
+    >
+        <option disabled selected></option>
+    </select>
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="choix_error"
+        >
+        </span>
+    </div>
+</label><label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Date</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="date"
+        name="date"
+        type="datetime-local"
+        placeholder=""
+        data-label="Date"
+        data-type="datetime"
+        data-name="date"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="date_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Tax</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="tax"
+        name="tax"
+        type="number"
+        placeholder=""
+        data-label="Tax"
+        data-type="tax"
+        data-name="tax"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="tax_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Prix</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="prix"
+        name="prix"
+        type="number"
+        placeholder=""
+        data-label="Prix"
+        data-type="price"
+        data-placeholder=""
+        data-name="prix"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="prix_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Password</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="password"
+        name="password"
+        type="password"
+        placeholder=""
+        data-label="Password"
+        data-type="password"
+        data-name="password"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="password_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Email2</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="email_2"
+        name="email_2"
+        type="email"
+        placeholder=""
+        data-label="Email2"
+        data-type="email"
+        data-name="email_2"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="email_2_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Phone</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="phone"
+        name="phone"
+        type="tel"
+        placeholder=""
+        data-label="Phone"
+        data-type="tel"
+        data-name="phone"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="phone_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Email</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="email"
+        name="email"
+        type="email"
+        placeholder=""
+        data-name="email"
+        data-can-delete="False"
+        data-type="email"
+        data-required="True"
+        data-label="Email"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="email_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Message</span>
+    </div>
     <textarea 
         class="textarea textarea-bordered textarea-sm w-full"
         id="message"
@@ -121,16 +292,21 @@
         data-type="textarea"
         data-name="message"
         data-section-name="section1"
-        data-required="True"
     >
     </textarea>
-    <span id="message_error" ></span>
-</div>
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="message_error"
+        >
+        </span>
+    </div>
+</label>
           </div>
 
         <!-- Form Buttons -->
           <div 
-            class="flex flex-col justify-center gap-3 px-9 mt-5"
+            class="flex flex-col justify-center mt-5"
           >
               <button 
                 class="btn btn-primary btn-block max-w-max"
@@ -147,13 +323,13 @@
               <span id="submitbtn_error" ></span></div></div>
         </div>
       </form>
-    
+
     </template>
 
     <!-- Please Don't Change the name attribute value. it is used to get the post configuration -->
     <form-ui name="hello" >
     </form-ui>
-  <!-- post- end -->
+  <!-- post-hello end -->
 
   <div id="app"></div>
   <script type="module" src="/src/index.ts"></script>

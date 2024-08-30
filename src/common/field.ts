@@ -2,8 +2,10 @@
 import TFieldConfig from './TFieldConfig';
 
 import slugify from 'slugify';
-import { lowerCase } from 'lodash';
+import { isEmpty, lowerCase } from 'lodash';
 import TFieldType from './TFieldType';
+import { TValidator } from './Validator';
+import { FieldConfig } from 'final-form';
 
 export const SECTION_TYPE = 'section';
 
@@ -22,14 +24,18 @@ export const NUMBER_TYPE = 'number';
 export const POSITIVE_INTEGER_TYPE = 'integer';
 export const PRICE_TYPE = 'price';
 export const PASSWORD_TYPE = 'password';
+export const SEARCH_TYPE = 'search';
+export const RANGE_TYPE = 'range';
+export const COLOR_TYPE = 'color';
+export const AGE_TYPE = 'age';
 export const SELECT_ONE_TYPE = 'select-one';
 export const RADIO_BUTTONS_TYPE = 'radio-buttons';
 export const BTNGROUP_TYPE = 'btngroup';
 export const CALL2ACTION_GROUP_TYPE = 'call2action-group';
 export const CALL2ACTION_TYPE = 'call2action';
 
-export const ACTION_TYPE_TYPE= 'action-type';
-export const ACTION_TARGET_TYPE= 'action-target';
+export const ACTION_TYPE_TYPE = 'action-type';
+export const ACTION_TARGET_TYPE = 'action-target';
 
 export const SELECT_MULTIPLE_TYPE = 'select-multiple';
 export const CHECKBOXES_TYPE = 'checkboxes';
@@ -57,7 +63,7 @@ export const HEADER_NAV_TYPE = 'header-nav';
 export const TITLE_TYPE = 'title';
 export const HTML_TYPE = 'html';
 export const FORM_TYPE = 'form';
-export const HEADER_TITLE_TYPE = 'header-title';
+export const HEADER_TYPE = 'header';
 
 export const LINK_TYPE = 'link';
 export const UNKNOWN_TYPE = 'unknown';
@@ -65,7 +71,7 @@ export const UNKNOWN_TYPE = 'unknown';
 export const FORM_SECTION_LABEL = 'Custom Section';
 export const LOGO_LABEL = 'Logo';
 export const BODY_LABEL = 'Body';
-export const HEADER_TITLE_LABEL = 'Header';
+export const HEADER_LABEL = 'Header';
 export const HERO_LABEL = 'Hero Section';
 export const FOOTER_LABEL = 'Footer';
 export const HEADER_NAV_LABEL = 'Header Menu';
@@ -77,14 +83,14 @@ export const CALL2ACTION_TYPE_LABEL = 'Call-To-Action Button';
 export const FIELDGROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: SECTION_TYPE, name: FORM_SECTION_LABEL };
 export const BTNGROUP_TYPE_FIELD: TFieldType = { type: BTNGROUP_TYPE, name: BTNGROUP_TYPE_LABEL };
 
-export const HERO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HERO_TYPE, name: HERO_LABEL, adminLabel: HERO_LABEL  };
+export const HERO_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HERO_TYPE, name: HERO_LABEL, adminLabel: HERO_LABEL };
 
 
 export const CALL2ACTION_GROUP_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: CALL2ACTION_GROUP_TYPE, name: CALL2ACTION_GROUP_TYPE_LABEL, adminLabel: CALL2ACTION_GROUP_TYPE_LABEL };
 export const CALL2ACTION_TYPE_FIELD: TFieldType = { type: CALL2ACTION_TYPE, name: CALL2ACTION_TYPE_LABEL };
 
 export const HEADER_NAV_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_NAV_TYPE, name: HEADER_NAV_LABEL, adminLabel: HEADER_NAV_LABEL };
-export const HEADER_TITLE_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_TITLE_TYPE, name: HEADER_TITLE_LABEL, adminLabel: HEADER_TITLE_LABEL };
+export const HEADER_TITLE_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: HEADER_TYPE, name: HEADER_LABEL, adminLabel: HEADER_LABEL };
 export const FOOTER_TYPE_FIELD: TFieldType = { type: SECTION_TYPE, subType: FOOTER_TYPE, name: FOOTER_LABEL, adminLabel: FOOTER_LABEL };
 
 export const TEXT_TYPE_FIELD: TFieldType = { type: TEXT_TYPE, name: 'Text Field' };
@@ -151,7 +157,7 @@ export const PRICING_DECIMAL_VALUES = [
 
 export const getIsChoiceField = (type: string): boolean => {
     return type === SELECT_MULTIPLE_TYPE ||
-          type === SELECT_ONE_TYPE
+        type === SELECT_ONE_TYPE
 }
 
 export const buildSlug = (name: string) => {
@@ -172,28 +178,157 @@ export const getFieldName = (fieldIndex: number, fieldConfig: TFieldConfig): str
     return `field${fieldIndex}`;
 }
 
-export const getBooleanValue  = (value: any) : boolean => {
+export const getBooleanValue = (value: any): boolean => {
     if (typeof value === 'boolean')
-      return value;
-  
+        return value;
+
     if (typeof value === 'string')
-      return value === 'true' ? true : false;
-  
+        return value === 'true' ? true : false;
+
     if (typeof value === 'number')
-      return value === 0 ? false : true;
-  
+        return value === 0 ? false : true;
+
     return false;
-  }
+}
 
 
-export const doNormalizeFieldValue = (fieldConfig: TFieldConfig, value: any) : any => {
+export const doNormalizeFieldValue = (fieldConfig: TFieldConfig, value: any): any => {
     switch (fieldConfig.type) {
         case CHECKBOX_TYPE:
         case SWITCH_TYPE:
             return getBooleanValue(value);
+
+        case DATETIME_TYPE:
+            return value ? value.replace('T', ' ') : value
+
+        case NUMBER_TYPE:
+        case PRICE_TYPE:
+        case TAX_TYPE:
+            return parseFloat(value)
+
+        case POSITIVE_INTEGER_TYPE:
+        case AGE_TYPE:
+            return parseInt(value)
 
         default:
             return value;
 
     }
 };
+
+export function normalizeFormValues(fieldMap: Record<string, TFieldConfig>, formValues: Record<string, any>) : Record<string, any> {
+    const res: Record<string, any> = {}
+
+    for (const [fieldName, fieldVal] of Object.entries(formValues)) {
+        const fieldConfig = fieldMap[fieldName];
+        if (!isEmpty(fieldVal) && fieldConfig) {
+            res[fieldName] = doNormalizeFieldValue(fieldConfig, fieldVal);
+        }
+    }
+
+    return res;
+}
+
+
+export const getHtmlInputType = (fieldType: string): string => {
+    switch (fieldType) {
+        case TEXT_TYPE:
+            return "text";
+
+        case EMAIL_TYPE:
+            return "email";
+
+        case PASSWORD_TYPE:
+            return "password"
+
+        case NUMBER_TYPE:
+        case PRICE_TYPE:
+        case TAX_TYPE:
+        case AGE_TYPE:
+        case POSITIVE_INTEGER_TYPE:
+            return "number";
+
+        case DATETIME_TYPE:
+            return "datetime-local";
+
+        case DATE_TYPE:
+            return "date";
+
+        case TIME_TYPE:
+            return "time";
+
+        case TEL_TYPE:
+            return "tel";
+
+        case SEARCH_TYPE:
+            return "search";
+
+        case RANGE_TYPE:
+            return "range";
+
+        case COLOR_TYPE:
+            return "color";
+
+        default:
+            return fieldType
+    }
+}
+
+
+export const getHtmlInputProps = (fieldConfig: TFieldConfig): Record<string, any> => {
+    switch (fieldConfig.type) {
+        case PRICE_TYPE:
+            return {
+                min: 0
+            };
+
+        case TAX_TYPE:
+            return {
+                min: 0,
+                max: 1
+            }
+
+        case POSITIVE_INTEGER_TYPE:
+            return {
+                min: 0,
+                step: 1
+            }
+
+        case AGE_TYPE:
+            return {
+                min: 0,
+                step: 1,
+                max: 150
+            }
+
+        case RANGE_TYPE:
+            {
+                const minProp = fieldConfig.min ? { min: Number(fieldConfig.min) } : {};
+                const maxProp = fieldConfig.max ? { max: Number(fieldConfig.max) } : {};
+                const stepProp = fieldConfig.step ? { step: Number(fieldConfig.step) } : {};
+
+                return {
+                    ...minProp,
+                    ...maxProp,
+                    ...stepProp
+                }
+            }
+
+        case DATE_TYPE:
+            {
+                const minProp = fieldConfig.min ? { min: fieldConfig.min } : {};
+                const maxProp = fieldConfig.max ? { max: fieldConfig.max } : {};
+                const stepProp = fieldConfig.step ? { step: fieldConfig.step } : {};
+
+                return {
+                    ...minProp,
+                    ...maxProp,
+                    ...stepProp
+                }
+            }
+
+
+        default:
+            return {}
+    }
+}

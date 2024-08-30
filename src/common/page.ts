@@ -2,7 +2,7 @@ import {
     HEADER_NAV_TYPE,
     HERO_TYPE,
     CALL2ACTION_GROUP_TYPE,
-    HEADER_TITLE_TYPE,
+    HEADER_TYPE,
     FOOTER_TYPE,
 } from "./field";
 import TFieldConfig from "./TFieldConfig";
@@ -27,7 +27,7 @@ const ADMIN_SECTIONS : string[] =  [
     HEADER_NAV_TYPE,
     HERO_TYPE,
     CALL2ACTION_GROUP_TYPE,
-    HEADER_TITLE_TYPE,
+    HEADER_TYPE,
     FOOTER_TYPE,
 ];
 
@@ -39,7 +39,7 @@ export default function getPageConfig(formConfig: TFormConfig) : TPageConfig {
 
     // Header Section
     {
-        const fieldConfig = getSectionByName(formConfig, HEADER_TITLE_TYPE);
+        const fieldConfig = getSectionByName(formConfig, HEADER_TYPE);
         if (fieldConfig) {
             res.headerTitleConfig = fieldConfig;
         }

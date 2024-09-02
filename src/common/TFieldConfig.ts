@@ -46,7 +46,6 @@ type TFieldConfig = {
     errorMsg?: string;
     successMsg?: string;
     nextBtnLabel?: string;
-    choiceGroupId?: string;
     choices?: Array<TChoice>;
     mediaInfo?: TMediaInfo;
     mediaInfoList?: TMediaInfo[];
@@ -54,6 +53,8 @@ type TFieldConfig = {
     parent?: TFieldConfig;
     linkType?: string;
     linkPath?: string;
+    width?: string;
+    layout?: string;
 };
 
 export type TFieldConfigInfo = {

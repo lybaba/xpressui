@@ -212,7 +212,7 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
         case SELECT_ONE_TYPE:
             res.type = "string"
             if (fieldConfig.choices)
-                res.enum = fieldConfig.choices.map((opt: TChoice) => opt.id);
+                res.enum = fieldConfig.choices.map((opt: TChoice) => opt.value);
             break;
 
         case DATETIME_TYPE:

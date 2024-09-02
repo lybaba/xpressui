@@ -332,3 +332,22 @@ export const getHtmlInputProps = (fieldConfig: TFieldConfig): Record<string, any
             return {}
     }
 }
+
+
+export function getSizes(width: string) : Record<string, number> {
+    const tab = width.split(' ');
+    const sizes : Record<string, number> = {};
+    tab.forEach((token) => {
+        const tab2 = token.split('-');
+       
+        if (tab2.length == 2) {
+            const sizeName = tab2[0];
+            const sizeVal = Number(tab2[1]);
+            if (['xl', 'md', 'sm', 'xs'].includes(sizeName)) {
+                sizes[sizeName] = sizeVal;
+            }
+        }
+    });
+
+    return sizes;
+}

@@ -23,8 +23,17 @@ export const CHOICE_FORM_TYPE = 'choiceform';
 
 
 export type TFormSettings = {
-    label: string;
+    title: string;
     subforms?: TChoice[];
+    background?: string;
+    bgcolor?: string;
+    textcolor?: string;
+    justifyContent?: string;
+    alignItems?: string;
+    spacing?: number;
+    gap?: number;
+    maxWidth?: string;
+    maxHeight?: string;
 };
 
 export enum RenderingMode {
@@ -39,12 +48,21 @@ type TFormConfig = {
     uid: string;
     type: string;
     name: string;
-    label: string;
+    title: string;
     timestamp?: number;
     sections: Record<string, TFieldConfig[]>;
     subforms?: TChoice[];
     choices?: TChoice[];
+    background?: string;
     renderingMode?: RenderingMode;
+    justifyContent?: string;
+    alignItems?: string;
+    spacing?: number;
+    gap?: number;
+    maxWidth?: string;
+    maxHeight?: string;
+    bgcolor?: string;
+    textcolor?: string;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {
@@ -53,7 +71,7 @@ export const DEFAULT_FORM_CONFIG: TFormConfig = {
     timestamp: Math.floor(Date.now() / 1000),
     type: CONTACTFORM_TYPE,
     name: 'demo',
-    label: 'demo',
+    title: 'demo',
     sections: {[CUSTOM_SECTION]: []},
 }
 

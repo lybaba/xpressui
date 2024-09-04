@@ -55,6 +55,7 @@ export const SWITCH_TYPE = 'switch';
 export const GRID_SIZE_TYPE = 'grid-size';
 export const SLIDER_TYPE = 'slider';
 export const SUBFORMS_TYPE = 'subforms';
+export const SUBFIELDS_TYPE = 'subfields';
 
 export const LOGO_TYPE = 'logo';
 export const HERO_TYPE = 'hero';
@@ -204,10 +205,16 @@ export const doNormalizeFieldValue = (fieldConfig: TFieldConfig, value: any): an
         case NUMBER_TYPE:
         case PRICE_TYPE:
         case TAX_TYPE:
+            if (Number.isNaN(value) || value === 'NaN')
+                return 0;
+
             return parseFloat(value)
 
         case POSITIVE_INTEGER_TYPE:
         case AGE_TYPE:
+            if (Number.isNaN(value) || value === 'NaN')
+                return 0;
+
             return parseInt(value)
 
         default:

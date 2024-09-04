@@ -55,6 +55,15 @@ type TFieldConfig = {
     linkPath?: string;
     width?: string;
     layout?: string;
+    justifyContent?: string;
+    alignItems?: string;
+    spacing?: number;
+    gap?: number;
+    bgcolor?: string;
+    textcolor?: string;
+    maxWidth?: string;
+    maxHeight?: string;
+    subfields?: TChoice[];
 };
 
 export type TFieldConfigInfo = {

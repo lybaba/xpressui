@@ -345,7 +345,7 @@ export function getSizes(width: string) : Record<string, number> {
     const tab = width.split(' ');
     const sizes : Record<string, number> = {};
     tab.forEach((token) => {
-        const tab2 = token.split('-');
+        const tab2 = token.split(':');
        
         if (tab2.length == 2) {
             const sizeName = tab2[0];

@@ -1,7 +1,7 @@
 import { TMediaInfo } from "./TMediaFile";
 
 type TChoice = {
-    name: string;
+    value: string;
     label: string;
     desc?: string;
     mediaId?: string;
@@ -11,7 +11,6 @@ type TChoice = {
     regularPrice?: number;
     salePrice?: number;
     disabled?: boolean;
-    meta?: Record<string, string>
 }
 
 export default TChoice;

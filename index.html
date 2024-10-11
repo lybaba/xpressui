@@ -1,18 +1,339 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="XPressUI, Form Builder, Post UI Builder"
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="XPressUI, Form Builder, Post UI Builder" />
+  <link href="./index.css" rel="stylesheet">
+  <title>IAKPress</title>
+</head>
+
+<body>
+  
+   <!-- post template -->
+    <!-- Don't remove attribe id, data-type required for the WebComponent iak-post-ui to work properly -->
+    <template id="hello">
+    
+      <form
+        id="hello_form"
+        data-type="contactform"
+        data-name="hello"
+        data-label="Hello"
+        data-id="2UbHEhWLytv1M1qrdCvo7G"
+        data-uid="7X0ICRD51opVUiqbIugv3UY2Kev6"
+        data-timestamp="1724902038"
+        novalidate
+      >
+      <div class="grid justify-items-center">
+        <div class="p-4 w-full max-w-3xl">
+          
+          <!-- Sections -->
+          <div 
+            id="section1"
+            class="flex flex-col justify-center"
+            data-name="section1"
+            data-can-delete="False"
+            data-type="section"
+            data-label="Section 1"
+          ><label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Region</span>
+    </div>
+    <select
+        class="select select-bordered select-sm w-full"
+        id="region"
+        name="region"
+        type="select-one"
+        data-label="Region"
+        data-type="select-one"
+        data-name="region"
+        data-section-name="section1"
+    >
+        <option disabled selected></option>
+        <option 
+            value="dakar"
+            data-id="dakar"
+            data-name="Dakar"
+            data-field-name="region"
+        >
+            Dakar
+        </option>
+        <option 
+            value="thies"
+            data-id="thies"
+            data-name="Thies"
+            data-field-name="region"
+        >
+            Thies
+        </option>
+        <option 
+            value="matam"
+            data-id="matam"
+            data-name="Matam"
+            data-field-name="region"
+        >
+            Matam
+        </option>
+        <option 
+            value="kolda"
+            data-id="kolda"
+            data-name="Kolda"
+            data-field-name="region"
+        >
+            Kolda
+        </option>
+    </select>
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="region_error"
+        >
+        </span>
+    </div>
+</label><label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Choix</span>
+    </div>
+    <select
+        class="select select-bordered select-sm w-full"
+        id="choix"
+        name="choix"
+        type="select-one"
+        data-label="Choix"
+        data-type="select-one"
+        data-name="choix"
+        data-section-name="section1"
+    >
+        <option disabled selected></option>
+    </select>
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="choix_error"
+        >
+        </span>
+    </div>
+</label><label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Date</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="date"
+        name="date"
+        type="datetime-local"
+        placeholder=""
+        data-label="Date"
+        data-type="datetime"
+        data-name="date"
+        data-section-name="section1"
     />
-    <title>IAKPress</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root" data-post-name="multi-step-form" ></div>
-    <script type="module" src="src/index.tsx"></script>
-  </body>
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="date_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Tax</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="tax"
+        name="tax"
+        type="number"
+        placeholder=""
+        data-label="Tax"
+        data-type="tax"
+        data-name="tax"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="tax_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Prix</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="prix"
+        name="prix"
+        type="number"
+        placeholder=""
+        data-label="Prix"
+        data-type="price"
+        data-placeholder=""
+        data-name="prix"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="prix_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Password</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="password"
+        name="password"
+        type="password"
+        placeholder=""
+        data-label="Password"
+        data-type="password"
+        data-name="password"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="password_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Email2</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="email_2"
+        name="email_2"
+        type="email"
+        placeholder=""
+        data-label="Email2"
+        data-type="email"
+        data-name="email_2"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="email_2_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Phone</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="phone"
+        name="phone"
+        type="tel"
+        placeholder=""
+        data-label="Phone"
+        data-type="tel"
+        data-name="phone"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="phone_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Email</span>
+    </div>
+    <input 
+        class="input input-bordered input-sm w-full" 
+        id="email"
+        name="email"
+        type="email"
+        placeholder=""
+        data-name="email"
+        data-can-delete="False"
+        data-type="email"
+        data-required="True"
+        data-label="Email"
+        data-section-name="section1"
+    />
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="email_error"
+        >
+        </span>
+    </div>
+</label>
+              <label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Message</span>
+    </div>
+    <textarea 
+        class="textarea textarea-bordered textarea-sm w-full"
+        id="message"
+        name="message"
+        type="textarea"
+        data-label="Message"
+        data-type="textarea"
+        data-name="message"
+        data-section-name="section1"
+    >
+    </textarea>
+    <div class="label">
+        <span
+          class="label-text-alt" 
+          id="message_error"
+        >
+        </span>
+    </div>
+</label>
+          </div>
+
+        <!-- Form Buttons -->
+          <div 
+            class="flex flex-col justify-center mt-5"
+          >
+              <button 
+                class="btn btn-primary btn-block max-w-max"
+                id="submitbtn"
+                type="submit"
+                data-label="Submit"
+                data-can-delete="False"
+                data-type="submit"
+                data-admin-label="Submit button"
+                data-name="submitbtn"
+                data-section-name="btngroup">
+                Submit
+              </button>
+              <span id="submitbtn_error" ></span></div></div>
+        </div>
+      </form>
+
+    </template>
+
+    <!-- Please Don't Change the name attribute value. it is used to get the post configuration -->
+    <form-ui name="hello" >
+    </form-ui>
+  <!-- post-hello end -->
+
+  <div id="app"></div>
+  <script type="module" src="/src/index.ts"></script>
+
+</body>
+
 </html>

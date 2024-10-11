@@ -3,6 +3,7 @@ enum TComponentType {
     FIELD_TYPE = 'field',
     INPUT_TYPE = 'input',
     LABEL_TYPE = 'label',
+    LIST_TYPE = 'list',
     BTN_GROUP_TYPE = 'btn-group',
     PREV_BTN_INPUT_TYPE = 'prev-btn-input',
     PREV_BTN_LABEL_TYPE = 'prev-btn-label',
@@ -12,7 +13,9 @@ enum TComponentType {
     SUBMIT_BTN_LABEL_TYPE = 'submit-btn-label',
     STEPPER_TYPE = 'stepper',
     STEP_TYPE = 'step',
-    STEP_INDICATOR_TYPE = 'step-indicator',  
+    STEP_INDICATOR_TYPE = 'step-indicator', 
+    FORM_BODY = 'form-body',
+    FORM_TITLE = 'form-title',
 };
 
 export default TComponentType;

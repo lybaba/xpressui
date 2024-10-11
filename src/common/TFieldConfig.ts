@@ -6,14 +6,26 @@ export type ImageSize = {
     height: number;
 };
 
+export const HERO_FIELD_NAME = 'hero';
+export const HERO_FIELD_LABEL = 'Hero Image';
+
+export const LOGO_FIELD_NAME = 'logo';
+export const LOGO_FIELD_LABEL = 'Logo Image';
+
+export const BG_FIELD_NAME = 'background';
+export const BG_FIELD_LABEL = 'Background Image';
+
+
 type TFieldConfig = {
     type: string;
     label: string;
+    adminLabel?: string;
     name: string;
     subType?: string;
     refType?: string;
     desc?: string;
     canDelete?: boolean;
+    canEdit?: boolean;
     required?: boolean;
     unique?: boolean;
     minLen?: number;
@@ -21,10 +33,13 @@ type TFieldConfig = {
     placeholder?: string;
     pattern?: string;
     mediaId?: string;
-    minValue?: number;
-    maxValue?: number;
-    stepValue?: number;
-    defaultValue?: number;
+    background?: string;
+    logo?: string;
+    hero?: string;
+    min?: any;
+    max?: any;
+    step?: any;
+    defaultValue?: any;
     minNumOfChoices?: number;
     maxNumOfChoices?: number;
     helpText?: string;
@@ -34,6 +49,21 @@ type TFieldConfig = {
     choices?: Array<TChoice>;
     mediaInfo?: TMediaInfo;
     mediaInfoList?: TMediaInfo[];
+    isAdminField?: boolean;
+    parent?: TFieldConfig;
+    linkType?: string;
+    linkPath?: string;
+    width?: string;
+    layout?: string;
+    justifyContent?: string;
+    alignItems?: string;
+    spacing?: number;
+    gap?: number;
+    bgcolor?: string;
+    textcolor?: string;
+    maxWidth?: string;
+    maxHeight?: string;
+    subfields?: TChoice[];
 };
 
 export type TFieldConfigInfo = {

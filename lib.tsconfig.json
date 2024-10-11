@@ -16,7 +16,10 @@
     "strict": true,
     "noImplicitAny": true,
     "declaration": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": [
+      "vite/client"
+    ]
   },
   "include": [
     "src/**/*"

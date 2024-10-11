@@ -1,42 +1,17 @@
 import Ajv from "ajv";
 import addFormats from 'ajv-formats';
 import addErrors from 'ajv-errors';
-import TPostConfig from "./TPostConfig";
 
 export const ajv = new Ajv({ allErrors: true });
 addFormats(ajv);
 addErrors(ajv);
 
-export type FrontendClientArgs = {
-  postConfig: TPostConfig;
-  baseUrl: string;
-  imagesBaseUrl: string;
-}
 
-export class FrontendClient {
-  private _baseUrl: string;
-  private _imagesBaseUrl: string;
-  private _postConfig: TPostConfig;
+const dateTimeRegex = new RegExp('^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9]) (2[0-3]|[01][0-9]):([0-5][0-9])?$');
 
-  constructor(args: FrontendClientArgs) {
-    this._baseUrl = args.baseUrl;
-    this._imagesBaseUrl = args.imagesBaseUrl;
-    this._postConfig = args.postConfig;
-  }
-
-  get postConfig() {
-    return this._postConfig;
-  }
-
-
-  get baseUrl() {
-    return this._baseUrl;
-  }
-
-  get imagesBaseUrl() {
-    return this._imagesBaseUrl;
-  }
-}
-
-export default FrontendClient;
-
+ajv.addFormat('date-time', {
+    validate: (date: string) => {
+        const res =  dateTimeRegex.test(date)
+        return res
+    }
+})

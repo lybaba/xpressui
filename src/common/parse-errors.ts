@@ -1,8 +1,9 @@
 import { ErrorObject } from 'ajv';
+import TFieldConfig from './TFieldConfig';
 
-const REQUIRED_FIELD_MSG = "This field is required.";
-const FIELD_VALUE_TOO_LONG = "Data too long for field (max length : %s Characters)";
-const FIELD_VALUE_TOO_SHORT = "Data too short for field (min length : %s Characters)";
+export const REQUIRED_FIELD_MSG = "This field is required.";
+export const FIELD_VALUE_TOO_LONG = "Data too long for field (max length : %s Characters)";
+export const FIELD_VALUE_TOO_SHORT = "Data too short for field (min length : %s Characters)";
 
 function getErrorLabel(errorKey: string, errorValue: string = "", limit: number = 0) : string {
     switch (errorKey) {
@@ -41,35 +42,32 @@ export function parseServerErrors(errors: Record<string, string>) : Record<strin
 
 
 
-export default function parseErrors(errors : null | undefined | ErrorObject[]) : Record<string, string>  {
-    const res : Record<string, string> = {};
+export default function parseErrors(errors : null | undefined | ErrorObject[], fieldMap?: Record<string, TFieldConfig>) : Record<string, TValidationError>  {
+    const res : Record<string, TValidationError> = {};
 
     if (errors) {
         errors.forEach(error => {
-            switch (error.keyword) {
-                case 'required':
-                    res[error.params.missingProperty] = getErrorLabel(error.keyword);
-                    break;
+            let fieldName : string | null = null;
+            let errorMessage : string | null = null;
+            console.log(error.keyword, "   ", error)
 
-                case 'format':
-                    res[error.instancePath.slice(1)] = getErrorLabel(error.keyword, error.message);
-                    break;
-        
-                case 'minLength':
-                    res[error.instancePath.slice(1)] = getErrorLabel(error.keyword, error.message, error.params.limit);
-                    break;
-
-                case 'maxLength':
-                    res[error.instancePath.slice(1)] = getErrorLabel(error.keyword, error.message, error.params.limit);
-                    break;
-
-                
-                case 'errorMessage':
-                    res[error.instancePath.slice(1)] = getErrorLabel(error.keyword, error.message);
-                    break;
-                default:
-                    break;
+            if (error.keyword === 'required') {
+                fieldName= error.params.missingProperty;
+                errorMessage = getErrorLabel(error.keyword);
+            } else {
+                fieldName = error.instancePath.slice(1);
+                errorMessage = error.message || '';
             }
+
+            if (fieldName && errorMessage) {
+                const fieldConfig = fieldMap && fieldMap.hasOwnProperty(fieldName) ? fieldMap[fieldName] : null;
+                errorMessage = fieldConfig ? fieldConfig.errorMsg || errorMessage : errorMessage;
+                res[fieldName] = {
+                    errorMessage,
+                    errorData: error
+                }
+            }
+
         })
     }
 

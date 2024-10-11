@@ -1,17 +1,25 @@
+
 export type TMediaFileMetadata = {
-    width: number;
-    height: number;
-    filePath: string;
+    width?: number;
+    height?: number;
+    publicUrl: string;
     label?: string;
 };
 
+export enum MediaSizeType {
+    Small,
+    Thumb,
+    Medium,
+    Large
+}
+
 export type TMediaInfo = {
-    filePath?: string;
+    publicUrl?: string;
     label?: string;
-    smallMeta?: TMediaFileMetadata;
-    thumbMeta?: TMediaFileMetadata;
-    mediumMeta?: TMediaFileMetadata; 
-    largeMeta?: TMediaFileMetadata; 
+    small?: TMediaFileMetadata;
+    thumb?: TMediaFileMetadata;
+    medium?: TMediaFileMetadata; 
+    large?: TMediaFileMetadata; 
 }
 
 type TMediaFile = TMediaInfo & {

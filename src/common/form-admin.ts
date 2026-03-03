@@ -77,8 +77,14 @@ export type TLocalFormAdmin = {
   clearDraft(): void;
   clearQueue(): void;
   clearDeadLetter(): void;
+  purgeQueue(query?: TLocalQueueQuery): number;
+  purgeDeadLetter(query?: TLocalQueueQuery): number;
   requeueDeadLetterEntry(entryId: string): boolean;
+  requeueDeadLetterEntries(query?: TLocalQueueQuery): number;
   replayDeadLetterEntry(entryId: string): Promise<boolean>;
+  replayDeadLetterEntries(
+    query?: TLocalQueueQuery,
+  ): Promise<{ succeeded: number; failed: number }>;
 };
 
 export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
@@ -108,6 +114,38 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
     clearDeadLetter() {
       storageAdapter?.clearDeadLetterQueue();
     },
+    purgeQueue(query) {
+      if (!storageAdapter) {
+        return 0;
+      }
+
+      const queue = storageAdapter.loadQueue();
+      const selected = applyQuery(queue, query);
+      if (!selected.length) {
+        return 0;
+      }
+
+      const selectedIds = new Set(selected.map((entry) => entry.id));
+      storageAdapter.saveQueue(queue.filter((entry) => !selectedIds.has(entry.id)));
+      return selected.length;
+    },
+    purgeDeadLetter(query) {
+      if (!storageAdapter) {
+        return 0;
+      }
+
+      const deadLetter = storageAdapter.loadDeadLetterQueue();
+      const selected = applyQuery(deadLetter, query);
+      if (!selected.length) {
+        return 0;
+      }
+
+      const selectedIds = new Set(selected.map((entry) => entry.id));
+      storageAdapter.saveDeadLetterQueue(
+        deadLetter.filter((entry) => !selectedIds.has(entry.id))
+      );
+      return selected.length;
+    },
     requeueDeadLetterEntry(entryId: string) {
       if (!storageAdapter) {
         return false;
@@ -120,6 +158,26 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
 
       storageAdapter.enqueueSubmission(entry.values);
       return true;
+    },
+    requeueDeadLetterEntries(query) {
+      if (!storageAdapter) {
+        return 0;
+      }
+
+      const deadLetter = storageAdapter.loadDeadLetterQueue();
+      const selected = applyQuery(deadLetter, query);
+      if (!selected.length) {
+        return 0;
+      }
+
+      const selectedIds = new Set(selected.map((entry) => entry.id));
+      storageAdapter.saveDeadLetterQueue(
+        deadLetter.filter((entry) => !selectedIds.has(entry.id))
+      );
+      selected.forEach((entry) => {
+        storageAdapter.enqueueSubmission(entry.values);
+      });
+      return selected.length;
     },
     async replayDeadLetterEntry(entryId: string) {
       if (!storageAdapter || !publicConfig.submit?.endpoint) {
@@ -144,6 +202,43 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
         });
         return false;
       }
+    },
+    async replayDeadLetterEntries(query) {
+      if (!storageAdapter || !publicConfig.submit?.endpoint) {
+        return { succeeded: 0, failed: 0 };
+      }
+
+      const deadLetter = storageAdapter.loadDeadLetterQueue();
+      const selected = applyQuery(deadLetter, query);
+      if (!selected.length) {
+        return { succeeded: 0, failed: 0 };
+      }
+
+      let succeeded = 0;
+      let failed = 0;
+
+      for (const selectedEntry of selected) {
+        const entry = storageAdapter.removeDeadLetterEntry(selectedEntry.id);
+        if (!entry) {
+          continue;
+        }
+
+        try {
+          await submitNow(entry.values, publicConfig.submit);
+          succeeded += 1;
+        } catch (error: any) {
+          failed += 1;
+          storageAdapter.enqueueDeadLetter({
+            ...entry,
+            attempts: entry.attempts + 1,
+            updatedAt: Date.now(),
+            nextAttemptAt: Date.now(),
+            lastError: error?.result?.message || error?.message || "replay_error",
+          });
+        }
+      }
+
+      return { succeeded, failed };
     },
   };
 }

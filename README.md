@@ -409,8 +409,12 @@ It can inspect and manage local state without a mounted `FormUI` instance:
 - `clearDraft()`
 - `clearQueue()`
 - `clearDeadLetter()`
+- `purgeQueue(query?)`
+- `purgeDeadLetter(query?)`
 - `requeueDeadLetterEntry(entryId)`
+- `requeueDeadLetterEntries(query?)`
 - `replayDeadLetterEntry(entryId)`
+- `replayDeadLetterEntries(query?)`
 
 Query options:
 - `minAttempts`

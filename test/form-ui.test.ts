@@ -1590,4 +1590,149 @@ describe('FormUI', () => {
       }).map((entry) => entry.id)
     ).toEqual(['dead_b']);
   });
+
+  it('supports batch admin actions for queue and dead-letter entries', async () => {
+    const fetchSpy = vi
+      .spyOn(window, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      )
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    const formConfig = createFormConfig({
+      name: 'admin-batch-form',
+      title: 'Admin Batch Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-batch',
+      },
+      submit: {
+        endpoint: 'https://api.example.test/admin-batch',
+        method: 'POST',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    window.localStorage.setItem(
+      'xpressui:test-admin-batch:queue',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queue_batch_1',
+            values: { email: 'keep@example.com' },
+            attempts: 0,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+          {
+            id: 'queue_batch_2',
+            values: { email: 'purge@example.com' },
+            attempts: 4,
+            createdAt: 2,
+            updatedAt: 2,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+    window.localStorage.setItem(
+      'xpressui:test-admin-batch:dead-letter',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'dead_batch_1',
+            values: { email: 'requeue@example.com' },
+            attempts: 3,
+            createdAt: 3,
+            updatedAt: 3,
+            nextAttemptAt: 0,
+          },
+          {
+            id: 'dead_batch_2',
+            values: { email: 'replay-success@example.com' },
+            attempts: 4,
+            createdAt: 4,
+            updatedAt: 4,
+            nextAttemptAt: 0,
+          },
+          {
+            id: 'dead_batch_3',
+            values: { email: 'replay-fail@example.com' },
+            attempts: 5,
+            createdAt: 5,
+            updatedAt: 5,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    expect(
+      admin.purgeQueue({
+        minAttempts: 4,
+      })
+    ).toBe(1);
+    expect(admin.getSnapshot().queue.map((entry) => entry.id)).toEqual(['queue_batch_1']);
+
+    expect(
+      admin.requeueDeadLetterEntries({
+        search: 'requeue@',
+      })
+    ).toBe(1);
+    expect(admin.getSnapshot().queue.map((entry) => entry.values.email)).toEqual([
+      'keep@example.com',
+      'requeue@example.com',
+    ]);
+
+    await expect(
+      admin.replayDeadLetterEntries({
+        search: 'replay',
+        sortBy: 'attempts',
+        sortOrder: 'asc',
+      })
+    ).resolves.toEqual({
+      succeeded: 1,
+      failed: 1,
+    });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/admin-batch',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'replay-success@example.com' }),
+      })
+    );
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/admin-batch',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'replay-fail@example.com' }),
+      })
+    );
+
+    const snapshot = admin.getSnapshot();
+    expect(snapshot.deadLetter).toHaveLength(1);
+    expect(snapshot.deadLetter[0].id).toBe('dead_batch_3');
+    expect(snapshot.deadLetter[0].attempts).toBe(6);
+
+    expect(
+      admin.purgeDeadLetter({
+        search: 'replay-fail',
+      })
+    ).toBe(1);
+    expect(admin.getSnapshot().deadLetter).toEqual([]);
+  });
 });

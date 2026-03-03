@@ -9,26 +9,65 @@ import {
 } from "./form-persistence";
 import { submitFormValues } from "./form-submit";
 
+export type TFormRuntimeSubmitResult = {
+  response: Response;
+  result: any;
+};
+
+export type TFormRuntimeEmitEvent = (
+  eventName: string,
+  detail: Record<string, any>,
+) => boolean;
+
+export type TFormRuntimeSubmitValues = (
+  values: Record<string, any>,
+  submitConfig: TFormSubmitRequest,
+) => Promise<TFormRuntimeSubmitResult>;
+
+export type TFormRuntimeDynamicAdapters = {
+  getFieldContainer(fieldName: string): HTMLElement | null;
+  getFieldElement(
+    fieldName: string,
+  ): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+  getFieldValue(fieldName: string): any;
+  clearFieldValue(fieldName: string): void;
+};
+
 export type TFormRuntimeOptions = {
   getValues?: () => Record<string, any>;
-  emitEvent?: (eventName: string, detail: Record<string, any>) => boolean;
-  submitValues?: (
-    values: Record<string, any>,
-    submitConfig: TFormSubmitRequest,
-  ) => Promise<{ response: Response; result: any }>;
-  dynamic?: {
-    getFieldContainer(fieldName: string): HTMLElement | null;
-    getFieldElement(
-      fieldName: string,
-    ): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
-    getFieldValue(fieldName: string): any;
-    clearFieldValue(fieldName: string): void;
-  };
+  emitEvent?: TFormRuntimeEmitEvent;
+  submitValues?: TFormRuntimeSubmitValues;
+  dynamic?: TFormRuntimeDynamicAdapters;
 };
 
 function noopEmitEvent(): boolean {
   return true;
 }
+
+export type TFormRuntimePublicApi = Pick<
+  FormRuntime,
+  | "setFormConfig"
+  | "setField"
+  | "getFields"
+  | "normalizeValues"
+  | "validateValues"
+  | "loadDraftValues"
+  | "saveDraft"
+  | "clearDraft"
+  | "scheduleDraftSave"
+  | "shouldUseQueue"
+  | "enqueueSubmission"
+  | "getQueueState"
+  | "getStorageSnapshot"
+  | "clearDeadLetterQueue"
+  | "requeueDeadLetterEntry"
+  | "replayDeadLetterEntry"
+  | "flushSubmissionQueue"
+  | "connectPersistence"
+  | "disconnectPersistence"
+  | "updateConditionalFields"
+  | "refreshRemoteOptions"
+>;
 
 export class FormRuntime {
   formConfig: TFormConfig | null;

@@ -28,6 +28,22 @@ plain object without hand-writing a full HTML template.
 For storage/debug tooling outside the component instance, use
 `createLocalFormAdmin(formConfig)`.
 
+Public API you should treat as stable:
+- `mountFormUI(...)`
+- `createFormConfig(...)`
+- `createTemplateMarkup(...)`
+- `FormUI`
+- `FormRuntime`
+- `createLocalFormAdmin(...)`
+- public schema helpers (`validatePublicFormConfig`, `migratePublicFormConfig`)
+
+Advanced building blocks available but better treated as lower-level/internal:
+- `FormEngineRuntime`
+- `FormDynamicRuntime`
+- `FormPersistenceRuntime`
+- `provider-registry` helpers
+- `form-submit` internals
+
 The public form contract is now versioned.
 Current public schema version:
 - `1`
@@ -134,6 +150,13 @@ Main `FormRuntime` methods:
 If you pass DOM adapters through `dynamic`, the same runtime can also handle:
 - `updateConditionalFields()`
 - `refreshRemoteOptions()`
+
+Public types exported for headless integrations:
+- `TFormRuntimeOptions`
+- `TFormRuntimePublicApi`
+- `TFormRuntimeDynamicAdapters`
+- `TFormRuntimeSubmitValues`
+- `TFormRuntimeSubmitResult`
 
 ## Submission Modes
 

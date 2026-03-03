@@ -6,6 +6,7 @@ import {
   FormEngineRuntime,
   FormDynamicRuntime,
   FormPersistenceRuntime,
+  FormRuntime,
   FormUI,
   getProviderDefinition,
   mountFormUI,
@@ -256,6 +257,55 @@ describe('FormUI', () => {
     });
 
     expect(Object.keys(runtime.validateValues({})).length).toBeGreaterThan(0);
+  });
+
+  it('exposes a composed headless runtime API', async () => {
+    let values: Record<string, any> = { amount: '12.50', email: 'headless@example.com' };
+    const formConfig = createFormConfig({
+      name: 'headless-runtime-form',
+      title: 'Headless Runtime Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-headless-runtime',
+        autoSaveMs: 0,
+      },
+      fields: [
+        {
+          name: 'amount',
+          label: 'Amount',
+          type: 'price',
+          required: true,
+        },
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+      ],
+    });
+    const runtime = new FormRuntime(formConfig, {
+      getValues: () => values,
+    });
+
+    (formConfig.sections.main || []).forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+
+    expect(runtime.normalizeValues(values)).toEqual({
+      amount: 12.5,
+      email: 'headless@example.com',
+    });
+
+    runtime.saveDraft();
+    await flushAsyncWork();
+
+    expect(runtime.loadDraftValues()).toEqual(values);
+    expect(runtime.getStorageSnapshot().draft).toEqual(values);
+
+    values = { amount: '', email: '' };
+    expect(Object.keys(runtime.validateValues(values)).length).toBeGreaterThan(0);
   });
 
   it('migrates legacy public configs to version 1', () => {

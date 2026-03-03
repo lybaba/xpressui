@@ -11,6 +11,7 @@ import {
   TFormQueueState,
   TFormStorageSnapshot,
 } from "./common/form-persistence";
+import { FormRuntime } from "./common/form-runtime";
 import { validatePublicFormConfig } from "./common/public-schema";
 import {
   getProviderErrorEventName,
@@ -27,6 +28,7 @@ export { createLocalFormAdmin } from "./common/form-admin";
 export { FormEngineRuntime } from "./common/form-engine";
 export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
+export { FormRuntime } from "./common/form-runtime";
 export {
   PUBLIC_FORM_SCHEMA_VERSION,
   getPublicFormSchemaErrors,

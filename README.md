@@ -258,6 +258,37 @@ mountFormUI(container, {
 Extra event:
 - `form-ui:options-loaded`
 
+## Local Draft Storage
+
+The runtime can persist draft values in the browser with `localStorage`.
+
+```ts
+mountFormUI(container, {
+  name: 'inspection-form',
+  title: 'Inspection',
+  storage: {
+    mode: 'draft',
+    adapter: 'local-storage',
+    key: 'xpressui:inspection-draft',
+    autoSaveMs: 300,
+  },
+  fields: [
+    { name: 'site', label: 'Site', type: 'text', required: true },
+    { name: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+});
+```
+
+Current storage support:
+- `mode: 'draft'`
+- `mode: 'draft-and-queue'` stores drafts today (queue is not implemented yet)
+- `adapter: 'local-storage'`
+
+Draft events:
+- `form-ui:draft-saved`
+- `form-ui:draft-restored`
+- `form-ui:draft-cleared`
+
 ## Field Features
 
 Useful field capabilities supported by the current builder:
@@ -290,6 +321,9 @@ Core events emitted by `<form-ui>`:
 - `form-ui:submit-success`
 - `form-ui:submit-error`
 - `form-ui:options-loaded`
+- `form-ui:draft-saved`
+- `form-ui:draft-restored`
+- `form-ui:draft-cleared`
 
 Provider-specific events:
 - `form-ui:reservation-success`
@@ -356,11 +390,13 @@ What is stable in the current codebase:
 - API submission hooks
 - reservation, payment, and Stripe-oriented provider flows
 - conditional fields and remote select loading
+- local draft persistence in the browser
 
 What is not implemented as a full product yet:
 - visual form builder UI
 - persistent hosted backend
 - prebuilt Stripe Elements integration
+- offline submission queue
 - auth/session management
 - production-ready analytics, audit trail, and admin workflows
 

@@ -4,6 +4,7 @@ import TFieldConfig from './TFieldConfig';
 import TFormConfig, {
   CONTACTFORM_TYPE,
   TFormProviderRequest,
+  TFormStorageConfig,
   TFormSubmitRequest,
 } from './TFormConfig';
 import {
@@ -26,6 +27,7 @@ export type TSimpleFormInput = {
   fields: TSimpleFieldInput[];
   submit?: TFormSubmitRequest;
   provider?: TFormProviderRequest;
+  storage?: TFormStorageConfig;
   sectionName?: string;
   sectionLabel?: string;
   successMsg?: string;
@@ -146,6 +148,7 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
     },
     submit,
     provider,
+    storage: input.storage,
     successMsg: input.successMsg,
     errorMsg: input.errorMsg,
   };
@@ -177,9 +180,25 @@ export function createTemplateMarkup(
         .filter(Boolean)
         .join(' ')
     : '';
+  const storageAttrs = config.storage
+    ? [
+        `data-storage-mode="${escapeHtml(config.storage.mode)}"`,
+        config.storage.adapter
+          ? `data-storage-adapter="${escapeHtml(config.storage.adapter)}"`
+          : '',
+        config.storage.key
+          ? `data-storage-key="${escapeHtml(config.storage.key)}"`
+          : '',
+        config.storage.autoSaveMs !== undefined
+          ? `data-storage-autosave-ms="${escapeHtml(String(config.storage.autoSaveMs))}"`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : '';
 
   return `<template id="${escapeHtml(templateName)}">
-  <form id="${escapeHtml(templateName)}_form" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs}>
+  <form id="${escapeHtml(templateName)}_form" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs}>
     <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}" class="flex flex-col gap-4">
       ${fieldMarkup}
       <button type="submit" class="btn btn-primary">Submit</button>

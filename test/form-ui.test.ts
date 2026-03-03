@@ -21,6 +21,7 @@ async function flushAsyncWork() {
 describe('FormUI', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    window.localStorage.clear();
     vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
@@ -462,6 +463,71 @@ describe('FormUI', () => {
           paymentIntentId: 'pi_123',
           redirectUrl: '/checkout/complete',
         },
+      })
+    );
+  });
+
+  it('saves and restores drafts with local storage', async () => {
+    const key = 'xpressui:test-draft';
+    const firstContainer = document.createElement('div');
+    const firstElement = mountFormUI(firstContainer, {
+      name: 'draft-form',
+      title: 'Draft Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key,
+        autoSaveMs: 0,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const input = firstElement.querySelector('#email') as HTMLInputElement;
+
+    input.dispatchEvent(new FocusEvent('focus'));
+    input.value = 'draft@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur'));
+    await flushAsyncWork();
+
+    expect(window.localStorage.getItem(key)).toContain('draft@example.com');
+
+    const secondContainer = document.createElement('div');
+    const secondElement = mountFormUI(secondContainer, {
+      name: 'draft-form',
+      title: 'Draft Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key,
+        autoSaveMs: 0,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const restoredInput = secondElement.querySelector('#email') as HTMLInputElement;
+    const onDraftRestored = vi.fn();
+
+    secondElement.addEventListener('form-ui:draft-restored', (event) => {
+      onDraftRestored((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+    secondElement.initialize();
+    await flushAsyncWork();
+
+    expect(restoredInput.value).toBe('draft@example.com');
+    expect(onDraftRestored).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: { email: 'draft@example.com' },
       })
     );
   });

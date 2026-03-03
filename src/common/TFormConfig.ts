@@ -67,6 +67,13 @@ export type TFormProviderRequest = {
     headers?: Record<string, string>;
 };
 
+export type TFormStorageConfig = {
+    mode: 'none' | 'draft' | 'queue' | 'draft-and-queue';
+    adapter?: 'local-storage';
+    key?: string;
+    autoSaveMs?: number;
+};
+
 type TFormConfig = {
     id: string;
     uid: string;
@@ -89,6 +96,7 @@ type TFormConfig = {
     textcolor?: string;
     submit?: TFormSubmitRequest;
     provider?: TFormProviderRequest;
+    storage?: TFormStorageConfig;
     successMsg?: string;
     errorMsg?: string;
 }

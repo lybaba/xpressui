@@ -59,6 +59,10 @@ export const ATTR_OPTIONS_ENDPOINT = "optionsEndpoint"
 export const ATTR_OPTIONS_DEPENDS_ON = "optionsDependsOn"
 export const ATTR_OPTIONS_LABEL_KEY = "optionsLabelKey"
 export const ATTR_OPTIONS_VALUE_KEY = "optionsValueKey"
+export const ATTR_STORAGE_MODE = "storageMode"
+export const ATTR_STORAGE_ADAPTER = "storageAdapter"
+export const ATTR_STORAGE_KEY = "storageKey"
+export const ATTR_STORAGE_AUTOSAVE_MS = "storageAutoSaveMs"
 
 
 export const HTML_ATTR_TYPE = `${HTML_ATTR_PREFIX}type`
@@ -114,6 +118,10 @@ export const HTML_ATTR_OPTIONS_ENDPOINT = `${HTML_ATTR_PREFIX}options-endpoint`
 export const HTML_ATTR_OPTIONS_DEPENDS_ON = `${HTML_ATTR_PREFIX}options-depends-on`
 export const HTML_ATTR_OPTIONS_LABEL_KEY = `${HTML_ATTR_PREFIX}options-label-key`
 export const HTML_ATTR_OPTIONS_VALUE_KEY = `${HTML_ATTR_PREFIX}options-value-key`
+export const HTML_ATTR_STORAGE_MODE = `${HTML_ATTR_PREFIX}storage-mode`
+export const HTML_ATTR_STORAGE_ADAPTER = `${HTML_ATTR_PREFIX}storage-adapter`
+export const HTML_ATTR_STORAGE_KEY = `${HTML_ATTR_PREFIX}storage-key`
+export const HTML_ATTR_STORAGE_AUTOSAVE_MS = `${HTML_ATTR_PREFIX}storage-autosave-ms`
 
 export const ATTR_MAP = {
     [HTML_ATTR_TYPE]: ATTR_TYPE,
@@ -169,6 +177,10 @@ export const ATTR_MAP = {
     [HTML_ATTR_OPTIONS_DEPENDS_ON]: ATTR_OPTIONS_DEPENDS_ON,
     [HTML_ATTR_OPTIONS_LABEL_KEY]: ATTR_OPTIONS_LABEL_KEY,
     [HTML_ATTR_OPTIONS_VALUE_KEY]: ATTR_OPTIONS_VALUE_KEY,
+    [HTML_ATTR_STORAGE_MODE]: ATTR_STORAGE_MODE,
+    [HTML_ATTR_STORAGE_ADAPTER]: ATTR_STORAGE_ADAPTER,
+    [HTML_ATTR_STORAGE_KEY]: ATTR_STORAGE_KEY,
+    [HTML_ATTR_STORAGE_AUTOSAVE_MS]: ATTR_STORAGE_AUTOSAVE_MS,
 }
 
 
@@ -220,6 +232,21 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).submitMethod;
         delete (formConfig as any).submitMode;
         delete (formConfig as any).submitAction;
+    }
+
+    if ((formConfig as any).storageMode) {
+        (formConfig as any).storage = {
+            mode: (formConfig as any).storageMode,
+            adapter: (formConfig as any).storageAdapter,
+            key: (formConfig as any).storageKey,
+            autoSaveMs: (formConfig as any).storageAutoSaveMs
+                ? Number((formConfig as any).storageAutoSaveMs)
+                : undefined,
+        };
+        delete (formConfig as any).storageMode;
+        delete (formConfig as any).storageAdapter;
+        delete (formConfig as any).storageKey;
+        delete (formConfig as any).storageAutoSaveMs;
     }
 
     const sectionNodes = node.querySelectorAll('[data-type="section"]');

@@ -5,6 +5,7 @@ import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { normalizeFormValues, UNKNOWN_TYPE } from "./common/field";
 import TChoice from "./common/TChoice";
+import { createStorageAdapter, TFormStorageAdapter } from "./common/form-storage";
 export {
   createFormConfig,
   createTemplateMarkup,
@@ -36,6 +37,8 @@ export class FormUI extends HTMLElement {
   errors: Record<string, boolean>;
   initialized: boolean;
   loadingOptions: Record<string, boolean>;
+  storageAdapter: TFormStorageAdapter | null;
+  draftSaveTimer: number | null;
 
   constructor() {
     super();
@@ -47,6 +50,8 @@ export class FormUI extends HTMLElement {
     this.form = null;
     this.initialized = false;
     this.loadingOptions = {};
+    this.storageAdapter = null;
+    this.draftSaveTimer = null;
   }
 
   connectedCallback() {
@@ -78,10 +83,12 @@ export class FormUI extends HTMLElement {
     if (formElem) {
       this.formConfig = getFormConfig(formElem);
       this.validators = getValidators(this.formConfig);
+      this.storageAdapter = createStorageAdapter(this.formConfig);
+      const draftValues = this.storageAdapter?.loadDraft() || {};
 
       this.form = createForm({
         onSubmit: this.onSubmit,
-        initialValues: {},
+        initialValues: draftValues,
         validate: (values: Record<string, any>) => this.validateForm(values),
 
       });
@@ -101,7 +108,61 @@ export class FormUI extends HTMLElement {
 
       this.updateConditionalFields();
       this.refreshRemoteOptions();
+
+      if (Object.keys(draftValues).length) {
+        this.emitFormEvent("form-ui:draft-restored", {
+          values: draftValues,
+          formConfig: this.formConfig,
+          submit: this.formConfig?.submit,
+        });
+      }
     }
+  }
+
+  getDraftAutoSaveMs = () => {
+    return this.formConfig?.storage?.autoSaveMs ?? 300;
+  }
+
+  saveDraft = (values?: Record<string, any>) => {
+    if (!this.storageAdapter) {
+      return;
+    }
+
+    const draftValues = values || this.form?.getState().values || {};
+    this.storageAdapter.saveDraft(draftValues);
+    this.emitFormEvent("form-ui:draft-saved", {
+      values: draftValues,
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+    });
+  }
+
+  scheduleDraftSave = () => {
+    if (!this.storageAdapter) {
+      return;
+    }
+
+    if (this.draftSaveTimer !== null) {
+      window.clearTimeout(this.draftSaveTimer);
+    }
+
+    this.draftSaveTimer = window.setTimeout(() => {
+      this.saveDraft();
+      this.draftSaveTimer = null;
+    }, this.getDraftAutoSaveMs());
+  }
+
+  clearDraft = () => {
+    if (!this.storageAdapter) {
+      return;
+    }
+
+    this.storageAdapter.clearDraft();
+    this.emitFormEvent("form-ui:draft-cleared", {
+      values: {},
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+    });
   }
 
   validateForm = (values: Record<string, any>) => {
@@ -207,6 +268,7 @@ export class FormUI extends HTMLElement {
     }
 
     if (!this.formConfig?.submit?.endpoint) {
+      this.clearDraft();
       this.emitFormEvent("form-ui:submit-success", detail);
       return;
     }
@@ -218,6 +280,7 @@ export class FormUI extends HTMLElement {
         response,
         result,
       });
+      this.clearDraft();
       if (this.formConfig?.submit?.action === "reservation") {
         this.emitFormEvent("form-ui:reservation-success", {
           ...detail,
@@ -446,10 +509,12 @@ export class FormUI extends HTMLElement {
                 ? (<HTMLInputElement>event.target)?.checked
                 : (<HTMLInputElement>event.target)?.value;
             change(nextValue);
+            this.scheduleDraftSave();
             this.updateConditionalFields();
             void this.refreshRemoteOptions(name);
           });
           input.addEventListener("change", () => {
+            this.scheduleDraftSave();
             this.updateConditionalFields();
             void this.refreshRemoteOptions(name);
           });

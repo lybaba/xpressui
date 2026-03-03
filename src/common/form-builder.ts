@@ -1,4 +1,4 @@
-import shortUUID from 'short-uuid';
+import * as shortUUID from 'short-uuid';
 import { CUSTOM_SECTION } from './Constants';
 import TFieldConfig from './TFieldConfig';
 import TFormConfig, {

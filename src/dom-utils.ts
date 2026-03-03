@@ -1,4 +1,4 @@
-import shortUUID from "short-uuid"
+import * as shortUUID from "short-uuid"
 import { TEXT_TYPE, TEXTAREA_TYPE, UNKNOWN_TYPE } from "./common/field"
 import TFieldConfig from "./common/TFieldConfig"
 import TFormConfig, { DEFAULT_FORM_CONFIG } from "./common/TFormConfig"

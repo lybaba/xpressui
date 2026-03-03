@@ -28,6 +28,7 @@
     "build:css": "tailwindcss -i ./src/input.css -o ./index.css",
     "build": "tsc && vite build && tsc --project ./lib.tsconfig.json",
     "verify:dist": "node ./scripts/verify-dist.mjs",
+    "verify:lib": "node ./scripts/verify-lib.mjs",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -1,6 +1,6 @@
 import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
-import shortUUID from "short-uuid";
+import * as shortUUID from "short-uuid";
 import { CUSTOM_SECTION } from "./Constants";
 
 

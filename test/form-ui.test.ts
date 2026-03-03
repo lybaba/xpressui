@@ -205,10 +205,10 @@ describe('FormUI', () => {
       createFormConfig({
         name: 'booking-api',
         title: 'Booking API',
-        submit: {
+        provider: {
+          type: 'reservation',
           endpoint: 'https://api.example.test/bookings',
           method: 'POST',
-          action: 'reservation',
         },
         fields: [
           {
@@ -239,7 +239,10 @@ describe('FormUI', () => {
       'https://api.example.test/bookings',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ email: 'alice@example.com' }),
+        body: JSON.stringify({
+          action: 'reservation',
+          reservation: { email: 'alice@example.com' },
+        }),
       })
     );
     expect(onSuccess).toHaveBeenCalledWith(
@@ -247,5 +250,63 @@ describe('FormUI', () => {
         result: { bookingId: 'bk_123' },
       })
     );
+  });
+
+  it('supports conditional visibility and remote select options', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          { value: 'morning', label: 'Morning' },
+          { value: 'evening', label: 'Evening' },
+        ]),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'dynamic-form',
+      title: 'Dynamic Form',
+      fields: [
+        {
+          name: 'service',
+          label: 'Service',
+          type: 'select-one',
+          choices: [
+            { value: 'consulting', label: 'Consulting' },
+            { value: 'support', label: 'Support' },
+          ],
+        },
+        {
+          name: 'slot',
+          label: 'Slot',
+          type: 'select-one',
+          visibleWhenField: 'service',
+          visibleWhenEquals: 'consulting',
+          optionsEndpoint: 'https://api.example.test/slots',
+          optionsDependsOn: 'service',
+        },
+      ],
+    }) as FormUI;
+    const service = element.querySelector('#service') as HTMLSelectElement;
+    const slot = element.querySelector('#slot') as HTMLSelectElement;
+    const slotContainer = slot.closest('label') as HTMLElement;
+
+    expect(slotContainer.style.display).toBe('none');
+
+    service.value = 'consulting';
+    service.dispatchEvent(new Event('input', { bubbles: true }));
+    service.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(slotContainer.style.display).toBe('');
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/slots?service=consulting'
+    );
+    expect(slot.options.length).toBe(3);
+    expect(slot.options[1].value).toBe('morning');
+    expect(slot.options[2].textContent).toBe('Evening');
   });
 });

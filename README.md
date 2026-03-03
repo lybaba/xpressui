@@ -183,6 +183,62 @@ Events emitted by the component:
 - `form-ui:submit-success`
 - `form-ui:submit-error`
 
+## Reservation Provider
+
+If you want a reservation workflow without hand-writing the submit action, use a
+provider:
+
+```ts
+mountFormUI(container, {
+  name: 'reservation-form',
+  title: 'Reserve',
+  provider: {
+    type: 'reservation',
+    endpoint: '/api/reservations',
+  },
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+    { name: 'date', label: 'Date', type: 'datetime', required: true },
+  ],
+});
+```
+
+This emits:
+- `form-ui:reservation-success`
+
+## Dynamic Fields
+
+You can show fields conditionally and load select options from an API:
+
+```ts
+mountFormUI(container, {
+  name: 'dynamic-booking',
+  fields: [
+    {
+      name: 'service',
+      label: 'Service',
+      type: 'select-one',
+      choices: [
+        { value: 'consulting', label: 'Consulting' },
+        { value: 'support', label: 'Support' },
+      ],
+    },
+    {
+      name: 'slot',
+      label: 'Slot',
+      type: 'select-one',
+      visibleWhenField: 'service',
+      visibleWhenEquals: 'consulting',
+      optionsEndpoint: '/api/slots',
+      optionsDependsOn: 'service',
+    },
+  ],
+});
+```
+
+This also emits:
+- `form-ui:options-loaded`
+
 ## License
 
 MIT © [lybaba](https://github.com/lybaba)

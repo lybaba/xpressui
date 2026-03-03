@@ -3,6 +3,7 @@ import { CUSTOM_SECTION } from './Constants';
 import TFieldConfig from './TFieldConfig';
 import TFormConfig, {
   CONTACTFORM_TYPE,
+  TFormProviderRequest,
   TFormSubmitRequest,
 } from './TFormConfig';
 import {
@@ -24,6 +25,7 @@ export type TSimpleFormInput = {
   type?: string;
   fields: TSimpleFieldInput[];
   submit?: TFormSubmitRequest;
+  provider?: TFormProviderRequest;
   sectionName?: string;
   sectionLabel?: string;
   successMsg?: string;
@@ -46,11 +48,31 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   const helpText = field.helpText
     ? `<div class="label"><span class="label-text-alt">${escapeHtml(field.helpText)}</span></div>`
     : '';
+  const conditionalAttrs = [
+    field.visibleWhenField
+      ? ` data-visible-when-field="${escapeHtml(String(field.visibleWhenField))}"`
+      : '',
+    field.visibleWhenEquals
+      ? ` data-visible-when-equals="${escapeHtml(String(field.visibleWhenEquals))}"`
+      : '',
+    field.optionsEndpoint
+      ? ` data-options-endpoint="${escapeHtml(String(field.optionsEndpoint))}"`
+      : '',
+    field.optionsDependsOn
+      ? ` data-options-depends-on="${escapeHtml(String(field.optionsDependsOn))}"`
+      : '',
+    field.optionsLabelKey
+      ? ` data-options-label-key="${escapeHtml(String(field.optionsLabelKey))}"`
+      : '',
+    field.optionsValueKey
+      ? ` data-options-value-key="${escapeHtml(String(field.optionsValueKey))}"`
+      : '',
+  ].join('');
 
   if (field.type === TEXTAREA_TYPE) {
     return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <textarea class="textarea textarea-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${placeholderAttr}></textarea>
+    <textarea class="textarea textarea-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${placeholderAttr}${conditionalAttrs}></textarea>
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </label>`;
@@ -66,7 +88,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
     return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <select class="select select-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="select-one" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}">
+    <select class="select select-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="select-one" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs}>
       <option value=""></option>
       ${options}
     </select>
@@ -77,7 +99,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   if (field.type === CHECKBOX_TYPE) {
     return `<label class="label cursor-pointer justify-start gap-3">
-    <input class="checkbox" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="checkbox" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}" />
+    <input class="checkbox" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="checkbox" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs} />
     <span class="label-text">${escapeHtml(field.label)}</span>
 </label>
 <span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span>`;
@@ -85,7 +107,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${placeholderAttr} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${placeholderAttr}${conditionalAttrs} />
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </label>`;
@@ -95,6 +117,15 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
   const sectionName = input.sectionName || 'main';
   const sectionLabel = input.sectionLabel || 'Main';
   const fields = input.fields.map((field) => ({ ...field }));
+  const provider = input.provider;
+  const submit = input.submit || (provider
+    ? {
+        endpoint: provider.endpoint,
+        method: provider.method || 'POST',
+        headers: provider.headers,
+        action: provider.type,
+      }
+    : undefined);
 
   return {
     id: shortUUID.generate(),
@@ -113,7 +144,8 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
       ],
       [sectionName]: fields,
     },
-    submit: input.submit,
+    submit,
+    provider,
     successMsg: input.successMsg,
     errorMsg: input.errorMsg,
   };

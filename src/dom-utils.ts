@@ -53,6 +53,12 @@ export const ATTR_SUBMIT_ENDPOINT = "submitEndpoint"
 export const ATTR_SUBMIT_METHOD = "submitMethod"
 export const ATTR_SUBMIT_MODE = "submitMode"
 export const ATTR_SUBMIT_ACTION = "submitAction"
+export const ATTR_VISIBLE_WHEN_FIELD = "visibleWhenField"
+export const ATTR_VISIBLE_WHEN_EQUALS = "visibleWhenEquals"
+export const ATTR_OPTIONS_ENDPOINT = "optionsEndpoint"
+export const ATTR_OPTIONS_DEPENDS_ON = "optionsDependsOn"
+export const ATTR_OPTIONS_LABEL_KEY = "optionsLabelKey"
+export const ATTR_OPTIONS_VALUE_KEY = "optionsValueKey"
 
 
 export const HTML_ATTR_TYPE = `${HTML_ATTR_PREFIX}type`
@@ -102,6 +108,12 @@ export const HTML_ATTR_SUBMIT_ENDPOINT = `${HTML_ATTR_PREFIX}submit-endpoint`
 export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
 export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
 export const HTML_ATTR_SUBMIT_ACTION = `${HTML_ATTR_PREFIX}submit-action`
+export const HTML_ATTR_VISIBLE_WHEN_FIELD = `${HTML_ATTR_PREFIX}visible-when-field`
+export const HTML_ATTR_VISIBLE_WHEN_EQUALS = `${HTML_ATTR_PREFIX}visible-when-equals`
+export const HTML_ATTR_OPTIONS_ENDPOINT = `${HTML_ATTR_PREFIX}options-endpoint`
+export const HTML_ATTR_OPTIONS_DEPENDS_ON = `${HTML_ATTR_PREFIX}options-depends-on`
+export const HTML_ATTR_OPTIONS_LABEL_KEY = `${HTML_ATTR_PREFIX}options-label-key`
+export const HTML_ATTR_OPTIONS_VALUE_KEY = `${HTML_ATTR_PREFIX}options-value-key`
 
 export const ATTR_MAP = {
     [HTML_ATTR_TYPE]: ATTR_TYPE,
@@ -151,6 +163,12 @@ export const ATTR_MAP = {
     [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
     [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
     [HTML_ATTR_SUBMIT_ACTION]: ATTR_SUBMIT_ACTION,
+    [HTML_ATTR_VISIBLE_WHEN_FIELD]: ATTR_VISIBLE_WHEN_FIELD,
+    [HTML_ATTR_VISIBLE_WHEN_EQUALS]: ATTR_VISIBLE_WHEN_EQUALS,
+    [HTML_ATTR_OPTIONS_ENDPOINT]: ATTR_OPTIONS_ENDPOINT,
+    [HTML_ATTR_OPTIONS_DEPENDS_ON]: ATTR_OPTIONS_DEPENDS_ON,
+    [HTML_ATTR_OPTIONS_LABEL_KEY]: ATTR_OPTIONS_LABEL_KEY,
+    [HTML_ATTR_OPTIONS_VALUE_KEY]: ATTR_OPTIONS_VALUE_KEY,
 }
 
 

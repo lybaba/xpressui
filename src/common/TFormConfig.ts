@@ -50,6 +50,13 @@ export type TFormSubmitRequest = {
     action?: string;
 };
 
+export type TFormProviderRequest = {
+    type: 'reservation';
+    endpoint: string;
+    method?: 'POST' | 'PUT' | 'PATCH';
+    headers?: Record<string, string>;
+};
+
 type TFormConfig = {
     id: string;
     uid: string;
@@ -71,6 +78,7 @@ type TFormConfig = {
     bgcolor?: string;
     textcolor?: string;
     submit?: TFormSubmitRequest;
+    provider?: TFormProviderRequest;
     successMsg?: string;
     errorMsg?: string;
 }

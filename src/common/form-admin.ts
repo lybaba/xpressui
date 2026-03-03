@@ -20,6 +20,8 @@ export type TLocalFormAdminSnapshot = {
   deadLetter: TQueuedSubmission[];
 };
 
+export type TLocalFormAdminImportMode = "replace" | "merge";
+
 export type TLocalQueueQuery = {
   minAttempts?: number;
   maxAttempts?: number;
@@ -101,6 +103,11 @@ function applyQuery(entries: TQueuedSubmission[], query?: TLocalQueueQuery): TQu
 
 export type TLocalFormAdmin = {
   getSnapshot(): TLocalFormAdminSnapshot;
+  exportSnapshot(): TLocalFormAdminSnapshot;
+  importSnapshot(
+    snapshot: TLocalFormAdminSnapshot,
+    mode?: TLocalFormAdminImportMode,
+  ): TLocalFormAdminSnapshot;
   listQueue(query?: TLocalQueueQuery): TQueuedSubmission[];
   listDeadLetter(query?: TLocalQueueQuery): TQueuedSubmission[];
   clearDraft(): void;
@@ -128,6 +135,62 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
 
   return {
     getSnapshot,
+    exportSnapshot() {
+      return getSnapshot();
+    },
+    importSnapshot(snapshot, mode = "replace") {
+      if (!storageAdapter) {
+        return getSnapshot();
+      }
+
+      const safeSnapshot: TLocalFormAdminSnapshot = {
+        draft: snapshot?.draft && typeof snapshot.draft === "object" ? snapshot.draft : null,
+        queue: Array.isArray(snapshot?.queue) ? snapshot.queue : [],
+        deadLetter: Array.isArray(snapshot?.deadLetter) ? snapshot.deadLetter : [],
+      };
+
+      const nextDraft =
+        mode === "merge"
+          ? {
+              ...(storageAdapter.loadDraft() || {}),
+              ...(safeSnapshot.draft || {}),
+            }
+          : safeSnapshot.draft;
+
+      const mergeEntries = (
+        current: TQueuedSubmission[],
+        incoming: TQueuedSubmission[],
+      ): TQueuedSubmission[] => {
+        const merged = [...current];
+        const ids = new Set(current.map((entry) => entry.id));
+        incoming.forEach((entry) => {
+          if (!ids.has(entry.id)) {
+            merged.push(entry);
+            ids.add(entry.id);
+          }
+        });
+        return merged;
+      };
+
+      const nextQueue =
+        mode === "merge"
+          ? mergeEntries(storageAdapter.loadQueue(), safeSnapshot.queue)
+          : safeSnapshot.queue;
+      const nextDeadLetter =
+        mode === "merge"
+          ? mergeEntries(storageAdapter.loadDeadLetterQueue(), safeSnapshot.deadLetter)
+          : safeSnapshot.deadLetter;
+
+      if (nextDraft) {
+        storageAdapter.saveDraft(nextDraft);
+      } else {
+        storageAdapter.clearDraft();
+      }
+      storageAdapter.saveQueue(nextQueue);
+      storageAdapter.saveDeadLetterQueue(nextDeadLetter);
+
+      return getSnapshot();
+    },
     listQueue(query) {
       return applyQuery(storageAdapter?.loadQueue() || [], query);
     },

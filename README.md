@@ -518,6 +518,8 @@ Standalone local admin helper:
 
 It can inspect and manage local state without a mounted `FormUI` instance:
 - `getSnapshot()`
+- `exportSnapshot()`
+- `importSnapshot(snapshot, mode?)`
 - `listQueue(query?)`
 - `listDeadLetter(query?)`
 - `clearDraft()`
@@ -529,6 +531,10 @@ It can inspect and manage local state without a mounted `FormUI` instance:
 - `requeueDeadLetterEntries(query?)`
 - `replayDeadLetterEntry(entryId)`
 - `replayDeadLetterEntries(query?)`
+
+Import modes:
+- `replace`
+- `merge`
 
 Query options:
 - `minAttempts`

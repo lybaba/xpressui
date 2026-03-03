@@ -1684,6 +1684,103 @@ describe('FormUI', () => {
     });
   });
 
+  it('can export and import local admin snapshots', () => {
+    const formConfig = createFormConfig({
+      name: 'admin-import-export-form',
+      title: 'Admin Import Export Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-import-export',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    const replaced = admin.importSnapshot({
+      draft: { email: 'draft@example.com' },
+      queue: [
+        {
+          id: 'queue_import_1',
+          values: { email: 'queued@example.com' },
+          attempts: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          nextAttemptAt: 10,
+        },
+      ],
+      deadLetter: [
+        {
+          id: 'dead_import_1',
+          values: { email: 'dead@example.com' },
+          attempts: 3,
+          createdAt: 2,
+          updatedAt: 2,
+          nextAttemptAt: 0,
+          lastError: 'timeout',
+        },
+      ],
+    });
+
+    expect(replaced).toEqual({
+      draft: { email: 'draft@example.com' },
+      queue: [
+        expect.objectContaining({ id: 'queue_import_1' }),
+      ],
+      deadLetter: [
+        expect.objectContaining({ id: 'dead_import_1' }),
+      ],
+    });
+    expect(admin.exportSnapshot()).toEqual(replaced);
+
+    const merged = admin.importSnapshot(
+      {
+        draft: { note: 'merged' },
+        queue: [
+          {
+            id: 'queue_import_2',
+            values: { email: 'queued-2@example.com' },
+            attempts: 0,
+            createdAt: 3,
+            updatedAt: 3,
+            nextAttemptAt: 20,
+          },
+        ],
+        deadLetter: [
+          {
+            id: 'dead_import_2',
+            values: { email: 'dead-2@example.com' },
+            attempts: 4,
+            createdAt: 4,
+            updatedAt: 4,
+            nextAttemptAt: 0,
+            lastError: 'network',
+          },
+        ],
+      },
+      'merge'
+    );
+
+    expect(merged.draft).toEqual({
+      email: 'draft@example.com',
+      note: 'merged',
+    });
+    expect(merged.queue.map((entry) => entry.id)).toEqual([
+      'queue_import_1',
+      'queue_import_2',
+    ]);
+    expect(merged.deadLetter.map((entry) => entry.id)).toEqual([
+      'dead_import_1',
+      'dead_import_2',
+    ]);
+  });
+
   it('can filter and sort queue entries through the local admin API', () => {
     const formConfig = createFormConfig({
       name: 'admin-query-form',

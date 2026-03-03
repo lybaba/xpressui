@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as publicApi from '../src/index';
 import {
   createLocalFormAdmin,
   createFormConfig,
@@ -38,6 +39,19 @@ describe('FormUI', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     vi.restoreAllMocks();
+  });
+
+  it('keeps the main public runtime exports available from the package entrypoint', () => {
+    expect(publicApi.FormUI).toBe(FormUI);
+    expect(publicApi.FormRuntime).toBe(FormRuntime);
+    expect(publicApi.createFormConfig).toBe(createFormConfig);
+    expect(publicApi.mountFormUI).toBe(mountFormUI);
+    expect(publicApi.createLocalFormAdmin).toBe(createLocalFormAdmin);
+    expect(publicApi.validatePublicFormConfig).toBe(validatePublicFormConfig);
+    expect(publicApi.PUBLIC_FORM_SCHEMA_VERSION).toBe(PUBLIC_FORM_SCHEMA_VERSION);
+    expect(publicApi.registerProvider).toBe(registerProvider);
+    expect(publicApi.getProviderDefinition).toBe(getProviderDefinition);
+    expect(publicApi.createSubmitRequestFromProvider).toBe(createSubmitRequestFromProvider);
   });
 
   it('hydrates a named template into the custom element', () => {

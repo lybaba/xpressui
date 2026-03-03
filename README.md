@@ -342,6 +342,12 @@ Project tooling:
 - daisyUI 5
 - Vitest
 
+## Backend Contracts
+
+For concrete request and response examples, see:
+
+- [docs/backend-integration.md](/home/lyb/projects/xpressui/docs/backend-integration.md)
+
 ## Status
 
 What is stable in the current codebase:

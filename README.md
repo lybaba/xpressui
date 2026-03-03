@@ -533,7 +533,7 @@ Project tooling:
 
 For concrete request and response examples, see:
 
-- [docs/backend-integration.md](/home/lyb/projects/xpressui/docs/backend-integration.md)
+- [`docs/backend-integration.md`](./docs/backend-integration.md)
 
 ## Status
 

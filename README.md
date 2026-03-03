@@ -1,155 +1,50 @@
 # xpress-ui
 
-> XPressUI Frontend Post UI Components
+`@lybaba/xpressui` is a lightweight form engine built around a custom element:
+`<form-ui>`.
 
-Build Form UI and Online-Store UI (aka PostUI)  from a Json Configuration File.
-Just declare your Post UI as a Json Object and XPressUI will take the rest.
-- Generate the Post UI
-- Handle the Post UI internals ( form validation, navigation, and post data to your backend server)
+It helps you:
+- define forms from simple JavaScript objects
+- validate input with AJV + `final-form`
+- submit data to your backend with normalized payloads
+- plug in common workflows such as reservation and payment
+- build dynamic forms with conditional fields and API-driven select options
 
-[![NPM](https://img.shields.io/npm/v/postui.svg)](https://www.npmjs.com/package/postui) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+This repository currently ships a browser-focused Web Component library. It is
+not the old React `PostUI` API shown in earlier versions of the README.
 
-## Node version used
-nvm install 20.19.0
-nvm use 20.19.0
+## Current Scope
 
-## Install
+The public API is centered on:
+- `FormUI` (the custom element class)
+- `mountFormUI(...)`
+- `createFormConfig(...)`
+- `createTemplateMarkup(...)`
+
+The recommended path is `mountFormUI(...)`, which lets you mount a form from a
+plain object without hand-writing a full HTML template.
+
+## Requirements
+
+- Node.js `20.19.0` or newer
 
 ```bash
-npm install --save @lybaba/xpressui
+nvm install 20.19.0
+nvm use 20.19.0
 ```
 
-## Usage
+## Installation
 
-```tsx
-import { ThemeProvider } from '@mui/joy/styles';
-import theme from './styles/default';
-import PostUIProvider from './components/postui/PostUIProvider';
-import TPostUIEvent, { TPostUIEventType } from 'src/common/TPostUIEvent';
-import TServerResponse from 'src/common/TServerResponse';
-import PostUI from './components/postui/PostUI';
-import TPostConfig from './common/TPostConfig';
+The package is configured for GitHub Packages:
 
-const MULTI_STEP_FORM_CONFIG: TPostConfig = {
-  "uid": "user123",
-  "id": "123",
-  "type": "multistepform",
-  "name": "multi-step-form",
-  "label": "MultiStep Form",
-  "submitBtnLabel": "Submit",
-  "prevBtnLabel": "Previous",
-  "nextBtnLabel": "Next",
-  "backendController": "controller.php",
-  "successMsg": "Form successfully submited.",
-  "errorMsg": "Submission failed.",
-  "sections": {
-      "main": [
-          {
-              "name": "step_1",
-              "label": "Step 1",
-              "type": "section",
-          },
-          {
-              "name": "step_2",
-              "label": "Step 2",
-              "type": "section",
-          },
-          {
-              "name": "step_3",
-              "label": "Step 3",
-              "type": "section",
-          }
-      ],
-      "step_1": [
-          {
-              "label": "Email",
-              "type": "email",
-              "required": true,
-              "name": "email"
-          }
-      ],
-      "step_2": [
-          {
-              "label": "Nom",
-              "type": "text",
-              "required": true,
-              "name": "nom"
-          }
-      ],
-      "step_3": [
-          {
-              "label": "Message",
-              "type": "textarea",
-              "required": true,
-              "name": "message"
-          }
-      ],
-  }
-}
-
-
-// callback for sending data to server.  
-async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
-
-  console.log("PostUIPage____onPostUIEvent : ", event);
-
-  // add logic to post the data (event.data) to the server
-  if (event.eventType === TPostUIEventType.SubmitFormEvent) {
-    const response = await fetch(event.frontend.postConfig.backendController, {
-      method: "POST", 
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(event.data), 
-    });
-
-    const {
-      errorMsg = 'Submission failed.',
-      successMsg = 'Form has been successfully submitted.'
-    } = event.frontend.postConfig;
-
-    if (!response.ok) {
-      const serverRes: TServerResponse = {
-        success: false,
-        message: errorMsg,
-        statusCode: response.status
-      };
-
-      return serverRes;
-    }
-    const data = response.json();
-    const serverRes: TServerResponse = {
-      success: true,
-      message: successMsg,
-      data
-    };
-
-    return serverRes;
-  }
-
-  const serverRes: TServerResponse = {
-    success: true,
-    message: 'success',
-  };
-
-  return serverRes;
-}
-
-class Example extends Component {
-  render() {
-    return(
-      <PostUIProvider>
-        <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
-      </PostUIProvider>
-    )
-  }
-}
+```bash
+npm install @lybaba/xpressui
 ```
 
-## Simpler Form Setup
+If you publish privately through GitHub Packages, make sure your npm registry
+and auth are configured for the `@lybaba` scope.
 
-You can also mount a form from a plain object and either listen to events or
-let the component call your API directly.
+## Quick Start
 
 ```ts
 import { mountFormUI } from '@lybaba/xpressui';
@@ -158,35 +53,65 @@ const container = document.getElementById('app');
 
 if (container) {
   const form = mountFormUI(container, {
-    name: 'booking-form',
-    title: 'Book a Table',
-    submit: {
-      endpoint: '/api/bookings',
-      method: 'POST',
-      action: 'reservation',
-    },
+    name: 'contact-form',
+    title: 'Contact Us',
     fields: [
       { name: 'email', label: 'Email', type: 'email', required: true },
-      { name: 'date', label: 'Date', type: 'datetime', required: true },
-      { name: 'notes', label: 'Notes', type: 'textarea' },
+      { name: 'message', label: 'Message', type: 'textarea', required: true },
     ],
   });
 
   form?.addEventListener('form-ui:submit-success', (event) => {
-    console.log('Booking created', (event as CustomEvent).detail.result);
+    console.log('Submitted', (event as CustomEvent).detail.values);
   });
 }
 ```
 
-Events emitted by the component:
+## Submission Modes
+
+### 1. Manual handling through events
+
+If you do not provide a submit endpoint, the component validates the form and
+emits events. Your app decides what to do next.
+
+Events:
 - `form-ui:submit`
 - `form-ui:submit-success`
 - `form-ui:submit-error`
 
-## Reservation Provider
+### 2. Direct API submission
 
-If you want a reservation workflow without hand-writing the submit action, use a
-provider:
+Provide a `submit` block and the component will call your backend with `fetch`.
+
+```ts
+mountFormUI(container, {
+  name: 'booking-form',
+  title: 'Book a Table',
+  submit: {
+    endpoint: '/api/bookings',
+    method: 'POST',
+  },
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+    { name: 'date', label: 'Date', type: 'datetime', required: true },
+    { name: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+});
+```
+
+Supported submit options:
+- `endpoint`
+- `method`
+- `headers`
+- `mode` (`json` or `form-data`)
+- `action`
+
+## Built-in Providers
+
+Providers are thin presets on top of `submit`. They normalize payloads so your
+backend receives stable request shapes.
+
+### Reservation
 
 ```ts
 mountFormUI(container, {
@@ -203,13 +128,22 @@ mountFormUI(container, {
 });
 ```
 
-This emits:
+Request body:
+
+```json
+{
+  "action": "reservation",
+  "reservation": {
+    "email": "user@example.com",
+    "date": "2026-03-03 20:00"
+  }
+}
+```
+
+Extra event:
 - `form-ui:reservation-success`
 
-## Payment Provider
-
-For payment flows, use the built-in payment provider. The component sends a
-normalized payload to your backend and emits a dedicated success event.
+### Payment
 
 ```ts
 mountFormUI(container, {
@@ -226,7 +160,7 @@ mountFormUI(container, {
 });
 ```
 
-Payload shape:
+Request body:
 
 ```json
 {
@@ -238,17 +172,66 @@ Payload shape:
 }
 ```
 
-This emits:
+Extra events:
 - `form-ui:payment-success`
 - `form-ui:payment-error`
 
-## Dynamic Fields
+### Stripe Payment
 
-You can show fields conditionally and load select options from an API:
+Use `payment-stripe` when your backend creates a Stripe PaymentIntent and
+returns checkout metadata to the frontend.
+
+```ts
+mountFormUI(container, {
+  name: 'stripe-payment-form',
+  title: 'Pay with Stripe',
+  provider: {
+    type: 'payment-stripe',
+    endpoint: '/api/stripe/create-intent',
+  },
+  fields: [
+    { name: 'amount', label: 'Amount', type: 'price', required: true },
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "payment-stripe",
+  "payment": {
+    "amount": 19.99,
+    "email": "stripe@example.com"
+  }
+}
+```
+
+Expected backend response:
+
+```json
+{
+  "clientSecret": "pi_secret_123",
+  "paymentIntentId": "pi_123",
+  "redirectUrl": "/checkout/complete"
+}
+```
+
+Extra events:
+- `form-ui:payment-stripe-success`
+- `form-ui:payment-stripe-error`
+
+## Dynamic Forms
+
+The component supports two dynamic patterns out of the box:
+- conditional visibility
+- remote options for select fields
 
 ```ts
 mountFormUI(container, {
   name: 'dynamic-booking',
+  title: 'Dynamic Booking',
   fields: [
     {
       name: 'service',
@@ -272,8 +255,108 @@ mountFormUI(container, {
 });
 ```
 
-This also emits:
+Extra event:
 - `form-ui:options-loaded`
+
+## Field Features
+
+Useful field capabilities supported by the current builder:
+- `required`
+- `placeholder`
+- `helpText`
+- `choices` for select fields
+- `visibleWhenField`
+- `visibleWhenEquals`
+- `optionsEndpoint`
+- `optionsDependsOn`
+- `optionsLabelKey`
+- `optionsValueKey`
+
+Common field types used today:
+- `text`
+- `textarea`
+- `email`
+- `tel`
+- `number`
+- `price`
+- `datetime`
+- `select-one`
+- `checkbox`
+
+## Events
+
+Core events emitted by `<form-ui>`:
+- `form-ui:submit`
+- `form-ui:submit-success`
+- `form-ui:submit-error`
+- `form-ui:options-loaded`
+
+Provider-specific events:
+- `form-ui:reservation-success`
+- `form-ui:payment-success`
+- `form-ui:payment-error`
+- `form-ui:payment-stripe-success`
+- `form-ui:payment-stripe-error`
+
+Event detail includes:
+- `values`
+- `formConfig`
+- `submit`
+- `response` when an API call happened
+- `result` when the backend returned data
+- `error` on failures
+
+## Advanced Usage
+
+If you need more control, you can generate the HTML template yourself:
+
+```ts
+import { createFormConfig, createTemplateMarkup } from '@lybaba/xpressui';
+
+const formConfig = createFormConfig({
+  name: 'custom-form',
+  title: 'Custom Form',
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+
+const markup = createTemplateMarkup(formConfig);
+document.getElementById('app')!.innerHTML = markup;
+```
+
+## Development
+
+```bash
+npm install
+npm run test
+npm run check
+npm run build
+npm run start
+```
+
+Project tooling:
+- Vite 7
+- TypeScript 5
+- Tailwind CSS 4
+- daisyUI 5
+- Vitest
+
+## Status
+
+What is stable in the current codebase:
+- Web Component rendering
+- schema-based validation
+- API submission hooks
+- reservation, payment, and Stripe-oriented provider flows
+- conditional fields and remote select loading
+
+What is not implemented as a full product yet:
+- visual form builder UI
+- persistent hosted backend
+- prebuilt Stripe Elements integration
+- auth/session management
+- production-ready analytics, audit trail, and admin workflows
 
 ## License
 

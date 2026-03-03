@@ -614,6 +614,7 @@ describe('FormUI', () => {
           optionsDependsOn: 'service',
         },
       ],
+      getRules: () => [],
       getFieldContainer: (fieldName) =>
         fieldName === 'slot'
           ? document.querySelector('#slot-container') as HTMLElement
@@ -642,6 +643,81 @@ describe('FormUI', () => {
     );
     expect((document.querySelector('#slot-container') as HTMLElement).style.display).toBe('');
     expect((document.querySelector('#slot') as HTMLSelectElement).options.length).toBe(3);
+  });
+
+  it('supports basic rules with AND/OR logic and show/hide actions', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'rules-form',
+      title: 'Rules Form',
+      rules: [
+        {
+          logic: 'AND',
+          conditions: [
+            { field: 'service', operator: 'equals', value: 'consulting' },
+            { field: 'urgency', operator: 'equals', value: 'high' },
+          ],
+          actions: [
+            { type: 'show', field: 'notes' },
+          ],
+        },
+        {
+          logic: 'OR',
+          conditions: [
+            { field: 'service', operator: 'equals', value: 'support' },
+            { field: 'urgency', operator: 'equals', value: 'low' },
+          ],
+          actions: [
+            { type: 'hide', field: 'notes' },
+            { type: 'clear-value', field: 'notes' },
+          ],
+        },
+      ],
+      fields: [
+        {
+          name: 'service',
+          label: 'Service',
+          type: 'text',
+        },
+        {
+          name: 'urgency',
+          label: 'Urgency',
+          type: 'text',
+        },
+        {
+          name: 'notes',
+          label: 'Notes',
+          type: 'textarea',
+        },
+      ],
+    }) as FormUI;
+    const service = element.querySelector('#service') as HTMLInputElement;
+    const urgency = element.querySelector('#urgency') as HTMLInputElement;
+    const notes = element.querySelector('#notes') as HTMLTextAreaElement;
+    const notesContainer = notes.closest('label') as HTMLElement;
+
+    service.value = 'support';
+    service.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(notesContainer.style.display).toBe('none');
+
+    service.value = 'consulting';
+    service.dispatchEvent(new Event('input', { bubbles: true }));
+    urgency.value = 'high';
+    urgency.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(notesContainer.style.display).toBe('');
+
+    notes.value = 'Keep me';
+    notes.dispatchEvent(new Event('input', { bubbles: true }));
+    urgency.value = 'low';
+    urgency.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(notesContainer.style.display).toBe('none');
+    expect((element.form?.getState().values || {}).notes).toBeUndefined();
   });
 
   it('supports a payment provider with a normalized payload', async () => {

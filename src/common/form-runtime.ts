@@ -93,6 +93,7 @@ export class FormRuntime {
     this.dynamic = options.dynamic
       ? new FormDynamicRuntime({
           getFieldConfigs: () => Object.values(this.engine.getFields()),
+          getRules: () => this.formConfig?.rules || [],
           getFieldContainer: (fieldName) => options.dynamic!.getFieldContainer(fieldName),
           getFieldElement: (fieldName) => options.dynamic!.getFieldElement(fieldName),
           getFieldValue: (fieldName) => options.dynamic!.getFieldValue(fieldName),

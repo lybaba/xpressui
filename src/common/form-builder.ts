@@ -4,6 +4,7 @@ import TFieldConfig from './TFieldConfig';
 import TFormConfig, {
   CONTACTFORM_TYPE,
   TFormProviderRequest,
+  TFormRule,
   TFormStorageConfig,
   TFormSubmitRequest,
 } from './TFormConfig';
@@ -30,6 +31,7 @@ export type TSimpleFormInput = {
   submit?: TFormSubmitRequest;
   provider?: TFormProviderRequest;
   storage?: TFormStorageConfig;
+  rules?: TFormRule[];
   sectionName?: string;
   sectionLabel?: string;
   successMsg?: string;
@@ -147,6 +149,7 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
     submit,
     provider,
     storage: input.storage,
+    rules: input.rules,
     successMsg: input.successMsg,
     errorMsg: input.errorMsg,
   });
@@ -194,9 +197,12 @@ export function createTemplateMarkup(
         .filter(Boolean)
         .join(' ')
     : '';
+  const rulesAttr = config.rules?.length
+    ? `data-rules="${escapeHtml(JSON.stringify(config.rules))}"`
+    : '';
 
   return `<template id="${escapeHtml(templateName)}">
-  <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs}>
+  <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs} ${rulesAttr}>
     <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}" class="flex flex-col gap-4">
       ${fieldMarkup}
       <button type="submit" class="btn btn-primary">Submit</button>

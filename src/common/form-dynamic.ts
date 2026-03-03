@@ -9,6 +9,18 @@ export type TFormRemoteOptionsDetail = {
 
 type TFormDynamicRuntimeOptions = {
   getFieldConfigs(): TFieldConfig[];
+  getRules(): Array<{
+    logic?: "AND" | "OR";
+    conditions: Array<{
+      field: string;
+      operator?: "equals" | "not_equals";
+      value?: any;
+    }>;
+    actions: Array<{
+      type: "show" | "hide" | "clear-value";
+      field: string;
+    }>;
+  }>;
   getFieldContainer(
     fieldName: string,
   ): HTMLElement | null;
@@ -31,7 +43,33 @@ export class FormDynamicRuntime {
     this.loadingOptions = {};
   }
 
+  matchesCondition(
+    condition: { field: string; operator?: "equals" | "not_equals"; value?: any },
+  ): boolean {
+    const currentValue = this.options.getFieldValue(condition.field);
+    const operator = condition.operator || "equals";
+
+    if (operator === "not_equals") {
+      return String(currentValue ?? "") !== String(condition.value ?? "");
+    }
+
+    return String(currentValue ?? "") === String(condition.value ?? "");
+  }
+
+  matchesRule(
+    rule: {
+      logic?: "AND" | "OR";
+      conditions: Array<{ field: string; operator?: "equals" | "not_equals"; value?: any }>;
+    },
+  ): boolean {
+    const logic = rule.logic || "AND";
+    const matches = rule.conditions.map((condition) => this.matchesCondition(condition));
+    return logic === "OR" ? matches.some(Boolean) : matches.every(Boolean);
+  }
+
   updateConditionalFields(): void {
+    const visibilityOverrides: Record<string, boolean> = {};
+
     this.options.getFieldConfigs().forEach((fieldConfig) => {
       if (!fieldConfig.visibleWhenField) {
         return;
@@ -48,6 +86,36 @@ export class FormDynamicRuntime {
       const isVisible = expectedValue === undefined
         ? Boolean(currentValue)
         : String(currentValue ?? "") === String(expectedValue);
+      visibilityOverrides[fieldConfig.name] = isVisible;
+    });
+
+    this.options.getRules().forEach((rule) => {
+      if (!rule.conditions.length || !rule.actions.length || !this.matchesRule(rule)) {
+        return;
+      }
+
+      rule.actions.forEach((action) => {
+        if (action.type === "show") {
+          visibilityOverrides[action.field] = true;
+        } else if (action.type === "hide") {
+          visibilityOverrides[action.field] = false;
+        } else if (action.type === "clear-value") {
+          this.options.clearFieldValue(action.field);
+        }
+      });
+    });
+
+    this.options.getFieldConfigs().forEach((fieldConfig) => {
+      const container = this.options.getFieldContainer(fieldConfig.name);
+      const fieldElement = this.options.getFieldElement(fieldConfig.name);
+      if (!container || !fieldElement) {
+        return;
+      }
+
+      const isVisible = visibilityOverrides[fieldConfig.name];
+      if (isVisible === undefined) {
+        return;
+      }
 
       container.style.display = isVisible ? "" : "none";
       fieldElement.disabled = !isVisible;

@@ -64,6 +64,23 @@ export type TFormStorageConfig = {
     autoSaveMs?: number;
 };
 
+export type TFormRuleCondition = {
+    field: string;
+    operator?: 'equals' | 'not_equals';
+    value?: any;
+};
+
+export type TFormRuleAction = {
+    type: 'show' | 'hide' | 'clear-value';
+    field: string;
+};
+
+export type TFormRule = {
+    logic?: 'AND' | 'OR';
+    conditions: TFormRuleCondition[];
+    actions: TFormRuleAction[];
+};
+
 type TFormConfig = {
     version: number;
     id: string;
@@ -88,6 +105,7 @@ type TFormConfig = {
     submit?: TFormSubmitRequest;
     provider?: TFormProviderRequest;
     storage?: TFormStorageConfig;
+    rules?: TFormRule[];
     successMsg?: string;
     errorMsg?: string;
 }

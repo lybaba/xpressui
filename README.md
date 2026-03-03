@@ -477,6 +477,7 @@ Extra events:
 The component supports two dynamic patterns out of the box:
 - conditional visibility
 - remote options for select fields
+- basic rules (`AND` / `OR`, `show`, `hide`, `clear-value`)
 
 ```ts
 mountFormUI(container, {
@@ -507,6 +508,37 @@ mountFormUI(container, {
 
 Extra event:
 - `form-ui:options-loaded`
+
+You can also define basic rules at the form level:
+
+```ts
+mountFormUI(container, {
+  name: 'rules-form',
+  title: 'Rules',
+  rules: [
+    {
+      logic: 'AND',
+      conditions: [
+        { field: 'service', operator: 'equals', value: 'consulting' },
+        { field: 'urgency', operator: 'equals', value: 'high' },
+      ],
+      actions: [
+        { type: 'show', field: 'notes' },
+      ],
+    },
+  ],
+  fields: [
+    { name: 'service', label: 'Service', type: 'text' },
+    { name: 'urgency', label: 'Urgency', type: 'text' },
+    { name: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+});
+```
+
+Current rule scope:
+- condition logic: `AND`, `OR`
+- condition operators: `equals`, `not_equals`
+- actions: `show`, `hide`, `clear-value`
 
 ## Local Draft Storage
 

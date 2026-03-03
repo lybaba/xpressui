@@ -837,4 +837,61 @@ describe('FormUI', () => {
     expect(window.localStorage.getItem(`${key}:dead-letter`)).toBeNull();
     expect(element.getStorageSnapshot().deadLetter).toEqual([]);
   });
+
+  it('can requeue a dead-letter entry back into the active queue', () => {
+    const key = 'xpressui:test-dead-letter-requeue';
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'dead-letter-requeue-form',
+      title: 'Dead Letter Requeue Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const onRequeued = vi.fn();
+
+    window.localStorage.setItem(
+      `${key}:dead-letter`,
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'dead_requeue',
+            values: { email: 'return@example.com' },
+            attempts: 3,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    element.addEventListener('form-ui:dead-letter-requeued', (event) => {
+      onRequeued((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    expect(element.requeueDeadLetterEntry('dead_requeue')).toBe(true);
+
+    const queueState = JSON.parse(window.localStorage.getItem(`${key}:queue`) || '{}');
+    const deadLetterState = JSON.parse(window.localStorage.getItem(`${key}:dead-letter`) || '{}');
+    expect(queueState.version).toBe(1);
+    expect(queueState.items).toHaveLength(1);
+    expect(queueState.items[0].values).toEqual({ email: 'return@example.com' });
+    expect(deadLetterState).toEqual({ version: 1, items: [] });
+    expect(onRequeued).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: { email: 'return@example.com' },
+      })
+    );
+  });
 });

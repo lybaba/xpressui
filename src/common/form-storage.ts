@@ -27,6 +27,7 @@ export interface TFormStorageAdapter {
   loadDeadLetterQueue(): TQueuedSubmission[];
   saveDeadLetterQueue(values: TQueuedSubmission[]): void;
   enqueueDeadLetter(entry: TQueuedSubmission): TQueuedSubmission[];
+  removeDeadLetterEntry(entryId: string): TQueuedSubmission | null;
   clearDeadLetterQueue(): void;
 }
 
@@ -191,6 +192,17 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
     queue.push(entry);
     this.saveDeadLetterQueue(queue);
     return queue;
+  }
+
+  removeDeadLetterEntry(entryId: string): TQueuedSubmission | null {
+    const queue = this.loadDeadLetterQueue();
+    const entry = queue.find((item) => item.id === entryId) || null;
+    if (!entry) {
+      return null;
+    }
+
+    this.saveDeadLetterQueue(queue.filter((item) => item.id !== entryId));
+    return entry;
   }
 
   clearDeadLetterQueue(): void {

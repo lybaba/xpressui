@@ -291,6 +291,32 @@ export class FormUI extends HTMLElement {
     this.emitQueueState();
   }
 
+  requeueDeadLetterEntry = (entryId: string) => {
+    if (!this.storageAdapter) {
+      return false;
+    }
+
+    const entry = this.storageAdapter.removeDeadLetterEntry(entryId);
+    if (!entry) {
+      return false;
+    }
+
+    const resetEntry: Record<string, any> = entry.values;
+    const queue = this.storageAdapter.enqueueSubmission(resetEntry);
+    this.emitFormEvent("form-ui:dead-letter-requeued", {
+      values: resetEntry,
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: {
+        queueLength: queue.length,
+        deadLetterLength: this.storageAdapter.loadDeadLetterQueue().length,
+        entryId,
+      },
+    });
+    this.emitQueueState();
+    return true;
+  }
+
   flushSubmissionQueue = async () => {
     if (
       !this.storageAdapter ||

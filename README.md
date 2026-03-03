@@ -10,8 +10,8 @@ Just declare your Post UI as a Json Object and XPressUI will take the rest.
 [![NPM](https://img.shields.io/npm/v/postui.svg)](https://www.npmjs.com/package/postui) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 ## Node version used
-nvm install 20.10.0
-nvm use 20.10.0
+nvm install 20.19.0
+nvm use 20.19.0
 
 ## Install
 

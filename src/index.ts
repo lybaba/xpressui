@@ -6,7 +6,7 @@ import TFieldConfig from "./common/TFieldConfig";
 import { normalizeFormValues } from "./common/field";
 
 
-class FormUI extends HTMLElement {
+export class FormUI extends HTMLElement {
   form: FormApi<any, any> | null;
   registered: Record<string, boolean>;
   validators: TValidator[];
@@ -142,4 +142,6 @@ class FormUI extends HTMLElement {
   }
 }
 
-window.customElements.define('form-ui', FormUI);
+if (!window.customElements.get('form-ui')) {
+  window.customElements.define('form-ui', FormUI);
+}

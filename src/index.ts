@@ -317,6 +317,52 @@ export class FormUI extends HTMLElement {
     return true;
   }
 
+  replayDeadLetterEntry = async (entryId: string) => {
+    if (!this.storageAdapter || !this.formConfig?.submit?.endpoint) {
+      return false;
+    }
+
+    const entry = this.storageAdapter.removeDeadLetterEntry(entryId);
+    if (!entry) {
+      return false;
+    }
+
+    try {
+      const { response, result } = await this.submitToApi(entry.values, this.formConfig.submit);
+      this.emitFormEvent("form-ui:dead-letter-replayed-success", {
+        values: entry.values,
+        formConfig: this.formConfig,
+        submit: this.formConfig.submit,
+        response,
+        result,
+      });
+      this.emitQueueState();
+      return true;
+    } catch (error: any) {
+      const replayEntry: TQueuedSubmission = {
+        ...entry,
+        attempts: entry.attempts + 1,
+        updatedAt: Date.now(),
+        nextAttemptAt: Date.now() + this.getRetryDelayMs(entry.attempts + 1),
+        lastError: error?.result?.message || error?.message || "replay_error",
+      };
+      const deadLetter = this.storageAdapter.enqueueDeadLetter(replayEntry);
+      this.emitFormEvent("form-ui:dead-letter-replayed-error", {
+        values: entry.values,
+        formConfig: this.formConfig,
+        submit: this.formConfig.submit,
+        response: error?.response,
+        result: {
+          deadLetterLength: deadLetter.length,
+          entry: replayEntry,
+        },
+        error,
+      });
+      this.emitQueueState();
+      return false;
+    }
+  }
+
   flushSubmissionQueue = async () => {
     if (
       !this.storageAdapter ||

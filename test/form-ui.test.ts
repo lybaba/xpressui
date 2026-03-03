@@ -894,4 +894,75 @@ describe('FormUI', () => {
       })
     );
   });
+
+  it('can replay a dead-letter entry immediately', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ replayed: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const key = 'xpressui:test-dead-letter-replay';
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'dead-letter-replay-form',
+      title: 'Dead Letter Replay Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key,
+      },
+      submit: {
+        endpoint: 'https://api.example.test/replay',
+        method: 'POST',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const onReplaySuccess = vi.fn();
+
+    window.localStorage.setItem(
+      `${key}:dead-letter`,
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'dead_replay',
+            values: { email: 'replay@example.com' },
+            attempts: 3,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    element.addEventListener('form-ui:dead-letter-replayed-success', (event) => {
+      onReplaySuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await expect(element.replayDeadLetterEntry('dead_replay')).resolves.toBe(true);
+
+    const deadLetterState = JSON.parse(window.localStorage.getItem(`${key}:dead-letter`) || '{}');
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/replay',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'replay@example.com' }),
+      })
+    );
+    expect(deadLetterState).toEqual({ version: 1, items: [] });
+    expect(onReplaySuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: { email: 'replay@example.com' },
+        result: { replayed: true },
+      })
+    );
+  });
 });

@@ -298,12 +298,15 @@ Queue events:
 - `form-ui:dead-lettered`
 - `form-ui:dead-letter-cleared`
 - `form-ui:dead-letter-requeued`
+- `form-ui:dead-letter-replayed-success`
+- `form-ui:dead-letter-replayed-error`
 
 Runtime inspection helpers:
 - `form.getQueueState()`
 - `form.getStorageSnapshot()`
 - `form.clearDeadLetterQueue()`
 - `form.requeueDeadLetterEntry(entryId)`
+- `form.replayDeadLetterEntry(entryId)`
 
 The local queue is now stored as a versioned object so it can evolve without
 breaking existing drafts:
@@ -360,6 +363,8 @@ Core events emitted by `<form-ui>`:
 - `form-ui:dead-lettered`
 - `form-ui:dead-letter-cleared`
 - `form-ui:dead-letter-requeued`
+- `form-ui:dead-letter-replayed-success`
+- `form-ui:dead-letter-replayed-error`
 
 Provider-specific events:
 - `form-ui:reservation-success`

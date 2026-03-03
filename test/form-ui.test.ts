@@ -956,6 +956,78 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports an email provider for outbound messaging workflows', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ delivered: true, messageId: 'msg_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'email-form',
+      title: 'Email Form',
+      provider: {
+        type: 'email',
+        endpoint: 'https://api.example.test/email/send',
+      },
+      fields: [
+        {
+          name: 'to',
+          label: 'To',
+          type: 'email',
+          required: true,
+        },
+        {
+          name: 'subject',
+          label: 'Subject',
+          type: 'text',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const to = element.querySelector('#to') as HTMLInputElement;
+    const subject = element.querySelector('#subject') as HTMLInputElement;
+    const form = element.querySelector('#email-form_form') as HTMLFormElement;
+    const onEmailSuccess = vi.fn();
+
+    element.addEventListener('form-ui:email-success', (event) => {
+      onEmailSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    to.dispatchEvent(new FocusEvent('focus'));
+    to.value = 'user@example.com';
+    to.dispatchEvent(new Event('input', { bubbles: true }));
+    to.dispatchEvent(new FocusEvent('blur'));
+
+    subject.dispatchEvent(new FocusEvent('focus'));
+    subject.value = 'Welcome';
+    subject.dispatchEvent(new Event('input', { bubbles: true }));
+    subject.dispatchEvent(new FocusEvent('blur'));
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/email/send',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'email',
+          email: {
+            to: 'user@example.com',
+            subject: 'Welcome',
+          },
+        }),
+      })
+    );
+    expect(onEmailSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { delivered: true, messageId: 'msg_123' },
+      })
+    );
+  });
+
   it('supports custom providers registered through the provider registry', async () => {
     registerProvider('quote-request', {
       buildPayload(values) {

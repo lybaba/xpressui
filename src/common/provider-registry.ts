@@ -156,3 +156,22 @@ registerProvider("booking-availability", {
   successEventName: "form-ui:booking-availability-success",
   errorEventName: "form-ui:booking-availability-error",
 });
+
+registerProvider("email", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "email",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "email",
+      email: values,
+    };
+  },
+  successEventName: "form-ui:email-success",
+  errorEventName: "form-ui:email-error",
+});

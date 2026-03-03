@@ -427,6 +427,51 @@ Extra events:
 - `form-ui:booking-availability-success`
 - `form-ui:booking-availability-error`
 
+### Email
+
+Use `email` when your backend exposes a messaging endpoint and you want a
+normalized request contract for outbound email workflows.
+
+```ts
+mountFormUI(container, {
+  name: 'email-form',
+  title: 'Email Form',
+  provider: {
+    type: 'email',
+    endpoint: '/api/email/send',
+  },
+  fields: [
+    { name: 'to', label: 'To', type: 'email', required: true },
+    { name: 'subject', label: 'Subject', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "email",
+  "email": {
+    "to": "user@example.com",
+    "subject": "Welcome"
+  }
+}
+```
+
+Typical backend response:
+
+```json
+{
+  "delivered": true,
+  "messageId": "msg_123"
+}
+```
+
+Extra events:
+- `form-ui:email-success`
+- `form-ui:email-error`
+
 ## Dynamic Forms
 
 The component supports two dynamic patterns out of the box:
@@ -617,6 +662,8 @@ Provider-specific events:
 - `form-ui:webhook-error`
 - `form-ui:booking-availability-success`
 - `form-ui:booking-availability-error`
+- `form-ui:email-success`
+- `form-ui:email-error`
 
 Event detail includes:
 - `values`
@@ -674,7 +721,7 @@ What is stable in the current codebase:
 - Web Component rendering
 - schema-based validation
 - API submission hooks
-- reservation, payment, Stripe, webhook, and booking-availability provider flows
+- reservation, payment, Stripe, webhook, booking-availability, and email provider flows
 - conditional fields and remote select loading
 - local draft persistence in the browser
 - local offline submission queue

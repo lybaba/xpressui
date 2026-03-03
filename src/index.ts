@@ -25,6 +25,7 @@ export {
   mountFormUI,
 } from "./common/form-builder";
 export { createLocalFormAdmin } from "./common/form-admin";
+export { attachFormDebugObserver } from "./common/form-debug";
 export { FormEngineRuntime } from "./common/form-engine";
 export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
@@ -43,6 +44,7 @@ export {
   registerProvider,
 } from "./common/provider-registry";
 export type { TLocalFormAdmin, TLocalQueueQuery } from "./common/form-admin";
+export type { TFormDebugEventRecord, TFormDebugObserver, TFormDebugOptions } from "./common/form-debug";
 export type { TFormQueueState, TFormStorageSnapshot } from "./common/form-persistence";
 export type {
   TFormRuntimeDynamicAdapters,

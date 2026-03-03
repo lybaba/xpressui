@@ -44,6 +44,9 @@ Advanced building blocks available but better treated as lower-level/internal:
 - `provider-registry` helpers
 - `form-submit` internals
 
+For lightweight event inspection in the browser, you can also use
+`attachFormDebugObserver(...)`.
+
 The public form contract is now versioned.
 Current public schema version:
 - `1`
@@ -157,6 +160,33 @@ Public types exported for headless integrations:
 - `TFormRuntimeDynamicAdapters`
 - `TFormRuntimeSubmitValues`
 - `TFormRuntimeSubmitResult`
+
+## Debug Observer
+
+Use `attachFormDebugObserver(...)` to record `form-ui:*` runtime events without
+instrumenting each event manually.
+
+```ts
+import { attachFormDebugObserver, mountFormUI } from '@lybaba/xpressui';
+
+const form = mountFormUI(container, {
+  name: 'debug-form',
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+
+const observer = form
+  ? attachFormDebugObserver(form, { maxEvents: 50 })
+  : null;
+
+console.log(observer?.getEvents());
+```
+
+The observer API:
+- `getEvents()`
+- `clear()`
+- `detach()`
 
 ## Submission Modes
 

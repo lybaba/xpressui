@@ -4,6 +4,7 @@ import {
   createLocalFormAdmin,
   createFormConfig,
   createSubmitRequestFromProvider,
+  attachFormDebugObserver,
   FormEngineRuntime,
   FormDynamicRuntime,
   FormPersistenceRuntime,
@@ -140,6 +141,56 @@ describe('FormUI', () => {
         values: { email: 'alice@example.com' },
       })
     );
+  });
+
+  it('can observe form events through the debug observer helper', async () => {
+    const element = renderFixture(`
+      <template id="debug">
+        <form
+          id="debug_form"
+          data-type="contactform"
+          data-name="debug"
+          data-label="Debug"
+        >
+          <div
+            data-type="section"
+            data-name="main"
+            data-label="Main"
+          ></div>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            data-type="email"
+            data-name="email"
+            data-label="Email"
+            data-required="true"
+            data-section-name="main"
+          />
+          <span id="email_error"></span>
+        </form>
+      </template>
+      <form-ui name="debug"></form-ui>
+    `);
+    const observer = attachFormDebugObserver(element, { maxEvents: 10 });
+    const input = element.querySelector('#email') as HTMLInputElement;
+    const form = element.querySelector('#debug_form') as HTMLFormElement;
+
+    input.dispatchEvent(new FocusEvent('focus'));
+    input.value = 'debug@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur'));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(observer.getEvents().map((event) => event.type)).toEqual([
+      'form-ui:submit',
+      'form-ui:submit-success',
+    ]);
+
+    observer.clear();
+    expect(observer.getEvents()).toEqual([]);
+    observer.detach();
   });
 
   it('shows and clears validation errors in the DOM', () => {

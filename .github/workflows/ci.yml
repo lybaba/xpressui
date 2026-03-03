@@ -30,11 +30,5 @@ jobs:
       - name: Test
         run: npm run test
 
-      - name: Build
-        run: npm run build
-
-      - name: Verify dist exports
-        run: npm run verify:dist
-
-      - name: Verify lib exports
-        run: npm run verify:lib
+      - name: Release sanity check
+        run: npm run release:check

@@ -144,6 +144,11 @@ export class FormUI extends HTMLElement {
             action: "reservation",
             reservation: formValues,
           }
+        : submitConfig.action === "payment"
+          ? {
+              action: "payment",
+              payment: formValues,
+            }
         : formValues;
 
     if (method === "GET") {
@@ -208,8 +213,14 @@ export class FormUI extends HTMLElement {
         response,
         result,
       });
-      if (this.formConfig.provider?.type === "reservation") {
+      if (this.formConfig?.submit?.action === "reservation") {
         this.emitFormEvent("form-ui:reservation-success", {
+          ...detail,
+          response,
+          result,
+        });
+      } else if (this.formConfig?.submit?.action === "payment") {
+        this.emitFormEvent("form-ui:payment-success", {
           ...detail,
           response,
           result,
@@ -222,6 +233,14 @@ export class FormUI extends HTMLElement {
         result: error?.result,
         error,
       });
+      if (this.formConfig?.submit?.action === "payment") {
+        this.emitFormEvent("form-ui:payment-error", {
+          ...detail,
+          response: error?.response,
+          result: error?.result,
+          error,
+        });
+      }
       throw error;
     }
   }

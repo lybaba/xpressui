@@ -206,6 +206,42 @@ mountFormUI(container, {
 This emits:
 - `form-ui:reservation-success`
 
+## Payment Provider
+
+For payment flows, use the built-in payment provider. The component sends a
+normalized payload to your backend and emits a dedicated success event.
+
+```ts
+mountFormUI(container, {
+  name: 'payment-form',
+  title: 'Pay Now',
+  provider: {
+    type: 'payment',
+    endpoint: '/api/payments',
+  },
+  fields: [
+    { name: 'amount', label: 'Amount', type: 'price', required: true },
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+```
+
+Payload shape:
+
+```json
+{
+  "action": "payment",
+  "payment": {
+    "amount": 42.5,
+    "email": "buyer@example.com"
+  }
+}
+```
+
+This emits:
+- `form-ui:payment-success`
+- `form-ui:payment-error`
+
 ## Dynamic Fields
 
 You can show fields conditionally and load select options from an API:

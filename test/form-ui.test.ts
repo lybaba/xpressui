@@ -15,6 +15,7 @@ async function flushAsyncWork() {
   await Promise.resolve();
   await Promise.resolve();
   await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 10));
 }
 
 describe('FormUI', () => {
@@ -308,5 +309,77 @@ describe('FormUI', () => {
     expect(slot.options.length).toBe(3);
     expect(slot.options[1].value).toBe('morning');
     expect(slot.options[2].textContent).toBe('Evening');
+  });
+
+  it('supports a payment provider with a normalized payload', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ clientSecret: 'pi_secret_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'payment-form',
+      title: 'Payment Form',
+      provider: {
+        type: 'payment',
+        endpoint: 'https://api.example.test/payments',
+      },
+      fields: [
+        {
+          name: 'amount',
+          label: 'Amount',
+          type: 'price',
+          required: true,
+        },
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const amount = element.querySelector('#amount') as HTMLInputElement;
+    const email = element.querySelector('#email') as HTMLInputElement;
+    const form = element.querySelector('#payment-form_form') as HTMLFormElement;
+    const onPaymentSuccess = vi.fn();
+
+    element.addEventListener('form-ui:payment-success', (event) => {
+      onPaymentSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    amount.dispatchEvent(new FocusEvent('focus'));
+    amount.value = '42.50';
+    amount.dispatchEvent(new Event('input', { bubbles: true }));
+    amount.dispatchEvent(new FocusEvent('blur'));
+
+    email.dispatchEvent(new FocusEvent('focus'));
+    email.value = 'buyer@example.com';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+    email.dispatchEvent(new FocusEvent('blur'));
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/payments',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'payment',
+          payment: {
+            amount: 42.5,
+            email: 'buyer@example.com',
+          },
+        }),
+      })
+    );
+    expect(onPaymentSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { clientSecret: 'pi_secret_123' },
+      })
+    );
   });
 });

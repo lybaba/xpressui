@@ -24,6 +24,9 @@ The public API is centered on:
 The recommended path is `mountFormUI(...)`, which lets you mount a form from a
 plain object without hand-writing a full HTML template.
 
+For storage/debug tooling outside the component instance, use
+`createLocalFormAdmin(formConfig)`.
+
 ## Requirements
 
 - Node.js `20.19.0` or newer
@@ -307,6 +310,17 @@ Runtime inspection helpers:
 - `form.clearDeadLetterQueue()`
 - `form.requeueDeadLetterEntry(entryId)`
 - `form.replayDeadLetterEntry(entryId)`
+
+Standalone local admin helper:
+- `createLocalFormAdmin(formConfig)`
+
+It can inspect and manage local state without a mounted `FormUI` instance:
+- `getSnapshot()`
+- `clearDraft()`
+- `clearQueue()`
+- `clearDeadLetter()`
+- `requeueDeadLetterEntry(entryId)`
+- `replayDeadLetterEntry(entryId)`
 
 The local queue is now stored as a versioned object so it can evolve without
 breaking existing drafts:

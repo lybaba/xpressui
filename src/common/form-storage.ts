@@ -21,6 +21,7 @@ export interface TFormStorageAdapter {
   clearDraft(): void;
   loadQueue(): TQueuedSubmission[];
   saveQueue(values: TQueuedSubmission[]): void;
+  clearQueue(): void;
   enqueueSubmission(values: Record<string, any>): TQueuedSubmission[];
   dequeueSubmission(): TQueuedSubmission | null;
   updateQueueEntry(entry: TQueuedSubmission): void;
@@ -129,6 +130,14 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
       window.localStorage.setItem(this.queueKey, JSON.stringify(state));
     } catch {
       // Ignore storage write failures.
+    }
+  }
+
+  clearQueue(): void {
+    try {
+      window.localStorage.removeItem(this.queueKey);
+    } catch {
+      // Ignore storage clear failures.
     }
   }
 

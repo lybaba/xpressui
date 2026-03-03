@@ -15,6 +15,7 @@ export {
   createTemplateMarkup,
   mountFormUI,
 } from "./common/form-builder";
+export { createLocalFormAdmin } from "./common/form-admin";
 
 export type TFormUISubmitDetail = {
   values: Record<string, any>;

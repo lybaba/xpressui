@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  createLocalFormAdmin,
   createFormConfig,
   FormUI,
   mountFormUI,
@@ -964,5 +965,116 @@ describe('FormUI', () => {
         result: { replayed: true },
       })
     );
+  });
+
+  it('exposes a local admin API independent of FormUI', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const formConfig = createFormConfig({
+      name: 'admin-form',
+      title: 'Admin Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin',
+      },
+      submit: {
+        endpoint: 'https://api.example.test/admin',
+        method: 'POST',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    window.localStorage.setItem('xpressui:test-admin', JSON.stringify({ email: 'draft@example.com' }));
+    window.localStorage.setItem(
+      'xpressui:test-admin:queue',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queue_admin_1',
+            values: { email: 'queued@example.com' },
+            attempts: 0,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+    window.localStorage.setItem(
+      'xpressui:test-admin:dead-letter',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'dead_admin_1',
+            values: { email: 'dead@example.com' },
+            attempts: 3,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    expect(admin.getSnapshot()).toEqual(
+      expect.objectContaining({
+        draft: { email: 'draft@example.com' },
+      })
+    );
+
+    expect(admin.requeueDeadLetterEntry('dead_admin_1')).toBe(true);
+    expect(admin.getSnapshot().queue).toHaveLength(2);
+    expect(admin.getSnapshot().deadLetter).toEqual([]);
+
+    await expect(admin.replayDeadLetterEntry('missing')).resolves.toBe(false);
+
+    window.localStorage.setItem(
+      'xpressui:test-admin:dead-letter',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'dead_admin_2',
+            values: { email: 'replay@example.com' },
+            attempts: 3,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    await expect(admin.replayDeadLetterEntry('dead_admin_2')).resolves.toBe(true);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/admin',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'replay@example.com' }),
+      })
+    );
+
+    admin.clearDraft();
+    admin.clearQueue();
+    admin.clearDeadLetter();
+    expect(admin.getSnapshot()).toEqual({
+      draft: null,
+      queue: [],
+      deadLetter: [],
+    });
   });
 });

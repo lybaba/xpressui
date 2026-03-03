@@ -504,6 +504,11 @@ Query options:
 - `minAttempts`
 - `maxAttempts`
 - `search`
+- `minAgeMs`
+- `maxAgeMs`
+- `nextAttemptBefore`
+- `nextAttemptAfter`
+- `errorText`
 - `sortBy` (`createdAt`, `updatedAt`, `attempts`, `nextAttemptAt`)
 - `sortOrder` (`asc`, `desc`)
 - `limit`

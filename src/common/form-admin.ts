@@ -24,6 +24,11 @@ export type TLocalQueueQuery = {
   minAttempts?: number;
   maxAttempts?: number;
   search?: string;
+  minAgeMs?: number;
+  maxAgeMs?: number;
+  nextAttemptBefore?: number;
+  nextAttemptAfter?: number;
+  errorText?: string;
   sortBy?: "createdAt" | "updatedAt" | "attempts" | "nextAttemptAt";
   sortOrder?: "asc" | "desc";
   limit?: number;
@@ -45,6 +50,30 @@ function matchesQuery(entry: TQueuedSubmission, query?: TLocalQueueQuery): boole
   if (query.search) {
     const haystack = JSON.stringify(entry.values).toLowerCase();
     if (!haystack.includes(query.search.toLowerCase())) {
+      return false;
+    }
+  }
+
+  const ageMs = Date.now() - entry.createdAt;
+  if (query.minAgeMs !== undefined && ageMs < query.minAgeMs) {
+    return false;
+  }
+
+  if (query.maxAgeMs !== undefined && ageMs > query.maxAgeMs) {
+    return false;
+  }
+
+  if (query.nextAttemptBefore !== undefined && entry.nextAttemptAt >= query.nextAttemptBefore) {
+    return false;
+  }
+
+  if (query.nextAttemptAfter !== undefined && entry.nextAttemptAt <= query.nextAttemptAfter) {
+    return false;
+  }
+
+  if (query.errorText) {
+    const errorText = (entry.lastError || "").toLowerCase();
+    if (!errorText.includes(query.errorText.toLowerCase())) {
       return false;
     }
   }

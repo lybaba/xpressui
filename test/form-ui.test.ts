@@ -1696,6 +1696,81 @@ describe('FormUI', () => {
     ).toEqual(['queue_2', 'queue_3']);
   });
 
+  it('can filter queue entries by age and retry window', () => {
+    const now = 10_000;
+    vi.spyOn(Date, 'now').mockReturnValue(now);
+
+    const formConfig = createFormConfig({
+      name: 'admin-age-query-form',
+      title: 'Admin Age Query Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-age-query',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    window.localStorage.setItem(
+      'xpressui:test-admin-age-query:queue',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queue_age_1',
+            values: { email: 'fresh@example.com' },
+            attempts: 1,
+            createdAt: 9_500,
+            updatedAt: 9_500,
+            nextAttemptAt: 10_500,
+            lastError: 'fresh network issue',
+          },
+          {
+            id: 'queue_age_2',
+            values: { email: 'stale@example.com' },
+            attempts: 2,
+            createdAt: 7_000,
+            updatedAt: 8_000,
+            nextAttemptAt: 9_000,
+            lastError: 'stale timeout',
+          },
+          {
+            id: 'queue_age_3',
+            values: { email: 'older@example.com' },
+            attempts: 3,
+            createdAt: 1_000,
+            updatedAt: 2_000,
+            nextAttemptAt: 15_000,
+            lastError: 'older timeout',
+          },
+        ],
+      }),
+    );
+
+    expect(
+      admin.listQueue({
+        minAgeMs: 2_000,
+        maxAgeMs: 9_000,
+        nextAttemptBefore: 10_000,
+      }).map((entry) => entry.id)
+    ).toEqual(['queue_age_2']);
+
+    expect(
+      admin.listQueue({
+        nextAttemptAfter: 10_000,
+        sortBy: 'nextAttemptAt',
+        sortOrder: 'asc',
+      }).map((entry) => entry.id)
+    ).toEqual(['queue_age_1', 'queue_age_3']);
+  });
+
   it('can filter dead-letter entries through the local admin API', () => {
     const formConfig = createFormConfig({
       name: 'admin-dead-query-form',
@@ -1746,6 +1821,59 @@ describe('FormUI', () => {
         search: 'other',
       }).map((entry) => entry.id)
     ).toEqual(['dead_b']);
+  });
+
+  it('can filter dead-letter entries by error text', () => {
+    const formConfig = createFormConfig({
+      name: 'admin-dead-error-form',
+      title: 'Admin Dead Error Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-dead-error',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    window.localStorage.setItem(
+      'xpressui:test-admin-dead-error:dead-letter',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'dead_error_a',
+            values: { email: 'a@example.com' },
+            attempts: 3,
+            createdAt: 100,
+            updatedAt: 200,
+            nextAttemptAt: 0,
+            lastError: 'payment timeout',
+          },
+          {
+            id: 'dead_error_b',
+            values: { email: 'b@example.com' },
+            attempts: 4,
+            createdAt: 300,
+            updatedAt: 400,
+            nextAttemptAt: 0,
+            lastError: 'validation rejected',
+          },
+        ],
+      }),
+    );
+
+    expect(
+      admin.listDeadLetter({
+        errorText: 'timeout',
+      }).map((entry) => entry.id)
+    ).toEqual(['dead_error_a']);
   });
 
   it('supports batch admin actions for queue and dead-letter entries', async () => {

@@ -1077,4 +1077,119 @@ describe('FormUI', () => {
       deadLetter: [],
     });
   });
+
+  it('can filter and sort queue entries through the local admin API', () => {
+    const formConfig = createFormConfig({
+      name: 'admin-query-form',
+      title: 'Admin Query Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-query',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    window.localStorage.setItem(
+      'xpressui:test-admin-query:queue',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queue_1',
+            values: { email: 'alpha@example.com' },
+            attempts: 0,
+            createdAt: 100,
+            updatedAt: 100,
+            nextAttemptAt: 100,
+          },
+          {
+            id: 'queue_2',
+            values: { email: 'beta@example.com' },
+            attempts: 2,
+            createdAt: 200,
+            updatedAt: 300,
+            nextAttemptAt: 400,
+          },
+          {
+            id: 'queue_3',
+            values: { email: 'gamma@example.com' },
+            attempts: 4,
+            createdAt: 300,
+            updatedAt: 500,
+            nextAttemptAt: 600,
+          },
+        ],
+      }),
+    );
+
+    expect(
+      admin.listQueue({
+        minAttempts: 1,
+        search: 'example',
+        sortBy: 'attempts',
+        sortOrder: 'asc',
+        limit: 2,
+      }).map((entry) => entry.id)
+    ).toEqual(['queue_2', 'queue_3']);
+  });
+
+  it('can filter dead-letter entries through the local admin API', () => {
+    const formConfig = createFormConfig({
+      name: 'admin-dead-query-form',
+      title: 'Admin Dead Query Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-dead-query',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    window.localStorage.setItem(
+      'xpressui:test-admin-dead-query:dead-letter',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'dead_a',
+            values: { email: 'a@example.com' },
+            attempts: 3,
+            createdAt: 100,
+            updatedAt: 200,
+            nextAttemptAt: 0,
+          },
+          {
+            id: 'dead_b',
+            values: { email: 'b@other.com' },
+            attempts: 5,
+            createdAt: 300,
+            updatedAt: 400,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    expect(
+      admin.listDeadLetter({
+        minAttempts: 4,
+        search: 'other',
+      }).map((entry) => entry.id)
+    ).toEqual(['dead_b']);
+  });
 });

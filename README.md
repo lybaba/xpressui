@@ -316,11 +316,21 @@ Standalone local admin helper:
 
 It can inspect and manage local state without a mounted `FormUI` instance:
 - `getSnapshot()`
+- `listQueue(query?)`
+- `listDeadLetter(query?)`
 - `clearDraft()`
 - `clearQueue()`
 - `clearDeadLetter()`
 - `requeueDeadLetterEntry(entryId)`
 - `replayDeadLetterEntry(entryId)`
+
+Query options:
+- `minAttempts`
+- `maxAttempts`
+- `search`
+- `sortBy` (`createdAt`, `updatedAt`, `attempts`, `nextAttemptAt`)
+- `sortOrder` (`asc`, `desc`)
+- `limit`
 
 The local queue is now stored as a versioned object so it can evolve without
 breaking existing drafts:

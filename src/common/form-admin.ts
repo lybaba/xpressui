@@ -87,8 +87,60 @@ export type TLocalFormAdminSnapshot = {
   deadLetter: TQueuedSubmission[];
 };
 
+export type TLocalQueueQuery = {
+  minAttempts?: number;
+  maxAttempts?: number;
+  search?: string;
+  sortBy?: "createdAt" | "updatedAt" | "attempts" | "nextAttemptAt";
+  sortOrder?: "asc" | "desc";
+  limit?: number;
+};
+
+function matchesQuery(entry: TQueuedSubmission, query?: TLocalQueueQuery): boolean {
+  if (!query) {
+    return true;
+  }
+
+  if (query.minAttempts !== undefined && entry.attempts < query.minAttempts) {
+    return false;
+  }
+
+  if (query.maxAttempts !== undefined && entry.attempts > query.maxAttempts) {
+    return false;
+  }
+
+  if (query.search) {
+    const haystack = JSON.stringify(entry.values).toLowerCase();
+    if (!haystack.includes(query.search.toLowerCase())) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function applyQuery(entries: TQueuedSubmission[], query?: TLocalQueueQuery): TQueuedSubmission[] {
+  const filtered = entries.filter((entry) => matchesQuery(entry, query));
+  const sortBy = query?.sortBy || "createdAt";
+  const sortOrder = query?.sortOrder || "desc";
+  const sorted = [...filtered].sort((a, b) => {
+    const left = a[sortBy];
+    const right = b[sortBy];
+    const result = left === right ? 0 : left < right ? -1 : 1;
+    return sortOrder === "asc" ? result : -result;
+  });
+
+  if (query?.limit !== undefined) {
+    return sorted.slice(0, query.limit);
+  }
+
+  return sorted;
+}
+
 export type TLocalFormAdmin = {
   getSnapshot(): TLocalFormAdminSnapshot;
+  listQueue(query?: TLocalQueueQuery): TQueuedSubmission[];
+  listDeadLetter(query?: TLocalQueueQuery): TQueuedSubmission[];
   clearDraft(): void;
   clearQueue(): void;
   clearDeadLetter(): void;
@@ -107,6 +159,12 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
 
   return {
     getSnapshot,
+    listQueue(query) {
+      return applyQuery(storageAdapter?.loadQueue() || [], query);
+    },
+    listDeadLetter(query) {
+      return applyQuery(storageAdapter?.loadDeadLetterQueue() || [], query);
+    },
     clearDraft() {
       storageAdapter?.clearDraft();
     },

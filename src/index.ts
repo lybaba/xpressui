@@ -149,6 +149,11 @@ export class FormUI extends HTMLElement {
               action: "payment",
               payment: formValues,
             }
+          : submitConfig.action === "payment-stripe"
+            ? {
+                action: "payment-stripe",
+                payment: formValues,
+              }
         : formValues;
 
     if (method === "GET") {
@@ -225,6 +230,12 @@ export class FormUI extends HTMLElement {
           response,
           result,
         });
+      } else if (this.formConfig?.submit?.action === "payment-stripe") {
+        this.emitFormEvent("form-ui:payment-stripe-success", {
+          ...detail,
+          response,
+          result,
+        });
       }
     } catch (error: any) {
       this.emitFormEvent("form-ui:submit-error", {
@@ -235,6 +246,13 @@ export class FormUI extends HTMLElement {
       });
       if (this.formConfig?.submit?.action === "payment") {
         this.emitFormEvent("form-ui:payment-error", {
+          ...detail,
+          response: error?.response,
+          result: error?.result,
+          error,
+        });
+      } else if (this.formConfig?.submit?.action === "payment-stripe") {
+        this.emitFormEvent("form-ui:payment-stripe-error", {
           ...detail,
           response: error?.response,
           result: error?.result,

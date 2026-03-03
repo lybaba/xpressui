@@ -382,4 +382,87 @@ describe('FormUI', () => {
       })
     );
   });
+
+  it('supports a stripe payment provider contract', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          clientSecret: 'pi_stripe_secret_123',
+          paymentIntentId: 'pi_123',
+          redirectUrl: '/checkout/complete',
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'stripe-form',
+      title: 'Stripe Form',
+      provider: {
+        type: 'payment-stripe',
+        endpoint: 'https://api.example.test/stripe/create-intent',
+      },
+      fields: [
+        {
+          name: 'amount',
+          label: 'Amount',
+          type: 'price',
+          required: true,
+        },
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const amount = element.querySelector('#amount') as HTMLInputElement;
+    const email = element.querySelector('#email') as HTMLInputElement;
+    const form = element.querySelector('#stripe-form_form') as HTMLFormElement;
+    const onStripeSuccess = vi.fn();
+
+    element.addEventListener('form-ui:payment-stripe-success', (event) => {
+      onStripeSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    amount.dispatchEvent(new FocusEvent('focus'));
+    amount.value = '19.99';
+    amount.dispatchEvent(new Event('input', { bubbles: true }));
+    amount.dispatchEvent(new FocusEvent('blur'));
+
+    email.dispatchEvent(new FocusEvent('focus'));
+    email.value = 'stripe@example.com';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+    email.dispatchEvent(new FocusEvent('blur'));
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/stripe/create-intent',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'payment-stripe',
+          payment: {
+            amount: 19.99,
+            email: 'stripe@example.com',
+          },
+        }),
+      })
+    );
+    expect(onStripeSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          clientSecret: 'pi_stripe_secret_123',
+          paymentIntentId: 'pi_123',
+          redirectUrl: '/checkout/complete',
+        },
+      })
+    );
+  });
 });

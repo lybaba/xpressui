@@ -60,6 +60,11 @@ export type TFormProviderRequest = {
     endpoint: string;
     method?: 'POST' | 'PUT' | 'PATCH';
     headers?: Record<string, string>;
+} | {
+    type: 'payment-stripe';
+    endpoint: string;
+    method?: 'POST' | 'PUT' | 'PATCH';
+    headers?: Record<string, string>;
 };
 
 type TFormConfig = {

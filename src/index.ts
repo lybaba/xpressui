@@ -39,6 +39,8 @@ export class FormUI extends HTMLElement {
   loadingOptions: Record<string, boolean>;
   storageAdapter: TFormStorageAdapter | null;
   draftSaveTimer: number | null;
+  syncInFlight: boolean;
+  onlineHandler: (() => void) | null;
 
   constructor() {
     super();
@@ -52,11 +54,25 @@ export class FormUI extends HTMLElement {
     this.loadingOptions = {};
     this.storageAdapter = null;
     this.draftSaveTimer = null;
+    this.syncInFlight = false;
+    this.onlineHandler = null;
   }
 
   connectedCallback() {
     if (!this.initialized) {
       this.initialize();
+    }
+  }
+
+  disconnectedCallback() {
+    if (this.draftSaveTimer !== null) {
+      window.clearTimeout(this.draftSaveTimer);
+      this.draftSaveTimer = null;
+    }
+
+    if (this.onlineHandler) {
+      window.removeEventListener("online", this.onlineHandler);
+      this.onlineHandler = null;
     }
   }
 
@@ -109,6 +125,15 @@ export class FormUI extends HTMLElement {
       this.updateConditionalFields();
       this.refreshRemoteOptions();
 
+      if (!this.onlineHandler) {
+        this.onlineHandler = () => {
+          void this.flushSubmissionQueue();
+        };
+        window.addEventListener("online", this.onlineHandler);
+      }
+
+      void this.flushSubmissionQueue();
+
       if (Object.keys(draftValues).length) {
         this.emitFormEvent("form-ui:draft-restored", {
           values: draftValues,
@@ -157,12 +182,88 @@ export class FormUI extends HTMLElement {
       return;
     }
 
+    if (this.draftSaveTimer !== null) {
+      window.clearTimeout(this.draftSaveTimer);
+      this.draftSaveTimer = null;
+    }
+
     this.storageAdapter.clearDraft();
     this.emitFormEvent("form-ui:draft-cleared", {
       values: {},
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
     });
+  }
+
+  shouldUseQueue = () => {
+    const mode = this.formConfig?.storage?.mode;
+    return mode === "queue" || mode === "draft-and-queue";
+  }
+
+  enqueueSubmission = (values: Record<string, any>) => {
+    if (!this.storageAdapter || !this.shouldUseQueue()) {
+      return;
+    }
+
+    const queue = this.storageAdapter.enqueueSubmission(values);
+    this.emitFormEvent("form-ui:queued", {
+      values,
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: {
+        queueLength: queue.length,
+      },
+    });
+  }
+
+  flushSubmissionQueue = async () => {
+    if (
+      !this.storageAdapter ||
+      !this.formConfig?.submit?.endpoint ||
+      !this.shouldUseQueue() ||
+      this.syncInFlight
+    ) {
+      return;
+    }
+
+    const pending = this.storageAdapter.loadQueue();
+    if (!pending.length) {
+      return;
+    }
+
+    this.syncInFlight = true;
+    try {
+      while (true) {
+        const values = this.storageAdapter.loadQueue()[0];
+        if (!values) {
+          break;
+        }
+
+        try {
+          const { response, result } = await this.submitToApi(values, this.formConfig.submit);
+          this.storageAdapter.dequeueSubmission();
+          this.emitFormEvent("form-ui:sync-success", {
+            values,
+            formConfig: this.formConfig,
+            submit: this.formConfig.submit,
+            response,
+            result,
+          });
+        } catch (error: any) {
+          this.emitFormEvent("form-ui:sync-error", {
+            values,
+            formConfig: this.formConfig,
+            submit: this.formConfig.submit,
+            response: error?.response,
+            result: error?.result,
+            error,
+          });
+          break;
+        }
+      }
+    } finally {
+      this.syncInFlight = false;
+    }
   }
 
   validateForm = (values: Record<string, any>) => {
@@ -301,6 +402,13 @@ export class FormUI extends HTMLElement {
         });
       }
     } catch (error: any) {
+      const isNetworkError = !error?.response;
+      if (isNetworkError && this.shouldUseQueue()) {
+        this.enqueueSubmission(formValues);
+        this.clearDraft();
+        return;
+      }
+
       this.emitFormEvent("form-ui:submit-error", {
         ...detail,
         response: error?.response,

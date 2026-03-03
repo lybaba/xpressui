@@ -281,13 +281,19 @@ mountFormUI(container, {
 
 Current storage support:
 - `mode: 'draft'`
-- `mode: 'draft-and-queue'` stores drafts today (queue is not implemented yet)
+- `mode: 'queue'`
+- `mode: 'draft-and-queue'`
 - `adapter: 'local-storage'`
 
 Draft events:
 - `form-ui:draft-saved`
 - `form-ui:draft-restored`
 - `form-ui:draft-cleared`
+
+Queue events:
+- `form-ui:queued`
+- `form-ui:sync-success`
+- `form-ui:sync-error`
 
 ## Field Features
 
@@ -324,6 +330,9 @@ Core events emitted by `<form-ui>`:
 - `form-ui:draft-saved`
 - `form-ui:draft-restored`
 - `form-ui:draft-cleared`
+- `form-ui:queued`
+- `form-ui:sync-success`
+- `form-ui:sync-error`
 
 Provider-specific events:
 - `form-ui:reservation-success`
@@ -391,12 +400,12 @@ What is stable in the current codebase:
 - reservation, payment, and Stripe-oriented provider flows
 - conditional fields and remote select loading
 - local draft persistence in the browser
+- local offline submission queue
 
 What is not implemented as a full product yet:
 - visual form builder UI
 - persistent hosted backend
 - prebuilt Stripe Elements integration
-- offline submission queue
 - auth/session management
 - production-ready analytics, audit trail, and admin workflows
 

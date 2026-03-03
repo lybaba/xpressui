@@ -531,4 +531,118 @@ describe('FormUI', () => {
       })
     );
   });
+
+  it('queues submissions locally when the network fails', async () => {
+    const fetchSpy = vi
+      .spyOn(window, 'fetch')
+      .mockRejectedValue(new TypeError('Failed to fetch'));
+    const key = 'xpressui:test-queue';
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'queue-form',
+      title: 'Queue Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key,
+        autoSaveMs: 0,
+      },
+      submit: {
+        endpoint: 'https://api.example.test/offline',
+        method: 'POST',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#email') as HTMLInputElement;
+    const form = element.querySelector('#queue-form_form') as HTMLFormElement;
+    const onQueued = vi.fn();
+
+    element.addEventListener('form-ui:queued', (event) => {
+      onQueued((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    input.dispatchEvent(new FocusEvent('focus'));
+    input.value = 'offline@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur'));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalled();
+    expect(onQueued).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: { email: 'offline@example.com' },
+      })
+    );
+    expect(window.localStorage.getItem(`${key}:queue`)).toContain('offline@example.com');
+    expect(window.localStorage.getItem(key)).toBeNull();
+  });
+
+  it('flushes queued submissions when sync resumes', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ synced: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const key = 'xpressui:test-sync';
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'sync-form',
+      title: 'Sync Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key,
+        autoSaveMs: 0,
+      },
+      submit: {
+        endpoint: 'https://api.example.test/sync',
+        method: 'POST',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const onSyncSuccess = vi.fn();
+
+    window.localStorage.setItem(
+      `${key}:queue`,
+      JSON.stringify([{ email: 'queued@example.com' }]),
+    );
+
+    element.addEventListener('form-ui:sync-success', (event) => {
+      onSyncSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await element.flushSubmissionQueue();
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/sync',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'queued@example.com' }),
+      })
+    );
+    expect(onSyncSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: { email: 'queued@example.com' },
+        result: { synced: true },
+      })
+    );
+    expect(window.localStorage.getItem(`${key}:queue`)).toBe('[]');
+  });
 });

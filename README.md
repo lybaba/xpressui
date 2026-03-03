@@ -27,6 +27,10 @@ plain object without hand-writing a full HTML template.
 For storage/debug tooling outside the component instance, use
 `createLocalFormAdmin(formConfig)`.
 
+The public form contract is now versioned.
+Current public schema version:
+- `1`
+
 ## Requirements
 
 - Node.js `20.19.0` or newer

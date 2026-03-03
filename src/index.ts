@@ -5,17 +5,37 @@ import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { normalizeFormValues, UNKNOWN_TYPE } from "./common/field";
 import TChoice from "./common/TChoice";
+import { validatePublicFormConfig } from "./common/public-schema";
+import {
+  getProviderDefinition,
+  getProviderErrorEventName,
+  getProviderSuccessEventName,
+  registerProvider,
+} from "./common/provider-registry";
 import {
   createStorageAdapter,
   TFormStorageAdapter,
   TQueuedSubmission,
 } from "./common/form-storage";
+import { submitFormValues } from "./common/form-submit";
 export {
   createFormConfig,
   createTemplateMarkup,
   mountFormUI,
 } from "./common/form-builder";
 export { createLocalFormAdmin } from "./common/form-admin";
+export {
+  PUBLIC_FORM_SCHEMA_VERSION,
+  getPublicFormSchemaErrors,
+  migratePublicFormConfig,
+  validatePublicFormConfig,
+} from "./common/public-schema";
+export {
+  getProviderDefinition,
+  getProviderErrorEventName,
+  getProviderSuccessEventName,
+  registerProvider,
+} from "./common/provider-registry";
 export type { TLocalFormAdmin, TLocalQueueQuery } from "./common/form-admin";
 
 export type TFormUISubmitDetail = {
@@ -110,7 +130,7 @@ export class FormUI extends HTMLElement {
 
 
     if (formElem) {
-      this.formConfig = getFormConfig(formElem);
+      this.formConfig = validatePublicFormConfig(getFormConfig(formElem) as unknown as Record<string, any>);
       this.validators = getValidators(this.formConfig);
       this.storageAdapter = createStorageAdapter(this.formConfig);
       const draftValues = this.storageAdapter?.loadDraft() || {};
@@ -475,65 +495,7 @@ export class FormUI extends HTMLElement {
     formValues: Record<string, any>,
     submitConfig: TFormSubmitRequest,
   ) => {
-    const method = submitConfig.method || "POST";
-    const mode = submitConfig.mode || "json";
-    const headers = { ...(submitConfig.headers || {}) };
-    let url = submitConfig.endpoint;
-    const init: RequestInit = { method, headers };
-
-    const payload =
-      submitConfig.action === "reservation"
-        ? {
-            action: "reservation",
-            reservation: formValues,
-          }
-        : submitConfig.action === "payment"
-          ? {
-              action: "payment",
-              payment: formValues,
-            }
-          : submitConfig.action === "payment-stripe"
-            ? {
-                action: "payment-stripe",
-                payment: formValues,
-              }
-        : formValues;
-
-    if (method === "GET") {
-      const searchParams = new URLSearchParams();
-      Object.entries(payload).forEach(([key, value]) => {
-        searchParams.set(key, String(value));
-      });
-      const query = searchParams.toString();
-      if (query) {
-        url += (url.includes("?") ? "&" : "?") + query;
-      }
-    } else if (mode === "form-data") {
-      const body = new FormData();
-      Object.entries(payload).forEach(([key, value]) => {
-        body.append(key, String(value));
-      });
-      init.body = body;
-    } else {
-      headers["Content-Type"] = headers["Content-Type"] || "application/json";
-      init.body = JSON.stringify(payload);
-    }
-
-    const response = await fetch(url, init);
-    const contentType = response.headers.get("content-type") || "";
-    let result: any = null;
-
-    if (contentType.includes("application/json")) {
-      result = await response.json();
-    } else if (contentType.startsWith("text/")) {
-      result = await response.text();
-    }
-
-    if (!response.ok) {
-      throw { response, result };
-    }
-
-    return { response, result };
+    return submitFormValues(formValues, submitConfig);
   }
 
   onSubmit = async (values: Record<string, any>) => {
@@ -563,20 +525,9 @@ export class FormUI extends HTMLElement {
         result,
       });
       this.clearDraft();
-      if (this.formConfig?.submit?.action === "reservation") {
-        this.emitFormEvent("form-ui:reservation-success", {
-          ...detail,
-          response,
-          result,
-        });
-      } else if (this.formConfig?.submit?.action === "payment") {
-        this.emitFormEvent("form-ui:payment-success", {
-          ...detail,
-          response,
-          result,
-        });
-      } else if (this.formConfig?.submit?.action === "payment-stripe") {
-        this.emitFormEvent("form-ui:payment-stripe-success", {
+      const providerSuccessEvent = getProviderSuccessEventName(this.formConfig?.submit?.action);
+      if (providerSuccessEvent) {
+        this.emitFormEvent(providerSuccessEvent, {
           ...detail,
           response,
           result,
@@ -596,15 +547,9 @@ export class FormUI extends HTMLElement {
         result: error?.result,
         error,
       });
-      if (this.formConfig?.submit?.action === "payment") {
-        this.emitFormEvent("form-ui:payment-error", {
-          ...detail,
-          response: error?.response,
-          result: error?.result,
-          error,
-        });
-      } else if (this.formConfig?.submit?.action === "payment-stripe") {
-        this.emitFormEvent("form-ui:payment-stripe-error", {
+      const providerErrorEvent = getProviderErrorEventName(this.formConfig?.submit?.action);
+      if (providerErrorEvent) {
+        this.emitFormEvent(providerErrorEvent, {
           ...detail,
           response: error?.response,
           result: error?.result,

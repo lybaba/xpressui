@@ -63,6 +63,7 @@ export const ATTR_STORAGE_MODE = "storageMode"
 export const ATTR_STORAGE_ADAPTER = "storageAdapter"
 export const ATTR_STORAGE_KEY = "storageKey"
 export const ATTR_STORAGE_AUTOSAVE_MS = "storageAutoSaveMs"
+export const ATTR_VERSION = "version"
 
 
 export const HTML_ATTR_TYPE = `${HTML_ATTR_PREFIX}type`
@@ -122,6 +123,7 @@ export const HTML_ATTR_STORAGE_MODE = `${HTML_ATTR_PREFIX}storage-mode`
 export const HTML_ATTR_STORAGE_ADAPTER = `${HTML_ATTR_PREFIX}storage-adapter`
 export const HTML_ATTR_STORAGE_KEY = `${HTML_ATTR_PREFIX}storage-key`
 export const HTML_ATTR_STORAGE_AUTOSAVE_MS = `${HTML_ATTR_PREFIX}storage-autosave-ms`
+export const HTML_ATTR_VERSION = `${HTML_ATTR_PREFIX}version`
 
 export const ATTR_MAP = {
     [HTML_ATTR_TYPE]: ATTR_TYPE,
@@ -181,6 +183,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_STORAGE_ADAPTER]: ATTR_STORAGE_ADAPTER,
     [HTML_ATTR_STORAGE_KEY]: ATTR_STORAGE_KEY,
     [HTML_ATTR_STORAGE_AUTOSAVE_MS]: ATTR_STORAGE_AUTOSAVE_MS,
+    [HTML_ATTR_VERSION]: ATTR_VERSION,
 }
 
 
@@ -221,6 +224,10 @@ export default function getFormConfig(node: Element): TFormConfig {
         }
     }
 
+    if ((formConfig as any).label && formConfig.title === DEFAULT_FORM_CONFIG.title) {
+        formConfig.title = (formConfig as any).label;
+    }
+
     if ((formConfig as any).submitEndpoint) {
         (formConfig as any).submit = {
             endpoint: (formConfig as any).submitEndpoint,
@@ -247,6 +254,10 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).storageAdapter;
         delete (formConfig as any).storageKey;
         delete (formConfig as any).storageAutoSaveMs;
+    }
+
+    if ((formConfig as any).version) {
+        (formConfig as any).version = Number((formConfig as any).version);
     }
 
     const sectionNodes = node.querySelectorAll('[data-type="section"]');

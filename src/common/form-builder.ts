@@ -7,6 +7,7 @@ import TFormConfig, {
   TFormStorageConfig,
   TFormSubmitRequest,
 } from './TFormConfig';
+import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-schema';
 import {
   CHECKBOX_TYPE,
   getHtmlInputType,
@@ -129,7 +130,8 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
       }
     : undefined);
 
-  return {
+  return validatePublicFormConfig({
+    version: PUBLIC_FORM_SCHEMA_VERSION,
     id: shortUUID.generate(),
     uid: shortUUID.generate(),
     timestamp: Math.floor(Date.now() / 1000),
@@ -151,7 +153,7 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
     storage: input.storage,
     successMsg: input.successMsg,
     errorMsg: input.errorMsg,
-  };
+  });
 }
 
 export function createTemplateMarkup(
@@ -198,7 +200,7 @@ export function createTemplateMarkup(
     : '';
 
   return `<template id="${escapeHtml(templateName)}">
-  <form id="${escapeHtml(templateName)}_form" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs}>
+  <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs}>
     <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}" class="flex flex-col gap-4">
       ${fieldMarkup}
       <button type="submit" class="btn btn-primary">Submit</button>
@@ -213,7 +215,7 @@ export function mountFormUI(
   input: TSimpleFormInput | TFormConfig,
   templateName?: string
 ): HTMLElement | null {
-  const config = 'fields' in input ? createFormConfig(input) : input;
+  const config = 'fields' in input ? createFormConfig(input) : validatePublicFormConfig(input);
   container.innerHTML = createTemplateMarkup(config, templateName);
   const element = container.querySelector('form-ui') as HTMLElement | null;
 

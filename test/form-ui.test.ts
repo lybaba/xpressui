@@ -3,8 +3,12 @@ import {
   createLocalFormAdmin,
   createFormConfig,
   FormUI,
+  getProviderDefinition,
   mountFormUI,
+  PUBLIC_FORM_SCHEMA_VERSION,
+  registerProvider,
   TFormUISubmitDetail,
+  validatePublicFormConfig,
 } from '../src/index';
 
 function renderFixture(markup: string): FormUI {
@@ -192,6 +196,66 @@ describe('FormUI', () => {
     expect(container.querySelector('template#booking-form')).not.toBeNull();
     expect(element.formConfig?.name).toBe('booking-form');
     expect(element.querySelector('#notes')).not.toBeNull();
+  });
+
+  it('emits version 1 configs from the public builder', () => {
+    const formConfig = createFormConfig({
+      name: 'versioned-form',
+      title: 'Versioned Form',
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+
+    expect(formConfig.version).toBe(PUBLIC_FORM_SCHEMA_VERSION);
+  });
+
+  it('migrates legacy public configs to version 1', () => {
+    const legacyConfig = {
+      id: 'legacy-id',
+      uid: 'legacy-uid',
+      type: 'contactform',
+      name: 'legacy-form',
+      label: 'Legacy Form',
+      sections: {
+        custom: [
+          {
+            type: 'section',
+            name: 'main',
+            label: 'Main',
+          },
+        ],
+        main: [
+          {
+            type: 'email',
+            name: 'email',
+            label: 'Email',
+          },
+        ],
+      },
+    };
+
+    const validated = validatePublicFormConfig(legacyConfig);
+    expect(validated.version).toBe(1);
+    expect(validated.title).toBe('Legacy Form');
+  });
+
+  it('rejects invalid public configs', () => {
+    expect(() =>
+      validatePublicFormConfig({
+        version: 1,
+        id: 'broken',
+        uid: 'broken',
+        type: 'contactform',
+        name: '',
+        title: 'Broken',
+        sections: {},
+      })
+    ).toThrow(/Invalid public form config/);
   });
 
   it('can submit to a configured API endpoint', async () => {
@@ -464,6 +528,75 @@ describe('FormUI', () => {
           paymentIntentId: 'pi_123',
           redirectUrl: '/checkout/complete',
         },
+      })
+    );
+  });
+
+  it('supports custom providers registered through the provider registry', async () => {
+    registerProvider('quote-request', {
+      buildPayload(values) {
+        return {
+          action: 'quote-request',
+          quote: values,
+        };
+      },
+      successEventName: 'form-ui:quote-success',
+      errorEventName: 'form-ui:quote-error',
+    });
+
+    expect(getProviderDefinition('quote-request')).not.toBeNull();
+
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ quoteId: 'qt_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'quote-form',
+      title: 'Quote Form',
+      submit: {
+        endpoint: 'https://api.example.test/quotes',
+        action: 'quote-request',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#email') as HTMLInputElement;
+    const form = element.querySelector('#quote-form_form') as HTMLFormElement;
+    const onQuoteSuccess = vi.fn();
+
+    element.addEventListener('form-ui:quote-success', (event) => {
+      onQuoteSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    input.dispatchEvent(new FocusEvent('focus'));
+    input.value = 'quote@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur'));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/quotes',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'quote-request',
+          quote: { email: 'quote@example.com' },
+        }),
+      })
+    );
+    expect(onQuoteSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { quoteId: 'qt_123' },
       })
     );
   });

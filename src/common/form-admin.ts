@@ -4,81 +4,14 @@ import {
   TFormStorageAdapter,
   TQueuedSubmission,
 } from "./form-storage";
-
-function buildSubmitPayload(
-  values: Record<string, any>,
-  submitConfig: TFormSubmitRequest,
-): Record<string, any> {
-  if (submitConfig.action === "reservation") {
-    return {
-      action: "reservation",
-      reservation: values,
-    };
-  }
-
-  if (submitConfig.action === "payment") {
-    return {
-      action: "payment",
-      payment: values,
-    };
-  }
-
-  if (submitConfig.action === "payment-stripe") {
-    return {
-      action: "payment-stripe",
-      payment: values,
-    };
-  }
-
-  return values;
-}
+import { submitFormValues } from "./form-submit";
+import { validatePublicFormConfig } from "./public-schema";
 
 async function submitNow(
   values: Record<string, any>,
   submitConfig: TFormSubmitRequest,
 ): Promise<{ response: Response; result: any }> {
-  const method = submitConfig.method || "POST";
-  const mode = submitConfig.mode || "json";
-  const headers = { ...(submitConfig.headers || {}) };
-  let url = submitConfig.endpoint;
-  const init: RequestInit = { method, headers };
-  const payload = buildSubmitPayload(values, submitConfig);
-
-  if (method === "GET") {
-    const searchParams = new URLSearchParams();
-    Object.entries(payload).forEach(([key, value]) => {
-      searchParams.set(key, String(value));
-    });
-    const query = searchParams.toString();
-    if (query) {
-      url += (url.includes("?") ? "&" : "?") + query;
-    }
-  } else if (mode === "form-data") {
-    const body = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      body.append(key, String(value));
-    });
-    init.body = body;
-  } else {
-    headers["Content-Type"] = headers["Content-Type"] || "application/json";
-    init.body = JSON.stringify(payload);
-  }
-
-  const response = await fetch(url, init);
-  const contentType = response.headers.get("content-type") || "";
-  let result: any = null;
-
-  if (contentType.includes("application/json")) {
-    result = await response.json();
-  } else if (contentType.startsWith("text/")) {
-    result = await response.text();
-  }
-
-  if (!response.ok) {
-    throw { response, result };
-  }
-
-  return { response, result };
+  return submitFormValues(values, submitConfig);
 }
 
 export type TLocalFormAdminSnapshot = {
@@ -149,7 +82,8 @@ export type TLocalFormAdmin = {
 };
 
 export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
-  const storageAdapter: TFormStorageAdapter | null = createStorageAdapter(formConfig);
+  const publicConfig = validatePublicFormConfig(formConfig as unknown as Record<string, any>);
+  const storageAdapter: TFormStorageAdapter | null = createStorageAdapter(publicConfig);
 
   const getSnapshot = (): TLocalFormAdminSnapshot => ({
     draft: storageAdapter?.loadDraft() || null,
@@ -188,7 +122,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       return true;
     },
     async replayDeadLetterEntry(entryId: string) {
-      if (!storageAdapter || !formConfig.submit?.endpoint) {
+      if (!storageAdapter || !publicConfig.submit?.endpoint) {
         return false;
       }
 
@@ -198,7 +132,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       }
 
       try {
-        await submitNow(entry.values, formConfig.submit);
+        await submitNow(entry.values, publicConfig.submit);
         return true;
       } catch (error: any) {
         storageAdapter.enqueueDeadLetter({

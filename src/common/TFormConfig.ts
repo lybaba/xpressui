@@ -75,6 +75,7 @@ export type TFormStorageConfig = {
 };
 
 type TFormConfig = {
+    version: number;
     id: string;
     uid: string;
     type: string;
@@ -102,6 +103,7 @@ type TFormConfig = {
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {
+    version: 1,
     id: shortUUID.generate(),
     uid: shortUUID.generate(),
     timestamp: Math.floor(Date.now() / 1000),

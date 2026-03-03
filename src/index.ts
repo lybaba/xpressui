@@ -33,6 +33,7 @@ type TFormUIRemoteOptionsDetail = {
 
 type TFormUIQueueState = {
   queueLength: number;
+  deadLetterLength: number;
   nextAttemptAt?: number;
   attempts?: number;
 };
@@ -166,6 +167,10 @@ export class FormUI extends HTMLElement {
     return Math.min(baseDelayMs * Math.pow(2, Math.max(0, attempts - 1)), maxDelayMs);
   }
 
+  getMaxRetryAttempts = () => {
+    return 3;
+  }
+
   saveDraft = (values?: Record<string, any>) => {
     if (!this.storageAdapter) {
       return;
@@ -231,6 +236,7 @@ export class FormUI extends HTMLElement {
       submit: this.formConfig?.submit,
       result: {
         queueLength: queue.length,
+        deadLetterLength: this.storageAdapter.loadDeadLetterQueue().length,
         nextAttemptAt: nextEntry?.nextAttemptAt,
         attempts: nextEntry?.attempts,
       } satisfies TFormUIQueueState,
@@ -243,6 +249,7 @@ export class FormUI extends HTMLElement {
     const nextEntry = queue[0];
     return {
       queueLength: queue.length,
+      deadLetterLength: this.storageAdapter?.loadDeadLetterQueue().length || 0,
       nextAttemptAt: nextEntry?.nextAttemptAt,
       attempts: nextEntry?.attempts,
     };
@@ -265,7 +272,23 @@ export class FormUI extends HTMLElement {
     return {
       draft: this.storageAdapter?.loadDraft() || null,
       queue: this.storageAdapter?.loadQueue() || [],
+      deadLetter: this.storageAdapter?.loadDeadLetterQueue() || [],
     };
+  }
+
+  clearDeadLetterQueue = () => {
+    if (!this.storageAdapter) {
+      return;
+    }
+
+    this.storageAdapter.clearDeadLetterQueue();
+    this.emitFormEvent("form-ui:dead-letter-cleared", {
+      values: {},
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: this.getQueueState(),
+    });
+    this.emitQueueState();
   }
 
   flushSubmissionQueue = async () => {
@@ -308,14 +331,31 @@ export class FormUI extends HTMLElement {
           });
           this.emitQueueState();
         } catch (error: any) {
+          const attempts = entry.attempts + 1;
           const nextEntry: TQueuedSubmission = {
             ...entry,
-            attempts: entry.attempts + 1,
+            attempts,
             updatedAt: Date.now(),
-            nextAttemptAt: Date.now() + this.getRetryDelayMs(entry.attempts + 1),
+            nextAttemptAt: Date.now() + this.getRetryDelayMs(attempts),
             lastError: error?.result?.message || error?.message || "sync_error",
           };
-          this.storageAdapter.updateQueueEntry(nextEntry);
+          if (attempts >= this.getMaxRetryAttempts()) {
+            this.storageAdapter.dequeueSubmission();
+            const deadLetter = this.storageAdapter.enqueueDeadLetter(nextEntry);
+            this.emitFormEvent("form-ui:dead-lettered", {
+              values: entry.values,
+              formConfig: this.formConfig,
+              submit: this.formConfig.submit,
+              response: error?.response,
+              result: {
+                deadLetterLength: deadLetter.length,
+                entry: nextEntry,
+              },
+              error,
+            });
+          } else {
+            this.storageAdapter.updateQueueEntry(nextEntry);
+          }
           this.emitFormEvent("form-ui:sync-error", {
             values: entry.values,
             formConfig: this.formConfig,

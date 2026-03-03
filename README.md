@@ -295,10 +295,13 @@ Queue events:
 - `form-ui:queue-state`
 - `form-ui:sync-success`
 - `form-ui:sync-error`
+- `form-ui:dead-lettered`
+- `form-ui:dead-letter-cleared`
 
 Runtime inspection helpers:
 - `form.getQueueState()`
 - `form.getStorageSnapshot()`
+- `form.clearDeadLetterQueue()`
 
 The local queue is now stored as a versioned object so it can evolve without
 breaking existing drafts:
@@ -309,6 +312,9 @@ breaking existing drafts:
   "items": []
 }
 ```
+
+If the same queued submission keeps failing, it is moved to a local
+dead-letter queue after 3 failed sync attempts.
 
 ## Field Features
 
@@ -349,6 +355,8 @@ Core events emitted by `<form-ui>`:
 - `form-ui:queue-state`
 - `form-ui:sync-success`
 - `form-ui:sync-error`
+- `form-ui:dead-lettered`
+- `form-ui:dead-letter-cleared`
 
 Provider-specific events:
 - `form-ui:reservation-success`

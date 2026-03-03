@@ -722,4 +722,119 @@ describe('FormUI', () => {
     expect(queueState.items[0].attempts).toBe(1);
     expect(queueState.items[0].nextAttemptAt).toBeGreaterThan(Date.now() - 100);
   });
+
+  it('moves exhausted queue entries to the dead-letter queue', async () => {
+    const fetchSpy = vi
+      .spyOn(window, 'fetch')
+      .mockRejectedValue(new TypeError('Permanent failure'));
+    const key = 'xpressui:test-dead-letter';
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'dead-letter-form',
+      title: 'Dead Letter Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key,
+      },
+      submit: {
+        endpoint: 'https://api.example.test/dead-letter',
+        method: 'POST',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const onDeadLettered = vi.fn();
+
+    window.localStorage.setItem(
+      `${key}:queue`,
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queued_dead',
+            values: { email: 'dead@example.com' },
+            attempts: 2,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    element.addEventListener('form-ui:dead-lettered', (event) => {
+      onDeadLettered((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await element.flushSubmissionQueue();
+    await flushAsyncWork();
+
+    const queueState = JSON.parse(window.localStorage.getItem(`${key}:queue`) || '{}');
+    const deadLetterState = JSON.parse(window.localStorage.getItem(`${key}:dead-letter`) || '{}');
+    expect(fetchSpy).toHaveBeenCalled();
+    expect(queueState).toEqual({ version: 1, items: [] });
+    expect(deadLetterState.version).toBe(1);
+    expect(deadLetterState.items).toHaveLength(1);
+    expect(deadLetterState.items[0].attempts).toBe(3);
+    expect(onDeadLettered).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: { email: 'dead@example.com' },
+      })
+    );
+    expect(element.getQueueState()).toEqual(
+      expect.objectContaining({
+        queueLength: 0,
+        deadLetterLength: 1,
+      })
+    );
+  });
+
+  it('can clear the dead-letter queue', () => {
+    const key = 'xpressui:test-dead-letter-clear';
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'dead-letter-clear-form',
+      title: 'Dead Letter Clear Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+
+    window.localStorage.setItem(
+      `${key}:dead-letter`,
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'dead_1',
+            values: { email: 'dead@example.com' },
+            attempts: 3,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    element.clearDeadLetterQueue();
+
+    expect(window.localStorage.getItem(`${key}:dead-letter`)).toBeNull();
+    expect(element.getStorageSnapshot().deadLetter).toEqual([]);
+  });
 });

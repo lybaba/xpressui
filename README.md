@@ -350,6 +350,53 @@ Extra events:
 - `form-ui:webhook-success`
 - `form-ui:webhook-error`
 
+### Booking Availability
+
+Use `booking-availability` when your backend returns available slots, pricing,
+or scheduling metadata for a selected service/date combination.
+
+```ts
+mountFormUI(container, {
+  name: 'availability-form',
+  title: 'Availability',
+  provider: {
+    type: 'booking-availability',
+    endpoint: '/api/availability',
+  },
+  fields: [
+    { name: 'service', label: 'Service', type: 'text', required: true },
+    { name: 'date', label: 'Date', type: 'date', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "booking-availability",
+  "availability": {
+    "service": "massage",
+    "date": "2026-03-10"
+  }
+}
+```
+
+Typical backend response:
+
+```json
+{
+  "slots": [
+    { "value": "09:00", "label": "09:00" },
+    { "value": "10:00", "label": "10:00" }
+  ]
+}
+```
+
+Extra events:
+- `form-ui:booking-availability-success`
+- `form-ui:booking-availability-error`
+
 ## Dynamic Forms
 
 The component supports two dynamic patterns out of the box:
@@ -527,6 +574,8 @@ Provider-specific events:
 - `form-ui:payment-stripe-error`
 - `form-ui:webhook-success`
 - `form-ui:webhook-error`
+- `form-ui:booking-availability-success`
+- `form-ui:booking-availability-error`
 
 Event detail includes:
 - `values`
@@ -584,7 +633,7 @@ What is stable in the current codebase:
 - Web Component rendering
 - schema-based validation
 - API submission hooks
-- reservation, payment, Stripe, and webhook-oriented provider flows
+- reservation, payment, Stripe, webhook, and booking-availability provider flows
 - conditional fields and remote select loading
 - local draft persistence in the browser
 - local offline submission queue

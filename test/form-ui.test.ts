@@ -820,6 +820,91 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports a booking availability provider for scheduling workflows', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          slots: [
+            { value: '09:00', label: '09:00' },
+            { value: '10:00', label: '10:00' },
+          ],
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'availability-form',
+      title: 'Availability Form',
+      provider: {
+        type: 'booking-availability',
+        endpoint: 'https://api.example.test/availability',
+      },
+      fields: [
+        {
+          name: 'service',
+          label: 'Service',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'date',
+          label: 'Date',
+          type: 'date',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const service = element.querySelector('#service') as HTMLInputElement;
+    const date = element.querySelector('#date') as HTMLInputElement;
+    const form = element.querySelector('#availability-form_form') as HTMLFormElement;
+    const onAvailabilitySuccess = vi.fn();
+
+    element.addEventListener('form-ui:booking-availability-success', (event) => {
+      onAvailabilitySuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    service.dispatchEvent(new FocusEvent('focus'));
+    service.value = 'massage';
+    service.dispatchEvent(new Event('input', { bubbles: true }));
+    service.dispatchEvent(new FocusEvent('blur'));
+
+    date.dispatchEvent(new FocusEvent('focus'));
+    date.value = '2026-03-10';
+    date.dispatchEvent(new Event('input', { bubbles: true }));
+    date.dispatchEvent(new FocusEvent('blur'));
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/availability',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'booking-availability',
+          availability: {
+            service: 'massage',
+            date: '2026-03-10',
+          },
+        }),
+      })
+    );
+    expect(onAvailabilitySuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          slots: [
+            { value: '09:00', label: '09:00' },
+            { value: '10:00', label: '10:00' },
+          ],
+        },
+      })
+    );
+  });
+
   it('supports custom providers registered through the provider registry', async () => {
     registerProvider('quote-request', {
       buildPayload(values) {

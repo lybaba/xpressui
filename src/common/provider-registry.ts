@@ -137,3 +137,22 @@ registerProvider("webhook", {
   successEventName: "form-ui:webhook-success",
   errorEventName: "form-ui:webhook-error",
 });
+
+registerProvider("booking-availability", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "booking-availability",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "booking-availability",
+      availability: values,
+    };
+  },
+  successEventName: "form-ui:booking-availability-success",
+  errorEventName: "form-ui:booking-availability-error",
+});

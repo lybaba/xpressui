@@ -3,6 +3,7 @@ import {
   createLocalFormAdmin,
   createFormConfig,
   createSubmitRequestFromProvider,
+  FormPersistenceRuntime,
   FormUI,
   getProviderDefinition,
   mountFormUI,
@@ -318,6 +319,46 @@ describe('FormUI', () => {
         result: { bookingId: 'bk_123' },
       })
     );
+  });
+
+  it('supports standalone persistence without mounting FormUI', async () => {
+    const formConfig = createFormConfig({
+      name: 'runtime-draft-form',
+      title: 'Runtime Draft Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-runtime-draft',
+        autoSaveMs: 0,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const runtime = new FormPersistenceRuntime({
+      getFormConfig: () => formConfig,
+      getValues: () => ({ email: 'runtime@example.com' }),
+      emitEvent: () => true,
+      submitValues: async () => ({
+        response: new Response(null, { status: 204 }),
+        result: null,
+      }),
+    });
+
+    runtime.setFormConfig(formConfig);
+    runtime.saveDraft();
+    await flushAsyncWork();
+
+    expect(runtime.loadDraftValues()).toEqual({ email: 'runtime@example.com' });
+    expect(runtime.getStorageSnapshot().draft).toEqual({ email: 'runtime@example.com' });
+
+    runtime.clearDraft();
+
+    expect(runtime.loadDraftValues()).toEqual({});
   });
 
   it('supports conditional visibility and remote select options', async () => {

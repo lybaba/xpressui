@@ -5,18 +5,17 @@ import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { normalizeFormValues, UNKNOWN_TYPE } from "./common/field";
 import TChoice from "./common/TChoice";
+import {
+  FormPersistenceRuntime,
+  TFormQueueState,
+  TFormStorageSnapshot,
+} from "./common/form-persistence";
 import { validatePublicFormConfig } from "./common/public-schema";
 import {
-  getProviderDefinition,
   getProviderErrorEventName,
   getProviderSuccessEventName,
   registerProvider,
 } from "./common/provider-registry";
-import {
-  createStorageAdapter,
-  TFormStorageAdapter,
-  TQueuedSubmission,
-} from "./common/form-storage";
 import { submitFormValues } from "./common/form-submit";
 export {
   createFormConfig,
@@ -24,6 +23,7 @@ export {
   mountFormUI,
 } from "./common/form-builder";
 export { createLocalFormAdmin } from "./common/form-admin";
+export { FormPersistenceRuntime } from "./common/form-persistence";
 export {
   PUBLIC_FORM_SCHEMA_VERSION,
   getPublicFormSchemaErrors,
@@ -38,6 +38,7 @@ export {
   registerProvider,
 } from "./common/provider-registry";
 export type { TLocalFormAdmin, TLocalQueueQuery } from "./common/form-admin";
+export type { TFormQueueState, TFormStorageSnapshot } from "./common/form-persistence";
 
 export type TFormUISubmitDetail = {
   values: Record<string, any>;
@@ -54,14 +55,6 @@ type TFormUIRemoteOptionsDetail = {
   sourceField?: string;
 };
 
-type TFormUIQueueState = {
-  queueLength: number;
-  deadLetterLength: number;
-  nextAttemptAt?: number;
-  attempts?: number;
-};
-
-
 export class FormUI extends HTMLElement {
   form: FormApi<any, any> | null;
   registered: Record<string, boolean>;
@@ -71,10 +64,7 @@ export class FormUI extends HTMLElement {
   errors: Record<string, boolean>;
   initialized: boolean;
   loadingOptions: Record<string, boolean>;
-  storageAdapter: TFormStorageAdapter | null;
-  draftSaveTimer: number | null;
-  syncInFlight: boolean;
-  onlineHandler: (() => void) | null;
+  persistence: FormPersistenceRuntime;
 
   constructor() {
     super();
@@ -86,10 +76,13 @@ export class FormUI extends HTMLElement {
     this.form = null;
     this.initialized = false;
     this.loadingOptions = {};
-    this.storageAdapter = null;
-    this.draftSaveTimer = null;
-    this.syncInFlight = false;
-    this.onlineHandler = null;
+    this.persistence = new FormPersistenceRuntime({
+      getFormConfig: () => this.formConfig,
+      getValues: () => this.form?.getState().values || {},
+      emitEvent: (eventName, detail) =>
+        this.emitFormEvent(eventName, detail as TFormUISubmitDetail),
+      submitValues: (values, submitConfig) => this.submitToApi(values, submitConfig),
+    });
   }
 
   connectedCallback() {
@@ -99,15 +92,7 @@ export class FormUI extends HTMLElement {
   }
 
   disconnectedCallback() {
-    if (this.draftSaveTimer !== null) {
-      window.clearTimeout(this.draftSaveTimer);
-      this.draftSaveTimer = null;
-    }
-
-    if (this.onlineHandler) {
-      window.removeEventListener("online", this.onlineHandler);
-      this.onlineHandler = null;
-    }
+    this.persistence.disconnect();
   }
 
   initialize = () => {
@@ -133,8 +118,8 @@ export class FormUI extends HTMLElement {
     if (formElem) {
       this.formConfig = validatePublicFormConfig(getFormConfig(formElem) as unknown as Record<string, any>);
       this.validators = getValidators(this.formConfig);
-      this.storageAdapter = createStorageAdapter(this.formConfig);
-      const draftValues = this.storageAdapter?.loadDraft() || {};
+      this.persistence.setFormConfig(this.formConfig);
+      const draftValues = this.persistence.loadDraftValues();
 
       this.form = createForm({
         onSubmit: this.onSubmit,
@@ -159,313 +144,62 @@ export class FormUI extends HTMLElement {
       this.updateConditionalFields();
       this.refreshRemoteOptions();
 
-      if (!this.onlineHandler) {
-        this.onlineHandler = () => {
-          void this.flushSubmissionQueue();
-        };
-        window.addEventListener("online", this.onlineHandler);
-      }
-
-      void this.flushSubmissionQueue();
+      this.persistence.connect();
 
       if (Object.keys(draftValues).length) {
-        this.emitFormEvent("form-ui:draft-restored", {
-          values: draftValues,
-          formConfig: this.formConfig,
-          submit: this.formConfig?.submit,
-        });
+        this.persistence.emitDraftRestored(draftValues);
       }
 
-      this.emitQueueState();
+      this.persistence.emitQueueState();
     }
-  }
-
-  getDraftAutoSaveMs = () => {
-    return this.formConfig?.storage?.autoSaveMs ?? 300;
-  }
-
-  getRetryDelayMs = (attempts: number) => {
-    const baseDelayMs = 1000;
-    const maxDelayMs = 30000;
-    return Math.min(baseDelayMs * Math.pow(2, Math.max(0, attempts - 1)), maxDelayMs);
-  }
-
-  getMaxRetryAttempts = () => {
-    return 3;
   }
 
   saveDraft = (values?: Record<string, any>) => {
-    if (!this.storageAdapter) {
-      return;
-    }
-
-    const draftValues = values || this.form?.getState().values || {};
-    this.storageAdapter.saveDraft(draftValues);
-    this.emitFormEvent("form-ui:draft-saved", {
-      values: draftValues,
-      formConfig: this.formConfig,
-      submit: this.formConfig?.submit,
-    });
+    this.persistence.saveDraft(values);
   }
 
   scheduleDraftSave = () => {
-    if (!this.storageAdapter) {
-      return;
-    }
-
-    if (this.draftSaveTimer !== null) {
-      window.clearTimeout(this.draftSaveTimer);
-    }
-
-    this.draftSaveTimer = window.setTimeout(() => {
-      this.saveDraft();
-      this.draftSaveTimer = null;
-    }, this.getDraftAutoSaveMs());
+    this.persistence.scheduleDraftSave();
   }
 
   clearDraft = () => {
-    if (!this.storageAdapter) {
-      return;
-    }
-
-    if (this.draftSaveTimer !== null) {
-      window.clearTimeout(this.draftSaveTimer);
-      this.draftSaveTimer = null;
-    }
-
-    this.storageAdapter.clearDraft();
-    this.emitFormEvent("form-ui:draft-cleared", {
-      values: {},
-      formConfig: this.formConfig,
-      submit: this.formConfig?.submit,
-    });
+    this.persistence.clearDraft();
   }
 
   shouldUseQueue = () => {
-    const mode = this.formConfig?.storage?.mode;
-    return mode === "queue" || mode === "draft-and-queue";
+    return this.persistence.shouldUseQueue();
   }
 
   enqueueSubmission = (values: Record<string, any>) => {
-    if (!this.storageAdapter || !this.shouldUseQueue()) {
-      return;
-    }
-
-    const queue = this.storageAdapter.enqueueSubmission(values);
-    const nextEntry = queue[0];
-    this.emitFormEvent("form-ui:queued", {
-      values,
-      formConfig: this.formConfig,
-      submit: this.formConfig?.submit,
-      result: {
-        queueLength: queue.length,
-        deadLetterLength: this.storageAdapter.loadDeadLetterQueue().length,
-        nextAttemptAt: nextEntry?.nextAttemptAt,
-        attempts: nextEntry?.attempts,
-      } satisfies TFormUIQueueState,
-    });
-    this.emitQueueState();
+    this.persistence.enqueueSubmission(values);
   }
 
-  getQueueState = (): TFormUIQueueState => {
-    const queue = this.storageAdapter?.loadQueue() || [];
-    const nextEntry = queue[0];
-    return {
-      queueLength: queue.length,
-      deadLetterLength: this.storageAdapter?.loadDeadLetterQueue().length || 0,
-      nextAttemptAt: nextEntry?.nextAttemptAt,
-      attempts: nextEntry?.attempts,
-    };
+  getQueueState = (): TFormQueueState => {
+    return this.persistence.getQueueState();
   }
 
   emitQueueState = () => {
-    if (!this.shouldUseQueue()) {
-      return;
-    }
-
-    this.emitFormEvent("form-ui:queue-state", {
-      values: this.form?.getState().values || {},
-      formConfig: this.formConfig,
-      submit: this.formConfig?.submit,
-      result: this.getQueueState(),
-    });
+    this.persistence.emitQueueState();
   }
 
-  getStorageSnapshot = () => {
-    return {
-      draft: this.storageAdapter?.loadDraft() || null,
-      queue: this.storageAdapter?.loadQueue() || [],
-      deadLetter: this.storageAdapter?.loadDeadLetterQueue() || [],
-    };
+  getStorageSnapshot = (): TFormStorageSnapshot => {
+    return this.persistence.getStorageSnapshot();
   }
 
   clearDeadLetterQueue = () => {
-    if (!this.storageAdapter) {
-      return;
-    }
-
-    this.storageAdapter.clearDeadLetterQueue();
-    this.emitFormEvent("form-ui:dead-letter-cleared", {
-      values: {},
-      formConfig: this.formConfig,
-      submit: this.formConfig?.submit,
-      result: this.getQueueState(),
-    });
-    this.emitQueueState();
+    this.persistence.clearDeadLetterQueue();
   }
 
   requeueDeadLetterEntry = (entryId: string) => {
-    if (!this.storageAdapter) {
-      return false;
-    }
-
-    const entry = this.storageAdapter.removeDeadLetterEntry(entryId);
-    if (!entry) {
-      return false;
-    }
-
-    const resetEntry: Record<string, any> = entry.values;
-    const queue = this.storageAdapter.enqueueSubmission(resetEntry);
-    this.emitFormEvent("form-ui:dead-letter-requeued", {
-      values: resetEntry,
-      formConfig: this.formConfig,
-      submit: this.formConfig?.submit,
-      result: {
-        queueLength: queue.length,
-        deadLetterLength: this.storageAdapter.loadDeadLetterQueue().length,
-        entryId,
-      },
-    });
-    this.emitQueueState();
-    return true;
+    return this.persistence.requeueDeadLetterEntry(entryId);
   }
 
   replayDeadLetterEntry = async (entryId: string) => {
-    if (!this.storageAdapter || !this.formConfig?.submit?.endpoint) {
-      return false;
-    }
-
-    const entry = this.storageAdapter.removeDeadLetterEntry(entryId);
-    if (!entry) {
-      return false;
-    }
-
-    try {
-      const { response, result } = await this.submitToApi(entry.values, this.formConfig.submit);
-      this.emitFormEvent("form-ui:dead-letter-replayed-success", {
-        values: entry.values,
-        formConfig: this.formConfig,
-        submit: this.formConfig.submit,
-        response,
-        result,
-      });
-      this.emitQueueState();
-      return true;
-    } catch (error: any) {
-      const replayEntry: TQueuedSubmission = {
-        ...entry,
-        attempts: entry.attempts + 1,
-        updatedAt: Date.now(),
-        nextAttemptAt: Date.now() + this.getRetryDelayMs(entry.attempts + 1),
-        lastError: error?.result?.message || error?.message || "replay_error",
-      };
-      const deadLetter = this.storageAdapter.enqueueDeadLetter(replayEntry);
-      this.emitFormEvent("form-ui:dead-letter-replayed-error", {
-        values: entry.values,
-        formConfig: this.formConfig,
-        submit: this.formConfig.submit,
-        response: error?.response,
-        result: {
-          deadLetterLength: deadLetter.length,
-          entry: replayEntry,
-        },
-        error,
-      });
-      this.emitQueueState();
-      return false;
-    }
+    return this.persistence.replayDeadLetterEntry(entryId);
   }
 
   flushSubmissionQueue = async () => {
-    if (
-      !this.storageAdapter ||
-      !this.formConfig?.submit?.endpoint ||
-      !this.shouldUseQueue() ||
-      this.syncInFlight
-    ) {
-      return;
-    }
-
-    const pending = this.storageAdapter.loadQueue();
-    if (!pending.length) {
-      return;
-    }
-
-    this.syncInFlight = true;
-    try {
-      while (true) {
-        const entry = this.storageAdapter.loadQueue()[0];
-        if (!entry) {
-          this.emitQueueState();
-          break;
-        }
-
-        if (entry.nextAttemptAt > Date.now()) {
-          break;
-        }
-
-        try {
-          const { response, result } = await this.submitToApi(entry.values, this.formConfig.submit);
-          this.storageAdapter.dequeueSubmission();
-          this.emitFormEvent("form-ui:sync-success", {
-            values: entry.values,
-            formConfig: this.formConfig,
-            submit: this.formConfig.submit,
-            response,
-            result,
-          });
-          this.emitQueueState();
-        } catch (error: any) {
-          const attempts = entry.attempts + 1;
-          const nextEntry: TQueuedSubmission = {
-            ...entry,
-            attempts,
-            updatedAt: Date.now(),
-            nextAttemptAt: Date.now() + this.getRetryDelayMs(attempts),
-            lastError: error?.result?.message || error?.message || "sync_error",
-          };
-          if (attempts >= this.getMaxRetryAttempts()) {
-            this.storageAdapter.dequeueSubmission();
-            const deadLetter = this.storageAdapter.enqueueDeadLetter(nextEntry);
-            this.emitFormEvent("form-ui:dead-lettered", {
-              values: entry.values,
-              formConfig: this.formConfig,
-              submit: this.formConfig.submit,
-              response: error?.response,
-              result: {
-                deadLetterLength: deadLetter.length,
-                entry: nextEntry,
-              },
-              error,
-            });
-          } else {
-            this.storageAdapter.updateQueueEntry(nextEntry);
-          }
-          this.emitFormEvent("form-ui:sync-error", {
-            values: entry.values,
-            formConfig: this.formConfig,
-            submit: this.formConfig.submit,
-            response: error?.response,
-            result: error?.result,
-            error,
-          });
-          this.emitQueueState();
-          break;
-        }
-      }
-    } finally {
-      this.syncInFlight = false;
-    }
+    await this.persistence.flushSubmissionQueue();
   }
 
   validateForm = (values: Record<string, any>) => {

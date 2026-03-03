@@ -17,6 +17,7 @@ not the old React `PostUI` API shown in earlier versions of the README.
 
 The public API is centered on:
 - `FormUI` (the custom element class)
+- `FormRuntime` (the composed headless runtime)
 - `mountFormUI(...)`
 - `createFormConfig(...)`
 - `createTemplateMarkup(...)`
@@ -73,6 +74,66 @@ if (container) {
   });
 }
 ```
+
+## Headless Runtime
+
+If you do not want to mount `<form-ui>`, use `FormRuntime` directly. It
+combines validation, normalization, local persistence, and optional dynamic
+field behavior behind a single headless API.
+
+```ts
+import { createFormConfig, FormRuntime } from '@lybaba/xpressui';
+
+const values = {
+  amount: '42.50',
+  email: 'buyer@example.com',
+};
+
+const formConfig = createFormConfig({
+  name: 'headless-payment',
+  title: 'Headless Payment',
+  storage: {
+    mode: 'draft',
+    adapter: 'local-storage',
+    key: 'xpressui:headless-payment',
+    autoSaveMs: 0,
+  },
+  fields: [
+    { name: 'amount', label: 'Amount', type: 'price', required: true },
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+
+const runtime = new FormRuntime(formConfig, {
+  getValues: () => values,
+});
+
+for (const field of formConfig.sections.main || []) {
+  runtime.setField(field.name, field);
+}
+
+const normalized = runtime.normalizeValues(values);
+const errors = runtime.validateValues(values);
+
+runtime.saveDraft();
+const draft = runtime.loadDraftValues();
+```
+
+Main `FormRuntime` methods:
+- `setFormConfig(...)`
+- `setField(...)`
+- `normalizeValues(...)`
+- `validateValues(...)`
+- `saveDraft()`
+- `loadDraftValues()`
+- `clearDraft()`
+- `getQueueState()`
+- `getStorageSnapshot()`
+- `flushSubmissionQueue()`
+
+If you pass DOM adapters through `dynamic`, the same runtime can also handle:
+- `updateConditionalFields()`
+- `refreshRemoteOptions()`
 
 ## Submission Modes
 

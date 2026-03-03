@@ -1,9 +1,10 @@
 import { createForm, FormApi } from "final-form";
 import TFormConfig, { TFormSubmitRequest } from "./common/TFormConfig";
-import validate, { getValidators, TValidator } from "./common/Validator";
+import { TValidator } from "./common/Validator";
 import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
-import { normalizeFormValues, UNKNOWN_TYPE } from "./common/field";
+import { FormEngineRuntime } from "./common/form-engine";
+import { UNKNOWN_TYPE } from "./common/field";
 import { FormDynamicRuntime } from "./common/form-dynamic";
 import {
   FormPersistenceRuntime,
@@ -23,6 +24,7 @@ export {
   mountFormUI,
 } from "./common/form-builder";
 export { createLocalFormAdmin } from "./common/form-admin";
+export { FormEngineRuntime } from "./common/form-engine";
 export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
 export {
@@ -53,9 +55,8 @@ export type TFormUISubmitDetail = {
 export class FormUI extends HTMLElement {
   form: FormApi<any, any> | null;
   registered: Record<string, boolean>;
-  validators: TValidator[];
   formConfig: TFormConfig | null;
-  inputFields: Record<string, TFieldConfig>;
+  engine: FormEngineRuntime;
   errors: Record<string, boolean>;
   initialized: boolean;
   dynamic: FormDynamicRuntime;
@@ -64,14 +65,13 @@ export class FormUI extends HTMLElement {
   constructor() {
     super();
     this.formConfig = null;
-    this.validators = [];
+    this.engine = new FormEngineRuntime();
     this.registered = {};
-    this.inputFields = {};
     this.errors = {}
     this.form = null;
     this.initialized = false;
     this.dynamic = new FormDynamicRuntime({
-      getFieldConfigs: () => Object.values(this.inputFields),
+      getFieldConfigs: () => Object.values(this.engine.getFields()),
       getFieldContainer: (fieldName) => this.getFieldContainer(fieldName),
       getFieldElement: (fieldName) => this.getFieldElement(fieldName),
       getFieldValue: (fieldName) => this.getFieldValue(fieldName),
@@ -95,6 +95,14 @@ export class FormUI extends HTMLElement {
         this.emitFormEvent(eventName, detail as TFormUISubmitDetail),
       submitValues: (values, submitConfig) => this.submitToApi(values, submitConfig),
     });
+  }
+
+  get validators(): TValidator[] {
+    return this.engine.validators;
+  }
+
+  get inputFields(): Record<string, TFieldConfig> {
+    return this.engine.getFields();
   }
 
   connectedCallback() {
@@ -129,7 +137,7 @@ export class FormUI extends HTMLElement {
 
     if (formElem) {
       this.formConfig = validatePublicFormConfig(getFormConfig(formElem) as unknown as Record<string, any>);
-      this.validators = getValidators(this.formConfig);
+      this.engine.setFormConfig(this.formConfig);
       this.persistence.setFormConfig(this.formConfig);
       const draftValues = this.persistence.loadDraftValues();
 
@@ -215,13 +223,7 @@ export class FormUI extends HTMLElement {
   }
 
   validateForm = (values: Record<string, any>) => {
-    if (this.validators.length) {
-      const validator = this.validators[0];
-      const formValues = normalizeFormValues(this.inputFields, values);
-      return validate(validator, formValues);
-    }
-
-    return {}
+    return this.engine.validateValues(values);
   }
 
   emitFormEvent = (
@@ -246,7 +248,7 @@ export class FormUI extends HTMLElement {
   }
 
   onSubmit = async (values: Record<string, any>) => {
-    const formValues = normalizeFormValues(this.inputFields, values);
+    const formValues = this.engine.normalizeValues(values);
     const detail: TFormUISubmitDetail = {
       values: formValues,
       formConfig: this.formConfig,
@@ -378,7 +380,7 @@ export class FormUI extends HTMLElement {
           });
           input.addEventListener("focus", () => focus());
           this.registered[name] = true;
-          this.inputFields[name] = fieldConfig;
+          this.engine.setField(name, fieldConfig);
         }
 
         // update value

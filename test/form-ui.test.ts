@@ -3,6 +3,7 @@ import {
   createLocalFormAdmin,
   createFormConfig,
   createSubmitRequestFromProvider,
+  FormEngineRuntime,
   FormDynamicRuntime,
   FormPersistenceRuntime,
   FormUI,
@@ -215,6 +216,46 @@ describe('FormUI', () => {
     });
 
     expect(formConfig.version).toBe(PUBLIC_FORM_SCHEMA_VERSION);
+  });
+
+  it('supports standalone normalization and validation without mounting FormUI', () => {
+    const formConfig = createFormConfig({
+      name: 'engine-form',
+      title: 'Engine Form',
+      fields: [
+        {
+          name: 'amount',
+          label: 'Amount',
+          type: 'price',
+          required: true,
+        },
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+      ],
+    });
+    const runtime = new FormEngineRuntime();
+    const section = formConfig.sections.main || [];
+
+    runtime.setFormConfig(formConfig);
+    section.forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+
+    expect(
+      runtime.normalizeValues({
+        amount: '42.50',
+        email: 'buyer@example.com',
+      })
+    ).toEqual({
+      amount: 42.5,
+      email: 'buyer@example.com',
+    });
+
+    expect(Object.keys(runtime.validateValues({})).length).toBeGreaterThan(0);
   });
 
   it('migrates legacy public configs to version 1', () => {

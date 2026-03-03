@@ -31,6 +31,7 @@ export {
   validatePublicFormConfig,
 } from "./common/public-schema";
 export {
+  createSubmitRequestFromProvider,
   getProviderDefinition,
   getProviderErrorEventName,
   getProviderSuccessEventName,

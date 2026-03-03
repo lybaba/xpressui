@@ -1,6 +1,9 @@
-import { TFormSubmitRequest } from "./TFormConfig";
+import { TFormProviderRequest, TFormSubmitRequest } from "./TFormConfig";
 
 export type TFormProviderDefinition = {
+  createSubmitRequest?(
+    provider: TFormProviderRequest,
+  ): TFormSubmitRequest;
   buildPayload(
     values: Record<string, any>,
     submitConfig: TFormSubmitRequest,
@@ -36,6 +39,22 @@ export function buildProviderPayload(
   return definition ? definition.buildPayload(values, submitConfig) : values;
 }
 
+export function createSubmitRequestFromProvider(
+  provider: TFormProviderRequest,
+): TFormSubmitRequest {
+  const definition = getProviderDefinition(provider.type);
+  if (definition?.createSubmitRequest) {
+    return definition.createSubmitRequest(provider);
+  }
+
+  return {
+    endpoint: provider.endpoint,
+    method: provider.method || "POST",
+    headers: provider.headers,
+    action: provider.type,
+  };
+}
+
 export function getProviderSuccessEventName(action?: string): string | null {
   return getProviderDefinition(action)?.successEventName || null;
 }
@@ -45,6 +64,14 @@ export function getProviderErrorEventName(action?: string): string | null {
 }
 
 registerProvider("reservation", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "reservation",
+    };
+  },
   buildPayload(values) {
     return {
       action: "reservation",
@@ -55,6 +82,14 @@ registerProvider("reservation", {
 });
 
 registerProvider("payment", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "payment",
+    };
+  },
   buildPayload(values) {
     return {
       action: "payment",
@@ -66,6 +101,14 @@ registerProvider("payment", {
 });
 
 registerProvider("payment-stripe", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "payment-stripe",
+    };
+  },
   buildPayload(values) {
     return {
       action: "payment-stripe",

@@ -7,6 +7,7 @@ import TFormConfig, {
   TFormStorageConfig,
   TFormSubmitRequest,
 } from './TFormConfig';
+import { createSubmitRequestFromProvider } from './provider-registry';
 import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-schema';
 import {
   CHECKBOX_TYPE,
@@ -122,12 +123,7 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
   const fields = input.fields.map((field) => ({ ...field }));
   const provider = input.provider;
   const submit = input.submit || (provider
-    ? {
-        endpoint: provider.endpoint,
-        method: provider.method || 'POST',
-        headers: provider.headers,
-        action: provider.type,
-      }
+    ? createSubmitRequestFromProvider(provider)
     : undefined);
 
   return validatePublicFormConfig({

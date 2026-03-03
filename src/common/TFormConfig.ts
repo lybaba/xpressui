@@ -51,17 +51,7 @@ export type TFormSubmitRequest = {
 };
 
 export type TFormProviderRequest = {
-    type: 'reservation';
-    endpoint: string;
-    method?: 'POST' | 'PUT' | 'PATCH';
-    headers?: Record<string, string>;
-} | {
-    type: 'payment';
-    endpoint: string;
-    method?: 'POST' | 'PUT' | 'PATCH';
-    headers?: Record<string, string>;
-} | {
-    type: 'payment-stripe';
+    type: string;
     endpoint: string;
     method?: 'POST' | 'PUT' | 'PATCH';
     headers?: Record<string, string>;

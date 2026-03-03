@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createLocalFormAdmin,
   createFormConfig,
+  createSubmitRequestFromProvider,
   FormUI,
   getProviderDefinition,
   mountFormUI,
@@ -599,6 +600,55 @@ describe('FormUI', () => {
         result: { quoteId: 'qt_123' },
       })
     );
+  });
+
+  it('derives submit config from the provider registry for built-in and custom providers', () => {
+    expect(
+      createSubmitRequestFromProvider({
+        type: 'reservation',
+        endpoint: 'https://api.example.test/reservations',
+      })
+    ).toEqual({
+      endpoint: 'https://api.example.test/reservations',
+      method: 'POST',
+      headers: undefined,
+      action: 'reservation',
+    });
+
+    expect(
+      createSubmitRequestFromProvider({
+        type: 'quote-request',
+        endpoint: 'https://api.example.test/quotes',
+      })
+    ).toEqual({
+      endpoint: 'https://api.example.test/quotes',
+      method: 'POST',
+      headers: undefined,
+      action: 'quote-request',
+    });
+
+    const formConfig = createFormConfig({
+      name: 'quote-provider-form',
+      title: 'Quote Provider Form',
+      provider: {
+        type: 'quote-request',
+        endpoint: 'https://api.example.test/quotes',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+
+    expect(formConfig.submit).toEqual({
+      endpoint: 'https://api.example.test/quotes',
+      method: 'POST',
+      headers: undefined,
+      action: 'quote-request',
+    });
   });
 
   it('saves and restores drafts with local storage', async () => {

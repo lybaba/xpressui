@@ -146,6 +146,43 @@ class Example extends Component {
 }
 ```
 
+## Simpler Form Setup
+
+You can also mount a form from a plain object and either listen to events or
+let the component call your API directly.
+
+```ts
+import { mountFormUI } from '@lybaba/xpressui';
+
+const container = document.getElementById('app');
+
+if (container) {
+  const form = mountFormUI(container, {
+    name: 'booking-form',
+    title: 'Book a Table',
+    submit: {
+      endpoint: '/api/bookings',
+      method: 'POST',
+      action: 'reservation',
+    },
+    fields: [
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'date', label: 'Date', type: 'datetime', required: true },
+      { name: 'notes', label: 'Notes', type: 'textarea' },
+    ],
+  });
+
+  form?.addEventListener('form-ui:submit-success', (event) => {
+    console.log('Booking created', (event as CustomEvent).detail.result);
+  });
+}
+```
+
+Events emitted by the component:
+- `form-ui:submit`
+- `form-ui:submit-success`
+- `form-ui:submit-error`
+
 ## License
 
 MIT © [lybaba](https://github.com/lybaba)

@@ -1,9 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FormUI } from '../src/index';
+import {
+  createFormConfig,
+  FormUI,
+  mountFormUI,
+  TFormUISubmitDetail,
+} from '../src/index';
 
 function renderFixture(markup: string): FormUI {
   document.body.innerHTML = markup;
   return document.querySelector('form-ui') as FormUI;
+}
+
+async function flushAsyncWork() {
+  await Promise.resolve();
+  await Promise.resolve();
+  await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 describe('FormUI', () => {
@@ -52,9 +63,7 @@ describe('FormUI', () => {
     expect(element.validators).toHaveLength(1);
   });
 
-  it('submits normalized values for a valid form', () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
+  it('emits a submit success event for a valid form', async () => {
     const element = renderFixture(`
       <template id="contact">
         <form
@@ -86,16 +95,24 @@ describe('FormUI', () => {
 
     const input = element.querySelector('#email') as HTMLInputElement;
     const form = element.querySelector('#contact_form') as HTMLFormElement;
+    const onSubmitSuccess = vi.fn();
+
+    element.addEventListener('form-ui:submit-success', (event) => {
+      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
 
     input.dispatchEvent(new FocusEvent('focus'));
     input.value = 'alice@example.com';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new FocusEvent('blur'));
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
 
-    expect(alertSpy).toHaveBeenCalledTimes(1);
-    expect(alertSpy).toHaveBeenCalledWith(
-      JSON.stringify({ email: 'alice@example.com' }, undefined, 2)
+    expect(onSubmitSuccess).toHaveBeenCalledTimes(1);
+    expect(onSubmitSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: { email: 'alice@example.com' },
+      })
     );
   });
 
@@ -146,5 +163,89 @@ describe('FormUI', () => {
     expect(error.textContent).toBe('');
     expect(error.style.display).toBe('none');
     expect(input.classList.contains('input-error')).toBe(false);
+  });
+
+  it('can mount a form from a simple config object', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'booking-form',
+      title: 'Booking Form',
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+        {
+          name: 'notes',
+          label: 'Notes',
+          type: 'textarea',
+        },
+      ],
+    }) as FormUI;
+
+    expect(element).not.toBeNull();
+    expect(container.querySelector('template#booking-form')).not.toBeNull();
+    expect(element.formConfig?.name).toBe('booking-form');
+    expect(element.querySelector('#notes')).not.toBeNull();
+  });
+
+  it('can submit to a configured API endpoint', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ bookingId: 'bk_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    const container = document.createElement('div');
+    const element = mountFormUI(
+      container,
+      createFormConfig({
+        name: 'booking-api',
+        title: 'Booking API',
+        submit: {
+          endpoint: 'https://api.example.test/bookings',
+          method: 'POST',
+          action: 'reservation',
+        },
+        fields: [
+          {
+            name: 'email',
+            label: 'Email',
+            type: 'email',
+            required: true,
+          },
+        ],
+      })
+    ) as FormUI;
+    const input = element.querySelector('#email') as HTMLInputElement;
+    const form = element.querySelector('#booking-api_form') as HTMLFormElement;
+    const onSuccess = vi.fn();
+
+    element.addEventListener('form-ui:submit-success', (event) => {
+      onSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    input.dispatchEvent(new FocusEvent('focus'));
+    input.value = 'alice@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur'));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/bookings',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'alice@example.com' }),
+      })
+    );
+    expect(onSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { bookingId: 'bk_123' },
+      })
+    );
   });
 });

@@ -42,6 +42,13 @@ export enum RenderingMode {
     VIEW_ENTRY
 }
 
+export type TFormSubmitRequest = {
+    endpoint: string;
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    headers?: Record<string, string>;
+    mode?: 'json' | 'form-data';
+    action?: string;
+};
 
 type TFormConfig = {
     id: string;
@@ -63,6 +70,9 @@ type TFormConfig = {
     maxHeight?: string;
     bgcolor?: string;
     textcolor?: string;
+    submit?: TFormSubmitRequest;
+    successMsg?: string;
+    errorMsg?: string;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {

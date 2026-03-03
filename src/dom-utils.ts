@@ -49,6 +49,10 @@ export const ATTR_TIMESTAMP = "timestamp"
 export const ATTR_SECTIONS = "sections"
 export const ATTR_SUBFORMS = "subforms"
 export const ATTR_RENDERING_MODE = "RenderingMode"
+export const ATTR_SUBMIT_ENDPOINT = "submitEndpoint"
+export const ATTR_SUBMIT_METHOD = "submitMethod"
+export const ATTR_SUBMIT_MODE = "submitMode"
+export const ATTR_SUBMIT_ACTION = "submitAction"
 
 
 export const HTML_ATTR_TYPE = `${HTML_ATTR_PREFIX}type`
@@ -94,6 +98,10 @@ export const HTML_ATTR_TIMESTAMP = `${HTML_ATTR_PREFIX}timestamp`
 export const HTML_ATTR_SECTIONS = `${HTML_ATTR_PREFIX}sections`
 export const HTML_ATTR_SUBFORMS = `${HTML_ATTR_PREFIX}subforms`
 export const HTML_ATTR_RENDERING_MODE = `${HTML_ATTR_PREFIX}rendering-mode`
+export const HTML_ATTR_SUBMIT_ENDPOINT = `${HTML_ATTR_PREFIX}submit-endpoint`
+export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
+export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
+export const HTML_ATTR_SUBMIT_ACTION = `${HTML_ATTR_PREFIX}submit-action`
 
 export const ATTR_MAP = {
     [HTML_ATTR_TYPE]: ATTR_TYPE,
@@ -139,6 +147,10 @@ export const ATTR_MAP = {
     [HTML_ATTR_SECTIONS]: ATTR_SECTIONS,
     [HTML_ATTR_SUBFORMS]: ATTR_SUBFORMS,
     [HTML_ATTR_RENDERING_MODE]: ATTR_RENDERING_MODE,
+    [HTML_ATTR_SUBMIT_ENDPOINT]: ATTR_SUBMIT_ENDPOINT,
+    [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
+    [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
+    [HTML_ATTR_SUBMIT_ACTION]: ATTR_SUBMIT_ACTION,
 }
 
 
@@ -177,6 +189,19 @@ export default function getFormConfig(node: Element): TFormConfig {
         if (attrValue) {
             (formConfig as any)[camelKey] = attrValue;
         }
+    }
+
+    if ((formConfig as any).submitEndpoint) {
+        (formConfig as any).submit = {
+            endpoint: (formConfig as any).submitEndpoint,
+            method: (formConfig as any).submitMethod,
+            mode: (formConfig as any).submitMode,
+            action: (formConfig as any).submitAction,
+        };
+        delete (formConfig as any).submitEndpoint;
+        delete (formConfig as any).submitMethod;
+        delete (formConfig as any).submitMode;
+        delete (formConfig as any).submitAction;
     }
 
     const sectionNodes = node.querySelectorAll('[data-type="section"]');

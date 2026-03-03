@@ -1,4 +1,4 @@
-import shortUUID from "short-uuid"
+import * as shortUUID from "short-uuid"
 import { TEXT_TYPE, TEXTAREA_TYPE, UNKNOWN_TYPE } from "./common/field"
 import TFieldConfig from "./common/TFieldConfig"
 import TFormConfig, { DEFAULT_FORM_CONFIG } from "./common/TFormConfig"
@@ -49,6 +49,21 @@ export const ATTR_TIMESTAMP = "timestamp"
 export const ATTR_SECTIONS = "sections"
 export const ATTR_SUBFORMS = "subforms"
 export const ATTR_RENDERING_MODE = "RenderingMode"
+export const ATTR_SUBMIT_ENDPOINT = "submitEndpoint"
+export const ATTR_SUBMIT_METHOD = "submitMethod"
+export const ATTR_SUBMIT_MODE = "submitMode"
+export const ATTR_SUBMIT_ACTION = "submitAction"
+export const ATTR_VISIBLE_WHEN_FIELD = "visibleWhenField"
+export const ATTR_VISIBLE_WHEN_EQUALS = "visibleWhenEquals"
+export const ATTR_OPTIONS_ENDPOINT = "optionsEndpoint"
+export const ATTR_OPTIONS_DEPENDS_ON = "optionsDependsOn"
+export const ATTR_OPTIONS_LABEL_KEY = "optionsLabelKey"
+export const ATTR_OPTIONS_VALUE_KEY = "optionsValueKey"
+export const ATTR_STORAGE_MODE = "storageMode"
+export const ATTR_STORAGE_ADAPTER = "storageAdapter"
+export const ATTR_STORAGE_KEY = "storageKey"
+export const ATTR_STORAGE_AUTOSAVE_MS = "storageAutoSaveMs"
+export const ATTR_VERSION = "version"
 
 
 export const HTML_ATTR_TYPE = `${HTML_ATTR_PREFIX}type`
@@ -94,6 +109,21 @@ export const HTML_ATTR_TIMESTAMP = `${HTML_ATTR_PREFIX}timestamp`
 export const HTML_ATTR_SECTIONS = `${HTML_ATTR_PREFIX}sections`
 export const HTML_ATTR_SUBFORMS = `${HTML_ATTR_PREFIX}subforms`
 export const HTML_ATTR_RENDERING_MODE = `${HTML_ATTR_PREFIX}rendering-mode`
+export const HTML_ATTR_SUBMIT_ENDPOINT = `${HTML_ATTR_PREFIX}submit-endpoint`
+export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
+export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
+export const HTML_ATTR_SUBMIT_ACTION = `${HTML_ATTR_PREFIX}submit-action`
+export const HTML_ATTR_VISIBLE_WHEN_FIELD = `${HTML_ATTR_PREFIX}visible-when-field`
+export const HTML_ATTR_VISIBLE_WHEN_EQUALS = `${HTML_ATTR_PREFIX}visible-when-equals`
+export const HTML_ATTR_OPTIONS_ENDPOINT = `${HTML_ATTR_PREFIX}options-endpoint`
+export const HTML_ATTR_OPTIONS_DEPENDS_ON = `${HTML_ATTR_PREFIX}options-depends-on`
+export const HTML_ATTR_OPTIONS_LABEL_KEY = `${HTML_ATTR_PREFIX}options-label-key`
+export const HTML_ATTR_OPTIONS_VALUE_KEY = `${HTML_ATTR_PREFIX}options-value-key`
+export const HTML_ATTR_STORAGE_MODE = `${HTML_ATTR_PREFIX}storage-mode`
+export const HTML_ATTR_STORAGE_ADAPTER = `${HTML_ATTR_PREFIX}storage-adapter`
+export const HTML_ATTR_STORAGE_KEY = `${HTML_ATTR_PREFIX}storage-key`
+export const HTML_ATTR_STORAGE_AUTOSAVE_MS = `${HTML_ATTR_PREFIX}storage-autosave-ms`
+export const HTML_ATTR_VERSION = `${HTML_ATTR_PREFIX}version`
 
 export const ATTR_MAP = {
     [HTML_ATTR_TYPE]: ATTR_TYPE,
@@ -139,6 +169,21 @@ export const ATTR_MAP = {
     [HTML_ATTR_SECTIONS]: ATTR_SECTIONS,
     [HTML_ATTR_SUBFORMS]: ATTR_SUBFORMS,
     [HTML_ATTR_RENDERING_MODE]: ATTR_RENDERING_MODE,
+    [HTML_ATTR_SUBMIT_ENDPOINT]: ATTR_SUBMIT_ENDPOINT,
+    [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
+    [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
+    [HTML_ATTR_SUBMIT_ACTION]: ATTR_SUBMIT_ACTION,
+    [HTML_ATTR_VISIBLE_WHEN_FIELD]: ATTR_VISIBLE_WHEN_FIELD,
+    [HTML_ATTR_VISIBLE_WHEN_EQUALS]: ATTR_VISIBLE_WHEN_EQUALS,
+    [HTML_ATTR_OPTIONS_ENDPOINT]: ATTR_OPTIONS_ENDPOINT,
+    [HTML_ATTR_OPTIONS_DEPENDS_ON]: ATTR_OPTIONS_DEPENDS_ON,
+    [HTML_ATTR_OPTIONS_LABEL_KEY]: ATTR_OPTIONS_LABEL_KEY,
+    [HTML_ATTR_OPTIONS_VALUE_KEY]: ATTR_OPTIONS_VALUE_KEY,
+    [HTML_ATTR_STORAGE_MODE]: ATTR_STORAGE_MODE,
+    [HTML_ATTR_STORAGE_ADAPTER]: ATTR_STORAGE_ADAPTER,
+    [HTML_ATTR_STORAGE_KEY]: ATTR_STORAGE_KEY,
+    [HTML_ATTR_STORAGE_AUTOSAVE_MS]: ATTR_STORAGE_AUTOSAVE_MS,
+    [HTML_ATTR_VERSION]: ATTR_VERSION,
 }
 
 
@@ -177,6 +222,42 @@ export default function getFormConfig(node: Element): TFormConfig {
         if (attrValue) {
             (formConfig as any)[camelKey] = attrValue;
         }
+    }
+
+    if ((formConfig as any).label && formConfig.title === DEFAULT_FORM_CONFIG.title) {
+        formConfig.title = (formConfig as any).label;
+    }
+
+    if ((formConfig as any).submitEndpoint) {
+        (formConfig as any).submit = {
+            endpoint: (formConfig as any).submitEndpoint,
+            method: (formConfig as any).submitMethod,
+            mode: (formConfig as any).submitMode,
+            action: (formConfig as any).submitAction,
+        };
+        delete (formConfig as any).submitEndpoint;
+        delete (formConfig as any).submitMethod;
+        delete (formConfig as any).submitMode;
+        delete (formConfig as any).submitAction;
+    }
+
+    if ((formConfig as any).storageMode) {
+        (formConfig as any).storage = {
+            mode: (formConfig as any).storageMode,
+            adapter: (formConfig as any).storageAdapter,
+            key: (formConfig as any).storageKey,
+            autoSaveMs: (formConfig as any).storageAutoSaveMs
+                ? Number((formConfig as any).storageAutoSaveMs)
+                : undefined,
+        };
+        delete (formConfig as any).storageMode;
+        delete (formConfig as any).storageAdapter;
+        delete (formConfig as any).storageKey;
+        delete (formConfig as any).storageAutoSaveMs;
+    }
+
+    if ((formConfig as any).version) {
+        (formConfig as any).version = Number((formConfig as any).version);
     }
 
     const sectionNodes = node.querySelectorAll('[data-type="section"]');

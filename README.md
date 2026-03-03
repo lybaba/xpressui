@@ -1,150 +1,557 @@
 # xpress-ui
 
-> XPressUI Frontend Post UI Components
+`@lybaba/xpressui` is a lightweight form engine built around a custom element:
+`<form-ui>`.
 
-Build Form UI and Online-Store UI (aka PostUI)  from a Json Configuration File.
-Just declare your Post UI as a Json Object and XPressUI will take the rest.
-- Generate the Post UI
-- Handle the Post UI internals ( form validation, navigation, and post data to your backend server)
+It helps you:
+- define forms from simple JavaScript objects
+- validate input with AJV + `final-form`
+- submit data to your backend with normalized payloads
+- plug in common workflows such as reservation and payment
+- build dynamic forms with conditional fields and API-driven select options
 
-[![NPM](https://img.shields.io/npm/v/postui.svg)](https://www.npmjs.com/package/postui) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+This repository currently ships a browser-focused Web Component library. It is
+not the old React `PostUI` API shown in earlier versions of the README.
 
-## Node version used
-nvm install 20.19.0
-nvm use 20.19.0
+## Current Scope
 
-## Install
+The public API is centered on:
+- `FormUI` (the custom element class)
+- `FormRuntime` (the composed headless runtime)
+- `mountFormUI(...)`
+- `createFormConfig(...)`
+- `createTemplateMarkup(...)`
+
+The recommended path is `mountFormUI(...)`, which lets you mount a form from a
+plain object without hand-writing a full HTML template.
+
+For storage/debug tooling outside the component instance, use
+`createLocalFormAdmin(formConfig)`.
+
+Public API you should treat as stable:
+- `mountFormUI(...)`
+- `createFormConfig(...)`
+- `createTemplateMarkup(...)`
+- `FormUI`
+- `FormRuntime`
+- `createLocalFormAdmin(...)`
+- public schema helpers (`validatePublicFormConfig`, `migratePublicFormConfig`)
+
+Advanced building blocks available but better treated as lower-level/internal:
+- `FormEngineRuntime`
+- `FormDynamicRuntime`
+- `FormPersistenceRuntime`
+- `provider-registry` helpers
+- `form-submit` internals
+
+The public form contract is now versioned.
+Current public schema version:
+- `1`
+
+## Requirements
+
+- Node.js `20.19.0` or newer
 
 ```bash
-npm install --save @lybaba/xpressui
+nvm install 20.19.0
+nvm use 20.19.0
 ```
 
-## Usage
+## Installation
 
-```tsx
-import { ThemeProvider } from '@mui/joy/styles';
-import theme from './styles/default';
-import PostUIProvider from './components/postui/PostUIProvider';
-import TPostUIEvent, { TPostUIEventType } from 'src/common/TPostUIEvent';
-import TServerResponse from 'src/common/TServerResponse';
-import PostUI from './components/postui/PostUI';
-import TPostConfig from './common/TPostConfig';
+The package is configured for GitHub Packages:
 
-const MULTI_STEP_FORM_CONFIG: TPostConfig = {
-  "uid": "user123",
-  "id": "123",
-  "type": "multistepform",
-  "name": "multi-step-form",
-  "label": "MultiStep Form",
-  "submitBtnLabel": "Submit",
-  "prevBtnLabel": "Previous",
-  "nextBtnLabel": "Next",
-  "backendController": "controller.php",
-  "successMsg": "Form successfully submited.",
-  "errorMsg": "Submission failed.",
-  "sections": {
-      "main": [
-          {
-              "name": "step_1",
-              "label": "Step 1",
-              "type": "section",
-          },
-          {
-              "name": "step_2",
-              "label": "Step 2",
-              "type": "section",
-          },
-          {
-              "name": "step_3",
-              "label": "Step 3",
-              "type": "section",
-          }
-      ],
-      "step_1": [
-          {
-              "label": "Email",
-              "type": "email",
-              "required": true,
-              "name": "email"
-          }
-      ],
-      "step_2": [
-          {
-              "label": "Nom",
-              "type": "text",
-              "required": true,
-              "name": "nom"
-          }
-      ],
-      "step_3": [
-          {
-              "label": "Message",
-              "type": "textarea",
-              "required": true,
-              "name": "message"
-          }
-      ],
-  }
+```bash
+npm install @lybaba/xpressui
+```
+
+If you publish privately through GitHub Packages, make sure your npm registry
+and auth are configured for the `@lybaba` scope.
+
+## Quick Start
+
+```ts
+import { mountFormUI } from '@lybaba/xpressui';
+
+const container = document.getElementById('app');
+
+if (container) {
+  const form = mountFormUI(container, {
+    name: 'contact-form',
+    title: 'Contact Us',
+    fields: [
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'message', label: 'Message', type: 'textarea', required: true },
+    ],
+  });
+
+  form?.addEventListener('form-ui:submit-success', (event) => {
+    console.log('Submitted', (event as CustomEvent).detail.values);
+  });
+}
+```
+
+## Headless Runtime
+
+If you do not want to mount `<form-ui>`, use `FormRuntime` directly. It
+combines validation, normalization, local persistence, and optional dynamic
+field behavior behind a single headless API.
+
+```ts
+import { createFormConfig, FormRuntime } from '@lybaba/xpressui';
+
+const values = {
+  amount: '42.50',
+  email: 'buyer@example.com',
+};
+
+const formConfig = createFormConfig({
+  name: 'headless-payment',
+  title: 'Headless Payment',
+  storage: {
+    mode: 'draft',
+    adapter: 'local-storage',
+    key: 'xpressui:headless-payment',
+    autoSaveMs: 0,
+  },
+  fields: [
+    { name: 'amount', label: 'Amount', type: 'price', required: true },
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+
+const runtime = new FormRuntime(formConfig, {
+  getValues: () => values,
+});
+
+for (const field of formConfig.sections.main || []) {
+  runtime.setField(field.name, field);
 }
 
+const normalized = runtime.normalizeValues(values);
+const errors = runtime.validateValues(values);
 
-// callback for sending data to server.  
-async function onPostUIEvent(event: TPostUIEvent): Promise<TServerResponse> {
+runtime.saveDraft();
+const draft = runtime.loadDraftValues();
+```
 
-  console.log("PostUIPage____onPostUIEvent : ", event);
+Main `FormRuntime` methods:
+- `setFormConfig(...)`
+- `setField(...)`
+- `normalizeValues(...)`
+- `validateValues(...)`
+- `saveDraft()`
+- `loadDraftValues()`
+- `clearDraft()`
+- `getQueueState()`
+- `getStorageSnapshot()`
+- `flushSubmissionQueue()`
 
-  // add logic to post the data (event.data) to the server
-  if (event.eventType === TPostUIEventType.SubmitFormEvent) {
-    const response = await fetch(event.frontend.postConfig.backendController, {
-      method: "POST", 
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(event.data), 
-    });
+If you pass DOM adapters through `dynamic`, the same runtime can also handle:
+- `updateConditionalFields()`
+- `refreshRemoteOptions()`
 
-    const {
-      errorMsg = 'Submission failed.',
-      successMsg = 'Form has been successfully submitted.'
-    } = event.frontend.postConfig;
+Public types exported for headless integrations:
+- `TFormRuntimeOptions`
+- `TFormRuntimePublicApi`
+- `TFormRuntimeDynamicAdapters`
+- `TFormRuntimeSubmitValues`
+- `TFormRuntimeSubmitResult`
 
-    if (!response.ok) {
-      const serverRes: TServerResponse = {
-        success: false,
-        message: errorMsg,
-        statusCode: response.status
-      };
+## Submission Modes
 
-      return serverRes;
-    }
-    const data = response.json();
-    const serverRes: TServerResponse = {
-      success: true,
-      message: successMsg,
-      data
-    };
+### 1. Manual handling through events
 
-    return serverRes;
-  }
+If you do not provide a submit endpoint, the component validates the form and
+emits events. Your app decides what to do next.
 
-  const serverRes: TServerResponse = {
-    success: true,
-    message: 'success',
-  };
+Events:
+- `form-ui:submit`
+- `form-ui:submit-success`
+- `form-ui:submit-error`
 
-  return serverRes;
-}
+### 2. Direct API submission
 
-class Example extends Component {
-  render() {
-    return(
-      <PostUIProvider>
-        <PostUI postConfig={MULTI_STEP_FORM_CONFIG} onPostUIEvent={onPostUIEvent}/>
-      </PostUIProvider>
-    )
+Provide a `submit` block and the component will call your backend with `fetch`.
+
+```ts
+mountFormUI(container, {
+  name: 'booking-form',
+  title: 'Book a Table',
+  submit: {
+    endpoint: '/api/bookings',
+    method: 'POST',
+  },
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+    { name: 'date', label: 'Date', type: 'datetime', required: true },
+    { name: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+});
+```
+
+Supported submit options:
+- `endpoint`
+- `method`
+- `headers`
+- `mode` (`json` or `form-data`)
+- `action`
+
+## Built-in Providers
+
+Providers are thin presets on top of `submit`. They normalize payloads so your
+backend receives stable request shapes.
+
+### Reservation
+
+```ts
+mountFormUI(container, {
+  name: 'reservation-form',
+  title: 'Reserve',
+  provider: {
+    type: 'reservation',
+    endpoint: '/api/reservations',
+  },
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+    { name: 'date', label: 'Date', type: 'datetime', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "reservation",
+  "reservation": {
+    "email": "user@example.com",
+    "date": "2026-03-03 20:00"
   }
 }
 ```
+
+Extra event:
+- `form-ui:reservation-success`
+
+### Payment
+
+```ts
+mountFormUI(container, {
+  name: 'payment-form',
+  title: 'Pay Now',
+  provider: {
+    type: 'payment',
+    endpoint: '/api/payments',
+  },
+  fields: [
+    { name: 'amount', label: 'Amount', type: 'price', required: true },
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "payment",
+  "payment": {
+    "amount": 42.5,
+    "email": "buyer@example.com"
+  }
+}
+```
+
+Extra events:
+- `form-ui:payment-success`
+- `form-ui:payment-error`
+
+### Stripe Payment
+
+Use `payment-stripe` when your backend creates a Stripe PaymentIntent and
+returns checkout metadata to the frontend.
+
+```ts
+mountFormUI(container, {
+  name: 'stripe-payment-form',
+  title: 'Pay with Stripe',
+  provider: {
+    type: 'payment-stripe',
+    endpoint: '/api/stripe/create-intent',
+  },
+  fields: [
+    { name: 'amount', label: 'Amount', type: 'price', required: true },
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "payment-stripe",
+  "payment": {
+    "amount": 19.99,
+    "email": "stripe@example.com"
+  }
+}
+```
+
+Expected backend response:
+
+```json
+{
+  "clientSecret": "pi_secret_123",
+  "paymentIntentId": "pi_123",
+  "redirectUrl": "/checkout/complete"
+}
+```
+
+Extra events:
+- `form-ui:payment-stripe-success`
+- `form-ui:payment-stripe-error`
+
+## Dynamic Forms
+
+The component supports two dynamic patterns out of the box:
+- conditional visibility
+- remote options for select fields
+
+```ts
+mountFormUI(container, {
+  name: 'dynamic-booking',
+  title: 'Dynamic Booking',
+  fields: [
+    {
+      name: 'service',
+      label: 'Service',
+      type: 'select-one',
+      choices: [
+        { value: 'consulting', label: 'Consulting' },
+        { value: 'support', label: 'Support' },
+      ],
+    },
+    {
+      name: 'slot',
+      label: 'Slot',
+      type: 'select-one',
+      visibleWhenField: 'service',
+      visibleWhenEquals: 'consulting',
+      optionsEndpoint: '/api/slots',
+      optionsDependsOn: 'service',
+    },
+  ],
+});
+```
+
+Extra event:
+- `form-ui:options-loaded`
+
+## Local Draft Storage
+
+The runtime can persist draft values in the browser with `localStorage`.
+
+```ts
+mountFormUI(container, {
+  name: 'inspection-form',
+  title: 'Inspection',
+  storage: {
+    mode: 'draft',
+    adapter: 'local-storage',
+    key: 'xpressui:inspection-draft',
+    autoSaveMs: 300,
+  },
+  fields: [
+    { name: 'site', label: 'Site', type: 'text', required: true },
+    { name: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+});
+```
+
+Current storage support:
+- `mode: 'draft'`
+- `mode: 'queue'`
+- `mode: 'draft-and-queue'`
+- `adapter: 'local-storage'`
+
+Draft events:
+- `form-ui:draft-saved`
+- `form-ui:draft-restored`
+- `form-ui:draft-cleared`
+
+Queue events:
+- `form-ui:queued`
+- `form-ui:queue-state`
+- `form-ui:sync-success`
+- `form-ui:sync-error`
+- `form-ui:dead-lettered`
+- `form-ui:dead-letter-cleared`
+- `form-ui:dead-letter-requeued`
+- `form-ui:dead-letter-replayed-success`
+- `form-ui:dead-letter-replayed-error`
+
+Runtime inspection helpers:
+- `form.getQueueState()`
+- `form.getStorageSnapshot()`
+- `form.clearDeadLetterQueue()`
+- `form.requeueDeadLetterEntry(entryId)`
+- `form.replayDeadLetterEntry(entryId)`
+
+Standalone local admin helper:
+- `createLocalFormAdmin(formConfig)`
+
+It can inspect and manage local state without a mounted `FormUI` instance:
+- `getSnapshot()`
+- `listQueue(query?)`
+- `listDeadLetter(query?)`
+- `clearDraft()`
+- `clearQueue()`
+- `clearDeadLetter()`
+- `requeueDeadLetterEntry(entryId)`
+- `replayDeadLetterEntry(entryId)`
+
+Query options:
+- `minAttempts`
+- `maxAttempts`
+- `search`
+- `sortBy` (`createdAt`, `updatedAt`, `attempts`, `nextAttemptAt`)
+- `sortOrder` (`asc`, `desc`)
+- `limit`
+
+The local queue is now stored as a versioned object so it can evolve without
+breaking existing drafts:
+
+```json
+{
+  "version": 1,
+  "items": []
+}
+```
+
+If the same queued submission keeps failing, it is moved to a local
+dead-letter queue after 3 failed sync attempts.
+
+## Field Features
+
+Useful field capabilities supported by the current builder:
+- `required`
+- `placeholder`
+- `helpText`
+- `choices` for select fields
+- `visibleWhenField`
+- `visibleWhenEquals`
+- `optionsEndpoint`
+- `optionsDependsOn`
+- `optionsLabelKey`
+- `optionsValueKey`
+
+Common field types used today:
+- `text`
+- `textarea`
+- `email`
+- `tel`
+- `number`
+- `price`
+- `datetime`
+- `select-one`
+- `checkbox`
+
+## Events
+
+Core events emitted by `<form-ui>`:
+- `form-ui:submit`
+- `form-ui:submit-success`
+- `form-ui:submit-error`
+- `form-ui:options-loaded`
+- `form-ui:draft-saved`
+- `form-ui:draft-restored`
+- `form-ui:draft-cleared`
+- `form-ui:queued`
+- `form-ui:queue-state`
+- `form-ui:sync-success`
+- `form-ui:sync-error`
+- `form-ui:dead-lettered`
+- `form-ui:dead-letter-cleared`
+- `form-ui:dead-letter-requeued`
+- `form-ui:dead-letter-replayed-success`
+- `form-ui:dead-letter-replayed-error`
+
+Provider-specific events:
+- `form-ui:reservation-success`
+- `form-ui:payment-success`
+- `form-ui:payment-error`
+- `form-ui:payment-stripe-success`
+- `form-ui:payment-stripe-error`
+
+Event detail includes:
+- `values`
+- `formConfig`
+- `submit`
+- `response` when an API call happened
+- `result` when the backend returned data
+- `error` on failures
+
+## Advanced Usage
+
+If you need more control, you can generate the HTML template yourself:
+
+```ts
+import { createFormConfig, createTemplateMarkup } from '@lybaba/xpressui';
+
+const formConfig = createFormConfig({
+  name: 'custom-form',
+  title: 'Custom Form',
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+
+const markup = createTemplateMarkup(formConfig);
+document.getElementById('app')!.innerHTML = markup;
+```
+
+## Development
+
+```bash
+npm install
+npm run test
+npm run check
+npm run build
+npm run start
+```
+
+Project tooling:
+- Vite 7
+- TypeScript 5
+- Tailwind CSS 4
+- daisyUI 5
+- Vitest
+
+## Backend Contracts
+
+For concrete request and response examples, see:
+
+- [docs/backend-integration.md](/home/lyb/projects/xpressui/docs/backend-integration.md)
+
+## Status
+
+What is stable in the current codebase:
+- Web Component rendering
+- schema-based validation
+- API submission hooks
+- reservation, payment, and Stripe-oriented provider flows
+- conditional fields and remote select loading
+- local draft persistence in the browser
+- local offline submission queue
+
+What is not implemented as a full product yet:
+- visual form builder UI
+- persistent hosted backend
+- prebuilt Stripe Elements integration
+- auth/session management
+- production-ready analytics, audit trail, and admin workflows
 
 ## License
 

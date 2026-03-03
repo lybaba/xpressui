@@ -1,6 +1,6 @@
 import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
-import shortUUID from "short-uuid";
+import * as shortUUID from "short-uuid";
 import { CUSTOM_SECTION } from "./Constants";
 
 
@@ -42,8 +42,30 @@ export enum RenderingMode {
     VIEW_ENTRY
 }
 
+export type TFormSubmitRequest = {
+    endpoint: string;
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    headers?: Record<string, string>;
+    mode?: 'json' | 'form-data';
+    action?: string;
+};
+
+export type TFormProviderRequest = {
+    type: string;
+    endpoint: string;
+    method?: 'POST' | 'PUT' | 'PATCH';
+    headers?: Record<string, string>;
+};
+
+export type TFormStorageConfig = {
+    mode: 'none' | 'draft' | 'queue' | 'draft-and-queue';
+    adapter?: 'local-storage';
+    key?: string;
+    autoSaveMs?: number;
+};
 
 type TFormConfig = {
+    version: number;
     id: string;
     uid: string;
     type: string;
@@ -63,9 +85,15 @@ type TFormConfig = {
     maxHeight?: string;
     bgcolor?: string;
     textcolor?: string;
+    submit?: TFormSubmitRequest;
+    provider?: TFormProviderRequest;
+    storage?: TFormStorageConfig;
+    successMsg?: string;
+    errorMsg?: string;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {
+    version: 1,
     id: shortUUID.generate(),
     uid: shortUUID.generate(),
     timestamp: Math.floor(Date.now() / 1000),

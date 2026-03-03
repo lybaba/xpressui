@@ -25,6 +25,25 @@
     "src/**/*"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/counter.ts",
+    "src/setupTests.ts",
+    "src/common/ICurrency.ts",
+    "src/common/IFormType.ts",
+    "src/common/ITimezone.ts",
+    "src/common/TAction.ts",
+    "src/common/TAppPage.ts",
+    "src/common/TBucketConfig.ts",
+    "src/common/TBuilderMenu.ts",
+    "src/common/TComponentType.ts",
+    "src/common/TFormConfigPrams.ts",
+    "src/common/TPostUIConfigProps.ts",
+    "src/common/TPostUIEvent.ts",
+    "src/common/TServerResponse.ts",
+    "src/common/TUser.ts",
+    "src/common/formsubmit.ts",
+    "src/common/iam.ts",
+    "src/common/messages.ts",
+    "src/common/page.ts"
   ]
 }

@@ -34,8 +34,8 @@ jobs:
       - name: Test
         run: npm run test
 
-      - name: Build
-        run: npm run build
+      - name: Release sanity check
+        run: npm run release:check
 
       - name: Publish package
         run: npm publish

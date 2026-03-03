@@ -64,6 +64,12 @@ type TFieldConfig = {
     maxWidth?: string;
     maxHeight?: string;
     subfields?: TChoice[];
+    visibleWhenField?: string;
+    visibleWhenEquals?: string;
+    optionsEndpoint?: string;
+    optionsDependsOn?: string;
+    optionsLabelKey?: string;
+    optionsValueKey?: string;
 };
 
 export type TFieldConfigInfo = {

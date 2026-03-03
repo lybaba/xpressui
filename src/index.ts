@@ -4,7 +4,7 @@ import validate, { getValidators, TValidator } from "./common/Validator";
 import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { normalizeFormValues, UNKNOWN_TYPE } from "./common/field";
-import TChoice from "./common/TChoice";
+import { FormDynamicRuntime } from "./common/form-dynamic";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
@@ -23,6 +23,7 @@ export {
   mountFormUI,
 } from "./common/form-builder";
 export { createLocalFormAdmin } from "./common/form-admin";
+export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
 export {
   PUBLIC_FORM_SCHEMA_VERSION,
@@ -49,12 +50,6 @@ export type TFormUISubmitDetail = {
   error?: unknown;
 };
 
-type TFormUIRemoteOptionsDetail = {
-  field: string;
-  options: TChoice[];
-  sourceField?: string;
-};
-
 export class FormUI extends HTMLElement {
   form: FormApi<any, any> | null;
   registered: Record<string, boolean>;
@@ -63,7 +58,7 @@ export class FormUI extends HTMLElement {
   inputFields: Record<string, TFieldConfig>;
   errors: Record<string, boolean>;
   initialized: boolean;
-  loadingOptions: Record<string, boolean>;
+  dynamic: FormDynamicRuntime;
   persistence: FormPersistenceRuntime;
 
   constructor() {
@@ -75,7 +70,24 @@ export class FormUI extends HTMLElement {
     this.errors = {}
     this.form = null;
     this.initialized = false;
-    this.loadingOptions = {};
+    this.dynamic = new FormDynamicRuntime({
+      getFieldConfigs: () => Object.values(this.inputFields),
+      getFieldContainer: (fieldName) => this.getFieldContainer(fieldName),
+      getFieldElement: (fieldName) => this.getFieldElement(fieldName),
+      getFieldValue: (fieldName) => this.getFieldValue(fieldName),
+      clearFieldValue: (fieldName) => {
+        if (this.form) {
+          this.form.change(fieldName, undefined);
+        }
+      },
+      getFormValues: () => this.form?.getState().values || {},
+      emitEvent: (eventName, detail) =>
+        this.emitFormEvent(eventName, detail as TFormUISubmitDetail),
+      getEventContext: () => ({
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+      }),
+    });
     this.persistence = new FormPersistenceRuntime({
       getFormConfig: () => this.formConfig,
       getValues: () => this.form?.getState().values || {},
@@ -141,8 +153,8 @@ export class FormUI extends HTMLElement {
         }
       });
 
-      this.updateConditionalFields();
-      this.refreshRemoteOptions();
+      this.dynamic.updateConditionalFields();
+      void this.dynamic.refreshRemoteOptions();
 
       this.persistence.connect();
 
@@ -326,134 +338,11 @@ export class FormUI extends HTMLElement {
   }
 
   updateConditionalFields = () => {
-    Object.values(this.inputFields).forEach((fieldConfig) => {
-      if (!fieldConfig.visibleWhenField) {
-        return;
-      }
-
-      const container = this.getFieldContainer(fieldConfig.name);
-      const fieldElement = this.getFieldElement(fieldConfig.name);
-      if (!container || !fieldElement) {
-        return;
-      }
-
-      const currentValue = this.getFieldValue(fieldConfig.visibleWhenField);
-      const expectedValue = fieldConfig.visibleWhenEquals;
-      const isVisible = expectedValue === undefined
-        ? Boolean(currentValue)
-        : String(currentValue ?? "") === String(expectedValue);
-
-      container.style.display = isVisible ? "" : "none";
-      fieldElement.disabled = !isVisible;
-      if (!isVisible && this.form) {
-        this.form.change(fieldConfig.name, undefined);
-      }
-    });
-  }
-
-  normalizeRemoteChoices = (payload: any, fieldConfig: TFieldConfig): TChoice[] => {
-    const optionList = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.items)
-        ? payload.items
-        : Array.isArray(payload?.options)
-          ? payload.options
-          : [];
-    const labelKey = fieldConfig.optionsLabelKey || "label";
-    const valueKey = fieldConfig.optionsValueKey || "value";
-
-    return optionList
-      .map((item: any) => {
-        if (typeof item === "string") {
-          return { value: item, label: item };
-        }
-
-        return {
-          value: String(item?.[valueKey] ?? item?.value ?? ""),
-          label: String(item?.[labelKey] ?? item?.label ?? item?.[valueKey] ?? ""),
-        };
-      })
-      .filter((choice: TChoice) => Boolean(choice.value));
-  }
-
-  populateSelectOptions = (fieldName: string, options: TChoice[]) => {
-    const fieldElement = this.getFieldElement(fieldName);
-    if (!(fieldElement instanceof HTMLSelectElement)) {
-      return;
-    }
-
-    const currentValue = fieldElement.value;
-    fieldElement.innerHTML = "";
-
-    const emptyOption = document.createElement("option");
-    emptyOption.value = "";
-    emptyOption.textContent = "";
-    fieldElement.appendChild(emptyOption);
-
-    options.forEach((choice) => {
-      const option = document.createElement("option");
-      option.value = choice.value;
-      option.textContent = choice.label;
-      fieldElement.appendChild(option);
-    });
-
-    if (currentValue && options.some((choice) => choice.value === currentValue)) {
-      fieldElement.value = currentValue;
-    }
-
-      const result: TFormUIRemoteOptionsDetail = {
-        field: fieldName,
-        options,
-      };
-
-      this.emitFormEvent("form-ui:options-loaded", {
-      values: this.form?.getState().values || {},
-      formConfig: this.formConfig,
-      result,
-    });
+    this.dynamic.updateConditionalFields();
   }
 
   refreshRemoteOptions = async (sourceFieldName?: string) => {
-    const fieldConfigs = Object.values(this.inputFields).filter(
-      (fieldConfig) =>
-        Boolean(fieldConfig.optionsEndpoint) &&
-        (!sourceFieldName || fieldConfig.optionsDependsOn === sourceFieldName),
-    );
-
-    await Promise.all(fieldConfigs.map(async (fieldConfig) => {
-      if (this.loadingOptions[fieldConfig.name]) {
-        return;
-      }
-
-      const dependencyValue = fieldConfig.optionsDependsOn
-        ? this.getFieldValue(fieldConfig.optionsDependsOn)
-        : undefined;
-
-      if (fieldConfig.optionsDependsOn && !dependencyValue) {
-        this.populateSelectOptions(fieldConfig.name, []);
-        return;
-      }
-
-      this.loadingOptions[fieldConfig.name] = true;
-      try {
-        let url = fieldConfig.optionsEndpoint as string;
-        if (fieldConfig.optionsDependsOn) {
-          const query = new URLSearchParams({
-            [fieldConfig.optionsDependsOn]: String(dependencyValue),
-          }).toString();
-          url += (url.includes("?") ? "&" : "?") + query;
-        }
-
-        const response = await fetch(url);
-        const payload = await response.json();
-        const options = this.normalizeRemoteChoices(payload, fieldConfig);
-        this.populateSelectOptions(fieldConfig.name, options);
-      } catch {
-        this.populateSelectOptions(fieldConfig.name, []);
-      } finally {
-        this.loadingOptions[fieldConfig.name] = false;
-      }
-    }));
+    await this.dynamic.refreshRemoteOptions(sourceFieldName);
   }
 
   registerField = (fieldConfig: TFieldConfig, input: any) => {

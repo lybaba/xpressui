@@ -3,6 +3,7 @@ import {
   createLocalFormAdmin,
   createFormConfig,
   createSubmitRequestFromProvider,
+  FormDynamicRuntime,
   FormPersistenceRuntime,
   FormUI,
   getProviderDefinition,
@@ -417,6 +418,74 @@ describe('FormUI', () => {
     expect(slot.options.length).toBe(3);
     expect(slot.options[1].value).toBe('morning');
     expect(slot.options[2].textContent).toBe('Evening');
+  });
+
+  it('supports standalone dynamic field logic without mounting FormUI', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          { value: 'morning', label: 'Morning' },
+          { value: 'evening', label: 'Evening' },
+        ]),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+    document.body.innerHTML = `
+      <div id="service-container">
+        <select id="service">
+          <option value=""></option>
+          <option value="consulting">Consulting</option>
+        </select>
+      </div>
+      <label id="slot-container">
+        <select id="slot"></select>
+      </label>
+    `;
+
+    let values: Record<string, any> = { service: '' };
+    const runtime = new FormDynamicRuntime({
+      getFieldConfigs: () => [
+        {
+          name: 'slot',
+          label: 'Slot',
+          type: 'select-one',
+          visibleWhenField: 'service',
+          visibleWhenEquals: 'consulting',
+          optionsEndpoint: 'https://api.example.test/slots',
+          optionsDependsOn: 'service',
+        },
+      ],
+      getFieldContainer: (fieldName) =>
+        fieldName === 'slot'
+          ? document.querySelector('#slot-container') as HTMLElement
+          : null,
+      getFieldElement: (fieldName) =>
+        document.querySelector(`#${fieldName}`) as HTMLSelectElement | null,
+      getFieldValue: (fieldName) => values[fieldName],
+      clearFieldValue: (fieldName) => {
+        values = { ...values, [fieldName]: undefined };
+      },
+      getFormValues: () => values,
+      emitEvent: () => true,
+      getEventContext: () => ({ formConfig: null, submit: undefined }),
+    });
+
+    runtime.updateConditionalFields();
+
+    expect((document.querySelector('#slot-container') as HTMLElement).style.display).toBe('none');
+
+    values = { service: 'consulting' };
+    runtime.updateConditionalFields();
+    await runtime.refreshRemoteOptions('service');
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/slots?service=consulting'
+    );
+    expect((document.querySelector('#slot-container') as HTMLElement).style.display).toBe('');
+    expect((document.querySelector('#slot') as HTMLSelectElement).options.length).toBe(3);
   });
 
   it('supports a payment provider with a normalized payload', async () => {

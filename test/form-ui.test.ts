@@ -748,6 +748,78 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports a webhook provider with a generic normalized payload', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ delivered: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'webhook-form',
+      title: 'Webhook Form',
+      provider: {
+        type: 'webhook',
+        endpoint: 'https://api.example.test/hooks/inbound',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+        {
+          name: 'topic',
+          label: 'Topic',
+          type: 'text',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const email = element.querySelector('#email') as HTMLInputElement;
+    const topic = element.querySelector('#topic') as HTMLInputElement;
+    const form = element.querySelector('#webhook-form_form') as HTMLFormElement;
+    const onWebhookSuccess = vi.fn();
+
+    element.addEventListener('form-ui:webhook-success', (event) => {
+      onWebhookSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    email.dispatchEvent(new FocusEvent('focus'));
+    email.value = 'hook@example.com';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+    email.dispatchEvent(new FocusEvent('blur'));
+
+    topic.dispatchEvent(new FocusEvent('focus'));
+    topic.value = 'lead.created';
+    topic.dispatchEvent(new Event('input', { bubbles: true }));
+    topic.dispatchEvent(new FocusEvent('blur'));
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/hooks/inbound',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'webhook',
+          data: {
+            email: 'hook@example.com',
+            topic: 'lead.created',
+          },
+        }),
+      })
+    );
+    expect(onWebhookSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { delivered: true },
+      })
+    );
+  });
+
   it('supports custom providers registered through the provider registry', async () => {
     registerProvider('quote-request', {
       buildPayload(values) {

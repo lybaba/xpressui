@@ -313,6 +313,43 @@ Extra events:
 - `form-ui:payment-stripe-success`
 - `form-ui:payment-stripe-error`
 
+### Webhook
+
+Use `webhook` for a generic outbound integration when you want to forward a
+normalized payload to another backend endpoint without creating a custom
+provider first.
+
+```ts
+mountFormUI(container, {
+  name: 'webhook-form',
+  title: 'Webhook Form',
+  provider: {
+    type: 'webhook',
+    endpoint: '/api/hooks/inbound',
+  },
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+    { name: 'topic', label: 'Topic', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "webhook",
+  "data": {
+    "email": "hook@example.com",
+    "topic": "lead.created"
+  }
+}
+```
+
+Extra events:
+- `form-ui:webhook-success`
+- `form-ui:webhook-error`
+
 ## Dynamic Forms
 
 The component supports two dynamic patterns out of the box:
@@ -488,6 +525,8 @@ Provider-specific events:
 - `form-ui:payment-error`
 - `form-ui:payment-stripe-success`
 - `form-ui:payment-stripe-error`
+- `form-ui:webhook-success`
+- `form-ui:webhook-error`
 
 Event detail includes:
 - `values`
@@ -545,7 +584,7 @@ What is stable in the current codebase:
 - Web Component rendering
 - schema-based validation
 - API submission hooks
-- reservation, payment, and Stripe-oriented provider flows
+- reservation, payment, Stripe, and webhook-oriented provider flows
 - conditional fields and remote select loading
 - local draft persistence in the browser
 - local offline submission queue

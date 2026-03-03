@@ -118,3 +118,22 @@ registerProvider("payment-stripe", {
   successEventName: "form-ui:payment-stripe-success",
   errorEventName: "form-ui:payment-stripe-error",
 });
+
+registerProvider("webhook", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "webhook",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "webhook",
+      data: values,
+    };
+  },
+  successEventName: "form-ui:webhook-success",
+  errorEventName: "form-ui:webhook-error",
+});

@@ -292,8 +292,23 @@ Draft events:
 
 Queue events:
 - `form-ui:queued`
+- `form-ui:queue-state`
 - `form-ui:sync-success`
 - `form-ui:sync-error`
+
+Runtime inspection helpers:
+- `form.getQueueState()`
+- `form.getStorageSnapshot()`
+
+The local queue is now stored as a versioned object so it can evolve without
+breaking existing drafts:
+
+```json
+{
+  "version": 1,
+  "items": []
+}
+```
 
 ## Field Features
 
@@ -331,6 +346,7 @@ Core events emitted by `<form-ui>`:
 - `form-ui:draft-restored`
 - `form-ui:draft-cleared`
 - `form-ui:queued`
+- `form-ui:queue-state`
 - `form-ui:sync-success`
 - `form-ui:sync-error`
 

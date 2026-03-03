@@ -5,7 +5,11 @@ import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { normalizeFormValues, UNKNOWN_TYPE } from "./common/field";
 import TChoice from "./common/TChoice";
-import { createStorageAdapter, TFormStorageAdapter } from "./common/form-storage";
+import {
+  createStorageAdapter,
+  TFormStorageAdapter,
+  TQueuedSubmission,
+} from "./common/form-storage";
 export {
   createFormConfig,
   createTemplateMarkup,
@@ -25,6 +29,12 @@ type TFormUIRemoteOptionsDetail = {
   field: string;
   options: TChoice[];
   sourceField?: string;
+};
+
+type TFormUIQueueState = {
+  queueLength: number;
+  nextAttemptAt?: number;
+  attempts?: number;
 };
 
 
@@ -141,11 +151,19 @@ export class FormUI extends HTMLElement {
           submit: this.formConfig?.submit,
         });
       }
+
+      this.emitQueueState();
     }
   }
 
   getDraftAutoSaveMs = () => {
     return this.formConfig?.storage?.autoSaveMs ?? 300;
+  }
+
+  getRetryDelayMs = (attempts: number) => {
+    const baseDelayMs = 1000;
+    const maxDelayMs = 30000;
+    return Math.min(baseDelayMs * Math.pow(2, Math.max(0, attempts - 1)), maxDelayMs);
   }
 
   saveDraft = (values?: Record<string, any>) => {
@@ -206,14 +224,48 @@ export class FormUI extends HTMLElement {
     }
 
     const queue = this.storageAdapter.enqueueSubmission(values);
+    const nextEntry = queue[0];
     this.emitFormEvent("form-ui:queued", {
       values,
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
       result: {
         queueLength: queue.length,
-      },
+        nextAttemptAt: nextEntry?.nextAttemptAt,
+        attempts: nextEntry?.attempts,
+      } satisfies TFormUIQueueState,
     });
+    this.emitQueueState();
+  }
+
+  getQueueState = (): TFormUIQueueState => {
+    const queue = this.storageAdapter?.loadQueue() || [];
+    const nextEntry = queue[0];
+    return {
+      queueLength: queue.length,
+      nextAttemptAt: nextEntry?.nextAttemptAt,
+      attempts: nextEntry?.attempts,
+    };
+  }
+
+  emitQueueState = () => {
+    if (!this.shouldUseQueue()) {
+      return;
+    }
+
+    this.emitFormEvent("form-ui:queue-state", {
+      values: this.form?.getState().values || {},
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: this.getQueueState(),
+    });
+  }
+
+  getStorageSnapshot = () => {
+    return {
+      draft: this.storageAdapter?.loadDraft() || null,
+      queue: this.storageAdapter?.loadQueue() || [],
+    };
   }
 
   flushSubmissionQueue = async () => {
@@ -234,30 +286,45 @@ export class FormUI extends HTMLElement {
     this.syncInFlight = true;
     try {
       while (true) {
-        const values = this.storageAdapter.loadQueue()[0];
-        if (!values) {
+        const entry = this.storageAdapter.loadQueue()[0];
+        if (!entry) {
+          this.emitQueueState();
+          break;
+        }
+
+        if (entry.nextAttemptAt > Date.now()) {
           break;
         }
 
         try {
-          const { response, result } = await this.submitToApi(values, this.formConfig.submit);
+          const { response, result } = await this.submitToApi(entry.values, this.formConfig.submit);
           this.storageAdapter.dequeueSubmission();
           this.emitFormEvent("form-ui:sync-success", {
-            values,
+            values: entry.values,
             formConfig: this.formConfig,
             submit: this.formConfig.submit,
             response,
             result,
           });
+          this.emitQueueState();
         } catch (error: any) {
+          const nextEntry: TQueuedSubmission = {
+            ...entry,
+            attempts: entry.attempts + 1,
+            updatedAt: Date.now(),
+            nextAttemptAt: Date.now() + this.getRetryDelayMs(entry.attempts + 1),
+            lastError: error?.result?.message || error?.message || "sync_error",
+          };
+          this.storageAdapter.updateQueueEntry(nextEntry);
           this.emitFormEvent("form-ui:sync-error", {
-            values,
+            values: entry.values,
             formConfig: this.formConfig,
             submit: this.formConfig.submit,
             response: error?.response,
             result: error?.result,
             error,
           });
+          this.emitQueueState();
           break;
         }
       }

@@ -581,7 +581,10 @@ describe('FormUI', () => {
         values: { email: 'offline@example.com' },
       })
     );
-    expect(window.localStorage.getItem(`${key}:queue`)).toContain('offline@example.com');
+    const queueState = JSON.parse(window.localStorage.getItem(`${key}:queue`) || '{}');
+    expect(queueState.version).toBe(1);
+    expect(queueState.items).toHaveLength(1);
+    expect(queueState.items[0].values).toEqual({ email: 'offline@example.com' });
     expect(window.localStorage.getItem(key)).toBeNull();
   });
 
@@ -620,7 +623,19 @@ describe('FormUI', () => {
 
     window.localStorage.setItem(
       `${key}:queue`,
-      JSON.stringify([{ email: 'queued@example.com' }]),
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queued_1',
+            values: { email: 'queued@example.com' },
+            attempts: 0,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
     );
 
     element.addEventListener('form-ui:sync-success', (event) => {
@@ -643,6 +658,68 @@ describe('FormUI', () => {
         result: { synced: true },
       })
     );
-    expect(window.localStorage.getItem(`${key}:queue`)).toBe('[]');
+    expect(window.localStorage.getItem(`${key}:queue`)).toBe(
+      JSON.stringify({ version: 1, items: [] })
+    );
+  });
+
+  it('increments retry metadata when queued sync fails', async () => {
+    const fetchSpy = vi
+      .spyOn(window, 'fetch')
+      .mockRejectedValue(new TypeError('Temporary offline'));
+    const key = 'xpressui:test-backoff';
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'backoff-form',
+      title: 'Backoff Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key,
+      },
+      submit: {
+        endpoint: 'https://api.example.test/backoff',
+        method: 'POST',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const onSyncError = vi.fn();
+
+    window.localStorage.setItem(
+      `${key}:queue`,
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queued_retry',
+            values: { email: 'retry@example.com' },
+            attempts: 0,
+            createdAt: 1,
+            updatedAt: 1,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    element.addEventListener('form-ui:sync-error', (event) => {
+      onSyncError((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await element.flushSubmissionQueue();
+    await flushAsyncWork();
+
+    const queueState = JSON.parse(window.localStorage.getItem(`${key}:queue`) || '{}');
+    expect(fetchSpy).toHaveBeenCalled();
+    expect(onSyncError).toHaveBeenCalledTimes(1);
+    expect(queueState.items).toHaveLength(1);
+    expect(queueState.items[0].attempts).toBe(1);
+    expect(queueState.items[0].nextAttemptAt).toBeGreaterThan(Date.now() - 100);
   });
 });

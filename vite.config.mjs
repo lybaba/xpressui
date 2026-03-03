@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   build: {
+    copyPublicDir: false,
     lib: {
       // Could also be a dictionary or array of multiple entry points
       entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),

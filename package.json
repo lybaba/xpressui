@@ -26,7 +26,7 @@
     "start": "vite",
     "prebuild": "npm run build:css",
     "build:css": "tailwindcss -i ./src/input.css -o ./index.css",
-    "build": "tsc && vite build && tsc --project ./lib.tsconfig.json",
+    "build": "node ./scripts/clean-build.mjs && tsc && vite build && tsc --project ./lib.tsconfig.json",
     "release:check": "npm run build && npm run verify:dist && npm run verify:lib && npm pack --dry-run --cache ./.npm-cache",
     "verify:dist": "node ./scripts/verify-dist.mjs",
     "verify:lib": "node ./scripts/verify-lib.mjs",

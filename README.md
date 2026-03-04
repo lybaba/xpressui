@@ -877,7 +877,7 @@ mountFormUI(container, {
 Current rule scope:
 - optional rule id: `id`
 - condition logic: `AND`, `OR`
-- condition operators: `equals`, `not_equals`, `contains`, `in`, `gt`, `lt`
+- condition operators: `equals`, `not_equals`, `contains`, `in`, `gt`, `lt`, `exists`, `empty`
 - actions: `show`, `hide`, `enable`, `disable`, `clear-value`, `set-value`, `fetch-options`
 - `set-value` can use a constant via `value`, copy another field via `sourceField`, or compose multiple fields via `template` (`{{firstName}} {{lastName}}`)
 - `set-value` can also transform the written value with `transform`: `copy`, `trim`, `lowercase`, `uppercase`, `slugify`

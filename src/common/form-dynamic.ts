@@ -13,7 +13,7 @@ export type TFormRuleAppliedDetail = {
   logic?: "AND" | "OR";
   conditions: Array<{
     field: string;
-    operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt";
+    operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt" | "exists" | "empty";
     value?: any;
   }>;
   actions: Array<{
@@ -69,7 +69,7 @@ type TFormDynamicRuntimeOptions = {
     logic?: "AND" | "OR";
     conditions: Array<{
       field: string;
-      operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt";
+      operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt" | "exists" | "empty";
       value?: any;
     }>;
     actions: Array<{
@@ -217,12 +217,36 @@ export class FormDynamicRuntime {
   matchesCondition(
     condition: {
       field: string;
-      operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt";
+      operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt" | "exists" | "empty";
       value?: any;
     },
   ): boolean {
     const currentValue = this.options.getFieldValue(condition.field);
     const operator = condition.operator || "equals";
+
+    if (operator === "exists") {
+      if (Array.isArray(currentValue)) {
+        return currentValue.length > 0;
+      }
+
+      return !(
+        currentValue === undefined ||
+        currentValue === null ||
+        (typeof currentValue === "string" && currentValue.trim() === "")
+      );
+    }
+
+    if (operator === "empty") {
+      if (Array.isArray(currentValue)) {
+        return currentValue.length === 0;
+      }
+
+      return (
+        currentValue === undefined ||
+        currentValue === null ||
+        (typeof currentValue === "string" && currentValue.trim() === "")
+      );
+    }
 
     if (operator === "contains") {
       return String(currentValue ?? "")
@@ -257,7 +281,7 @@ export class FormDynamicRuntime {
       logic?: "AND" | "OR";
       conditions: Array<{
         field: string;
-        operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt";
+        operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt" | "exists" | "empty";
         value?: any;
       }>;
     },

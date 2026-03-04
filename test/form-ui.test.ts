@@ -3083,6 +3083,63 @@ describe('FormUI', () => {
     expect(accountManagerContainer.style.display).toBe('');
   });
 
+  it('supports exists and empty rule operators', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'presence-rules-form',
+      title: 'Presence Rules Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'document_number', operator: 'exists' },
+          ],
+          actions: [
+            { type: 'disable', field: 'review_state' },
+          ],
+        },
+        {
+          conditions: [
+            { field: 'notes', operator: 'empty' },
+          ],
+          actions: [
+            { type: 'disable', field: 'submit_ready' },
+          ],
+        },
+        {
+          conditions: [
+            { field: 'notes', operator: 'exists' },
+          ],
+          actions: [
+            { type: 'enable', field: 'submit_ready' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'document_number', label: 'Document Number', type: 'text' },
+        { name: 'notes', label: 'Notes', type: 'textarea' },
+        { name: 'review_state', label: 'Review State', type: 'text' },
+        { name: 'submit_ready', label: 'Submit Ready', type: 'text' },
+      ],
+    }) as FormUI;
+    const documentNumber = element.querySelector('#document_number') as HTMLInputElement;
+    const notes = element.querySelector('#notes') as HTMLTextAreaElement;
+    const reviewState = element.querySelector('#review_state') as HTMLInputElement;
+    const submitReady = element.querySelector('#submit_ready') as HTMLInputElement;
+
+    await flushAsyncWork();
+    expect(reviewState.disabled).toBe(false);
+    expect(submitReady.disabled).toBe(true);
+
+    documentNumber.value = 'L898902C3';
+    documentNumber.dispatchEvent(new Event('input', { bubbles: true }));
+    notes.value = 'Reviewed';
+    notes.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(reviewState.disabled).toBe(true);
+    expect(submitReady.disabled).toBe(false);
+  });
+
   it('supports the set-value rule action', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

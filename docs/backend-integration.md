@@ -22,6 +22,128 @@ responses your frontend can rely on.
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events
 
+## View And Hybrid Runtime Contract
+
+`FormUI` can now run in three render modes:
+
+- `mode="form"` (default): input-first behavior
+- `mode="view"`: read-only output rendering, no submit interactions
+- `mode="hybrid"`: input + output rendering side by side
+
+### Value Sources In `view`/`hybrid`
+
+Value resolution order is:
+
+1. DOM field values
+2. draft storage values (when enabled)
+3. `view-values` / `data-view-values` JSON attribute
+4. `setViewValues(...)` runtime override
+
+Example:
+
+```html
+<form-ui
+  name="invoice_view"
+  mode="view"
+  view-values='{"customer":"Alice","invoice_pdf":"https://cdn.example.test/invoice.pdf"}'
+></form-ui>
+```
+
+### Output Renderers
+
+Built-in renderer types:
+
+- `text`
+- `html`
+- `image`
+- `file`
+- `video`
+- `link`
+
+Default renderer inference uses field type + `accept` + `subType/refType` metadata.
+You can override renderer selection per field using `data-view-renderer="..."`.
+
+Runtime API:
+
+```ts
+formUI.setOutputRenderer("badge", ({ value }) => {
+  const el = document.createElement("span");
+  el.textContent = String(value || "").toUpperCase();
+  return el;
+});
+
+formUI.setFieldOutputRenderer("status", "badge");
+// or
+formUI.setFieldOutputRenderer("status", ({ value }) => {
+  const el = document.createElement("strong");
+  el.textContent = `Status: ${value}`;
+  return el;
+});
+```
+
+### HTML Safety Policy
+
+`html` output is sanitized by default (scripts/inline handlers/unsafe javascript URLs are removed).
+
+Controls:
+
+- global attribute: `allow-unsafe-html="true"` (or `data-allow-unsafe-html="true"`)
+- field attribute: `data-view-html-unsafe="true"`
+- runtime API:
+  - `setAllowUnsafeHtml(boolean)`
+  - `setHtmlSanitizer((html, context) => sanitizedHtml)`
+  - `resetHtmlSanitizer()`
+
+Use unsafe mode only for trusted backend-generated HTML.
+
+### Media / Resource Display Policies
+
+Media renderers (`image` / `video` / `file`) support:
+
+- `large`
+- `thumbnail`
+- `link`
+- `gallery`
+
+Per-field controls:
+
+- markup attribute:
+  - `data-view-media-display="thumbnail|large|link|gallery"`
+  - `data-view-resource-display="thumbnail|large|link|gallery"` (alias)
+- runtime API:
+  - `setFieldMediaPolicy(fieldName, policy)`
+  - `clearFieldMediaPolicy(fieldName)`
+
+### Output Snapshot API And Events
+
+UI API:
+
+```ts
+const snapshot = formUI.getOutputSnapshot();
+```
+
+Headless API:
+
+```ts
+const runtime = new FormRuntime(formConfig, { getValues: () => values });
+const snapshot = runtime.getOutputSnapshot();
+```
+
+Snapshot shape:
+
+```json
+{
+  "field_name": {
+    "rendererType": "text|html|image|file|video|link|custom",
+    "mediaDisplayPolicy": "thumbnail|large|link|gallery",
+    "value": "..."
+  }
+}
+```
+
+`FormUI` emits `form-ui:output-snapshot` in `view` and `hybrid` modes when output rendering is refreshed.
+The latest snapshot is also available in debug tools (`attachFormDebugObserver`, `createFormDebugPanel`).
+
 ### Submit Lifecycle Hooks
 
 `submit.lifecycle` supports three runtime hooks:

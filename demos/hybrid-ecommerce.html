@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui hybrid ecommerce demo</title>
+    <link rel="stylesheet" href="../index.css" />
+    <style>
+      :root {
+        --bg: #f7f8f5;
+        --ink: #17212b;
+        --muted: #52606d;
+        --line: #d8dee6;
+        --panel: #ffffff;
+        --accent: #0f766e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% 12%, rgba(20, 184, 166, 0.12), transparent 32%),
+          radial-gradient(circle at 84% 8%, rgba(14, 165, 233, 0.09), transparent 30%),
+          linear-gradient(180deg, #fcfdfb 0%, var(--bg) 100%);
+      }
+
+      main { max-width: 1380px; margin: 0 auto; padding: 34px 20px 74px; }
+      h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 3.8vw, 2.8rem); }
+      p { margin: 0; color: var(--muted); }
+      a { color: #0c4a6e; }
+
+      .layout {
+        margin-top: 24px;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: 360px minmax(0, 1fr) 320px;
+        align-items: start;
+      }
+
+      .products,
+      .shell,
+      .result,
+      .code {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 12px 32px rgba(2, 8, 23, 0.06);
+      }
+
+      .products h2,
+      .result h2,
+      .shell h2,
+      .code h2 { margin: 0; font-size: 1rem; }
+
+      .catalog {
+        margin-top: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .product {
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fbfdff;
+      }
+
+      .product strong { display: block; }
+      .product span { color: var(--muted); font-size: 0.92rem; }
+
+      .code-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .copy-btn {
+        border: 1px solid #93c5fd;
+        background: #fff;
+        color: #1d4ed8;
+        border-radius: 999px;
+        padding: 6px 11px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .code-body { margin-top: 12px; }
+      .code-tools { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+      .code pre {
+        margin: 0;
+        padding: 12px;
+        overflow: auto;
+        border-radius: 12px;
+        background: #0f172a;
+        color: #dbeafe;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .result pre {
+        margin: 10px 0 0;
+        padding: 12px;
+        border-radius: 12px;
+        background: #0f172a;
+        color: #dbeafe;
+        font-size: 12px;
+        line-height: 1.45;
+        overflow: auto;
+      }
+
+      @media (max-width: 1024px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>Hybrid E-commerce Checkout</h1>
+      <p>Exemple <code>mode="hybrid"</code> avec catalogue produit, saisie client et prévisualisation live de la commande.</p>
+
+      <div class="layout">
+        <aside class="products">
+          <h2>Catalogue</h2>
+          <div class="catalog" id="catalog"></div>
+        </aside>
+
+        <section class="shell">
+          <h2>Checkout Form</h2>
+          <div id="app"></div>
+        </section>
+
+        <aside>
+          <div class="result" id="result"></div>
+          <div class="code" style="margin-top: 20px;">
+            <div class="code-head">
+              <h2>Code</h2>
+              <button class="copy-btn" type="button" data-toggle-code>Show code</button>
+            </div>
+            <div class="code-body" hidden>
+              <div class="code-tools">
+                <button class="copy-btn" type="button" data-copy-code>Copy</button>
+              </div>
+              <pre><code>import { mountFormUI } from "../dist/xpressui.mjs";
+
+const form = mountFormUI(app, {
+  version: 1,
+  id: "hybrid_ecommerce_demo",
+  uid: "hybrid_ecommerce_demo_uid",
+  type: "contactform",
+  name: "hybrid-ecommerce-demo",
+  title: "E-commerce Checkout",
+  submit: {
+    endpoint: "/api/orders",
+  },
+  sections: {
+    main: [
+      { type: "text", name: "customer_name", label: "Customer Name", required: true },
+      { type: "email", name: "customer_email", label: "Email", required: true },
+      {
+        type: "select-multiple",
+        name: "product_skus",
+        label: "Products",
+        required: true,
+        choices: [
+          { value: "sku-camera", label: "Nomad Camera Bag" },
+          { value: "sku-headset", label: "Studio Headset" },
+          { value: "sku-keyboard", label: "Mechanical Keyboard" },
+          { value: "sku-lamp", label: "Desk Lamp" },
+        ],
+      },
+      { type: "number", name: "quantity", label: "Quantity", required: true, min: 1 },
+      { type: "text", name: "coupon", label: "Coupon" },
+      { type: "textarea", name: "shipping_notes", label: "Shipping Notes" },
+    ],
+  },
+});
+
+form.setAttribute("mode", "hybrid");
+form.setFieldOutputRenderer("product_skus", ({ value }) => {
+  const container = document.createElement("ul");
+  (Array.isArray(value) ? value : []).forEach((sku) => {
+    const line = document.createElement("li");
+    line.textContent = productsBySku[sku]?.name || sku;
+    container.appendChild(line);
+  });
+  return container;
+});
+form.refreshOutputRendering();</code></pre>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module">
+      import { mountFormUI } from "../dist/xpressui.mjs";
+
+      const products = [
+        { sku: "sku-camera", name: "Nomad Camera Bag", price: 129 },
+        { sku: "sku-headset", name: "Studio Headset", price: 189 },
+        { sku: "sku-keyboard", name: "Mechanical Keyboard", price: 149 },
+        { sku: "sku-lamp", name: "Desk Lamp", price: 79 },
+      ];
+      const productsBySku = products.reduce((acc, product) => {
+        acc[product.sku] = product;
+        return acc;
+      }, {});
+
+      const catalog = document.getElementById("catalog");
+      products.forEach((product) => {
+        const card = document.createElement("article");
+        card.className = "product";
+        card.innerHTML = `<strong>${product.name}</strong><span>${product.sku} · $${product.price}</span>`;
+        catalog.appendChild(card);
+      });
+
+      const result = document.getElementById("result");
+      const renderResult = (title, data) => {
+        result.innerHTML = "";
+        const heading = document.createElement("h2");
+        heading.textContent = title;
+        result.appendChild(heading);
+        const payload = document.createElement("pre");
+        payload.textContent = JSON.stringify(data, null, 2);
+        result.appendChild(payload);
+      };
+
+      renderResult("Latest Submit", {});
+
+      const app = document.getElementById("app");
+      const form = mountFormUI(app, {
+        version: 1,
+        id: "hybrid_ecommerce_demo",
+        uid: "hybrid_ecommerce_demo_uid",
+        type: "contactform",
+        name: "hybrid-ecommerce-demo",
+        title: "E-commerce Checkout",
+        submit: {
+          endpoint: "/api/orders",
+        },
+        sections: {
+          main: [
+            { type: "text", name: "customer_name", label: "Customer Name", required: true },
+            { type: "email", name: "customer_email", label: "Email", required: true },
+            {
+              type: "select-multiple",
+              name: "product_skus",
+              label: "Products",
+              required: true,
+              choices: [
+                { value: "sku-camera", label: "Nomad Camera Bag" },
+                { value: "sku-headset", label: "Studio Headset" },
+                { value: "sku-keyboard", label: "Mechanical Keyboard" },
+                { value: "sku-lamp", label: "Desk Lamp" },
+              ],
+            },
+            { type: "number", name: "quantity", label: "Quantity", required: true, min: 1 },
+            { type: "text", name: "coupon", label: "Coupon" },
+            { type: "textarea", name: "shipping_notes", label: "Shipping Notes" },
+          ],
+        },
+      });
+
+      form.setAttribute("mode", "hybrid");
+      form.setFieldOutputRenderer("product_skus", ({ value }) => {
+        const list = document.createElement("ul");
+        list.style.margin = "0";
+        list.style.paddingLeft = "18px";
+        const values = Array.isArray(value) ? value : [];
+        if (!values.length) {
+          const empty = document.createElement("li");
+          empty.textContent = "No products selected yet";
+          list.appendChild(empty);
+          return list;
+        }
+        values.forEach((sku) => {
+          const item = document.createElement("li");
+          item.textContent = productsBySku[sku]?.name || sku;
+          list.appendChild(item);
+        });
+        return list;
+      });
+      form.refreshOutputRendering();
+
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = async (input, init) => {
+        const body = init?.body && typeof init.body === "string" ? JSON.parse(init.body) : {};
+        const productLines = Array.isArray(body?.order?.product_skus)
+          ? body.order.product_skus.map((sku) => ({ sku, name: productsBySku[sku]?.name || sku }))
+          : [];
+
+        const mock = {
+          orderId: `ord_${Date.now()}`,
+          status: "pending",
+          totalPreview: productLines.length,
+          lines: productLines,
+          payload: body,
+        };
+
+        return new Response(JSON.stringify(mock), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      };
+
+      form.addEventListener("form-ui:submit-success", (event) => {
+        renderResult("Latest Submit", (event).detail?.result || {});
+      });
+
+      window.addEventListener("beforeunload", () => {
+        window.fetch = originalFetch;
+      });
+
+      document.querySelectorAll("[data-toggle-code]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const panel = button.closest(".code");
+          const body = panel?.querySelector(".code-body");
+          const isHidden = body?.hasAttribute("hidden");
+          if (!body) return;
+          if (isHidden) {
+            body.removeAttribute("hidden");
+            button.textContent = "Hide code";
+          } else {
+            body.setAttribute("hidden", "true");
+            button.textContent = "Show code";
+          }
+        });
+      });
+
+      document.querySelectorAll("[data-copy-code]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const code = button.closest(".code")?.querySelector("code")?.textContent || "";
+          if (!code) return;
+          const previousLabel = button.textContent;
+          try {
+            if (navigator.clipboard?.writeText) {
+              await navigator.clipboard.writeText(code);
+            } else {
+              const textarea = document.createElement("textarea");
+              textarea.value = code;
+              document.body.appendChild(textarea);
+              textarea.select();
+              document.execCommand("copy");
+              textarea.remove();
+            }
+            button.textContent = "Copied";
+          } catch {
+            button.textContent = "Failed";
+          }
+          window.setTimeout(() => {
+            button.textContent = previousLabel;
+          }, 1200);
+        });
+      });
+    </script>
+  </body>
+</html>

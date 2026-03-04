@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui view photo gallery demo</title>
+    <link rel="stylesheet" href="../index.css" />
+    <style>
+      :root {
+        --bg: #f5f9ff;
+        --ink: #0f172a;
+        --muted: #475569;
+        --line: #bfdbfe;
+        --panel: #ffffff;
+        --accent: #0f766e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.16), transparent 34%),
+          radial-gradient(circle at 85% 15%, rgba(14, 165, 233, 0.14), transparent 30%),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      }
+
+      main { max-width: 1240px; margin: 0 auto; padding: 34px 20px 68px; }
+      h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 4vw, 2.8rem); }
+      p { margin: 0; color: var(--muted); }
+      a { color: #0369a1; }
+
+      .layout {
+        margin-top: 24px;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: 360px minmax(0, 1fr) 300px;
+        align-items: start;
+      }
+
+      .code,
+      .shell,
+      .notes {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 12px 34px rgba(15, 23, 42, 0.07);
+      }
+
+      .code-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .code h2,
+      .notes h2,
+      .shell h2 { margin: 0; font-size: 1rem; }
+
+      .copy-btn {
+        border: 1px solid #93c5fd;
+        background: #fff;
+        color: #1d4ed8;
+        border-radius: 999px;
+        padding: 6px 11px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .code-body { margin-top: 12px; }
+      .code-tools { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+      .code pre {
+        margin: 0;
+        padding: 12px;
+        overflow: auto;
+        border-radius: 12px;
+        background: #0f172a;
+        color: #dbeafe;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .notes ul { margin: 10px 0 0; padding-left: 18px; color: var(--muted); }
+      .notes li { margin-bottom: 8px; }
+
+      @media (max-width: 1024px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>View Photo Gallery</h1>
+      <p>Démonstration de <code>mode="view"</code> avec policy média <code>gallery</code> et données injectées via API runtime.</p>
+
+      <div class="layout">
+        <aside class="code">
+          <div class="code-head">
+            <h2>Code</h2>
+            <button class="copy-btn" type="button" data-toggle-code>Show code</button>
+          </div>
+          <div class="code-body" hidden>
+            <div class="code-tools">
+              <button class="copy-btn" type="button" data-copy-code>Copy</button>
+            </div>
+            <pre><code>import { mountFormUI } from "../dist/xpressui.mjs";
+
+const app = document.getElementById("app");
+const form = mountFormUI(app, {
+  version: 1,
+  id: "view_gallery_demo",
+  uid: "view_gallery_demo_uid",
+  type: "contactform",
+  name: "view-gallery-demo",
+  title: "Travel Memories",
+  sections: {
+    main: [
+      { type: "text", name: "album_title", label: "Album" },
+      { type: "image", name: "photos", label: "Photos" },
+      { type: "textarea", name: "caption", label: "Caption" },
+    ],
+  },
+});
+
+form.setAttribute("mode", "view");
+form.setViewValues({
+  album_title: "Kyoto Spring Collection",
+  caption: "A curated stream of travel moments.",
+  photos: [
+    "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80"
+  ],
+});
+form.setFieldMediaPolicy("photos", "gallery");
+form.refreshOutputRendering();</code></pre>
+          </div>
+        </aside>
+
+        <section class="shell">
+          <h2>Live Demo</h2>
+          <div id="app"></div>
+        </section>
+
+        <aside class="notes">
+          <h2>Points clés</h2>
+          <ul>
+            <li>Le formulaire est monté normalement puis basculé en <code>view</code>.</li>
+            <li>Les valeurs sont injectées avec <code>setViewValues(...)</code>.</li>
+            <li><code>setFieldMediaPolicy("photos", "gallery")</code> force une grille d’images.</li>
+            <li>Le submit est masqué automatiquement en mode vue.</li>
+          </ul>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module">
+      import { mountFormUI } from "../dist/xpressui.mjs";
+
+      document.querySelectorAll("[data-toggle-code]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const panel = button.closest(".code");
+          const body = panel?.querySelector(".code-body");
+          const isHidden = body?.hasAttribute("hidden");
+          if (!body) return;
+          if (isHidden) {
+            body.removeAttribute("hidden");
+            button.textContent = "Hide code";
+          } else {
+            body.setAttribute("hidden", "true");
+            button.textContent = "Show code";
+          }
+        });
+      });
+
+      document.querySelectorAll("[data-copy-code]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const code = button.closest(".code")?.querySelector("code")?.textContent || "";
+          if (!code) return;
+          const previousLabel = button.textContent;
+          try {
+            if (navigator.clipboard?.writeText) {
+              await navigator.clipboard.writeText(code);
+            } else {
+              const textarea = document.createElement("textarea");
+              textarea.value = code;
+              document.body.appendChild(textarea);
+              textarea.select();
+              document.execCommand("copy");
+              textarea.remove();
+            }
+            button.textContent = "Copied";
+          } catch {
+            button.textContent = "Failed";
+          }
+          window.setTimeout(() => {
+            button.textContent = previousLabel;
+          }, 1200);
+        });
+      });
+
+      const app = document.getElementById("app");
+      const form = mountFormUI(app, {
+        version: 1,
+        id: "view_gallery_demo",
+        uid: "view_gallery_demo_uid",
+        type: "contactform",
+        name: "view-gallery-demo",
+        title: "Travel Memories",
+        sections: {
+          main: [
+            { type: "text", name: "album_title", label: "Album" },
+            { type: "image", name: "photos", label: "Photos" },
+            { type: "textarea", name: "caption", label: "Caption" },
+          ],
+        },
+      });
+
+      form.setAttribute("mode", "view");
+      form.setViewValues({
+        album_title: "Kyoto Spring Collection",
+        caption: "A curated stream of travel moments.",
+        photos: [
+          "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80",
+          "https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1200&q=80",
+          "https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=1200&q=80",
+          "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80"
+        ],
+      });
+      form.setFieldMediaPolicy("photos", "gallery");
+      form.refreshOutputRendering();
+    </script>
+  </body>
+</html>

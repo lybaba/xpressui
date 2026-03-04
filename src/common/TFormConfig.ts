@@ -66,7 +66,7 @@ export type TFormStorageConfig = {
 
 export type TFormRuleCondition = {
     field: string;
-    operator?: 'equals' | 'not_equals';
+    operator?: 'equals' | 'not_equals' | 'contains' | 'in' | 'gt' | 'lt';
     value?: any;
 };
 

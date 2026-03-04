@@ -13,7 +13,7 @@ type TFormDynamicRuntimeOptions = {
     logic?: "AND" | "OR";
     conditions: Array<{
       field: string;
-      operator?: "equals" | "not_equals";
+      operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt";
       value?: any;
     }>;
     actions: Array<{
@@ -44,10 +44,35 @@ export class FormDynamicRuntime {
   }
 
   matchesCondition(
-    condition: { field: string; operator?: "equals" | "not_equals"; value?: any },
+    condition: {
+      field: string;
+      operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt";
+      value?: any;
+    },
   ): boolean {
     const currentValue = this.options.getFieldValue(condition.field);
     const operator = condition.operator || "equals";
+
+    if (operator === "contains") {
+      return String(currentValue ?? "")
+        .toLowerCase()
+        .includes(String(condition.value ?? "").toLowerCase());
+    }
+
+    if (operator === "in") {
+      const allowedValues = Array.isArray(condition.value)
+        ? condition.value
+        : [condition.value];
+      return allowedValues.map((value) => String(value ?? "")).includes(String(currentValue ?? ""));
+    }
+
+    if (operator === "gt") {
+      return Number(currentValue) > Number(condition.value);
+    }
+
+    if (operator === "lt") {
+      return Number(currentValue) < Number(condition.value);
+    }
 
     if (operator === "not_equals") {
       return String(currentValue ?? "") !== String(condition.value ?? "");
@@ -59,7 +84,11 @@ export class FormDynamicRuntime {
   matchesRule(
     rule: {
       logic?: "AND" | "OR";
-      conditions: Array<{ field: string; operator?: "equals" | "not_equals"; value?: any }>;
+      conditions: Array<{
+        field: string;
+        operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt";
+        value?: any;
+      }>;
     },
   ): boolean {
     const logic = rule.logic || "AND";

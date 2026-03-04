@@ -720,6 +720,61 @@ describe('FormUI', () => {
     expect((element.form?.getState().values || {}).notes).toBeUndefined();
   });
 
+  it('supports advanced rule operators for string and numeric comparisons', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'advanced-rules-form',
+      title: 'Advanced Rules Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'email', operator: 'contains', value: '@vip.' },
+          ],
+          actions: [
+            { type: 'show', field: 'vipNotes' },
+          ],
+        },
+        {
+          conditions: [
+            { field: 'plan', operator: 'in', value: ['pro', 'enterprise'] },
+            { field: 'amount', operator: 'gt', value: 100 },
+            { field: 'discount', operator: 'lt', value: 50 },
+          ],
+          actions: [
+            { type: 'show', field: 'accountManager' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+        { name: 'plan', label: 'Plan', type: 'text' },
+        { name: 'amount', label: 'Amount', type: 'number' },
+        { name: 'discount', label: 'Discount', type: 'number' },
+        { name: 'vipNotes', label: 'VIP Notes', type: 'textarea' },
+        { name: 'accountManager', label: 'Account Manager', type: 'text' },
+      ],
+    }) as FormUI;
+    const email = element.querySelector('#email') as HTMLInputElement;
+    const plan = element.querySelector('#plan') as HTMLInputElement;
+    const amount = element.querySelector('#amount') as HTMLInputElement;
+    const discount = element.querySelector('#discount') as HTMLInputElement;
+    const vipNotesContainer = (element.querySelector('#vipNotes') as HTMLTextAreaElement).closest('label') as HTMLElement;
+    const accountManagerContainer = (element.querySelector('#accountManager') as HTMLInputElement).closest('label') as HTMLElement;
+
+    email.value = 'member@vip.example';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+    plan.value = 'pro';
+    plan.dispatchEvent(new Event('input', { bubbles: true }));
+    amount.value = '150';
+    amount.dispatchEvent(new Event('input', { bubbles: true }));
+    discount.value = '10';
+    discount.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(vipNotesContainer.style.display).toBe('');
+    expect(accountManagerContainer.style.display).toBe('');
+  });
+
   it('supports a payment provider with a normalized payload', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ clientSecret: 'pi_secret_123' }), {

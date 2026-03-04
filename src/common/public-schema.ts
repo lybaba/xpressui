@@ -33,7 +33,10 @@ const PUBLIC_FORM_SCHEMA = {
               additionalProperties: true,
               properties: {
                 field: { type: "string", minLength: 1 },
-                operator: { type: "string", enum: ["equals", "not_equals"] },
+                operator: {
+                  type: "string",
+                  enum: ["equals", "not_equals", "contains", "in", "gt", "lt"],
+                },
               },
             },
           },

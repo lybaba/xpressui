@@ -420,6 +420,10 @@ export class FormUI extends HTMLElement {
             const nextValue =
               input.type === "checkbox"
                 ? (<HTMLInputElement>event.target)?.checked
+                : input instanceof HTMLSelectElement && input.multiple
+                  ? Array.from((<HTMLSelectElement>event.target)?.selectedOptions || []).map(
+                      (option) => option.value,
+                    )
                 : (<HTMLInputElement>event.target)?.value;
             change(nextValue);
             this.scheduleDraftSave();
@@ -439,6 +443,13 @@ export class FormUI extends HTMLElement {
         // update value
         if (input.type === "checkbox") {
           (<HTMLInputElement>input).checked = value;
+        } else if (input instanceof HTMLSelectElement && input.multiple) {
+          const selectedValues = Array.isArray(value)
+            ? value.map((entry) => String(entry))
+            : [];
+          Array.from(input.options).forEach((option) => {
+            option.selected = selectedValues.includes(option.value);
+          });
         } else {
           input.value = value === undefined ? "" : value;
         }

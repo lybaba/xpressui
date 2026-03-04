@@ -114,6 +114,13 @@ export class FormRuntime {
             if (fieldElement) {
               if (fieldElement instanceof HTMLInputElement && fieldElement.type === "checkbox") {
                 fieldElement.checked = Boolean(value);
+              } else if (fieldElement instanceof HTMLSelectElement && fieldElement.multiple) {
+                const selectedValues = Array.isArray(value)
+                  ? value.map((entry) => String(entry))
+                  : [];
+                Array.from(fieldElement.options).forEach((option) => {
+                  option.selected = selectedValues.includes(option.value);
+                });
               } else {
                 fieldElement.value = value === undefined ? "" : String(value);
               }

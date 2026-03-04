@@ -490,13 +490,17 @@ export class FormDynamicRuntime {
       return;
     }
 
-    const currentValue = fieldElement.value;
+    const currentValue = fieldElement.multiple
+      ? Array.from(fieldElement.selectedOptions).map((option) => option.value)
+      : fieldElement.value;
     fieldElement.innerHTML = "";
 
-    const emptyOption = document.createElement("option");
-    emptyOption.value = "";
-    emptyOption.textContent = "";
-    fieldElement.appendChild(emptyOption);
+    if (!fieldElement.multiple) {
+      const emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = "";
+      fieldElement.appendChild(emptyOption);
+    }
 
     options.forEach((choice) => {
       const option = document.createElement("option");
@@ -505,7 +509,15 @@ export class FormDynamicRuntime {
       fieldElement.appendChild(option);
     });
 
-    if (currentValue && options.some((choice) => choice.value === currentValue)) {
+    if (fieldElement.multiple && Array.isArray(currentValue)) {
+      Array.from(fieldElement.options).forEach((option) => {
+        option.selected = currentValue.includes(option.value);
+      });
+    } else if (
+      typeof currentValue === "string" &&
+      currentValue &&
+      options.some((choice) => choice.value === currentValue)
+    ) {
       fieldElement.value = currentValue;
     }
 

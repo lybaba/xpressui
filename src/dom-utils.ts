@@ -292,6 +292,7 @@ export function getErrorClass(input: any): string {
             return 'textarea-error'
 
         case 'select-one':
+        case 'select-multiple':
             return 'select-error'
 
         default:

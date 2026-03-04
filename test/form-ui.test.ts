@@ -677,6 +677,52 @@ describe('FormUI', () => {
     expect(element.querySelector('#notes')).not.toBeNull();
   });
 
+  it('supports select-multiple fields in mounted forms', async () => {
+    const container = document.createElement('div');
+    const onSubmitSuccess = vi.fn();
+    const element = mountFormUI(container, {
+      name: 'multi-select-form',
+      title: 'Multi Select Form',
+      fields: [
+        {
+          name: 'services',
+          label: 'Services',
+          type: 'select-multiple',
+          choices: [
+            { value: 'consulting', label: 'Consulting' },
+            { value: 'support', label: 'Support' },
+            { value: 'training', label: 'Training' },
+          ],
+        },
+      ],
+    }) as FormUI;
+    const services = element.querySelector('#services') as HTMLSelectElement;
+
+    element.addEventListener('form-ui:submit-success', (event) => {
+      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    Array.from(services.options).forEach((option) => {
+      option.selected = option.value === 'consulting' || option.value === 'training';
+    });
+    services.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).services).toEqual(['consulting', 'training']);
+
+    const form = element.querySelector('#multi-select-form_form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(onSubmitSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: {
+          services: ['consulting', 'training'],
+        },
+      })
+    );
+  });
+
   it('emits version 1 configs from the public builder', () => {
     const formConfig = createFormConfig({
       name: 'versioned-form',

@@ -13,6 +13,7 @@ import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-s
 import {
   CHECKBOX_TYPE,
   getHtmlInputType,
+  SELECT_MULTIPLE_TYPE,
   SELECT_ONE_TYPE,
   TEXTAREA_TYPE,
 } from './field';
@@ -96,6 +97,24 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
     <select class="select select-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="select-one" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs}>
       <option value=""></option>
+      ${options}
+    </select>
+    ${helpText}
+    <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
+</label>`;
+  }
+
+  if (field.type === SELECT_MULTIPLE_TYPE) {
+    const options = (field.choices || [])
+      .map(
+        (choice) =>
+          `<option value="${escapeHtml(String(choice.value))}">${escapeHtml(choice.label)}</option>`
+      )
+      .join('');
+
+    return `<label class="form-control w-full">
+    <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
+    <select class="select select-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" multiple type="select-multiple" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs}>
       ${options}
     </select>
     ${helpText}

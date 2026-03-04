@@ -372,6 +372,9 @@ describe('FormUI', () => {
         missingField: 'missingName',
       },
     ]);
+
+    element.clearActiveTemplateWarnings();
+    expect(element.getActiveTemplateWarnings()).toEqual([]);
   });
 
   it('exposes recently applied rules directly on FormUI', async () => {
@@ -655,6 +658,9 @@ describe('FormUI', () => {
         missingField: 'missingName',
       },
     ]);
+
+    runtime.clearActiveTemplateWarnings();
+    expect(runtime.getActiveTemplateWarnings()).toEqual([]);
   });
 
   it('exposes recently applied rules through the composed headless runtime', () => {
@@ -1047,6 +1053,9 @@ describe('FormUI', () => {
         missingField: 'missingName',
       },
     ]);
+
+    runtime.clearActiveTemplateWarnings();
+    expect(runtime.getActiveTemplateWarnings()).toEqual([]);
   });
 
   it('exposes recently applied rules from the standalone dynamic runtime', () => {

@@ -68,6 +68,7 @@ export type TFormRuntimePublicApi = Pick<
   | "updateConditionalFields"
   | "refreshRemoteOptions"
   | "getActiveTemplateWarnings"
+  | "clearActiveTemplateWarnings"
   | "getRecentAppliedRules"
   | "clearRecentAppliedRules"
 >;
@@ -222,6 +223,10 @@ export class FormRuntime {
 
   getActiveTemplateWarnings(): TFormActiveTemplateWarning[] {
     return this.dynamic?.getActiveTemplateWarnings() || [];
+  }
+
+  clearActiveTemplateWarnings(): void {
+    this.dynamic?.clearActiveTemplateWarnings();
   }
 
   getRecentAppliedRules() {

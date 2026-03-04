@@ -258,6 +258,10 @@ export class FormUI extends HTMLElement {
     return this.dynamic.getActiveTemplateWarnings();
   }
 
+  clearActiveTemplateWarnings = () => {
+    this.dynamic.clearActiveTemplateWarnings();
+  }
+
   getRecentAppliedRules = () => {
     return this.dynamic.getRecentAppliedRules();
   }

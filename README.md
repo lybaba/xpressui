@@ -27,6 +27,7 @@ plain object without hand-writing a full HTML template.
 
 `FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
 active template issues on the mounted component.
+Use `clearActiveTemplateWarnings()` to reset that warning state.
 It also exposes `getRecentAppliedRules()` to inspect the latest effective rule
 applications.
 Use `clearRecentAppliedRules()` to reset that in-memory rule state.
@@ -159,6 +160,7 @@ Main `FormRuntime` methods:
 - `getStorageSnapshot()`
 - `flushSubmissionQueue()`
 - `getActiveTemplateWarnings()`
+- `clearActiveTemplateWarnings()`
 - `getRecentAppliedRules()`
 - `clearRecentAppliedRules()`
 
@@ -166,6 +168,7 @@ If you pass DOM adapters through `dynamic`, the same runtime can also handle:
 - `updateConditionalFields()`
 - `refreshRemoteOptions()`
 - `getActiveTemplateWarnings()`
+- `clearActiveTemplateWarnings()`
 - `getRecentAppliedRules()`
 - `clearRecentAppliedRules()`
 

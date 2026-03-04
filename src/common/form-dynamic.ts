@@ -293,6 +293,16 @@ export class FormDynamicRuntime {
     return Object.values(this.activeTemplateWarnings);
   }
 
+  clearActiveTemplateWarnings(): void {
+    const warningKeys = Object.keys(this.activeTemplateWarnings);
+    if (!warningKeys.length) {
+      return;
+    }
+
+    this.activeTemplateWarnings = {};
+    this.emitTemplateWarningState();
+  }
+
   getRecentAppliedRules(): TFormRuleAppliedDetail[] {
     return [...this.recentAppliedRules];
   }

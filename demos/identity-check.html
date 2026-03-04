@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui identity check demo</title>
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #eff6ff; color: #0f172a; }
+      main { max-width: 840px; margin: 0 auto; padding: 32px 20px 60px; }
+      h1 { margin: 0 0 8px; }
+      p { color: #334155; }
+      .shell { margin-top: 24px; padding: 20px; background: #fff; border: 1px solid #bfdbfe; border-radius: 16px; }
+      a { color: #1d4ed8; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>Identity Check</h1>
+      <p>Démo KYC avec `document-scan`, extraction de données document et payload normalisé.</p>
+      <div class="shell" id="app"></div>
+    </main>
+    <script type="module">
+      import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
+
+      const container = document.getElementById("app");
+      mountFormUI(container, createFormPreset("identity-check"));
+    </script>
+  </body>
+  </html>

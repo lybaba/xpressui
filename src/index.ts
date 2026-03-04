@@ -310,6 +310,7 @@ export class FormUI extends HTMLElement {
   stepNextButton: HTMLButtonElement | null;
   productListCartClickBound: boolean;
   productCartOverlay: HTMLElement | null;
+  productCartCloseTimer: number | null;
   productGalleryOverlay: HTMLElement | null;
   viewValues: Record<string, any>;
   outputRenderers: Record<string, TFormOutputRenderer>;
@@ -349,6 +350,7 @@ export class FormUI extends HTMLElement {
     this.stepNextButton = null;
     this.productListCartClickBound = false;
     this.productCartOverlay = null;
+    this.productCartCloseTimer = null;
     this.productGalleryOverlay = null;
     this.viewValues = {};
     this.outputRenderers = this.createDefaultOutputRenderers();
@@ -481,6 +483,10 @@ export class FormUI extends HTMLElement {
     if (this.productCartOverlay) {
       this.productCartOverlay.remove();
       this.productCartOverlay = null;
+    }
+    if (this.productCartCloseTimer !== null && typeof window !== "undefined") {
+      window.clearTimeout(this.productCartCloseTimer);
+      this.productCartCloseTimer = null;
     }
     this.productListCartClickBound = false;
     this.persistence.disconnect();
@@ -2288,15 +2294,20 @@ export class FormUI extends HTMLElement {
 
     const overlay = document.createElement("div");
     overlay.setAttribute("data-product-cart-overlay", "true");
+    overlay.setAttribute("data-state", "closed");
     overlay.style.position = "fixed";
     overlay.style.inset = "0";
     overlay.style.background = "rgba(15, 23, 42, 0.45)";
     overlay.style.zIndex = "10002";
     overlay.style.display = "none";
     overlay.style.justifyContent = "flex-end";
+    overlay.style.opacity = "0";
+    overlay.style.visibility = "hidden";
+    overlay.style.transition = "opacity 180ms ease";
 
     const panel = document.createElement("aside");
     panel.setAttribute("data-product-list-global-cart", "true");
+    panel.setAttribute("data-product-cart-panel", "true");
     panel.style.width = "min(420px, 92vw)";
     panel.style.height = "100%";
     panel.style.background = "#ffffff";
@@ -2306,6 +2317,8 @@ export class FormUI extends HTMLElement {
     panel.style.display = "grid";
     panel.style.gridTemplateRows = "auto 1fr auto";
     panel.style.gap = "12px";
+    panel.style.transform = "translateX(100%)";
+    panel.style.transition = "transform 180ms ease";
 
     overlay.appendChild(panel);
     this.appendChild(overlay);
@@ -2321,14 +2334,57 @@ export class FormUI extends HTMLElement {
     if (!this.productCartOverlay) {
       return;
     }
+    if (this.productCartCloseTimer !== null && typeof window !== "undefined") {
+      window.clearTimeout(this.productCartCloseTimer);
+      this.productCartCloseTimer = null;
+    }
+    this.productCartOverlay.setAttribute("data-state", "open");
     this.productCartOverlay.style.display = "flex";
+    this.productCartOverlay.style.visibility = "visible";
+    const panel = this.productCartOverlay.querySelector("[data-product-cart-panel]") as HTMLElement | null;
+    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(() => {
+        this.productCartOverlay!.style.opacity = "1";
+        if (panel) {
+          panel.style.transform = "translateX(0)";
+        }
+      });
+    } else {
+      this.productCartOverlay.style.opacity = "1";
+      if (panel) {
+        panel.style.transform = "translateX(0)";
+      }
+    }
   }
 
   closeProductCartModal = () => {
     if (!this.productCartOverlay) {
       return;
     }
-    this.productCartOverlay.style.display = "none";
+    this.productCartOverlay.setAttribute("data-state", "closing");
+    this.productCartOverlay.style.opacity = "0";
+    const panel = this.productCartOverlay.querySelector("[data-product-cart-panel]") as HTMLElement | null;
+    if (panel) {
+      panel.style.transform = "translateX(100%)";
+    }
+    if (this.productCartCloseTimer !== null && typeof window !== "undefined") {
+      window.clearTimeout(this.productCartCloseTimer);
+    }
+    if (typeof window !== "undefined") {
+      this.productCartCloseTimer = window.setTimeout(() => {
+        if (!this.productCartOverlay) {
+          return;
+        }
+        this.productCartOverlay.style.display = "none";
+        this.productCartOverlay.style.visibility = "hidden";
+        this.productCartOverlay.setAttribute("data-state", "closed");
+        this.productCartCloseTimer = null;
+      }, 180);
+    } else {
+      this.productCartOverlay.style.display = "none";
+      this.productCartOverlay.style.visibility = "hidden";
+      this.productCartOverlay.setAttribute("data-state", "closed");
+    }
   }
 
   renderProductListGlobalCart = () => {
@@ -2389,13 +2445,27 @@ export class FormUI extends HTMLElement {
     list.style.gap = "8px";
     entries.forEach(({ fieldName, item }) => {
       const row = document.createElement("div");
-      row.className = "flex items-center justify-between gap-3 rounded border border-base-300 px-2 py-2";
+      row.className = "grid gap-2 rounded border border-base-300 px-2 py-2";
       row.setAttribute("data-product-cart-item", `${fieldName}:${item.id}`);
+
+      const top = document.createElement("div");
+      top.className = "flex items-center gap-2";
+      if (item.image_thumbnail || item.image_medium) {
+        const thumb = document.createElement("img");
+        thumb.src = item.image_thumbnail || item.image_medium;
+        thumb.alt = item.name;
+        thumb.style.width = "52px";
+        thumb.style.height = "52px";
+        thumb.style.objectFit = "cover";
+        thumb.style.borderRadius = "8px";
+        thumb.style.flexShrink = "0";
+        top.appendChild(thumb);
+      }
 
       const details = document.createElement("div");
       details.className = "min-w-0 flex-1";
       const name = document.createElement("div");
-      name.className = "text-sm";
+      name.className = "text-sm font-medium";
       name.textContent = item.name;
       details.appendChild(name);
 
@@ -2404,6 +2474,11 @@ export class FormUI extends HTMLElement {
       const unitPrice = item.discount_price ?? item.sale_price ?? 0;
       meta.textContent = `Qty: ${item.quantity} · Unit: ${unitPrice.toFixed(2)}€`;
       details.appendChild(meta);
+      const subtotal = document.createElement("div");
+      subtotal.className = "text-xs font-semibold";
+      subtotal.textContent = `Subtotal: ${(unitPrice * item.quantity).toFixed(2)}€`;
+      details.appendChild(subtotal);
+      top.appendChild(details);
 
       const controls = document.createElement("div");
       controls.className = "flex items-center gap-1";
@@ -2423,7 +2498,7 @@ export class FormUI extends HTMLElement {
       controls.appendChild(createControl("inc", "+", "btn btn-xs btn-outline"));
       controls.appendChild(createControl("remove", "Remove", "btn btn-xs btn-ghost"));
 
-      row.appendChild(details);
+      row.appendChild(top);
       row.appendChild(controls);
       list.appendChild(row);
     });

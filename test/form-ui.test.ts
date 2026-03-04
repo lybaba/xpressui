@@ -5718,7 +5718,18 @@ describe('FormUI', () => {
 
   it('supports an approval-request provider and emits pending approval events', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ status: 'pending_approval', approvalId: 'apr_123' }), {
+      new Response(JSON.stringify({
+        status: 'pending_approval',
+        transition: {
+          type: 'workflow',
+          state: 'pending_approval',
+        },
+        messages: ['Waiting for manager approval'],
+        errors: [],
+        data: {
+          approvalId: 'apr_123',
+        },
+      }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       })
@@ -5778,7 +5789,30 @@ describe('FormUI', () => {
     );
     expect(onApprovalRequested).toHaveBeenCalledWith(
       expect.objectContaining({
-        result: { status: 'pending_approval', approvalId: 'apr_123' },
+        result: {
+          status: 'pending_approval',
+          transition: {
+            type: 'workflow',
+            state: 'pending_approval',
+          },
+          messages: ['Waiting for manager approval'],
+          errors: [],
+          data: {
+            approvalId: 'apr_123',
+          },
+        },
+        providerResult: {
+          status: 'pending_approval',
+          transition: {
+            type: 'workflow',
+            state: 'pending_approval',
+          },
+          messages: ['Waiting for manager approval'],
+          errors: [],
+          data: {
+            approvalId: 'apr_123',
+          },
+        },
       })
     );
   });
@@ -5825,11 +5859,25 @@ describe('FormUI', () => {
         result: { status: 'approved', approvalId: 'apr_123' },
       })
     );
-    expect(element.getApprovalState()).toEqual({
-      status: 'approved',
-      approvalId: 'apr_123',
-      result: { status: 'approved', approvalId: 'apr_123' },
-    });
+    expect(element.getApprovalState()).toEqual(
+      expect.objectContaining({
+        status: 'approved',
+        approvalId: 'apr_123',
+        result: { status: 'approved', approvalId: 'apr_123' },
+        providerResult: {
+          status: 'approved',
+          transition: {
+            type: 'workflow',
+            state: 'approved',
+          },
+          messages: [],
+          errors: [],
+          data: {
+            approvalId: 'apr_123',
+          },
+        },
+      })
+    );
   });
 
   it('supports an approval-decision provider and emits approval state updates', async () => {
@@ -5893,18 +5941,44 @@ describe('FormUI', () => {
     );
     expect(onApprovalState).toHaveBeenCalledWith(
       expect.objectContaining({
-        result: {
+        result: expect.objectContaining({
           status: 'completed',
           approvalId: 'apr_123',
           result: { status: 'completed', approvalId: 'apr_123' },
+          providerResult: {
+            status: 'completed',
+            transition: {
+              type: 'workflow',
+              state: 'completed',
+            },
+            messages: [],
+            errors: [],
+            data: {
+              approvalId: 'apr_123',
+            },
+          },
+        }),
+      })
+    );
+    expect(element.getApprovalState()).toEqual(
+      expect.objectContaining({
+        status: 'completed',
+        approvalId: 'apr_123',
+        result: { status: 'completed', approvalId: 'apr_123' },
+        providerResult: {
+          status: 'completed',
+          transition: {
+            type: 'workflow',
+            state: 'completed',
+          },
+          messages: [],
+          errors: [],
+          data: {
+            approvalId: 'apr_123',
+          },
         },
       })
     );
-    expect(element.getApprovalState()).toEqual({
-      status: 'completed',
-      approvalId: 'apr_123',
-      result: { status: 'completed', approvalId: 'apr_123' },
-    });
   });
 
   it('supports an approval-comment provider for audit trail messages', async () => {
@@ -6066,11 +6140,23 @@ describe('FormUI', () => {
       expect.objectContaining({
         result: {
           state: 'pending_approval',
-          approvalState: {
+          approvalState: expect.objectContaining({
             status: 'pending_approval',
             approvalId: 'apr_123',
             result: { status: 'pending_approval', approvalId: 'apr_123' },
-          },
+            providerResult: {
+              status: 'pending_approval',
+              transition: {
+                type: 'workflow',
+                state: 'pending_approval',
+              },
+              messages: [],
+              errors: [],
+              data: {
+                approvalId: 'apr_123',
+              },
+            },
+          }),
         },
       })
     );

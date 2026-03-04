@@ -29,9 +29,10 @@ import { validatePublicFormConfig } from "./common/public-schema";
 import {
   getProviderErrorEventName,
   getProviderSuccessEventName,
-  resolveProviderTransition,
+  normalizeProviderResult,
   registerProvider,
 } from "./common/provider-registry";
+import type { TNormalizedProviderResult } from "./common/provider-registry";
 export {
   createFormConfig,
   createTemplateMarkup,
@@ -59,6 +60,7 @@ export {
   getProviderDefinition,
   getProviderErrorEventName,
   getProviderSuccessEventName,
+  normalizeProviderResult,
   resolveProviderTransition,
   registerProvider,
 } from "./common/provider-registry";
@@ -85,7 +87,10 @@ export type {
   TFormStorageSnapshot,
 } from "./common/form-persistence";
 export type { TCreateFormPresetOptions, TFormPresetName } from "./common/form-presets";
-export type { TFormProviderTransition } from "./common/provider-registry";
+export type {
+  TFormProviderTransition,
+  TNormalizedProviderResult,
+} from "./common/provider-registry";
 export type {
   TFormRuntimeDynamicAdapters,
   TFormRuntimeEmitEvent,
@@ -102,6 +107,7 @@ export type TFormUISubmitDetail = {
   submit?: TFormSubmitRequest;
   response?: Response;
   result?: any;
+  providerResult?: TNormalizedProviderResult;
   error?: unknown;
 };
 
@@ -109,6 +115,7 @@ export type TFormApprovalState = {
   status: string;
   approvalId?: string;
   result?: any;
+  providerResult?: TNormalizedProviderResult;
 };
 
 export type TFormWorkflowState =
@@ -2251,9 +2258,9 @@ export class FormUI extends HTMLElement {
     detail: TFormUISubmitDetail,
     response: Response | undefined,
     result: any,
+    providerResult?: TNormalizedProviderResult,
   ) => {
-    const submitConfig = this.formConfig?.submit;
-    const transition = resolveProviderTransition(submitConfig?.action, result, submitConfig || { endpoint: "" });
+    const transition = providerResult?.transition || null;
     if (!transition) {
       return false;
     }
@@ -2362,25 +2369,31 @@ export class FormUI extends HTMLElement {
   emitApprovalStateEvents = (
     detail: TFormUISubmitDetail,
     result: any,
+    providerResult?: TNormalizedProviderResult,
     response?: Response,
   ) => {
     const action = this.formConfig?.submit?.action;
-    if (
-      (action !== "approval-request" && action !== "approval-decision") ||
-      !result ||
-      typeof result !== "object"
-    ) {
+    if (action !== "approval-request" && action !== "approval-decision") {
       return;
     }
 
-    const status = typeof result.status === "string" ? result.status : "";
+    const status = providerResult?.status || "";
+    const normalizedData = providerResult?.data;
+    const approvalId =
+      (normalizedData &&
+      typeof normalizedData === "object" &&
+      typeof normalizedData.approvalId === "string"
+        ? normalizedData.approvalId
+        : undefined) ||
+      (result && typeof result === "object" && typeof result.approvalId === "string"
+        ? result.approvalId
+        : undefined) ||
+      this.approvalState?.approvalId;
     this.approvalState = {
       status: status || "unknown",
-      approvalId:
-        typeof result.approvalId === "string"
-          ? result.approvalId
-          : this.approvalState?.approvalId,
+      approvalId,
       result,
+      providerResult,
     };
     this.emitFormEvent("form-ui:approval-state", {
       ...detail,
@@ -2394,6 +2407,7 @@ export class FormUI extends HTMLElement {
         ...detail,
         response,
         result,
+        providerResult,
       });
       return;
     }
@@ -2403,6 +2417,7 @@ export class FormUI extends HTMLElement {
         ...detail,
         response,
         result,
+        providerResult,
       });
       return;
     }
@@ -2440,24 +2455,27 @@ export class FormUI extends HTMLElement {
 
     try {
       const { response, result } = await this.submitToApi(formValues, this.formConfig.submit);
-      this.emitFormEvent("form-ui:submit-success", {
+      const providerResult = normalizeProviderResult(
+        this.formConfig.submit.action,
+        result,
+        this.formConfig.submit,
+      );
+      const successDetail = {
         ...detail,
         response,
         result,
-      });
-      this.emitApprovalStateEvents(detail, result, response);
-      const appliedProviderTransition = this.applyProviderTransition(detail, response, result);
+        providerResult,
+      };
+      this.emitFormEvent("form-ui:submit-success", successDetail);
+      this.emitApprovalStateEvents(successDetail, result, providerResult, response);
+      const appliedProviderTransition = this.applyProviderTransition(successDetail, response, result, providerResult);
       if (!appliedProviderTransition && this.formConfig?.submit?.action !== "approval-request" && this.formConfig?.submit?.action !== "approval-decision") {
-        this.setWorkflowState("submitted", detail, response, result);
+        this.setWorkflowState("submitted", successDetail, response, result);
       }
       this.clearDraft();
       const providerSuccessEvent = getProviderSuccessEventName(this.formConfig?.submit?.action);
       if (providerSuccessEvent) {
-        this.emitFormEvent(providerSuccessEvent, {
-          ...detail,
-          response,
-          result,
-        });
+        this.emitFormEvent(providerSuccessEvent, successDetail);
       }
     } catch (error: any) {
       const isNetworkError = !error?.response;
@@ -2485,21 +2503,22 @@ export class FormUI extends HTMLElement {
         return;
       }
 
-      this.emitFormEvent("form-ui:submit-error", {
+      const providerResult =
+        error?.result && this.formConfig?.submit
+          ? normalizeProviderResult(this.formConfig.submit.action, error.result, this.formConfig.submit)
+          : undefined;
+      const errorDetail = {
         ...detail,
         response: error?.response,
         result: error?.result,
+        providerResult,
         error,
-      });
-      this.setWorkflowState("error", detail, error?.response, error?.result);
+      };
+      this.emitFormEvent("form-ui:submit-error", errorDetail);
+      this.setWorkflowState("error", errorDetail, error?.response, error?.result);
       const providerErrorEvent = getProviderErrorEventName(this.formConfig?.submit?.action);
       if (providerErrorEvent) {
-        this.emitFormEvent(providerErrorEvent, {
-          ...detail,
-          response: error?.response,
-          result: error?.result,
-          error,
-        });
+        this.emitFormEvent(providerErrorEvent, errorDetail);
       }
       throw error;
     }

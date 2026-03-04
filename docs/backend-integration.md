@@ -15,6 +15,38 @@ responses your frontend can rely on.
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events
 
+## Standard Provider Response Envelope
+
+`xpressui` can normalize older provider responses, but the recommended backend
+contract is a shared envelope that keeps all providers consistent:
+
+```json
+{
+  "status": "pending_approval",
+  "transition": {
+    "type": "workflow",
+    "state": "pending_approval"
+  },
+  "messages": ["Waiting for manager approval"],
+  "errors": [],
+  "data": {
+    "approvalId": "apr_123"
+  }
+}
+```
+
+Normalized frontend event detail:
+- `detail.result`: raw backend payload
+- `detail.providerResult.status`: normalized provider status
+- `detail.providerResult.transition`: normalized workflow or step transition
+- `detail.providerResult.messages`: normalized message list
+- `detail.providerResult.errors`: normalized error list
+- `detail.providerResult.data`: normalized provider data payload
+
+Legacy responses such as `{ "status": "approved", "approvalId": "apr_123" }`
+still work. `xpressui` will normalize them into the same `providerResult`
+shape for event consumers.
+
 ## Reservation Provider
 
 Frontend config:
@@ -51,9 +83,11 @@ Suggested success response:
 
 ```json
 {
-  "reservationId": "res_123",
   "status": "confirmed",
-  "message": "Reservation created"
+  "messages": ["Reservation created"],
+  "data": {
+    "reservationId": "res_123"
+  }
 }
 ```
 

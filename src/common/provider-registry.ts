@@ -26,6 +26,14 @@ export type TFormProviderTransition =
       state: string;
     };
 
+export type TNormalizedProviderResult = {
+  status: string | null;
+  transition: TFormProviderTransition | null;
+  messages: string[];
+  errors: any[];
+  data: any;
+};
+
 const providerRegistry = new Map<string, TFormProviderDefinition>();
 
 export function registerProvider(
@@ -103,6 +111,95 @@ function normalizeProviderTransition(result: any): TFormProviderTransition | nul
   return null;
 }
 
+function normalizeProviderStatus(result: any): string | null {
+  if (!result || typeof result !== "object") {
+    return null;
+  }
+
+  if (typeof result.status === "string" && result.status) {
+    return result.status;
+  }
+
+  if (
+    result.data &&
+    typeof result.data === "object" &&
+    typeof result.data.status === "string" &&
+    result.data.status
+  ) {
+    return result.data.status;
+  }
+
+  return null;
+}
+
+function normalizeProviderMessages(result: any): string[] {
+  if (!result || typeof result !== "object") {
+    return [];
+  }
+
+  if (Array.isArray(result.messages)) {
+    return result.messages.filter((entry) => typeof entry === "string" && entry);
+  }
+
+  if (typeof result.message === "string" && result.message) {
+    return [result.message];
+  }
+
+  return [];
+}
+
+function normalizeProviderErrors(result: any): any[] {
+  if (!result || typeof result !== "object") {
+    return [];
+  }
+
+  if (Array.isArray(result.errors)) {
+    return result.errors;
+  }
+
+  if (result.errors && typeof result.errors === "object") {
+    return [result.errors];
+  }
+
+  if (result.error !== undefined) {
+    return [result.error];
+  }
+
+  return [];
+}
+
+function normalizeProviderData(result: any): any {
+  if (!result || typeof result !== "object") {
+    return result;
+  }
+
+  if (result.data !== undefined) {
+    return result.data;
+  }
+
+  const {
+    status,
+    transition,
+    message,
+    messages,
+    error,
+    errors,
+    ...rest
+  } = result as Record<string, any>;
+  void status;
+  void transition;
+  void message;
+  void messages;
+  void error;
+  void errors;
+
+  if (Object.keys(rest).length > 0) {
+    return rest;
+  }
+
+  return result;
+}
+
 export function resolveProviderTransition(
   action: string | undefined,
   result: any,
@@ -115,6 +212,20 @@ export function resolveProviderTransition(
   }
 
   return definition?.resolveTransition?.(result, submitConfig) || null;
+}
+
+export function normalizeProviderResult(
+  action: string | undefined,
+  result: any,
+  submitConfig: TFormSubmitRequest,
+): TNormalizedProviderResult {
+  return {
+    status: normalizeProviderStatus(result),
+    transition: resolveProviderTransition(action, result, submitConfig),
+    messages: normalizeProviderMessages(result),
+    errors: normalizeProviderErrors(result),
+    data: normalizeProviderData(result),
+  };
 }
 
 registerProvider("reservation", {

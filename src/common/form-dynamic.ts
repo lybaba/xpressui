@@ -40,6 +40,13 @@ export type TFormRuleTemplateMissingFieldDetail = {
   missingField: string;
 };
 
+export type TFormRuleTemplateWarningClearedDetail = {
+  ruleId?: string;
+  field: string;
+  template: string;
+  previousMissingField: string;
+};
+
 type TFormDynamicRuntimeOptions = {
   getFieldConfigs(): TFieldConfig[];
   getRules(): Array<{
@@ -158,7 +165,26 @@ export class FormDynamicRuntime {
     });
 
     if (!hasMissingField) {
-      delete this.lastTemplateWarnings[templateWarningKey];
+      const previousWarningSignature = this.lastTemplateWarnings[templateWarningKey];
+      if (previousWarningSignature) {
+        delete this.lastTemplateWarnings[templateWarningKey];
+        const separatorIndex = previousWarningSignature.indexOf(":");
+        const previousMissingField = separatorIndex >= 0
+          ? previousWarningSignature.slice(separatorIndex + 1)
+          : previousWarningSignature;
+        const context = this.options.getEventContext();
+        this.options.emitEvent("form-ui:rule-template-warning-cleared", {
+          values: this.options.getFormValues(),
+          formConfig: context.formConfig,
+          submit: context.submit,
+          result: {
+            ruleId,
+            field: targetField || "",
+            template,
+            previousMissingField,
+          } satisfies TFormRuleTemplateWarningClearedDetail,
+        });
+      }
     }
 
     return renderedValue;

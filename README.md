@@ -517,6 +517,7 @@ Extra event:
 - `form-ui:options-loaded`
 - `form-ui:rule-applied`
 - `form-ui:rule-template-missing-field`
+- `form-ui:rule-template-warning-cleared`
 
 You can also define basic rules at the form level:
 
@@ -686,6 +687,7 @@ Core events emitted by `<form-ui>`:
 - `form-ui:options-loaded`
 - `form-ui:rule-applied`
 - `form-ui:rule-template-missing-field`
+- `form-ui:rule-template-warning-cleared`
 - `form-ui:draft-saved`
 - `form-ui:draft-restored`
 - `form-ui:draft-cleared`

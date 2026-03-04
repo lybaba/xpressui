@@ -7,11 +7,13 @@
     <link rel="stylesheet" href="../index.css" />
     <style>
       body { margin: 0; font-family: system-ui, sans-serif; background: #f8fafc; color: #0f172a; }
-      main { max-width: 1080px; margin: 0 auto; padding: 32px 20px 60px; }
+      main { max-width: 1440px; margin: 0 auto; padding: 32px 20px 60px; }
       h1 { margin: 0 0 8px; }
       p { color: #475569; }
-      .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; margin-top: 24px; align-items: start; }
-      .shell, .preview { padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; }
+      .layout { display: grid; grid-template-columns: 400px minmax(0, 1fr) 320px; gap: 20px; margin-top: 24px; align-items: start; }
+      .code, .shell, .preview { padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; }
+      .code h2 { margin: 0 0 12px; font-size: 1rem; }
+      .code pre { margin: 0; padding: 12px; overflow: auto; border-radius: 12px; background: #0f172a; color: #e2e8f0; font-size: 12px; line-height: 1.45; }
       .preview h2 { margin: 0 0 12px; font-size: 1rem; }
       .preview small { display: block; margin-bottom: 12px; color: #64748b; }
       .preview pre {
@@ -38,6 +40,48 @@
         et un résumé final natif sur la dernière étape.
       </p>
       <div class="layout">
+        <aside class="code">
+          <h2>Code</h2>
+          <pre><code>import { mountFormUI } from "../dist/xpressui.mjs";
+
+const app = document.getElementById("app");
+
+const form = mountFormUI(app, {
+  version: 1,
+  id: "multi_step_review_demo",
+  uid: "multi_step_review_demo_uid",
+  type: "multistepform",
+  name: "multi-step-review-demo",
+  title: "Project Intake Wizard",
+  stepLabels: {
+    previous: "Back",
+    next: "Continue",
+  },
+  stepSections: [
+    { type: "section", name: "contact_step", label: "Contact" },
+    { type: "section", name: "project_step", label: "Project" },
+    { type: "section", name: "review_step", label: "Review", stepSummary: true },
+  ],
+  sections: {
+    custom: [
+      { type: "section", name: "contact_step", label: "Contact" },
+      { type: "section", name: "project_step", label: "Project" },
+      { type: "section", name: "review_step", label: "Review", stepSummary: true },
+    ],
+    contact_step: [
+      { type: "text", name: "full_name", label: "Full Name", required: true },
+      { type: "email", name: "email", label: "Work Email", required: true },
+    ],
+    project_step: [
+      { type: "text", name: "project_name", label: "Project Name", required: true },
+      { type: "textarea", name: "notes", label: "Scope Notes" },
+    ],
+    review_step: [
+      { type: "output", name: "final_hint", label: "Final Review" },
+    ],
+  },
+});</code></pre>
+        </aside>
         <div class="shell" id="app"></div>
         <aside class="preview" id="preview"></aside>
       </div>

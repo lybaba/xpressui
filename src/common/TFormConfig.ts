@@ -73,6 +73,8 @@ export type TFormStorageConfig = {
     adapter?: 'local-storage' | 'indexeddb';
     key?: string;
     autoSaveMs?: number;
+    resumeEndpoint?: string;
+    resumeTokenTtlDays?: number;
     encryptionKey?: string;
     retentionDays?: number;
     retentionDraftDays?: number;

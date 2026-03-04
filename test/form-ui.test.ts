@@ -5691,6 +5691,164 @@ describe('FormUI', () => {
     );
   });
 
+  it('creates and restores local resume tokens through FormUI', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'resume-form',
+      title: 'Resume Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-resume-form',
+        autoSaveMs: 0,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#email') as HTMLInputElement;
+    const onResumeRestored = vi.fn();
+
+    element.addEventListener('form-ui:resume-token-restored', (event) => {
+      onResumeRestored((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    input.value = 'resume@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    const token = element.createResumeToken();
+    expect(typeof token).toBe('string');
+
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    const restored = element.restoreFromResumeToken(token as string);
+
+    expect(restored).toEqual({ email: 'resume@example.com' });
+    expect((element.querySelector('#email') as HTMLInputElement).value).toBe('resume@example.com');
+    expect(onResumeRestored).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: { email: 'resume@example.com' },
+        result: expect.objectContaining({
+          token,
+        }),
+      }),
+    );
+  });
+
+  it('creates and restores local resume tokens through the headless runtime', () => {
+    let values: Record<string, any> = { email: 'runtime-resume@example.com' };
+    const runtime = new FormRuntime(createFormConfig({
+      name: 'runtime-resume-form',
+      title: 'Runtime Resume Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-runtime-resume',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }), {
+      getValues: () => values,
+    });
+
+    const token = runtime.createResumeToken();
+    expect(typeof token).toBe('string');
+
+    values = {};
+    const restored = runtime.restoreFromResumeToken(token as string);
+
+    expect(restored).toEqual({ email: 'runtime-resume@example.com' });
+  });
+
+  it('can list and delete local resume tokens, including through the admin helper', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'resume-admin-form',
+      title: 'Resume Admin Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-resume-admin',
+        resumeEndpoint: '/api/resume',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#email') as HTMLInputElement;
+
+    input.value = 'admin-resume@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    const token = element.createResumeToken() as string;
+    expect(element.listResumeTokens()).toEqual([
+      expect.objectContaining({
+        token,
+        resumeEndpoint: '/api/resume',
+      }),
+    ]);
+
+    const admin = createLocalFormAdmin(element.formConfig!);
+    expect(admin.listResumeTokens()).toEqual([
+      expect.objectContaining({
+        token,
+        resumeEndpoint: '/api/resume',
+      }),
+    ]);
+    expect(admin.deleteResumeToken(token)).toBe(true);
+    expect(element.listResumeTokens()).toEqual([]);
+  });
+
+  it('expires resume tokens when resumeTokenTtlDays is configured', () => {
+    const runtime = new FormRuntime(createFormConfig({
+      name: 'resume-ttl-form',
+      title: 'Resume TTL Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-resume-ttl',
+        resumeTokenTtlDays: 1,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }), {
+      getValues: () => ({ email: 'ttl@example.com' }),
+    });
+
+    const token = runtime.createResumeToken() as string;
+    const storageKey = `xpressui:resume:resume-ttl-form:${token}`;
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        version: 1,
+        savedAt: Date.now() - (2 * 24 * 60 * 60 * 1000),
+        snapshot: {
+          draft: { email: 'expired@example.com' },
+          queue: [],
+          deadLetter: [],
+        },
+      }),
+    );
+
+    expect(runtime.listResumeTokens()).toEqual([]);
+    expect(runtime.restoreFromResumeToken(token)).toBeNull();
+    expect(window.localStorage.getItem(storageKey)).toBeNull();
+  });
+
   it('queues submissions locally when the network fails', async () => {
     const fetchSpy = vi
       .spyOn(window, 'fetch')

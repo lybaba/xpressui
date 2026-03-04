@@ -1,5 +1,6 @@
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
+import { TResumeTokenInfo } from "./form-persistence";
 import {
   createStorageAdapter,
   TStorageHealth,
@@ -124,6 +125,8 @@ export type TLocalFormAdmin = {
     mode?: TLocalFormAdminImportMode,
   ): TLocalFormAdminSnapshot;
   getStorageHealth(): TStorageHealth;
+  listResumeTokens(): TResumeTokenInfo[];
+  deleteResumeToken(token: string): boolean;
   listQueue(query?: TLocalQueueQuery): TQueuedSubmission[];
   listDeadLetter(query?: TLocalQueueQuery): TQueuedSubmission[];
   clearDraft(): void;
@@ -143,6 +146,56 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
   const publicConfig = validatePublicFormConfig(formConfig as unknown as Record<string, any>);
   const storageAdapter: TFormStorageAdapter | null = createStorageAdapter(publicConfig);
   const fieldMap = getFieldMap(publicConfig);
+  const resumePrefix = `xpressui:resume:${publicConfig.name}:`;
+
+  const getResumeTokenTtlMs = (): number | null =>
+    typeof publicConfig.storage?.resumeTokenTtlDays === "number" && publicConfig.storage.resumeTokenTtlDays > 0
+      ? publicConfig.storage.resumeTokenTtlDays * 24 * 60 * 60 * 1000
+      : null;
+
+  const listResumeTokens = (): TResumeTokenInfo[] => {
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    const ttlMs = getResumeTokenTtlMs();
+    const tokens: TResumeTokenInfo[] = [];
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index);
+      if (!key || !key.startsWith(resumePrefix)) {
+        continue;
+      }
+
+      const raw = window.localStorage.getItem(key);
+      if (!raw) {
+        window.localStorage.removeItem(key);
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(raw) as { savedAt?: number; resumeEndpoint?: string };
+        const savedAt = typeof parsed.savedAt === "number" ? parsed.savedAt : 0;
+        const expired = Boolean(ttlMs && savedAt && Date.now() - savedAt > ttlMs);
+        if (expired) {
+          window.localStorage.removeItem(key);
+          continue;
+        }
+        tokens.push({
+          token: key.slice(resumePrefix.length),
+          savedAt,
+          expired: false,
+          resumeEndpoint:
+            typeof parsed.resumeEndpoint === "string"
+              ? parsed.resumeEndpoint
+              : publicConfig.storage?.resumeEndpoint,
+        });
+      } catch {
+        window.localStorage.removeItem(key);
+      }
+    }
+
+    return tokens.sort((left, right) => right.savedAt - left.savedAt);
+  };
 
   const getSnapshot = (): TLocalFormAdminSnapshot => ({
     draft: storageAdapter?.loadDraft() || null,
@@ -237,6 +290,20 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
           },
         }
       );
+    },
+    listResumeTokens,
+    deleteResumeToken(token) {
+      if (typeof window === "undefined") {
+        return false;
+      }
+
+      const key = `${resumePrefix}${token}`;
+      if (!window.localStorage.getItem(key)) {
+        return false;
+      }
+
+      window.localStorage.removeItem(key);
+      return true;
     },
     listQueue(query) {
       return applyQuery(storageAdapter?.loadQueue() || [], query);

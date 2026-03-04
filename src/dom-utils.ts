@@ -96,6 +96,8 @@ export const ATTR_STORAGE_MODE = "storageMode"
 export const ATTR_STORAGE_ADAPTER = "storageAdapter"
 export const ATTR_STORAGE_KEY = "storageKey"
 export const ATTR_STORAGE_AUTOSAVE_MS = "storageAutoSaveMs"
+export const ATTR_STORAGE_RESUME_ENDPOINT = "storageResumeEndpoint"
+export const ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS = "storageResumeTokenTtlDays"
 export const ATTR_STORAGE_ENCRYPTION_KEY = "storageEncryptionKey"
 export const ATTR_STORAGE_RETENTION_DAYS = "storageRetentionDays"
 export const ATTR_STORAGE_RETENTION_DRAFT_DAYS = "storageRetentionDraftDays"
@@ -195,6 +197,8 @@ export const HTML_ATTR_STORAGE_MODE = `${HTML_ATTR_PREFIX}storage-mode`
 export const HTML_ATTR_STORAGE_ADAPTER = `${HTML_ATTR_PREFIX}storage-adapter`
 export const HTML_ATTR_STORAGE_KEY = `${HTML_ATTR_PREFIX}storage-key`
 export const HTML_ATTR_STORAGE_AUTOSAVE_MS = `${HTML_ATTR_PREFIX}storage-autosave-ms`
+export const HTML_ATTR_STORAGE_RESUME_ENDPOINT = `${HTML_ATTR_PREFIX}storage-resume-endpoint`
+export const HTML_ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS = `${HTML_ATTR_PREFIX}storage-resume-token-ttl-days`
 export const HTML_ATTR_STORAGE_ENCRYPTION_KEY = `${HTML_ATTR_PREFIX}storage-encryption-key`
 export const HTML_ATTR_STORAGE_RETENTION_DAYS = `${HTML_ATTR_PREFIX}storage-retention-days`
 export const HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS = `${HTML_ATTR_PREFIX}storage-retention-draft-days`
@@ -294,6 +298,8 @@ export const ATTR_MAP = {
     [HTML_ATTR_STORAGE_ADAPTER]: ATTR_STORAGE_ADAPTER,
     [HTML_ATTR_STORAGE_KEY]: ATTR_STORAGE_KEY,
     [HTML_ATTR_STORAGE_AUTOSAVE_MS]: ATTR_STORAGE_AUTOSAVE_MS,
+    [HTML_ATTR_STORAGE_RESUME_ENDPOINT]: ATTR_STORAGE_RESUME_ENDPOINT,
+    [HTML_ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS]: ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS,
     [HTML_ATTR_STORAGE_ENCRYPTION_KEY]: ATTR_STORAGE_ENCRYPTION_KEY,
     [HTML_ATTR_STORAGE_RETENTION_DAYS]: ATTR_STORAGE_RETENTION_DAYS,
     [HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS]: ATTR_STORAGE_RETENTION_DRAFT_DAYS,
@@ -430,6 +436,10 @@ export default function getFormConfig(node: Element): TFormConfig {
             autoSaveMs: (formConfig as any).storageAutoSaveMs
                 ? Number((formConfig as any).storageAutoSaveMs)
                 : undefined,
+            resumeEndpoint: (formConfig as any).storageResumeEndpoint,
+            resumeTokenTtlDays: (formConfig as any).storageResumeTokenTtlDays
+                ? Number((formConfig as any).storageResumeTokenTtlDays)
+                : undefined,
             encryptionKey: (formConfig as any).storageEncryptionKey,
             retentionDays: (formConfig as any).storageRetentionDays
                 ? Number((formConfig as any).storageRetentionDays)
@@ -448,6 +458,8 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).storageAdapter;
         delete (formConfig as any).storageKey;
         delete (formConfig as any).storageAutoSaveMs;
+        delete (formConfig as any).storageResumeEndpoint;
+        delete (formConfig as any).storageResumeTokenTtlDays;
         delete (formConfig as any).storageEncryptionKey;
         delete (formConfig as any).storageRetentionDays;
         delete (formConfig as any).storageRetentionDraftDays;

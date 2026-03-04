@@ -6,6 +6,7 @@ import { FormUploadRuntime } from "./form-upload";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
+  TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
 } from "./form-persistence";
@@ -63,6 +64,10 @@ export type TFormRuntimePublicApi = Pick<
   | "getQueueState"
   | "getStorageSnapshot"
   | "getStorageHealth"
+  | "createResumeToken"
+  | "listResumeTokens"
+  | "deleteResumeToken"
+  | "restoreFromResumeToken"
   | "clearDeadLetterQueue"
   | "requeueDeadLetterEntry"
   | "replayDeadLetterEntry"
@@ -230,6 +235,22 @@ export class FormRuntime {
 
   getStorageHealth(): TFormStorageHealth {
     return this.persistence.getStorageHealth();
+  }
+
+  createResumeToken(): string | null {
+    return this.persistence.createResumeToken();
+  }
+
+  listResumeTokens(): TResumeTokenInfo[] {
+    return this.persistence.listResumeTokens();
+  }
+
+  deleteResumeToken(token: string): boolean {
+    return this.persistence.deleteResumeToken(token);
+  }
+
+  restoreFromResumeToken(token: string): Record<string, any> | null {
+    return this.persistence.restoreFromResumeToken(token);
   }
 
   clearDeadLetterQueue(): void {

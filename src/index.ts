@@ -16,6 +16,7 @@ import type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
+  TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
 } from "./common/form-persistence";
@@ -72,6 +73,7 @@ export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 export type { TFormUploadState } from "./common/form-upload";
 export type {
   TFormQueueState,
+  TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
 } from "./common/form-persistence";
@@ -1601,6 +1603,33 @@ export class FormUI extends HTMLElement {
 
   getStorageHealth = (): TFormStorageHealth => {
     return this.persistence.getStorageHealth();
+  }
+
+  createResumeToken = (): string | null => {
+    return this.persistence.createResumeToken();
+  }
+
+  listResumeTokens = (): TResumeTokenInfo[] => {
+    return this.persistence.listResumeTokens();
+  }
+
+  deleteResumeToken = (token: string): boolean => {
+    return this.persistence.deleteResumeToken(token);
+  }
+
+  restoreFromResumeToken = (token: string): Record<string, any> | null => {
+    const restoredValues = this.persistence.restoreFromResumeToken(token);
+    if (!restoredValues || !this.form) {
+      return restoredValues;
+    }
+
+    Object.entries(restoredValues).forEach(([fieldName, fieldValue]) => {
+      this.form?.change(fieldName, fieldValue);
+    });
+    this.persistence.emitDraftRestored(restoredValues);
+    this.updateConditionalFields();
+    void this.refreshRemoteOptions();
+    return restoredValues;
   }
 
   clearDeadLetterQueue = () => {

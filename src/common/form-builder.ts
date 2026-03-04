@@ -336,6 +336,12 @@ export function createTemplateMarkup(
         config.storage.autoSaveMs !== undefined
           ? `data-storage-autosave-ms="${escapeHtml(String(config.storage.autoSaveMs))}"`
           : '',
+        config.storage.resumeEndpoint
+          ? `data-storage-resume-endpoint="${escapeHtml(config.storage.resumeEndpoint)}"`
+          : '',
+        config.storage.resumeTokenTtlDays !== undefined
+          ? `data-storage-resume-token-ttl-days="${escapeHtml(String(config.storage.resumeTokenTtlDays))}"`
+          : '',
         config.storage.encryptionKey
           ? `data-storage-encryption-key="${escapeHtml(config.storage.encryptionKey)}"`
           : '',

@@ -1193,6 +1193,8 @@ Current storage support:
 - `mode: 'draft-and-queue'`
 - `adapter: 'local-storage'`
 - `adapter: 'indexeddb'`
+- `resumeEndpoint`
+- `resumeTokenTtlDays`
 - `encryptionKey`
 - `retentionDays`
 - `retentionDraftDays`
@@ -1231,6 +1233,10 @@ Draft events:
 - `form-ui:draft-restored`
 - `form-ui:draft-cleared`
 - `form-ui:storage-migrated`
+- `form-ui:resume-token-created`
+- `form-ui:resume-token-restored`
+- `form-ui:resume-token-deleted`
+- `form-ui:resume-token-expired`
 
 Queue events:
 - `form-ui:queued`
@@ -1248,13 +1254,29 @@ Runtime inspection helpers:
 - `form.getQueueState()`
 - `form.getStorageSnapshot()`
 - `form.getStorageHealth()`
+- `form.createResumeToken()`
+- `form.listResumeTokens()`
+- `form.deleteResumeToken(token)`
+- `form.restoreFromResumeToken(token)`
 - `form.clearDeadLetterQueue()`
 - `form.requeueDeadLetterEntry(entryId)`
 - `form.replayDeadLetterEntry(entryId)`
 
+`createResumeToken()` stores a local resume snapshot and returns a token scoped
+to the current form name. `restoreFromResumeToken(token)` reloads that snapshot
+back into the form draft state and restores field values in `FormUI`.
+`listResumeTokens()` returns the local token inventory for the current form, and
+`deleteResumeToken(token)` removes one.
+
+If `resumeTokenTtlDays` is set, expired resume tokens are pruned on listing and
+restoring. `resumeEndpoint` is stored as metadata on each token so the same
+config can later evolve toward a backend-based cross-device resume flow.
+
 Standalone local admin helper:
 - `createLocalFormAdmin(formConfig)`
 - `admin.getStorageHealth()`
+- `admin.listResumeTokens()`
+- `admin.deleteResumeToken(token)`
 
 It can inspect and manage local state without a mounted `FormUI` instance:
 - `getSnapshot()`

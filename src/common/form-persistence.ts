@@ -1,7 +1,9 @@
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
 import { isFileFieldType } from "./field";
+import { generateRuntimeId } from "./id";
 import {
   createStorageAdapter,
+  getSerializableStorageValues,
   getRestorableStorageValues,
   TStorageHealth,
   TStorageHydrationResult,
@@ -26,6 +28,20 @@ export type TFormStorageSnapshot = {
 export type TFormStorageHealth = TStorageHealth & {
   queueDisabledReason?: string;
   queueEnabled: boolean;
+};
+
+export type TResumeTokenInfo = {
+  token: string;
+  savedAt: number;
+  expired: boolean;
+  resumeEndpoint?: string;
+};
+
+type TResumeTokenState = {
+  version: 1;
+  savedAt: number;
+  snapshot: TFormStorageSnapshot;
+  resumeEndpoint?: string;
 };
 
 type TFormPersistenceRuntimeOptions = {
@@ -106,6 +122,75 @@ export class FormPersistenceRuntime {
 
   getDraftAutoSaveMs(): number {
     return this.options.getFormConfig()?.storage?.autoSaveMs ?? 300;
+  }
+
+  getResumeStorageKey(token: string): string | null {
+    const formName = this.options.getFormConfig()?.name;
+    if (!formName) {
+      return null;
+    }
+
+    return `xpressui:resume:${formName}:${token}`;
+  }
+
+  getResumeStoragePrefix(): string | null {
+    const formName = this.options.getFormConfig()?.name;
+    if (!formName) {
+      return null;
+    }
+
+    return `xpressui:resume:${formName}:`;
+  }
+
+  getResumeTokenTtlMs(): number | null {
+    const retentionDays = this.options.getFormConfig()?.storage?.resumeTokenTtlDays;
+    return typeof retentionDays === "number" && retentionDays > 0
+      ? retentionDays * 24 * 60 * 60 * 1000
+      : null;
+  }
+
+  isResumeTokenExpired(savedAt?: number): boolean {
+    const ttlMs = this.getResumeTokenTtlMs();
+    if (!ttlMs || typeof savedAt !== "number") {
+      return false;
+    }
+
+    return Date.now() - savedAt > ttlMs;
+  }
+
+  getResumeEndpoint(): string | undefined {
+    return this.options.getFormConfig()?.storage?.resumeEndpoint;
+  }
+
+  parseResumeToken(token: string, raw: string | null): (TResumeTokenInfo & {
+    snapshot: TFormStorageSnapshot | null;
+  }) | null {
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Partial<TResumeTokenState>;
+      const snapshot =
+        parsed?.snapshot && typeof parsed.snapshot === "object"
+          ? parsed.snapshot
+          : null;
+      const savedAt = typeof parsed?.savedAt === "number" ? parsed.savedAt : 0;
+      const expired = this.isResumeTokenExpired(savedAt);
+
+      return {
+        token,
+        savedAt,
+        expired,
+        resumeEndpoint:
+          typeof parsed?.resumeEndpoint === "string"
+            ? parsed.resumeEndpoint
+            : this.getResumeEndpoint(),
+        snapshot,
+      };
+    } catch {
+      return null;
+    }
   }
 
   getRetryDelayMs(attempts: number): number {
@@ -254,6 +339,183 @@ export class FormPersistenceRuntime {
       queue: this.storageAdapter?.loadQueue() || [],
       deadLetter: this.storageAdapter?.loadDeadLetterQueue() || [],
     };
+  }
+
+  createResumeToken(): string | null {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const token = generateRuntimeId();
+    const key = this.getResumeStorageKey(token);
+    if (!key) {
+      return null;
+    }
+
+    const currentValues = this.options.getValues();
+    const storageSnapshot = this.storageAdapter ? this.getStorageSnapshot() : null;
+    const snapshot = storageSnapshot
+      ? {
+          ...storageSnapshot,
+          draft:
+            storageSnapshot.draft ||
+            (Object.keys(currentValues).length
+              ? getSerializableStorageValues(currentValues)
+              : null),
+        }
+      : {
+          draft: Object.keys(currentValues).length
+            ? getSerializableStorageValues(currentValues)
+            : null,
+          queue: [],
+          deadLetter: [],
+        };
+
+    const state: TResumeTokenState = {
+      version: 1,
+      savedAt: Date.now(),
+      snapshot,
+      resumeEndpoint: this.getResumeEndpoint(),
+    };
+
+    try {
+      window.localStorage.setItem(key, JSON.stringify(state));
+      this.options.emitEvent(
+        "form-ui:resume-token-created",
+        this.createEventDetail(currentValues, {
+          token,
+          savedAt: state.savedAt,
+          resumeEndpoint: state.resumeEndpoint,
+        }),
+      );
+      return token;
+    } catch {
+      return null;
+    }
+  }
+
+  restoreFromResumeToken(token: string): Record<string, any> | null {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const key = this.getResumeStorageKey(token);
+    if (!key) {
+      return null;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) {
+        return null;
+      }
+
+      const parsed = this.parseResumeToken(token, raw);
+      if (!parsed?.snapshot) {
+        return null;
+      }
+      if (parsed.expired) {
+        this.deleteResumeToken(token);
+        this.options.emitEvent(
+          "form-ui:resume-token-expired",
+          this.createEventDetail({}, {
+            token,
+            savedAt: parsed.savedAt,
+            resumeEndpoint: parsed.resumeEndpoint,
+          }),
+        );
+        return null;
+      }
+      const snapshot = parsed.snapshot;
+
+      if (this.storageAdapter) {
+        if (snapshot.draft) {
+          this.storageAdapter.saveDraft(snapshot.draft);
+        } else {
+          this.storageAdapter.clearDraft();
+        }
+        this.storageAdapter.saveQueue(Array.isArray(snapshot.queue) ? snapshot.queue : []);
+        this.storageAdapter.saveDeadLetterQueue(
+          Array.isArray(snapshot.deadLetter) ? snapshot.deadLetter : [],
+        );
+      }
+
+      const restoredDraft = getRestorableStorageValues(
+        snapshot.draft && typeof snapshot.draft === "object" ? snapshot.draft : null,
+      );
+      this.options.emitEvent(
+        "form-ui:resume-token-restored",
+        this.createEventDetail(restoredDraft, {
+          token,
+          snapshot,
+          savedAt: parsed.savedAt,
+          resumeEndpoint: parsed.resumeEndpoint,
+        }),
+      );
+      return restoredDraft;
+    } catch {
+      return null;
+    }
+  }
+
+  listResumeTokens(): TResumeTokenInfo[] {
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    const prefix = this.getResumeStoragePrefix();
+    if (!prefix) {
+      return [];
+    }
+
+    const tokens: TResumeTokenInfo[] = [];
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index);
+      if (!key || !key.startsWith(prefix)) {
+        continue;
+      }
+
+      const token = key.slice(prefix.length);
+      const parsed = this.parseResumeToken(token, window.localStorage.getItem(key));
+      if (!parsed) {
+        window.localStorage.removeItem(key);
+        continue;
+      }
+
+      if (parsed.expired) {
+        window.localStorage.removeItem(key);
+        continue;
+      }
+
+      tokens.push({
+        token: parsed.token,
+        savedAt: parsed.savedAt,
+        expired: false,
+        resumeEndpoint: parsed.resumeEndpoint,
+      });
+    }
+
+    return tokens.sort((left, right) => right.savedAt - left.savedAt);
+  }
+
+  deleteResumeToken(token: string): boolean {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    const key = this.getResumeStorageKey(token);
+    if (!key || !window.localStorage.getItem(key)) {
+      return false;
+    }
+
+    window.localStorage.removeItem(key);
+    this.options.emitEvent(
+      "form-ui:resume-token-deleted",
+      this.createEventDetail(this.options.getValues(), {
+        token,
+      }),
+    );
+    return true;
   }
 
   getStorageHealth(): TFormStorageHealth {

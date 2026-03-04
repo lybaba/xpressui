@@ -1102,6 +1102,265 @@ describe('FormUI', () => {
     revokeObjectUrlSpy.mockRestore();
   });
 
+  it('renders native capture attributes for file and camera-photo fields', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'camera-fields-form',
+      title: 'Camera Fields Form',
+      fields: [
+        {
+          name: 'identity_photo',
+          label: 'Identity Photo',
+          type: 'file',
+          accept: 'image/*',
+          capture: 'user',
+        },
+        {
+          name: 'document_scan',
+          label: 'Document Scan',
+          type: 'camera-photo',
+        },
+      ],
+    }) as FormUI;
+    const fileField = element.querySelector('#identity_photo') as HTMLInputElement;
+    const cameraField = element.querySelector('#document_scan') as HTMLInputElement;
+
+    expect(fileField.getAttribute('capture')).toBe('user');
+    expect(fileField.getAttribute('accept')).toBe('image/*');
+    expect(cameraField.type).toBe('file');
+    expect(cameraField.getAttribute('accept')).toBe('image/*');
+    expect(cameraField.getAttribute('capture')).toBe('environment');
+  });
+
+  it('can decode a qr-scan field into a string value', async () => {
+    const originalBarcodeDetector = (globalThis as any).BarcodeDetector;
+    const onQrScanSuccess = vi.fn();
+
+    class MockBarcodeDetector {
+      detect = vi.fn().mockResolvedValue([{ rawValue: 'ID-QR-123' }]);
+    }
+
+    (globalThis as any).BarcodeDetector = MockBarcodeDetector;
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'qr-scan-form',
+      title: 'QR Scan Form',
+      fields: [
+        {
+          name: 'scan_code',
+          label: 'Scan Code',
+          type: 'qr-scan',
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#scan_code') as HTMLInputElement;
+    const imageFile = new File(['image'], 'qr.png', { type: 'image/png' });
+
+    element.addEventListener('form-ui:qr-scan-success', (event) => {
+      onQrScanSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [imageFile],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).scan_code).toBe('ID-QR-123');
+    expect(onQrScanSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          field: 'scan_code',
+          code: 'ID-QR-123',
+        },
+      }),
+    );
+    expect((element.querySelector('#scan_code_selection') as HTMLElement).textContent).toContain(
+      'Scanned code: ID-QR-123',
+    );
+
+    (globalThis as any).BarcodeDetector = originalBarcodeDetector;
+  });
+
+  it('emits a qr-scan error when barcode detection is unavailable', async () => {
+    const originalBarcodeDetector = (globalThis as any).BarcodeDetector;
+    const onQrScanError = vi.fn();
+
+    (globalThis as any).BarcodeDetector = undefined;
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'qr-scan-error-form',
+      title: 'QR Scan Error Form',
+      fields: [
+        {
+          name: 'scan_code',
+          label: 'Scan Code',
+          type: 'qr-scan',
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#scan_code') as HTMLInputElement;
+    const imageFile = new File(['image'], 'qr.png', { type: 'image/png' });
+
+    element.addEventListener('form-ui:qr-scan-error', (event) => {
+      onQrScanError((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [imageFile],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).scan_code).toBeUndefined();
+    expect(onQrScanError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          field: 'scan_code',
+          reason: 'barcode-detector-unavailable',
+        },
+      }),
+    );
+
+    (globalThis as any).BarcodeDetector = originalBarcodeDetector;
+  });
+
+  it('supports live camera scanning for qr-scan fields', async () => {
+    const originalBarcodeDetector = (globalThis as any).BarcodeDetector;
+    const originalMediaDevices = navigator.mediaDevices;
+    const playSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockResolvedValue(undefined as unknown as void);
+    const onQrScanSuccess = vi.fn();
+    const stopTrack = vi.fn();
+
+    class MockBarcodeDetector {
+      detect = vi.fn().mockResolvedValue([{ rawValue: 'LIVE-QR-789' }]);
+    }
+
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: vi.fn().mockResolvedValue({
+          getTracks: () => [{ stop: stopTrack }],
+        }),
+      },
+    });
+    (globalThis as any).BarcodeDetector = MockBarcodeDetector;
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'qr-live-form',
+      title: 'QR Live Form',
+      fields: [
+        {
+          name: 'scan_code',
+          label: 'Scan Code',
+          type: 'qr-scan',
+        },
+      ],
+    }) as FormUI;
+
+    element.addEventListener('form-ui:qr-scan-success', (event) => {
+      onQrScanSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    const startButton = element.querySelector('[data-qr-action="start"]') as HTMLButtonElement;
+    startButton.click();
+    await flushAsyncWork();
+
+    const scanButton = element.querySelector('[data-qr-action="scan"]') as HTMLButtonElement;
+    expect(scanButton).not.toBeNull();
+
+    scanButton.click();
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).scan_code).toBe('LIVE-QR-789');
+    expect(onQrScanSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          field: 'scan_code',
+          code: 'LIVE-QR-789',
+          source: 'camera',
+        },
+      }),
+    );
+    expect(stopTrack).toHaveBeenCalled();
+
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: originalMediaDevices,
+    });
+    (globalThis as any).BarcodeDetector = originalBarcodeDetector;
+    playSpy.mockRestore();
+  });
+
+  it('supports document-scan front and back slots with framed previews', async () => {
+    const createObjectUrlSpy = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockImplementation((file: Blob) => `blob:${(file as File).name}`);
+    const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'document-scan-form',
+      title: 'Document Scan Form',
+      fields: [
+        {
+          name: 'identity_card',
+          label: 'Identity Card',
+          type: 'document-scan',
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#identity_card') as HTMLInputElement;
+    const frontFile = new File(['front'], 'front.png', { type: 'image/png' });
+    const backFile = new File(['back'], 'back.png', { type: 'image/png' });
+
+    const buttons = Array.from(
+      element.querySelectorAll('#identity_card_selection [data-document-scan-slot]'),
+    ) as HTMLButtonElement[];
+    expect(buttons).toHaveLength(2);
+
+    buttons[1].click();
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [backFile],
+    });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    const rerenderedButtons = Array.from(
+      element.querySelectorAll('#identity_card_selection [data-document-scan-slot]'),
+    ) as HTMLButtonElement[];
+    rerenderedButtons[0].click();
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [frontFile],
+    });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).identity_card).toEqual([frontFile, backFile]);
+    expect((element.querySelector('#identity_card_selection') as HTMLElement).textContent).toContain(
+      'Front',
+    );
+    expect((element.querySelector('#identity_card_selection') as HTMLElement).textContent).toContain(
+      'Back',
+    );
+    expect(
+      (element.querySelectorAll('#identity_card_selection img') as NodeListOf<HTMLImageElement>).length,
+    ).toBe(2);
+
+    createObjectUrlSpy.mockRestore();
+    revokeObjectUrlSpy.mockRestore();
+  });
+
   it('emits a dedicated event for file validation errors', () => {
     const container = document.createElement('div');
     const onFileValidationError = vi.fn();

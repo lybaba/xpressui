@@ -4,7 +4,12 @@ import { TValidator } from "./common/Validator";
 import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { FormEngineRuntime } from "./common/form-engine";
-import { isFileLikeValue, UNKNOWN_TYPE } from "./common/field";
+import {
+  DOCUMENT_SCAN_TYPE,
+  isFileLikeValue,
+  QR_SCAN_TYPE,
+  UNKNOWN_TYPE,
+} from "./common/field";
 import { FormDynamicRuntime } from "./common/form-dynamic";
 import type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 import {
@@ -79,6 +84,15 @@ export type TFormUISubmitDetail = {
   error?: unknown;
 };
 
+type TBarcodeDetectorResult = {
+  rawValue?: string;
+};
+
+type TQrScannerState = {
+  status: "idle" | "starting" | "live" | "error";
+  message?: string;
+};
+
 function hasFileValues(value: any): boolean {
   if (isFileLikeValue(value)) {
     return true;
@@ -108,6 +122,9 @@ export class FormUI extends HTMLElement {
   filePreviewUrls: Record<string, string[]>;
   fileDragActive: Record<string, boolean>;
   fileUploadState: Record<string, TFormUploadState | null>;
+  qrScannerState: Record<string, TQrScannerState>;
+  qrScannerStreams: Record<string, MediaStream | null>;
+  activeDocumentScanSlot: Record<string, number>;
 
   constructor() {
     super();
@@ -120,6 +137,9 @@ export class FormUI extends HTMLElement {
     this.fileUploadState = {};
     this.filePreviewUrls = {};
     this.fileDragActive = {};
+    this.qrScannerState = {};
+    this.qrScannerStreams = {};
+    this.activeDocumentScanSlot = {};
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
       getRules: () => this.formConfig?.rules || [],
@@ -197,6 +217,7 @@ export class FormUI extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.stopAllQrCameras();
     this.clearAllFilePreviewUrls();
     this.persistence.disconnect();
   }
@@ -204,9 +225,314 @@ export class FormUI extends HTMLElement {
   getFileValueList = (value: any) => {
     return Array.isArray(value)
       ? value
-      : value
+      : value && typeof value === "object"
         ? [value]
         : [];
+  }
+
+  isQrScanField = (fieldConfig: TFieldConfig) => {
+    return fieldConfig.type === QR_SCAN_TYPE;
+  }
+
+  isDocumentScanField = (fieldConfig: TFieldConfig) => {
+    return fieldConfig.type === DOCUMENT_SCAN_TYPE;
+  }
+
+  getDocumentScanSlotCount = (fieldConfig: TFieldConfig) => {
+    return fieldConfig.documentScanMode === "single" ? 1 : 2;
+  }
+
+  resolveFileInputValue = async (fieldConfig: TFieldConfig, input: HTMLInputElement) => {
+    const files = input.multiple
+      ? Array.from(input.files || [])
+      : input.files?.[0];
+
+    if (this.isDocumentScanField(fieldConfig)) {
+      const selectedFile = Array.isArray(files) ? files[0] : files;
+      if (!selectedFile) {
+        return undefined;
+      }
+
+      const currentFiles = this.getFileValueList(this.getFieldValue(fieldConfig.name));
+      const slotCount = this.getDocumentScanSlotCount(fieldConfig);
+      const activeSlot = Math.min(
+        Math.max(this.activeDocumentScanSlot[fieldConfig.name] || 0, 0),
+        slotCount - 1,
+      );
+      const nextFiles = Array.from(
+        { length: slotCount },
+        (_, index) => currentFiles[index] instanceof File ? currentFiles[index] : undefined,
+      );
+      nextFiles[activeSlot] = selectedFile;
+      return slotCount === 1 ? nextFiles[0] : nextFiles;
+    }
+
+    if (!this.isQrScanField(fieldConfig)) {
+      return files;
+    }
+
+    const fileList = Array.isArray(files)
+      ? files
+      : files
+        ? [files]
+        : [];
+
+    const fileValidationError = this.engine.validateFileField(fieldConfig.name, files);
+    if (fileValidationError) {
+      this.emitFileValidationErrorEvent(
+        fieldConfig.name,
+        {
+          ...(this.form?.getState().values || {}),
+          [fieldConfig.name]: files,
+        },
+        fileValidationError as TValidationError,
+      );
+      return undefined;
+    }
+
+    if (!fileList.length) {
+      return undefined;
+    }
+
+    const qrValue = await this.decodeQrScanFile(fieldConfig, fileList[0]);
+    if (qrValue !== null) {
+      return qrValue;
+    }
+
+    return undefined;
+  }
+
+  getBarcodeDetector = () => {
+    const barcodeDetector = (globalThis as any).BarcodeDetector;
+    if (!barcodeDetector) {
+      return null;
+    }
+
+    try {
+      return new barcodeDetector({ formats: ["qr_code"] });
+    } catch {
+      try {
+        return new barcodeDetector();
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  assignQrVideoStream = (fieldName: string) => {
+    const video = this.querySelector(`[data-qr-video="${fieldName}"]`) as HTMLVideoElement | null;
+    const stream = this.qrScannerStreams[fieldName];
+    if (!video || !stream) {
+      return;
+    }
+
+    try {
+      (video as any).srcObject = stream;
+    } catch {
+      return;
+    }
+
+    if (typeof video.play === "function") {
+      void video.play().catch(() => undefined);
+    }
+  }
+
+  stopQrCamera = (fieldName: string, rerender: boolean = true) => {
+    const stream = this.qrScannerStreams[fieldName];
+    stream?.getTracks?.().forEach((track) => track.stop());
+    this.qrScannerStreams[fieldName] = null;
+    this.qrScannerState[fieldName] = { status: "idle" };
+    if (rerender) {
+      const fieldConfig = this.engine.getField(fieldName);
+      const selectionElement = this.querySelector(`#${fieldName}_selection`) as HTMLElement | null;
+      if (fieldConfig) {
+        this.renderFileSelection(fieldConfig, this.getFieldValue(fieldName), selectionElement);
+      }
+    }
+  }
+
+  stopAllQrCameras = () => {
+    Object.keys(this.qrScannerStreams).forEach((fieldName) => {
+      this.stopQrCamera(fieldName, false);
+    });
+  }
+
+  startQrCamera = async (fieldConfig: TFieldConfig) => {
+    const mediaDevices = navigator?.mediaDevices;
+    if (!mediaDevices?.getUserMedia) {
+      this.qrScannerState[fieldConfig.name] = {
+        status: "error",
+        message: "Camera is not available in this browser.",
+      };
+      const selectionElement = this.querySelector(`#${fieldConfig.name}_selection`) as HTMLElement | null;
+      this.renderFileSelection(fieldConfig, this.getFieldValue(fieldConfig.name), selectionElement);
+      return;
+    }
+
+    this.qrScannerState[fieldConfig.name] = { status: "starting" };
+    this.renderFileSelection(
+      fieldConfig,
+      this.getFieldValue(fieldConfig.name),
+      this.querySelector(`#${fieldConfig.name}_selection`) as HTMLElement | null,
+    );
+
+    try {
+      const stream = await mediaDevices.getUserMedia({
+        video: {
+          facingMode: fieldConfig.capture || "environment",
+        },
+      });
+      this.qrScannerStreams[fieldConfig.name] = stream;
+      this.qrScannerState[fieldConfig.name] = { status: "live" };
+      const selectionElement = this.querySelector(`#${fieldConfig.name}_selection`) as HTMLElement | null;
+      this.renderFileSelection(fieldConfig, this.getFieldValue(fieldConfig.name), selectionElement);
+    } catch {
+      this.qrScannerState[fieldConfig.name] = {
+        status: "error",
+        message: "Unable to start the camera.",
+      };
+      const selectionElement = this.querySelector(`#${fieldConfig.name}_selection`) as HTMLElement | null;
+      this.renderFileSelection(fieldConfig, this.getFieldValue(fieldConfig.name), selectionElement);
+    }
+  }
+
+  scanQrFromLiveVideo = async (fieldConfig: TFieldConfig) => {
+    const detector = this.getBarcodeDetector();
+    if (!detector || typeof detector.detect !== "function") {
+      this.emitFormEvent("form-ui:qr-scan-error", {
+        values: this.engine.normalizeValues(this.form?.getState().values || {}),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        error: new Error("QR scan is not available in this browser."),
+        result: {
+          field: fieldConfig.name,
+          reason: "barcode-detector-unavailable",
+        },
+      });
+      return;
+    }
+
+    const video = this.querySelector(`[data-qr-video="${fieldConfig.name}"]`) as HTMLVideoElement | null;
+    if (!video) {
+      return;
+    }
+
+    try {
+      const results = await detector.detect(video);
+      const qrResult = (results as TBarcodeDetectorResult[]).find(
+        (entry) => typeof entry?.rawValue === "string" && entry.rawValue.trim().length,
+      );
+      if (!qrResult?.rawValue) {
+        throw new Error("No QR code detected.");
+      }
+
+      this.form?.change(fieldConfig.name, qrResult.rawValue);
+      this.stopQrCamera(fieldConfig.name, false);
+      this.emitFormEvent("form-ui:qr-scan-success", {
+        values: this.engine.normalizeValues({
+          ...(this.form?.getState().values || {}),
+          [fieldConfig.name]: qrResult.rawValue,
+        }),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          field: fieldConfig.name,
+          code: qrResult.rawValue,
+          source: "camera",
+        },
+      });
+      this.scheduleDraftSave();
+      this.updateConditionalFields();
+      void this.refreshRemoteOptions(fieldConfig.name);
+      this.renderFileSelection(
+        fieldConfig,
+        this.getFieldValue(fieldConfig.name),
+        this.querySelector(`#${fieldConfig.name}_selection`) as HTMLElement | null,
+      );
+    } catch (error) {
+      this.emitFormEvent("form-ui:qr-scan-error", {
+        values: this.engine.normalizeValues(this.form?.getState().values || {}),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        error,
+        result: {
+          field: fieldConfig.name,
+          reason: "decode-failed",
+        },
+      });
+    }
+  }
+
+  decodeQrScanFile = async (fieldConfig: TFieldConfig, file: File) => {
+    const detector = this.getBarcodeDetector();
+    if (!detector || typeof detector.detect !== "function") {
+      const error = new Error("QR scan is not available in this browser.");
+      this.emitFormEvent("form-ui:qr-scan-error", {
+        values: this.engine.normalizeValues(this.form?.getState().values || {}),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        error,
+        result: {
+          field: fieldConfig.name,
+          reason: "barcode-detector-unavailable",
+        },
+      });
+      return null;
+    }
+
+    let scanSource: any = file;
+    let imageBitmap: ImageBitmap | null = null;
+
+    if (typeof createImageBitmap === "function") {
+      try {
+        imageBitmap = await createImageBitmap(file);
+        scanSource = imageBitmap;
+      } catch {
+        scanSource = file;
+      }
+    }
+
+    try {
+      const results = await detector.detect(scanSource);
+      const qrResult = (results as TBarcodeDetectorResult[]).find(
+        (entry) => typeof entry?.rawValue === "string" && entry.rawValue.trim().length,
+      );
+      if (!qrResult?.rawValue) {
+        throw new Error("No QR code detected.");
+      }
+
+      this.stopQrCamera(fieldConfig.name, false);
+      this.emitFormEvent("form-ui:qr-scan-success", {
+        values: this.engine.normalizeValues({
+          ...(this.form?.getState().values || {}),
+          [fieldConfig.name]: qrResult.rawValue,
+        }),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          field: fieldConfig.name,
+          code: qrResult.rawValue,
+        },
+      });
+
+      return qrResult.rawValue;
+    } catch (error) {
+      this.emitFormEvent("form-ui:qr-scan-error", {
+        values: this.engine.normalizeValues(this.form?.getState().values || {}),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        error,
+        result: {
+          field: fieldConfig.name,
+          reason: "decode-failed",
+        },
+      });
+      return null;
+    } finally {
+      if (imageBitmap && typeof imageBitmap.close === "function") {
+        imageBitmap.close();
+      }
+    }
   }
 
   clearFilePreviewUrls = (fieldName: string) => {
@@ -228,6 +554,147 @@ export class FormUI extends HTMLElement {
   shouldShowImagePreview = (fieldConfig: TFieldConfig, file: File) => {
     const accept = String(fieldConfig.accept || "").toLowerCase();
     return accept.includes("image/*") && String(file.type || "").startsWith("image/");
+  }
+
+  renderDocumentScanSelection = (
+    fieldConfig: TFieldConfig,
+    selectedFiles: any[],
+    selectionElement: HTMLElement,
+  ) => {
+    const slotCount = this.getDocumentScanSlotCount(fieldConfig);
+    const activeSlot = this.activeDocumentScanSlot[fieldConfig.name] || 0;
+    const controls = document.createElement("div");
+    controls.className = "mb-3 flex flex-wrap gap-2";
+
+    Array.from({ length: slotCount }, (_, index) => index).forEach((slotIndex) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "btn btn-xs btn-outline";
+      button.textContent = slotIndex === 0 ? "Capture Front" : "Capture Back";
+      button.setAttribute("data-document-scan-slot", String(slotIndex));
+      button.classList.toggle("btn-primary", activeSlot === slotIndex);
+      controls.appendChild(button);
+    });
+
+    selectionElement.appendChild(controls);
+
+    const slotGrid = document.createElement("div");
+    slotGrid.className = "grid gap-3 md:grid-cols-2";
+
+    Array.from({ length: slotCount }, (_, index) => index).forEach((slotIndex) => {
+      const file = selectedFiles[slotIndex];
+      const card = document.createElement("div");
+      card.className = "rounded border border-base-300 p-3";
+
+      const title = document.createElement("div");
+      title.className = "mb-2 text-xs font-medium uppercase opacity-70";
+      title.textContent = slotIndex === 0 ? "Front" : "Back";
+      card.appendChild(title);
+
+      const previewFrame = document.createElement("div");
+      previewFrame.className = "flex h-28 w-full items-center justify-center overflow-hidden rounded border border-base-300 bg-base-200";
+      previewFrame.style.aspectRatio = "1.586 / 1";
+
+      if (
+        file instanceof File &&
+        this.shouldShowImagePreview(fieldConfig, file) &&
+        typeof URL !== "undefined" &&
+        typeof URL.createObjectURL === "function"
+      ) {
+        const previewUrl = URL.createObjectURL(file);
+        this.filePreviewUrls[fieldConfig.name] = [
+          ...(this.filePreviewUrls[fieldConfig.name] || []),
+          previewUrl,
+        ];
+        const image = document.createElement("img");
+        image.src = previewUrl;
+        image.alt = file.name;
+        image.className = "h-full w-full object-cover";
+        previewFrame.appendChild(image);
+      } else {
+        const placeholder = document.createElement("div");
+        placeholder.className = "px-2 text-center text-xs opacity-70";
+        placeholder.textContent = file?.name || "No scan yet";
+        previewFrame.appendChild(placeholder);
+      }
+
+      card.appendChild(previewFrame);
+
+      if (file?.name) {
+        const name = document.createElement("div");
+        name.className = "mt-2 text-xs";
+        name.textContent = file.name;
+        card.appendChild(name);
+      }
+
+      slotGrid.appendChild(card);
+    });
+
+    selectionElement.appendChild(slotGrid);
+  }
+
+  renderQrSelection = (fieldConfig: TFieldConfig, value: any, selectionElement: HTMLElement) => {
+    const qrState = this.qrScannerState[fieldConfig.name] || { status: "idle" as const };
+
+    if (typeof value === "string" && value.length) {
+      const result = document.createElement("div");
+      result.className = "text-sm";
+      result.textContent = `Scanned code: ${value}`;
+      selectionElement.appendChild(result);
+    }
+
+    const controls = document.createElement("div");
+    controls.className = "mt-2 flex flex-wrap gap-2";
+
+    const startButton = document.createElement("button");
+    startButton.type = "button";
+    startButton.className = "btn btn-xs btn-outline";
+    startButton.textContent =
+      qrState.status === "starting" ? "Starting..." : qrState.status === "live" ? "Camera Live" : "Start Camera";
+    startButton.setAttribute("data-qr-action", "start");
+    startButton.disabled = qrState.status === "starting" || qrState.status === "live";
+    controls.appendChild(startButton);
+
+    if (qrState.status === "live") {
+      const scanButton = document.createElement("button");
+      scanButton.type = "button";
+      scanButton.className = "btn btn-xs btn-primary";
+      scanButton.textContent = "Scan Now";
+      scanButton.setAttribute("data-qr-action", "scan");
+      controls.appendChild(scanButton);
+
+      const stopButton = document.createElement("button");
+      stopButton.type = "button";
+      stopButton.className = "btn btn-xs btn-ghost";
+      stopButton.textContent = "Stop";
+      stopButton.setAttribute("data-qr-action", "stop");
+      controls.appendChild(stopButton);
+    }
+
+    selectionElement.appendChild(controls);
+
+    if (qrState.message) {
+      const message = document.createElement("div");
+      message.className = "mt-2 text-xs";
+      message.textContent = qrState.message;
+      selectionElement.appendChild(message);
+    }
+
+    if (qrState.status === "live") {
+      const video = document.createElement("video");
+      video.className = "mt-3 h-40 w-full rounded border border-base-300 bg-black object-cover";
+      video.setAttribute("playsinline", "true");
+      video.setAttribute("muted", "true");
+      video.setAttribute("autoplay", "true");
+      video.setAttribute("data-qr-video", fieldConfig.name);
+      selectionElement.appendChild(video);
+      this.assignQrVideoStream(fieldConfig.name);
+    }
+
+    const hint = document.createElement("div");
+    hint.className = "mt-2 text-xs opacity-70";
+    hint.textContent = "You can also upload or capture an image with the file picker.";
+    selectionElement.appendChild(hint);
   }
 
   renderFileSelection = (
@@ -260,7 +727,20 @@ export class FormUI extends HTMLElement {
       selectionElement.appendChild(status);
     }
 
+    if (this.isDocumentScanField(fieldConfig)) {
+      this.renderDocumentScanSelection(fieldConfig, selectedFiles, selectionElement);
+      return;
+    }
+
+    if (this.isQrScanField(fieldConfig)) {
+      this.renderQrSelection(fieldConfig, value, selectionElement);
+      if (!selectedFiles.length) {
+        return;
+      }
+    }
+
     if (!selectedFiles.length) {
+
       const placeholder = document.createElement("div");
       placeholder.className = "text-xs opacity-70";
       placeholder.textContent = "Drop files here or use the file picker.";
@@ -333,7 +813,7 @@ export class FormUI extends HTMLElement {
     this.renderFileSelection(fieldConfig, this.getFieldValue(fieldName), selectionElement);
   }
 
-  applyDroppedFiles = (fieldName: string, files: File[]) => {
+  applyDroppedFiles = async (fieldName: string, files: File[]) => {
     if (!this.form || !files.length) {
       return;
     }
@@ -359,6 +839,33 @@ export class FormUI extends HTMLElement {
         },
         fileValidationError as TValidationError,
       );
+      return;
+    }
+
+    if (this.isQrScanField(fieldConfig)) {
+      const qrValue = files[0]
+        ? await this.decodeQrScanFile(fieldConfig, files[0])
+        : undefined;
+      this.form.change(fieldName, qrValue);
+      this.scheduleDraftSave();
+      this.updateConditionalFields();
+      void this.refreshRemoteOptions(fieldName);
+      return;
+    }
+
+    if (this.isDocumentScanField(fieldConfig)) {
+      const slotCount = this.getDocumentScanSlotCount(fieldConfig);
+      const currentFiles = this.getFileValueList(this.getFieldValue(fieldName));
+      const nextFiles = Array.from(
+        { length: slotCount },
+        (_, index) => currentFiles[index] instanceof File ? currentFiles[index] : undefined,
+      );
+      nextFiles[Math.min(this.activeDocumentScanSlot[fieldName] || 0, slotCount - 1)] = files[0];
+      const nextDocumentValue = slotCount === 1 ? nextFiles[0] : nextFiles;
+      this.form.change(fieldName, nextDocumentValue);
+      this.scheduleDraftSave();
+      this.updateConditionalFields();
+      void this.refreshRemoteOptions(fieldName);
       return;
     }
 
@@ -709,12 +1216,12 @@ export class FormUI extends HTMLElement {
           // first time, register event listeners
           input.addEventListener("blur", () => blur());
           input.addEventListener("input", (event: any) => {
+            if (input instanceof HTMLInputElement && input.type === "file") {
+              return;
+            }
+
             const nextValue =
-              input instanceof HTMLInputElement && input.type === "file"
-                ? input.multiple
-                  ? Array.from((<HTMLInputElement>event.target)?.files || [])
-                  : (<HTMLInputElement>event.target)?.files?.[0]
-              : input.type === "checkbox"
+              input.type === "checkbox"
                 ? (<HTMLInputElement>event.target)?.checked
                 : input instanceof HTMLSelectElement && input.multiple
                   ? Array.from((<HTMLSelectElement>event.target)?.selectedOptions || []).map(
@@ -726,11 +1233,9 @@ export class FormUI extends HTMLElement {
             this.updateConditionalFields();
             void this.refreshRemoteOptions(name);
           });
-          input.addEventListener("change", () => {
+          input.addEventListener("change", async () => {
             if (input instanceof HTMLInputElement && input.type === "file") {
-              const nextValue = input.multiple
-                ? Array.from(input.files || [])
-                : input.files?.[0];
+              const nextValue = await this.resolveFileInputValue(fieldConfig, input);
               change(nextValue);
             }
             this.scheduleDraftSave();
@@ -741,6 +1246,32 @@ export class FormUI extends HTMLElement {
           if (selectionElement) {
             selectionElement.addEventListener("click", (event) => {
               const target = event.target as HTMLElement | null;
+              const qrAction = target?.closest("[data-qr-action]") as HTMLElement | null;
+              if (qrAction) {
+                const action = qrAction.getAttribute("data-qr-action");
+                if (action === "start") {
+                  void this.startQrCamera(fieldConfig);
+                } else if (action === "scan") {
+                  void this.scanQrFromLiveVideo(fieldConfig);
+                } else if (action === "stop") {
+                  this.stopQrCamera(name);
+                }
+                return;
+              }
+
+              const documentScanSlotButton = target?.closest("[data-document-scan-slot]") as HTMLElement | null;
+              if (documentScanSlotButton) {
+                const slotIndex = Number(documentScanSlotButton.getAttribute("data-document-scan-slot"));
+                if (!Number.isNaN(slotIndex)) {
+                  this.activeDocumentScanSlot[name] = slotIndex;
+                  this.renderFileSelection(fieldConfig, this.getFieldValue(name), selectionElement);
+                  if (input instanceof HTMLInputElement && input.type === "file") {
+                    input.click();
+                  }
+                }
+                return;
+              }
+
               const removeButton = target?.closest("[data-remove-file-index]") as HTMLElement | null;
               if (!removeButton) {
                 return;
@@ -772,7 +1303,7 @@ export class FormUI extends HTMLElement {
               event.preventDefault();
               this.setFileDragState(name, false);
               const droppedFiles = Array.from(event.dataTransfer?.files || []);
-              this.applyDroppedFiles(name, droppedFiles);
+              void this.applyDroppedFiles(name, droppedFiles);
             });
           }
           this.registered[name] = true;
@@ -784,7 +1315,11 @@ export class FormUI extends HTMLElement {
           (<HTMLInputElement>input).checked = value;
         } else if (input instanceof HTMLInputElement && input.type === "file") {
           this.renderFileSelection(fieldConfig, value, selectionElement);
-          if (!value || (Array.isArray(value) && !value.length)) {
+          if (
+            !value ||
+            (Array.isArray(value) && !value.length) ||
+            (typeof value === "string" && this.isQrScanField(fieldConfig))
+          ) {
             input.value = "";
           }
         } else if (input instanceof HTMLSelectElement && input.multiple) {

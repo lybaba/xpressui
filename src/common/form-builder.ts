@@ -11,9 +11,12 @@ import TFormConfig, {
 import { createSubmitRequestFromProvider } from './provider-registry';
 import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-schema';
 import {
+  CAMERA_PHOTO_TYPE,
   CHECKBOX_TYPE,
+  DOCUMENT_SCAN_TYPE,
   getHtmlInputType,
   isFileFieldType,
+  QR_SCAN_TYPE,
   SELECT_MULTIPLE_TYPE,
   SELECT_ONE_TYPE,
   TEXTAREA_TYPE,
@@ -58,8 +61,22 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     ? ` accept="${escapeHtml(String(field.accept))}"`
     : field.type === UPLOAD_IMAGE_TYPE
       ? ' accept="image/*"'
+      : field.type === CAMERA_PHOTO_TYPE ||
+          field.type === QR_SCAN_TYPE ||
+          field.type === DOCUMENT_SCAN_TYPE
+        ? ' accept="image/*"'
+      : '';
+  const captureAttr = field.capture
+    ? ` capture="${escapeHtml(String(field.capture))}"`
+    : field.type === CAMERA_PHOTO_TYPE ||
+        field.type === QR_SCAN_TYPE ||
+        field.type === DOCUMENT_SCAN_TYPE
+      ? ' capture="environment"'
       : '';
   const multipleAttr = field.multiple ? ' multiple' : '';
+  const documentScanModeAttr = field.documentScanMode
+    ? ` data-document-scan-mode="${escapeHtml(String(field.documentScanMode))}"`
+    : '';
   const fileDropModeAttr = field.fileDropMode
     ? ` data-file-drop-mode="${escapeHtml(String(field.fileDropMode))}"`
     : '';
@@ -167,7 +184,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${multipleAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
     ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>

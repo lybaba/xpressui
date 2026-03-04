@@ -19,6 +19,9 @@ export const DATETIME_TYPE = 'datetime';
 export const EMAIL_TYPE = 'email';
 export const UPLOAD_FILE_TYPE = 'file';
 export const UPLOAD_IMAGE_TYPE = 'upload-image';
+export const CAMERA_PHOTO_TYPE = 'camera-photo';
+export const QR_SCAN_TYPE = 'qr-scan';
+export const DOCUMENT_SCAN_TYPE = 'document-scan';
 export const IMAGE_TYPE = 'image';
 export const NUMBER_TYPE = 'number';
 export const POSITIVE_INTEGER_TYPE = 'integer';
@@ -162,7 +165,11 @@ export const getIsChoiceField = (type: string): boolean => {
 }
 
 export const isFileFieldType = (type: string): boolean => {
-    return type === UPLOAD_FILE_TYPE || type === UPLOAD_IMAGE_TYPE;
+    return type === UPLOAD_FILE_TYPE ||
+        type === UPLOAD_IMAGE_TYPE ||
+        type === CAMERA_PHOTO_TYPE ||
+        type === QR_SCAN_TYPE ||
+        type === DOCUMENT_SCAN_TYPE;
 }
 
 export const isFileLikeValue = (value: any): boolean => {
@@ -307,6 +314,9 @@ export const getHtmlInputType = (fieldType: string): string => {
 
         case UPLOAD_FILE_TYPE:
         case UPLOAD_IMAGE_TYPE:
+        case CAMERA_PHOTO_TYPE:
+        case QR_SCAN_TYPE:
+        case DOCUMENT_SCAN_TYPE:
             return "file";
 
         default:

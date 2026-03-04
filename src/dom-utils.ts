@@ -21,7 +21,9 @@ export const ATTR_MIN_LEN = "minLen"
 export const ATTR_MAX_LEN = "maxLen"
 export const ATTR_PLACEHOLDER = "placeholder"
 export const ATTR_ACCEPT = "accept"
+export const ATTR_CAPTURE = "capture"
 export const ATTR_MULTIPLE = "multiple"
+export const ATTR_DOCUMENT_SCAN_MODE = "documentScanMode"
 export const ATTR_FILE_DROP_MODE = "fileDropMode"
 export const ATTR_MIN_FILES = "minFiles"
 export const ATTR_MAX_FILES = "maxFiles"
@@ -99,7 +101,9 @@ export const HTML_ATTR_MIN_LEN = `${HTML_ATTR_PREFIX}min-len`
 export const HTML_ATTR_MAX_LEN = `${HTML_ATTR_PREFIX}max-len`
 export const HTML_ATTR_PLACEHOLDER = `${HTML_ATTR_PREFIX}placeholder`
 export const HTML_ATTR_ACCEPT = `${HTML_ATTR_PREFIX}accept`
+export const HTML_ATTR_CAPTURE = `${HTML_ATTR_PREFIX}capture`
 export const HTML_ATTR_MULTIPLE = `${HTML_ATTR_PREFIX}multiple`
+export const HTML_ATTR_DOCUMENT_SCAN_MODE = `${HTML_ATTR_PREFIX}document-scan-mode`
 export const HTML_ATTR_FILE_DROP_MODE = `${HTML_ATTR_PREFIX}file-drop-mode`
 export const HTML_ATTR_MIN_FILES = `${HTML_ATTR_PREFIX}min-files`
 export const HTML_ATTR_MAX_FILES = `${HTML_ATTR_PREFIX}max-files`
@@ -177,7 +181,9 @@ export const ATTR_MAP = {
     [HTML_ATTR_MAX_LEN]: ATTR_MAX_LEN,
     [HTML_ATTR_PLACEHOLDER]: ATTR_PLACEHOLDER,
     [HTML_ATTR_ACCEPT]: ATTR_ACCEPT,
+    [HTML_ATTR_CAPTURE]: ATTR_CAPTURE,
     [HTML_ATTR_MULTIPLE]: ATTR_MULTIPLE,
+    [HTML_ATTR_DOCUMENT_SCAN_MODE]: ATTR_DOCUMENT_SCAN_MODE,
     [HTML_ATTR_FILE_DROP_MODE]: ATTR_FILE_DROP_MODE,
     [HTML_ATTR_MIN_FILES]: ATTR_MIN_FILES,
     [HTML_ATTR_MAX_FILES]: ATTR_MAX_FILES,
@@ -267,6 +273,11 @@ export function getFieldConfig(node: Element): TFieldConfig {
     const acceptValue = node.getAttribute("accept");
     if (acceptValue) {
         fieldConfig.accept = acceptValue;
+    }
+
+    const captureValue = node.getAttribute("capture") || node.getAttribute(HTML_ATTR_CAPTURE);
+    if (captureValue === "user" || captureValue === "environment") {
+        fieldConfig.capture = captureValue;
     }
 
     if (node.hasAttribute("multiple")) {

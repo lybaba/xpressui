@@ -702,6 +702,12 @@ Frontend behavior:
 - `fileDropMode: 'append'` merges dropped files with the current selection
 - selected files can be removed one by one in the default UI
 - `accept: 'image/*'` shows a simple image preview before submit
+- `capture: 'user' | 'environment'` can hint mobile browsers to open the camera
+- `type: 'camera-photo'` is a shorthand for camera-first image capture
+- `type: 'qr-scan'` captures or uploads an image, then decodes it through the
+  native `BarcodeDetector` API when available
+- `type: 'document-scan'` gives a simple front/back document capture flow with
+  framed previews for ID cards and similar documents
 - `minFiles` sets a minimum file count for multi-upload fields
 - `maxFiles` limits how many files can be selected
 - `maxTotalFileSizeMb` limits the total size across all selected files
@@ -711,6 +717,10 @@ Frontend behavior:
   file fields are sent as `attachments[]` or `attachments`
 - `submit.uploadStrategy: 'presigned'` uploads files first, then submits the
   resulting URLs to your backend
+- `qr-scan` can start a live camera session and scan directly from the video
+  stream when `getUserMedia` and `BarcodeDetector` are available
+- `document-scan` keeps a lightweight two-slot front/back workflow; its
+  "cropping" is a visual framed preview, not a destructive image transform
 
 Extra event:
 - `form-ui:file-validation-error`
@@ -719,6 +729,8 @@ Extra event:
 - `form-ui:upload-progress`
 - `form-ui:upload-complete`
 - `form-ui:upload-error`
+- `form-ui:qr-scan-success`
+- `form-ui:qr-scan-error`
 
 You can also define basic rules at the form level:
 
@@ -894,6 +906,9 @@ Common field types used today:
 - `select-one`
 - `select-multiple`
 - `file`
+- `camera-photo`
+- `qr-scan`
+- `document-scan`
 - `checkbox`
 
 ## Events

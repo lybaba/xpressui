@@ -32,7 +32,9 @@ type TFieldConfig = {
     maxLen?: number;
     placeholder?: string;
     accept?: string;
+    capture?: 'user' | 'environment';
     multiple?: boolean;
+    documentScanMode?: 'single' | 'double';
     fileDropMode?: 'replace' | 'append';
     minFiles?: number;
     maxFiles?: number;

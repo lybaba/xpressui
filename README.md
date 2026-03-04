@@ -181,12 +181,19 @@ const observer = form
   : null;
 
 console.log(observer?.getEvents());
+console.log(observer?.getRuleHistory());
 ```
 
 The observer API:
 - `getEvents()`
+- `getRuleHistory()`
 - `clear()`
+- `clearRuleHistory()`
 - `detach()`
+
+`getRuleHistory()` returns only `form-ui:rule-applied` events. Use
+`clearRuleHistory()` to reset that rule-specific buffer without clearing the
+full event log.
 
 ## Submission Modes
 

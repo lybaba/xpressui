@@ -193,6 +193,44 @@ describe('FormUI', () => {
     observer.detach();
   });
 
+  it('can observe applied rules through the debug observer helper', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'debug-rule-history-form',
+      title: 'Debug Rule History Form',
+      rules: [
+        {
+          id: 'set-currency',
+          conditions: [
+            { field: 'country', operator: 'equals', value: 'fr' },
+          ],
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'country', label: 'Country', type: 'text' },
+        { name: 'currency', label: 'Currency', type: 'text' },
+      ],
+    }) as FormUI;
+    const observer = attachFormDebugObserver(element, { maxEvents: 10 });
+    const country = element.querySelector('#country') as HTMLInputElement;
+
+    country.value = 'fr';
+    country.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(observer.getRuleHistory()).toHaveLength(1);
+    expect(observer.getRuleHistory()[0]?.detail?.result?.id).toBe('set-currency');
+
+    observer.clearRuleHistory();
+    expect(observer.getRuleHistory()).toEqual([]);
+    expect(observer.getEvents().some((event) => event.type === 'form-ui:rule-applied')).toBe(true);
+
+    observer.detach();
+  });
+
   it('shows and clears validation errors in the DOM', () => {
     const element = renderFixture(`
       <template id="contact">

@@ -44,7 +44,12 @@ export {
   registerProvider,
 } from "./common/provider-registry";
 export type { TLocalFormAdmin, TLocalQueueQuery } from "./common/form-admin";
-export type { TFormDebugEventRecord, TFormDebugObserver, TFormDebugOptions } from "./common/form-debug";
+export type {
+  TFormDebugEventRecord,
+  TFormDebugObserver,
+  TFormDebugOptions,
+  TFormDebugRuleRecord,
+} from "./common/form-debug";
 export type { TFormQueueState, TFormStorageSnapshot } from "./common/form-persistence";
 export type {
   TFormRuntimeDynamicAdapters,

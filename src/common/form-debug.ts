@@ -1,12 +1,24 @@
+import type { TFormRuleAppliedDetail } from "./form-dynamic";
+
 export type TFormDebugEventRecord = {
   type: string;
   timestamp: number;
   detail: any;
 };
 
+export type TFormDebugRuleRecord = Omit<TFormDebugEventRecord, "type" | "detail"> & {
+  type: "form-ui:rule-applied";
+  detail: {
+    result?: TFormRuleAppliedDetail;
+    [key: string]: any;
+  };
+};
+
 export type TFormDebugObserver = {
   getEvents(): TFormDebugEventRecord[];
+  getRuleHistory(): TFormDebugRuleRecord[];
   clear(): void;
+  clearRuleHistory(): void;
   detach(): void;
 };
 
@@ -50,6 +62,7 @@ export function attachFormDebugObserver(
 ): TFormDebugObserver {
   const maxEvents = options.maxEvents ?? 100;
   const events: TFormDebugEventRecord[] = [];
+  const ruleEvents: TFormDebugRuleRecord[] = [];
   const listeners = DEFAULT_DEBUG_EVENTS.map((eventName) => {
     const listener = (event: Event) => {
       const customEvent = event as CustomEvent<any>;
@@ -62,6 +75,13 @@ export function attachFormDebugObserver(
       events.push(record);
       if (events.length > maxEvents) {
         events.splice(0, events.length - maxEvents);
+      }
+
+      if (record.type === "form-ui:rule-applied") {
+        ruleEvents.push(record as TFormDebugRuleRecord);
+        if (ruleEvents.length > maxEvents) {
+          ruleEvents.splice(0, ruleEvents.length - maxEvents);
+        }
       }
 
       options.onEvent?.(record);
@@ -78,8 +98,15 @@ export function attachFormDebugObserver(
     getEvents() {
       return [...events];
     },
+    getRuleHistory() {
+      return [...ruleEvents];
+    },
     clear() {
       events.splice(0, events.length);
+      ruleEvents.splice(0, ruleEvents.length);
+    },
+    clearRuleHistory() {
+      ruleEvents.splice(0, ruleEvents.length);
     },
     detach() {
       listeners.forEach(({ eventName, listener }) => {

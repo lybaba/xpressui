@@ -86,10 +86,12 @@ type TDynamicRule = ReturnType<TFormDynamicRuntimeOptions["getRules"]>[number];
 export class FormDynamicRuntime {
   options: TFormDynamicRuntimeOptions;
   loadingOptions: Record<string, boolean>;
+  lastTemplateWarnings: Record<string, string>;
 
   constructor(options: TFormDynamicRuntimeOptions) {
     this.options = options;
     this.loadingOptions = {};
+    this.lastTemplateWarnings = {};
   }
 
   transformRuleValue(
@@ -126,21 +128,25 @@ export class FormDynamicRuntime {
   }
 
   renderRuleTemplate(template: string, ruleId?: string, targetField?: string): string {
+    const templateWarningKey = `${ruleId || ""}:${targetField || ""}:${template}`;
     return template.replace(/\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g, (_, fieldName: string) => {
       const hasField = this.options.getFieldConfigs().some((fieldConfig) => fieldConfig.name === fieldName);
       if (!hasField) {
-        const context = this.options.getEventContext();
-        this.options.emitEvent("form-ui:rule-template-missing-field", {
-          values: this.options.getFormValues(),
-          formConfig: context.formConfig,
-          submit: context.submit,
-          result: {
-            ruleId,
-            field: targetField || "",
-            template,
-            missingField: fieldName,
-          } satisfies TFormRuleTemplateMissingFieldDetail,
-        });
+        if (this.lastTemplateWarnings[templateWarningKey] !== fieldName) {
+          this.lastTemplateWarnings[templateWarningKey] = fieldName;
+          const context = this.options.getEventContext();
+          this.options.emitEvent("form-ui:rule-template-missing-field", {
+            values: this.options.getFormValues(),
+            formConfig: context.formConfig,
+            submit: context.submit,
+            result: {
+              ruleId,
+              field: targetField || "",
+              template,
+              missingField: fieldName,
+            } satisfies TFormRuleTemplateMissingFieldDetail,
+          });
+        }
         return "";
       }
 

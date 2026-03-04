@@ -283,6 +283,9 @@ export function createTemplateMarkup(
         config.submit.documentDataMode
           ? `data-submit-document-data-mode="${escapeHtml(config.submit.documentDataMode)}"`
           : '',
+        config.submit.documentFieldPaths?.length
+          ? `data-submit-document-field-paths="${escapeHtml(JSON.stringify(config.submit.documentFieldPaths))}"`
+          : '',
         config.submit.formDataArrayMode
           ? `data-submit-form-data-array-mode="${escapeHtml(config.submit.formDataArrayMode)}"`
           : '',

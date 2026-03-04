@@ -49,6 +49,7 @@ export type TFormSubmitRequest = {
     mode?: 'json' | 'form-data';
     includeDocumentData?: boolean;
     documentDataMode?: 'full' | 'summary' | 'fields-only' | 'mrz-only' | 'none';
+    documentFieldPaths?: string[];
     formDataArrayMode?: 'brackets' | 'repeat';
     uploadStrategy?: 'standard' | 'presigned';
     presignEndpoint?: string;

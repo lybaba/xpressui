@@ -2255,6 +2255,48 @@ describe('FormUI', () => {
     });
   });
 
+  it('can whitelist document submission fields in headless submission values', () => {
+    const formConfig = createFormConfig({
+      name: 'headless-document-submit-filter-form',
+      title: 'Headless Document Submit Filter Form',
+      submit: {
+        endpoint: '/api/submit',
+        includeDocumentData: true,
+        documentDataMode: 'summary',
+        documentFieldPaths: ['mrz.documentNumber', 'mrz.valid', 'fields.firstName'],
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const runtime = new FormRuntime(formConfig);
+
+    (formConfig.sections.main || []).forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+    runtime.engine.setDocumentData('passport', {
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3', valid: true, nationality: 'UTO' },
+      fields: { firstName: 'ANNA MARIA', lastName: 'ERIKSSON' },
+    });
+
+    expect(runtime.buildSubmissionValues({ email: 'doc@example.com' })).toEqual({
+      email: 'doc@example.com',
+      document: {
+        field: 'passport',
+        mrz: {
+          documentNumber: 'L898902C3',
+          valid: true,
+        },
+        fields: { firstName: 'ANNA MARIA' },
+      },
+    });
+  });
+
   it('exposes active template warnings through the composed headless runtime', () => {
     let values: Record<string, any> = {
       firstName: '',
@@ -4163,6 +4205,60 @@ describe('FormUI', () => {
               birthDate: undefined,
               expiryDate: undefined,
               sex: undefined,
+              valid: true,
+            },
+            fields: { firstName: 'ANNA MARIA' },
+          },
+        }),
+      }),
+    );
+  });
+
+  it('can whitelist document submission fields in submitted FormUI payloads', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ saved: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'document-submit-filter-form',
+      title: 'Document Submit Filter Form',
+      submit: {
+        endpoint: 'https://api.example.test/document-submit',
+        method: 'POST',
+        includeDocumentData: true,
+        documentDataMode: 'summary',
+        documentFieldPaths: ['mrz.documentNumber', 'mrz.valid', 'fields.firstName'],
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+
+    element.engine.setDocumentData('passport', {
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3', valid: true, nationality: 'UTO' },
+      fields: { firstName: 'ANNA MARIA', lastName: 'ERIKSSON' },
+    });
+
+    await element.onSubmit({ email: 'doc@example.com' });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/document-submit',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          email: 'doc@example.com',
+          document: {
+            field: 'passport',
+            mrz: {
+              documentNumber: 'L898902C3',
               valid: true,
             },
             fields: { firstName: 'ANNA MARIA' },

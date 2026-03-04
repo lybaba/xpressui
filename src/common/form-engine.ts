@@ -51,6 +51,69 @@ function redactDocumentData(
   }
 }
 
+function hasObjectContent(value: Record<string, any> | null): boolean {
+  return Boolean(value && Object.keys(value).length);
+}
+
+function setNestedValue(target: Record<string, any>, path: string[], value: any): void {
+  let cursor = target;
+  path.forEach((segment, index) => {
+    if (index === path.length - 1) {
+      cursor[segment] = value;
+      return;
+    }
+
+    if (!cursor[segment] || typeof cursor[segment] !== "object") {
+      cursor[segment] = {};
+    }
+    cursor = cursor[segment];
+  });
+}
+
+function getNestedValue(source: Record<string, any>, path: string[]): any {
+  let cursor: any = source;
+  for (const segment of path) {
+    if (!cursor || typeof cursor !== "object" || !(segment in cursor)) {
+      return undefined;
+    }
+    cursor = cursor[segment];
+  }
+
+  return cursor;
+}
+
+function filterDocumentDataByPaths(
+  data: Record<string, any>,
+  fieldPaths?: string[],
+): Record<string, any> | null {
+  if (!fieldPaths?.length) {
+    return data;
+  }
+
+  const filtered: Record<string, any> = {};
+
+  fieldPaths.forEach((path) => {
+    const normalizedPath = path.trim();
+    if (!normalizedPath) {
+      return;
+    }
+
+    const segments = normalizedPath.split(".").filter(Boolean);
+    if (!segments.length) {
+      return;
+    }
+
+    const value = getNestedValue(data, segments);
+    if (typeof value === "undefined") {
+      return;
+    }
+
+    setNestedValue(filtered, segments, value);
+  });
+
+  return hasObjectContent(filtered) ? filtered : null;
+}
+
 function getFileList(value: any): File[] {
   if (!value) {
     return [];
@@ -144,6 +207,7 @@ export class FormEngineRuntime {
     values: Record<string, any>,
     includeDocumentData: boolean = false,
     documentDataMode: "full" | "summary" | "fields-only" | "mrz-only" | "none" = "full",
+    documentFieldPaths?: string[],
   ): Record<string, any> {
     const normalizedValues = this.normalizeValues(values);
     if (!includeDocumentData) {
@@ -158,21 +222,32 @@ export class FormEngineRuntime {
     if (entries.length === 1) {
       const [fieldName, data] = entries[0];
       const redactedData = redactDocumentData(data, documentDataMode);
-      if (!redactedData) {
+      const filteredData = redactedData
+        ? filterDocumentDataByPaths(redactedData, documentFieldPaths)
+        : null;
+      if (!filteredData) {
         return normalizedValues;
       }
       return {
         ...normalizedValues,
         document: {
           field: fieldName,
-          ...redactedData,
+          ...filteredData,
         },
       };
     }
 
     const redactedEntries = Object.fromEntries(
       entries
-        .map(([fieldName, data]) => [fieldName, redactDocumentData(data, documentDataMode)] as const)
+        .map(([fieldName, data]) => {
+          const redactedData = redactDocumentData(data, documentDataMode);
+          return [
+            fieldName,
+            redactedData
+              ? filterDocumentDataByPaths(redactedData, documentFieldPaths)
+              : null,
+          ] as const;
+        })
         .filter(([, data]) => data),
     );
     if (!Object.keys(redactedEntries).length) {

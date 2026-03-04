@@ -180,6 +180,7 @@ export class FormRuntime {
       values,
       Boolean(this.formConfig?.submit?.includeDocumentData),
       this.formConfig?.submit?.documentDataMode || "full",
+      this.formConfig?.submit?.documentFieldPaths,
     );
   }
 

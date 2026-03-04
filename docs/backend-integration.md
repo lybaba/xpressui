@@ -207,6 +207,7 @@ mountFormUI(container, {
     endpoint: '/api/identity/webhook',
     includeDocumentData: true,
     documentDataMode: 'summary',
+    documentFieldPaths: ['mrz.documentNumber', 'mrz.valid', 'fields.firstName', 'fields.lastName'],
   },
   fields: [
     { name: 'document_number', label: 'Document Number', type: 'text', required: true },

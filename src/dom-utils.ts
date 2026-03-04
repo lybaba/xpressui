@@ -77,6 +77,7 @@ export const ATTR_SUBMIT_METHOD = "submitMethod"
 export const ATTR_SUBMIT_MODE = "submitMode"
 export const ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = "submitIncludeDocumentData"
 export const ATTR_SUBMIT_DOCUMENT_DATA_MODE = "submitDocumentDataMode"
+export const ATTR_SUBMIT_DOCUMENT_FIELD_PATHS = "submitDocumentFieldPaths"
 export const ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = "submitFormDataArrayMode"
 export const ATTR_SUBMIT_UPLOAD_STRATEGY = "submitUploadStrategy"
 export const ATTR_SUBMIT_PRESIGN_ENDPOINT = "submitPresignEndpoint"
@@ -170,6 +171,7 @@ export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
 export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
 export const HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = `${HTML_ATTR_PREFIX}submit-include-document-data`
 export const HTML_ATTR_SUBMIT_DOCUMENT_DATA_MODE = `${HTML_ATTR_PREFIX}submit-document-data-mode`
+export const HTML_ATTR_SUBMIT_DOCUMENT_FIELD_PATHS = `${HTML_ATTR_PREFIX}submit-document-field-paths`
 export const HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = `${HTML_ATTR_PREFIX}submit-form-data-array-mode`
 export const HTML_ATTR_SUBMIT_UPLOAD_STRATEGY = `${HTML_ATTR_PREFIX}submit-upload-strategy`
 export const HTML_ATTR_SUBMIT_PRESIGN_ENDPOINT = `${HTML_ATTR_PREFIX}submit-presign-endpoint`
@@ -263,6 +265,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
     [HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA]: ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA,
     [HTML_ATTR_SUBMIT_DOCUMENT_DATA_MODE]: ATTR_SUBMIT_DOCUMENT_DATA_MODE,
+    [HTML_ATTR_SUBMIT_DOCUMENT_FIELD_PATHS]: ATTR_SUBMIT_DOCUMENT_FIELD_PATHS,
     [HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE]: ATTR_SUBMIT_FORM_DATA_ARRAY_MODE,
     [HTML_ATTR_SUBMIT_UPLOAD_STRATEGY]: ATTR_SUBMIT_UPLOAD_STRATEGY,
     [HTML_ATTR_SUBMIT_PRESIGN_ENDPOINT]: ATTR_SUBMIT_PRESIGN_ENDPOINT,
@@ -376,6 +379,9 @@ export default function getFormConfig(node: Element): TFormConfig {
             mode: (formConfig as any).submitMode,
             includeDocumentData: (formConfig as any).submitIncludeDocumentData === 'true',
             documentDataMode: (formConfig as any).submitDocumentDataMode,
+            documentFieldPaths: (formConfig as any).submitDocumentFieldPaths
+              ? JSON.parse((formConfig as any).submitDocumentFieldPaths)
+              : undefined,
             formDataArrayMode: (formConfig as any).submitFormDataArrayMode,
             uploadStrategy: (formConfig as any).submitUploadStrategy,
             presignEndpoint: (formConfig as any).submitPresignEndpoint,
@@ -390,6 +396,7 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).submitMode;
         delete (formConfig as any).submitIncludeDocumentData;
         delete (formConfig as any).submitDocumentDataMode;
+        delete (formConfig as any).submitDocumentFieldPaths;
         delete (formConfig as any).submitFormDataArrayMode;
         delete (formConfig as any).submitUploadStrategy;
         delete (formConfig as any).submitPresignEndpoint;

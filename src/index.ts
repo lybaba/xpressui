@@ -1652,6 +1652,7 @@ export class FormUI extends HTMLElement {
       values,
       Boolean(this.formConfig?.submit?.includeDocumentData),
       this.formConfig?.submit?.documentDataMode || "full",
+      this.formConfig?.submit?.documentFieldPaths,
     );
     const detail: TFormUISubmitDetail = {
       values: formValues,

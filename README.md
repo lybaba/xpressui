@@ -756,6 +756,8 @@ Frontend behavior:
   directly into submitted values
 - `submit.documentDataMode` controls redaction: `full`, `summary`,
   `fields-only`, `mrz-only`, `none`
+- `submit.documentFieldPaths` can further whitelist exact paths such as
+  `mrz.documentNumber`, `mrz.valid`, `fields.firstName`
 
 Extra event:
 - `form-ui:file-validation-error`

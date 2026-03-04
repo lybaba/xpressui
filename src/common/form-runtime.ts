@@ -6,6 +6,7 @@ import { FormUploadRuntime } from "./form-upload";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
+  TFormStorageHealth,
   TFormStorageSnapshot,
 } from "./form-persistence";
 
@@ -61,6 +62,7 @@ export type TFormRuntimePublicApi = Pick<
   | "enqueueSubmission"
   | "getQueueState"
   | "getStorageSnapshot"
+  | "getStorageHealth"
   | "clearDeadLetterQueue"
   | "requeueDeadLetterEntry"
   | "replayDeadLetterEntry"
@@ -224,6 +226,10 @@ export class FormRuntime {
 
   getStorageSnapshot(): TFormStorageSnapshot {
     return this.persistence.getStorageSnapshot();
+  }
+
+  getStorageHealth(): TFormStorageHealth {
+    return this.persistence.getStorageHealth();
   }
 
   clearDeadLetterQueue(): void {

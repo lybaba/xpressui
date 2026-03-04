@@ -3,6 +3,7 @@ import { isFileFieldType } from "./field";
 import {
   createStorageAdapter,
   getRestorableStorageValues,
+  TStorageHealth,
   TStorageHydrationResult,
   TFormStorageAdapter,
   TQueuedSubmission,
@@ -20,6 +21,11 @@ export type TFormStorageSnapshot = {
   draft: Record<string, any> | null;
   queue: TQueuedSubmission[];
   deadLetter: TQueuedSubmission[];
+};
+
+export type TFormStorageHealth = TStorageHealth & {
+  queueDisabledReason?: string;
+  queueEnabled: boolean;
 };
 
 type TFormPersistenceRuntimeOptions = {
@@ -247,6 +253,28 @@ export class FormPersistenceRuntime {
       draft: this.storageAdapter?.loadDraft() || null,
       queue: this.storageAdapter?.loadQueue() || [],
       deadLetter: this.storageAdapter?.loadDeadLetterQueue() || [],
+    };
+  }
+
+  getStorageHealth(): TFormStorageHealth {
+    const storageHealth = this.storageAdapter?.getHealth() || {
+      adapter: "local-storage",
+      encryptionEnabled: false,
+      hasDraft: false,
+      queueLength: 0,
+      deadLetterLength: 0,
+      totalEntries: 0,
+      retentionMs: {
+        draft: null,
+        queue: null,
+        deadLetter: null,
+      },
+    };
+
+    return {
+      ...storageHealth,
+      queueDisabledReason: this.getQueueDisabledReason(),
+      queueEnabled: this.shouldUseQueue(),
     };
   }
 

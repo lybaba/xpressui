@@ -910,7 +910,11 @@ Current storage support:
 - `mode: 'draft-and-queue'`
 - `adapter: 'local-storage'`
 - `adapter: 'indexeddb'`
+- `encryptionKey`
 - `retentionDays`
+- `retentionDraftDays`
+- `retentionQueueDays`
+- `retentionDeadLetterDays`
 
 `indexeddb` currently uses a compatibility-first local cache plus IndexedDB
 write-through, so the runtime API stays synchronous while still persisting to a
@@ -923,6 +927,15 @@ If you need the freshest async-backed snapshot, call:
 
 If `retentionDays` is set, expired drafts, queue entries, and dead-letter
 entries are pruned automatically when storage is read.
+
+You can override retention per storage type with:
+- `retentionDraftDays`
+- `retentionQueueDays`
+- `retentionDeadLetterDays`
+
+If `encryptionKey` is set, local storage payloads are stored with a synchronous
+best-effort encrypted wrapper (`enc:v1:`). This keeps the API synchronous, but
+it is still browser-side protection, not a replacement for server-side security.
 
 For `file` fields, local draft storage keeps metadata only (`name`, `size`,
 `mimeType`). The user must re-select files after a page reload. Use
@@ -951,12 +964,14 @@ Queue events:
 Runtime inspection helpers:
 - `form.getQueueState()`
 - `form.getStorageSnapshot()`
+- `form.getStorageHealth()`
 - `form.clearDeadLetterQueue()`
 - `form.requeueDeadLetterEntry(entryId)`
 - `form.replayDeadLetterEntry(entryId)`
 
 Standalone local admin helper:
 - `createLocalFormAdmin(formConfig)`
+- `admin.getStorageHealth()`
 
 It can inspect and manage local state without a mounted `FormUI` instance:
 - `getSnapshot()`

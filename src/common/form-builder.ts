@@ -326,8 +326,20 @@ export function createTemplateMarkup(
         config.storage.autoSaveMs !== undefined
           ? `data-storage-autosave-ms="${escapeHtml(String(config.storage.autoSaveMs))}"`
           : '',
+        config.storage.encryptionKey
+          ? `data-storage-encryption-key="${escapeHtml(config.storage.encryptionKey)}"`
+          : '',
         config.storage.retentionDays !== undefined
           ? `data-storage-retention-days="${escapeHtml(String(config.storage.retentionDays))}"`
+          : '',
+        config.storage.retentionDraftDays !== undefined
+          ? `data-storage-retention-draft-days="${escapeHtml(String(config.storage.retentionDraftDays))}"`
+          : '',
+        config.storage.retentionQueueDays !== undefined
+          ? `data-storage-retention-queue-days="${escapeHtml(String(config.storage.retentionQueueDays))}"`
+          : '',
+        config.storage.retentionDeadLetterDays !== undefined
+          ? `data-storage-retention-dead-letter-days="${escapeHtml(String(config.storage.retentionDeadLetterDays))}"`
           : '',
       ]
         .filter(Boolean)

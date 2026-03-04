@@ -31,6 +31,20 @@ export type TStorageHydrationResult = {
   migratedFromLocalStorage: boolean;
 };
 
+export type TStorageHealth = {
+  adapter: "local-storage" | "indexeddb";
+  encryptionEnabled: boolean;
+  hasDraft: boolean;
+  queueLength: number;
+  deadLetterLength: number;
+  totalEntries: number;
+  retentionMs: {
+    draft: number | null;
+    queue: number | null;
+    deadLetter: number | null;
+  };
+};
+
 type TQueueState = {
   version: 1;
   items: TQueuedSubmission[];
@@ -120,6 +134,7 @@ export interface TFormStorageAdapter {
   enqueueDeadLetter(entry: TQueuedSubmission): TQueuedSubmission[];
   removeDeadLetterEntry(entryId: string): TQueuedSubmission | null;
   clearDeadLetterQueue(): void;
+  getHealth(): TStorageHealth;
   hydrate?(): Promise<TStorageHydrationResult>;
 }
 
@@ -177,18 +192,27 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
   storageKey: string;
   queueKey: string;
   deadLetterKey: string;
-  retentionMs: number | null;
+  encryptionKey: string | null;
+  draftRetentionMs: number | null;
+  queueRetentionMs: number | null;
+  deadLetterRetentionMs: number | null;
 
   constructor(
     storageKey: string,
     queueKey: string,
     deadLetterKey: string,
-    retentionMs: number | null = null,
+    encryptionKey: string | null = null,
+    draftRetentionMs: number | null = null,
+    queueRetentionMs: number | null = null,
+    deadLetterRetentionMs: number | null = null,
   ) {
     this.storageKey = storageKey;
     this.queueKey = queueKey;
     this.deadLetterKey = deadLetterKey;
-    this.retentionMs = retentionMs;
+    this.encryptionKey = encryptionKey || null;
+    this.draftRetentionMs = draftRetentionMs;
+    this.queueRetentionMs = queueRetentionMs;
+    this.deadLetterRetentionMs = deadLetterRetentionMs;
   }
 
   createQueueEntry(values: Record<string, any>): TQueuedSubmission {
@@ -203,152 +227,258 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
     };
   }
 
-  parseDraftRaw(raw: string | null): Record<string, any> | null {
+  encodePayload(raw: string): string {
+    if (!this.encryptionKey) {
+      return raw;
+    }
+
+    try {
+      const key = this.encryptionKey;
+      let encoded = "";
+      for (let index = 0; index < raw.length; index += 1) {
+        encoded += String.fromCharCode(
+          raw.charCodeAt(index) ^ key.charCodeAt(index % key.length),
+        );
+      }
+
+      return `enc:v1:${window.btoa(encoded)}`;
+    } catch {
+      return raw;
+    }
+  }
+
+  decodePayload(raw: string | null): string | null {
     if (!raw) {
       return null;
     }
 
-    const parsed = JSON.parse(raw);
-    if (
-      parsed &&
-      typeof parsed === "object" &&
-      (parsed as Partial<TDraftState>).version === 1 &&
-      typeof (parsed as Partial<TDraftState>).savedAt === "number" &&
-      (parsed as Partial<TDraftState>).values &&
-      typeof (parsed as Partial<TDraftState>).values === "object"
-    ) {
-      const draftState = parsed as TDraftState;
-      if (this.isExpiredTimestamp(draftState.savedAt)) {
-        return null;
-      }
-
-      return draftState.values;
+    if (!raw.startsWith("enc:v1:")) {
+      return raw;
     }
 
-    return parsed && typeof parsed === "object" ? parsed : null;
-  }
-
-  parseQueueRaw(raw: string | null): TQueuedSubmission[] {
-    if (!raw) {
-      return [];
+    if (!this.encryptionKey) {
+      return null;
     }
 
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed
-        .filter((item) => item && typeof item === "object")
-        .map((item) => this.createQueueEntry(item as Record<string, any>));
-    }
-
-    const state = parsed as Partial<TQueueState>;
-    const items = Array.isArray(state?.items) ? state.items : [];
-    return items.filter((item) => !this.isExpiredTimestamp(item.updatedAt || item.createdAt));
-  }
-
-  parseDeadLetterRaw(raw: string | null): TQueuedSubmission[] {
-    if (!raw) {
-      return [];
-    }
-
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed as TQueuedSubmission[];
-    }
-
-    const state = parsed as Partial<TQueueState>;
-    const items = Array.isArray(state?.items) ? state.items : [];
-    return items.filter((item) => !this.isExpiredTimestamp(item.updatedAt || item.createdAt));
-  }
-
-  isExpiredTimestamp(timestamp?: number): boolean {
-    if (!this.retentionMs || typeof timestamp !== "number") {
-      return false;
-    }
-
-    return Date.now() - timestamp > this.retentionMs;
-  }
-
-  loadDraft(): Record<string, any> | null {
     try {
-      const raw = window.localStorage.getItem(this.storageKey);
-      const parsed = this.parseDraftRaw(raw);
-      if (!parsed && raw) {
-        this.clearDraft();
+      const decoded = window.atob(raw.slice("enc:v1:".length));
+      const key = this.encryptionKey;
+      let nextValue = "";
+      for (let index = 0; index < decoded.length; index += 1) {
+        nextValue += String.fromCharCode(
+          decoded.charCodeAt(index) ^ key.charCodeAt(index % key.length),
+        );
       }
-      return parsed;
+
+      return nextValue;
     } catch {
       return null;
     }
   }
 
-  saveDraft(values: Record<string, any>): void {
+  serializeDraftState(values: Record<string, any>): string {
+    const state: TDraftState = {
+      version: 1,
+      savedAt: Date.now(),
+      values: getSerializableStorageValues(values),
+    };
+
+    return this.encodePayload(JSON.stringify(state));
+  }
+
+  serializeQueueState(values: TQueuedSubmission[]): string {
+    const state: TQueueState = {
+      version: 1,
+      items: values,
+    };
+
+    return this.encodePayload(JSON.stringify(state));
+  }
+
+  getStorageValue(key: string): string | null {
     try {
-      const state: TDraftState = {
-        version: 1,
-        savedAt: Date.now(),
-        values: getSerializableStorageValues(values),
-      };
-      window.localStorage.setItem(
-        this.storageKey,
-        JSON.stringify(state),
-      );
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  setStorageValue(key: string, value: string): void {
+    try {
+      window.localStorage.setItem(key, value);
     } catch {
       // Ignore storage write failures (quota/private mode).
     }
   }
 
-  clearDraft(): void {
+  removeStorageValue(key: string): void {
     try {
-      window.localStorage.removeItem(this.storageKey);
+      window.localStorage.removeItem(key);
     } catch {
       // Ignore storage clear failures.
     }
+  }
+
+  parseDraftRaw(raw: string | null): { value: Record<string, any> | null; changed: boolean } {
+    if (!raw) {
+      return { value: null, changed: false };
+    }
+
+    const decoded = this.decodePayload(raw);
+    if (!decoded) {
+      return { value: null, changed: true };
+    }
+
+    try {
+      const parsed = JSON.parse(decoded);
+      if (
+        parsed &&
+        typeof parsed === "object" &&
+        (parsed as Partial<TDraftState>).version === 1 &&
+        typeof (parsed as Partial<TDraftState>).savedAt === "number" &&
+        (parsed as Partial<TDraftState>).values &&
+        typeof (parsed as Partial<TDraftState>).values === "object"
+      ) {
+        const draftState = parsed as TDraftState;
+        if (this.isExpiredTimestamp(draftState.savedAt, this.draftRetentionMs)) {
+          return { value: null, changed: true };
+        }
+
+        return { value: draftState.values, changed: false };
+      }
+
+      return {
+        value: parsed && typeof parsed === "object" ? parsed : null,
+        changed: raw.startsWith("enc:v1:"),
+      };
+    } catch {
+      return { value: null, changed: true };
+    }
+  }
+
+  parseQueueRaw(raw: string | null): { value: TQueuedSubmission[]; changed: boolean } {
+    if (!raw) {
+      return { value: [], changed: false };
+    }
+
+    const decoded = this.decodePayload(raw);
+    if (!decoded) {
+      return { value: [], changed: true };
+    }
+
+    try {
+      const parsed = JSON.parse(decoded);
+      if (Array.isArray(parsed)) {
+        return {
+          value: parsed
+            .filter((item) => item && typeof item === "object")
+            .map((item) => this.createQueueEntry(item as Record<string, any>)),
+          changed: true,
+        };
+      }
+
+      const state = parsed as Partial<TQueueState>;
+      const items = Array.isArray(state?.items) ? state.items : [];
+      const filtered = items.filter(
+        (item) => !this.isExpiredTimestamp(item.updatedAt || item.createdAt, this.queueRetentionMs),
+      );
+      return {
+        value: filtered,
+        changed: filtered.length !== items.length,
+      };
+    } catch {
+      return { value: [], changed: true };
+    }
+  }
+
+  parseDeadLetterRaw(raw: string | null): { value: TQueuedSubmission[]; changed: boolean } {
+    if (!raw) {
+      return { value: [], changed: false };
+    }
+
+    const decoded = this.decodePayload(raw);
+    if (!decoded) {
+      return { value: [], changed: true };
+    }
+
+    try {
+      const parsed = JSON.parse(decoded);
+      if (Array.isArray(parsed)) {
+        const filtered = (parsed as TQueuedSubmission[]).filter(
+          (item) =>
+            !this.isExpiredTimestamp(item.updatedAt || item.createdAt, this.deadLetterRetentionMs),
+        );
+        return {
+          value: filtered,
+          changed: filtered.length !== parsed.length,
+        };
+      }
+
+      const state = parsed as Partial<TQueueState>;
+      const items = Array.isArray(state?.items) ? state.items : [];
+      const filtered = items.filter(
+        (item) =>
+          !this.isExpiredTimestamp(item.updatedAt || item.createdAt, this.deadLetterRetentionMs),
+      );
+      return {
+        value: filtered,
+        changed: filtered.length !== items.length,
+      };
+    } catch {
+      return { value: [], changed: true };
+    }
+  }
+
+  isExpiredTimestamp(timestamp?: number, retentionMs: number | null = null): boolean {
+    if (!retentionMs || typeof timestamp !== "number") {
+      return false;
+    }
+
+    return Date.now() - timestamp > retentionMs;
+  }
+
+  loadDraft(): Record<string, any> | null {
+    const raw = this.getStorageValue(this.storageKey);
+    const parsed = this.parseDraftRaw(raw);
+    if (parsed.changed) {
+      if (parsed.value) {
+        this.saveDraft(parsed.value);
+      } else {
+        this.clearDraft();
+      }
+    }
+
+    return parsed.value;
+  }
+
+  saveDraft(values: Record<string, any>): void {
+    this.setStorageValue(this.storageKey, this.serializeDraftState(values));
+  }
+
+  clearDraft(): void {
+    this.removeStorageValue(this.storageKey);
   }
 
   loadQueue(): TQueuedSubmission[] {
-    try {
-      const raw = window.localStorage.getItem(this.queueKey);
-      const parsed = this.parseQueueRaw(raw);
-      if (raw) {
-        const beforeLength = (() => {
-          try {
-            const before = JSON.parse(raw);
-            if (Array.isArray(before)) {
-              return before.length;
-            }
-            return Array.isArray(before?.items) ? before.items.length : 0;
-          } catch {
-            return parsed.length;
-          }
-        })();
-        if (beforeLength !== parsed.length) {
-          this.saveQueue(parsed);
-        }
+    const raw = this.getStorageValue(this.queueKey);
+    const parsed = this.parseQueueRaw(raw);
+    if (parsed.changed) {
+      if (parsed.value.length) {
+        this.saveQueue(parsed.value);
+      } else {
+        this.clearQueue();
       }
-      return parsed;
-    } catch {
-      return [];
     }
+
+    return parsed.value;
   }
 
   saveQueue(values: TQueuedSubmission[]): void {
-    try {
-      const state: TQueueState = {
-        version: 1,
-        items: values,
-      };
-      window.localStorage.setItem(this.queueKey, JSON.stringify(state));
-    } catch {
-      // Ignore storage write failures.
-    }
+    this.setStorageValue(this.queueKey, this.serializeQueueState(values));
   }
 
   clearQueue(): void {
-    try {
-      window.localStorage.removeItem(this.queueKey);
-    } catch {
-      // Ignore storage clear failures.
-    }
+    this.removeStorageValue(this.queueKey);
   }
 
   enqueueSubmission(values: Record<string, any>): TQueuedSubmission[] {
@@ -376,41 +506,21 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
   }
 
   loadDeadLetterQueue(): TQueuedSubmission[] {
-    try {
-      const raw = window.localStorage.getItem(this.deadLetterKey);
-      const parsed = this.parseDeadLetterRaw(raw);
-      if (raw) {
-        const beforeLength = (() => {
-          try {
-            const before = JSON.parse(raw);
-            if (Array.isArray(before)) {
-              return before.length;
-            }
-            return Array.isArray(before?.items) ? before.items.length : 0;
-          } catch {
-            return parsed.length;
-          }
-        })();
-        if (beforeLength !== parsed.length) {
-          this.saveDeadLetterQueue(parsed);
-        }
+    const raw = this.getStorageValue(this.deadLetterKey);
+    const parsed = this.parseDeadLetterRaw(raw);
+    if (parsed.changed) {
+      if (parsed.value.length) {
+        this.saveDeadLetterQueue(parsed.value);
+      } else {
+        this.clearDeadLetterQueue();
       }
-      return parsed;
-    } catch {
-      return [];
     }
+
+    return parsed.value;
   }
 
   saveDeadLetterQueue(values: TQueuedSubmission[]): void {
-    try {
-      const state: TQueueState = {
-        version: 1,
-        items: values,
-      };
-      window.localStorage.setItem(this.deadLetterKey, JSON.stringify(state));
-    } catch {
-      // Ignore storage write failures.
-    }
+    this.setStorageValue(this.deadLetterKey, this.serializeQueueState(values));
   }
 
   enqueueDeadLetter(entry: TQueuedSubmission): TQueuedSubmission[] {
@@ -432,11 +542,25 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
   }
 
   clearDeadLetterQueue(): void {
-    try {
-      window.localStorage.removeItem(this.deadLetterKey);
-    } catch {
-      // Ignore storage clear failures.
-    }
+    this.removeStorageValue(this.deadLetterKey);
+  }
+
+  getHealth(): TStorageHealth {
+    const queue = this.loadQueue();
+    const deadLetter = this.loadDeadLetterQueue();
+    return {
+      adapter: "local-storage",
+      encryptionEnabled: Boolean(this.encryptionKey),
+      hasDraft: Boolean(this.loadDraft()),
+      queueLength: queue.length,
+      deadLetterLength: deadLetter.length,
+      totalEntries: queue.length + deadLetter.length,
+      retentionMs: {
+        draft: this.draftRetentionMs,
+        queue: this.queueRetentionMs,
+        deadLetter: this.deadLetterRetentionMs,
+      },
+    };
   }
 
   async hydrate(): Promise<TStorageHydrationResult> {
@@ -461,10 +585,21 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
     queueKey: string,
     deadLetterKey: string,
     dbName: string,
-    retentionMs: number | null = null,
+    encryptionKey: string | null = null,
+    draftRetentionMs: number | null = null,
+    queueRetentionMs: number | null = null,
+    deadLetterRetentionMs: number | null = null,
     storeName: string = "form-state",
   ) {
-    super(storageKey, queueKey, deadLetterKey, retentionMs);
+    super(
+      storageKey,
+      queueKey,
+      deadLetterKey,
+      encryptionKey,
+      draftRetentionMs,
+      queueRetentionMs,
+      deadLetterRetentionMs,
+    );
     this.dbName = dbName;
     this.storeName = storeName;
     void this.hydrateFromIndexedDb();
@@ -557,7 +692,7 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
         }
 
         try {
-          window.localStorage.setItem(key, value);
+          this.setStorageValue(key, value);
         } catch {
           // Ignore cache warm-up failures.
         }
@@ -607,9 +742,9 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
     );
 
     if (!hasIndexedDbState) {
-      const localDraftRaw = window.localStorage.getItem(this.storageKey);
-      const localQueueRaw = window.localStorage.getItem(this.queueKey);
-      const localDeadLetterRaw = window.localStorage.getItem(this.deadLetterKey);
+      const localDraftRaw = this.getStorageValue(this.storageKey);
+      const localQueueRaw = this.getStorageValue(this.queueKey);
+      const localDeadLetterRaw = this.getStorageValue(this.deadLetterKey);
       const hasLocalState = Boolean(localDraftRaw || localQueueRaw || localDeadLetterRaw);
 
       if (hasLocalState) {
@@ -621,9 +756,9 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
 
         return {
           snapshot: {
-            draft: this.parseDraftRaw(localDraftRaw),
-            queue: this.parseQueueRaw(localQueueRaw),
-            deadLetter: this.parseDeadLetterRaw(localDeadLetterRaw),
+            draft: this.parseDraftRaw(localDraftRaw).value,
+            queue: this.parseQueueRaw(localQueueRaw).value,
+            deadLetter: this.parseDeadLetterRaw(localDeadLetterRaw).value,
           },
           source: "indexeddb",
           migratedFromLocalStorage: true,
@@ -632,26 +767,26 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
     }
 
     if (indexedDbState.draftRaw !== null) {
-      window.localStorage.setItem(this.storageKey, indexedDbState.draftRaw);
+      this.setStorageValue(this.storageKey, indexedDbState.draftRaw);
     } else {
-      window.localStorage.removeItem(this.storageKey);
+      this.removeStorageValue(this.storageKey);
     }
     if (indexedDbState.queueRaw !== null) {
-      window.localStorage.setItem(this.queueKey, indexedDbState.queueRaw);
+      this.setStorageValue(this.queueKey, indexedDbState.queueRaw);
     } else {
-      window.localStorage.removeItem(this.queueKey);
+      this.removeStorageValue(this.queueKey);
     }
     if (indexedDbState.deadLetterRaw !== null) {
-      window.localStorage.setItem(this.deadLetterKey, indexedDbState.deadLetterRaw);
+      this.setStorageValue(this.deadLetterKey, indexedDbState.deadLetterRaw);
     } else {
-      window.localStorage.removeItem(this.deadLetterKey);
+      this.removeStorageValue(this.deadLetterKey);
     }
 
     return {
       snapshot: {
-        draft: this.parseDraftRaw(indexedDbState.draftRaw),
-        queue: this.parseQueueRaw(indexedDbState.queueRaw),
-        deadLetter: this.parseDeadLetterRaw(indexedDbState.deadLetterRaw),
+        draft: this.parseDraftRaw(indexedDbState.draftRaw).value,
+        queue: this.parseQueueRaw(indexedDbState.queueRaw).value,
+        deadLetter: this.parseDeadLetterRaw(indexedDbState.deadLetterRaw).value,
       },
       source: "indexeddb",
       migratedFromLocalStorage: false,
@@ -660,11 +795,9 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
 
   override saveDraft(values: Record<string, any>): void {
     super.saveDraft(values);
-    try {
-      const serialized = JSON.stringify(getSerializableStorageValues(values));
+    const serialized = this.getStorageValue(this.storageKey);
+    if (serialized !== null) {
       void this.writeKey(this.storageKey, serialized);
-    } catch {
-      // Ignore serialization errors.
     }
   }
 
@@ -675,11 +808,9 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
 
   override saveQueue(values: TQueuedSubmission[]): void {
     super.saveQueue(values);
-    try {
-      const state: TQueueState = { version: 1, items: values };
-      void this.writeKey(this.queueKey, JSON.stringify(state));
-    } catch {
-      // Ignore serialization errors.
+    const serialized = this.getStorageValue(this.queueKey);
+    if (serialized !== null) {
+      void this.writeKey(this.queueKey, serialized);
     }
   }
 
@@ -690,11 +821,9 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
 
   override saveDeadLetterQueue(values: TQueuedSubmission[]): void {
     super.saveDeadLetterQueue(values);
-    try {
-      const state: TQueueState = { version: 1, items: values };
-      void this.writeKey(this.deadLetterKey, JSON.stringify(state));
-    } catch {
-      // Ignore serialization errors.
+    const serialized = this.getStorageValue(this.deadLetterKey);
+    if (serialized !== null) {
+      void this.writeKey(this.deadLetterKey, serialized);
     }
   }
 
@@ -702,6 +831,19 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
     super.clearDeadLetterQueue();
     void this.deleteKey(this.deadLetterKey);
   }
+
+  override getHealth(): TStorageHealth {
+    return {
+      ...super.getHealth(),
+      adapter: "indexeddb",
+    };
+  }
+}
+
+function retentionDaysToMs(retentionDays?: number): number | null {
+  return typeof retentionDays === "number" && retentionDays > 0
+    ? retentionDays * 24 * 60 * 60 * 1000
+    : null;
 }
 
 export function createStorageAdapter(
@@ -721,16 +863,20 @@ export function createStorageAdapter(
   }
 
   const adapter = storage.adapter || "local-storage";
-  const retentionMs =
-    typeof storage.retentionDays === "number" && storage.retentionDays > 0
-      ? storage.retentionDays * 24 * 60 * 60 * 1000
-      : null;
+  const fallbackRetentionMs = retentionDaysToMs(storage.retentionDays);
+  const draftRetentionMs = retentionDaysToMs(storage.retentionDraftDays) ?? fallbackRetentionMs;
+  const queueRetentionMs = retentionDaysToMs(storage.retentionQueueDays) ?? fallbackRetentionMs;
+  const deadLetterRetentionMs =
+    retentionDaysToMs(storage.retentionDeadLetterDays) ?? fallbackRetentionMs;
   if (adapter === "local-storage") {
     return new LocalStorageAdapter(
       getDraftKey(formConfig, storage),
       getQueueKey(formConfig, storage),
       getDeadLetterKey(formConfig, storage),
-      retentionMs,
+      storage.encryptionKey || null,
+      draftRetentionMs,
+      queueRetentionMs,
+      deadLetterRetentionMs,
     );
   }
 
@@ -740,7 +886,10 @@ export function createStorageAdapter(
       getQueueKey(formConfig, storage),
       getDeadLetterKey(formConfig, storage),
       storage.key || `xpressui:idb:${formConfig.name}`,
-      retentionMs,
+      storage.encryptionKey || null,
+      draftRetentionMs,
+      queueRetentionMs,
+      deadLetterRetentionMs,
     );
   }
 

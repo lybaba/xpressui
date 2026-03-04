@@ -398,6 +398,160 @@ describe('FormUI', () => {
     expect(queue[0]?.id).toBe('fresh_queue');
   });
 
+  it('supports per-kind retention and encrypted local draft storage', () => {
+    const formConfig = createFormConfig({
+      name: 'secure-storage-form',
+      title: 'Secure Storage Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-secure-storage',
+        encryptionKey: 'secret-key',
+        retentionDraftDays: 1,
+        retentionQueueDays: 7,
+        retentionDeadLetterDays: 30,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    });
+
+    const draftKey = 'xpressui:test-secure-storage';
+    const queueKey = 'xpressui:test-secure-storage:queue';
+    const deadLetterKey = 'xpressui:test-secure-storage:dead-letter';
+
+    const adapter = createStorageAdapter(formConfig);
+    adapter?.saveDraft({ email: 'encrypted@example.com' });
+    adapter?.saveQueue([
+      {
+        id: 'fresh_queue',
+        values: { email: 'queue@example.com' },
+        attempts: 0,
+        createdAt: Date.now() - (2 * 24 * 60 * 60 * 1000),
+        updatedAt: Date.now() - (2 * 24 * 60 * 60 * 1000),
+        nextAttemptAt: 0,
+      },
+    ]);
+    adapter?.saveDeadLetterQueue([
+      {
+        id: 'fresh_dead_letter',
+        values: { email: 'dead@example.com' },
+        attempts: 3,
+        createdAt: Date.now() - (10 * 24 * 60 * 60 * 1000),
+        updatedAt: Date.now() - (10 * 24 * 60 * 60 * 1000),
+        nextAttemptAt: 0,
+      },
+    ]);
+
+    const draftRaw = window.localStorage.getItem(draftKey) || '';
+    expect(draftRaw).toContain('enc:v1:');
+    expect(draftRaw).not.toContain('encrypted@example.com');
+
+    window.localStorage.setItem(
+      draftKey,
+      JSON.stringify({
+        version: 1,
+        savedAt: Date.now() - (2 * 24 * 60 * 60 * 1000),
+        values: { email: 'expired@example.com' },
+      }),
+    );
+
+    expect(adapter?.loadDraft()).toBeNull();
+    expect(adapter?.loadQueue()).toEqual([
+      expect.objectContaining({
+        id: 'fresh_queue',
+      }),
+    ]);
+    expect(adapter?.loadDeadLetterQueue()).toEqual([
+      expect.objectContaining({
+        id: 'fresh_dead_letter',
+      }),
+    ]);
+    expect(window.localStorage.getItem(queueKey)).toContain('enc:v1:');
+    expect(window.localStorage.getItem(deadLetterKey)).toContain('enc:v1:');
+  });
+
+  it('reports storage health through the adapter and admin helpers', () => {
+    const formConfig = createFormConfig({
+      name: 'storage-health-form',
+      title: 'Storage Health Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-storage-health',
+        encryptionKey: 'health-key',
+        retentionDraftDays: 1,
+        retentionQueueDays: 2,
+        retentionDeadLetterDays: 3,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    });
+
+    const adapter = createStorageAdapter(formConfig);
+    adapter?.saveDraft({ email: 'health@example.com' });
+    adapter?.saveQueue([
+      {
+        id: 'queue_health',
+        values: { email: 'queue@example.com' },
+        attempts: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        nextAttemptAt: 0,
+      },
+    ]);
+    adapter?.saveDeadLetterQueue([
+      {
+        id: 'dead_health',
+        values: { email: 'dead@example.com' },
+        attempts: 3,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        nextAttemptAt: 0,
+      },
+    ]);
+
+    const admin = createLocalFormAdmin(formConfig);
+
+    expect(adapter?.getHealth()).toEqual({
+      adapter: 'local-storage',
+      encryptionEnabled: true,
+      hasDraft: true,
+      queueLength: 1,
+      deadLetterLength: 1,
+      totalEntries: 2,
+      retentionMs: {
+        draft: 1 * 24 * 60 * 60 * 1000,
+        queue: 2 * 24 * 60 * 60 * 1000,
+        deadLetter: 3 * 24 * 60 * 60 * 1000,
+      },
+    });
+    expect(admin.getStorageHealth()).toEqual(adapter?.getHealth());
+  });
+
+  it('reports storage health through the headless runtime', () => {
+    const runtime = new FormRuntime(createFormConfig({
+      name: 'runtime-storage-health-form',
+      title: 'Runtime Storage Health Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-runtime-storage-health',
+      },
+      fields: [
+        { name: 'attachment', label: 'Attachment', type: 'file' },
+      ],
+    }));
+
+    expect(runtime.getStorageHealth()).toEqual(
+      expect.objectContaining({
+        queueEnabled: false,
+        queueDisabledReason: 'file-uploads-are-not-queued',
+      }),
+    );
+  });
+
   it('emits a submit success event for a valid form', async () => {
     const element = renderFixture(`
       <template id="contact">

@@ -96,7 +96,11 @@ export const ATTR_STORAGE_MODE = "storageMode"
 export const ATTR_STORAGE_ADAPTER = "storageAdapter"
 export const ATTR_STORAGE_KEY = "storageKey"
 export const ATTR_STORAGE_AUTOSAVE_MS = "storageAutoSaveMs"
+export const ATTR_STORAGE_ENCRYPTION_KEY = "storageEncryptionKey"
 export const ATTR_STORAGE_RETENTION_DAYS = "storageRetentionDays"
+export const ATTR_STORAGE_RETENTION_DRAFT_DAYS = "storageRetentionDraftDays"
+export const ATTR_STORAGE_RETENTION_QUEUE_DAYS = "storageRetentionQueueDays"
+export const ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS = "storageRetentionDeadLetterDays"
 export const ATTR_VERSION = "version"
 export const ATTR_RULES = "rules"
 
@@ -191,7 +195,11 @@ export const HTML_ATTR_STORAGE_MODE = `${HTML_ATTR_PREFIX}storage-mode`
 export const HTML_ATTR_STORAGE_ADAPTER = `${HTML_ATTR_PREFIX}storage-adapter`
 export const HTML_ATTR_STORAGE_KEY = `${HTML_ATTR_PREFIX}storage-key`
 export const HTML_ATTR_STORAGE_AUTOSAVE_MS = `${HTML_ATTR_PREFIX}storage-autosave-ms`
+export const HTML_ATTR_STORAGE_ENCRYPTION_KEY = `${HTML_ATTR_PREFIX}storage-encryption-key`
 export const HTML_ATTR_STORAGE_RETENTION_DAYS = `${HTML_ATTR_PREFIX}storage-retention-days`
+export const HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS = `${HTML_ATTR_PREFIX}storage-retention-draft-days`
+export const HTML_ATTR_STORAGE_RETENTION_QUEUE_DAYS = `${HTML_ATTR_PREFIX}storage-retention-queue-days`
+export const HTML_ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS = `${HTML_ATTR_PREFIX}storage-retention-dead-letter-days`
 export const HTML_ATTR_VERSION = `${HTML_ATTR_PREFIX}version`
 export const HTML_ATTR_RULES = `${HTML_ATTR_PREFIX}rules`
 
@@ -286,7 +294,11 @@ export const ATTR_MAP = {
     [HTML_ATTR_STORAGE_ADAPTER]: ATTR_STORAGE_ADAPTER,
     [HTML_ATTR_STORAGE_KEY]: ATTR_STORAGE_KEY,
     [HTML_ATTR_STORAGE_AUTOSAVE_MS]: ATTR_STORAGE_AUTOSAVE_MS,
+    [HTML_ATTR_STORAGE_ENCRYPTION_KEY]: ATTR_STORAGE_ENCRYPTION_KEY,
     [HTML_ATTR_STORAGE_RETENTION_DAYS]: ATTR_STORAGE_RETENTION_DAYS,
+    [HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS]: ATTR_STORAGE_RETENTION_DRAFT_DAYS,
+    [HTML_ATTR_STORAGE_RETENTION_QUEUE_DAYS]: ATTR_STORAGE_RETENTION_QUEUE_DAYS,
+    [HTML_ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS]: ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS,
     [HTML_ATTR_VERSION]: ATTR_VERSION,
     [HTML_ATTR_RULES]: ATTR_RULES,
 }
@@ -418,15 +430,29 @@ export default function getFormConfig(node: Element): TFormConfig {
             autoSaveMs: (formConfig as any).storageAutoSaveMs
                 ? Number((formConfig as any).storageAutoSaveMs)
                 : undefined,
+            encryptionKey: (formConfig as any).storageEncryptionKey,
             retentionDays: (formConfig as any).storageRetentionDays
                 ? Number((formConfig as any).storageRetentionDays)
+                : undefined,
+            retentionDraftDays: (formConfig as any).storageRetentionDraftDays
+                ? Number((formConfig as any).storageRetentionDraftDays)
+                : undefined,
+            retentionQueueDays: (formConfig as any).storageRetentionQueueDays
+                ? Number((formConfig as any).storageRetentionQueueDays)
+                : undefined,
+            retentionDeadLetterDays: (formConfig as any).storageRetentionDeadLetterDays
+                ? Number((formConfig as any).storageRetentionDeadLetterDays)
                 : undefined,
         };
         delete (formConfig as any).storageMode;
         delete (formConfig as any).storageAdapter;
         delete (formConfig as any).storageKey;
         delete (formConfig as any).storageAutoSaveMs;
+        delete (formConfig as any).storageEncryptionKey;
         delete (formConfig as any).storageRetentionDays;
+        delete (formConfig as any).storageRetentionDraftDays;
+        delete (formConfig as any).storageRetentionQueueDays;
+        delete (formConfig as any).storageRetentionDeadLetterDays;
     }
 
     if ((formConfig as any).version) {

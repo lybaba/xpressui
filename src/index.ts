@@ -15,6 +15,7 @@ import type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
+  TFormStorageHealth,
   TFormStorageSnapshot,
 } from "./common/form-persistence";
 import { getRestorableStorageValues } from "./common/form-storage";
@@ -40,6 +41,7 @@ export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
 export { FormRuntime } from "./common/form-runtime";
 export { FormUploadRuntime } from "./common/form-upload";
+export type { TStorageHealth } from "./common/form-storage";
 export {
   PUBLIC_FORM_SCHEMA_VERSION,
   getPublicFormSchemaErrors,
@@ -67,7 +69,11 @@ export type {
 export type { TFormDebugPanel, TFormDebugPanelOptions } from "./common/form-debug-panel";
 export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 export type { TFormUploadState } from "./common/form-upload";
-export type { TFormQueueState, TFormStorageSnapshot } from "./common/form-persistence";
+export type {
+  TFormQueueState,
+  TFormStorageHealth,
+  TFormStorageSnapshot,
+} from "./common/form-persistence";
 export type { TCreateFormPresetOptions, TFormPresetName } from "./common/form-presets";
 export type {
   TFormRuntimeDynamicAdapters,
@@ -1570,6 +1576,10 @@ export class FormUI extends HTMLElement {
 
   getStorageSnapshot = (): TFormStorageSnapshot => {
     return this.persistence.getStorageSnapshot();
+  }
+
+  getStorageHealth = (): TFormStorageHealth => {
+    return this.persistence.getStorageHealth();
   }
 
   clearDeadLetterQueue = () => {

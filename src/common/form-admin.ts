@@ -2,6 +2,7 @@ import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
 import {
   createStorageAdapter,
+  TStorageHealth,
   TFormStorageAdapter,
   TQueuedSubmission,
 } from "./form-storage";
@@ -122,6 +123,7 @@ export type TLocalFormAdmin = {
     snapshot: TLocalFormAdminSnapshot,
     mode?: TLocalFormAdminImportMode,
   ): TLocalFormAdminSnapshot;
+  getStorageHealth(): TStorageHealth;
   listQueue(query?: TLocalQueueQuery): TQueuedSubmission[];
   listDeadLetter(query?: TLocalQueueQuery): TQueuedSubmission[];
   clearDraft(): void;
@@ -218,6 +220,23 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       storageAdapter.saveDeadLetterQueue(nextDeadLetter);
 
       return getSnapshot();
+    },
+    getStorageHealth() {
+      return (
+        storageAdapter?.getHealth() || {
+          adapter: "local-storage",
+          encryptionEnabled: false,
+          hasDraft: false,
+          queueLength: 0,
+          deadLetterLength: 0,
+          totalEntries: 0,
+          retentionMs: {
+            draft: null,
+            queue: null,
+            deadLetter: null,
+          },
+        }
+      );
     },
     listQueue(query) {
       return applyQuery(storageAdapter?.loadQueue() || [], query);

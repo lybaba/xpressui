@@ -2,6 +2,7 @@ import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
 import { FormDynamicRuntime, TFormActiveTemplateWarning } from "./form-dynamic";
 import { FormEngineRuntime, TStoredDocumentData } from "./form-engine";
+import { FormStepRuntime, TFormStepProgress, TFormWorkflowSnapshot } from "./form-steps";
 import { FormUploadRuntime } from "./form-upload";
 import {
   FormPersistenceRuntime,
@@ -65,6 +66,18 @@ export type TFormRuntimePublicApi = Pick<
   | "getQueueState"
   | "getStorageSnapshot"
   | "getStorageHealth"
+  | "getStepNames"
+  | "getCurrentStepIndex"
+  | "getCurrentStepName"
+  | "getStepProgress"
+  | "getWorkflowState"
+  | "setWorkflowState"
+  | "goToWorkflowStep"
+  | "getWorkflowSnapshot"
+  | "goToStep"
+  | "nextStep"
+  | "previousStep"
+  | "validateCurrentStep"
   | "createResumeToken"
   | "createResumeTokenAsync"
   | "listResumeTokens"
@@ -94,6 +107,7 @@ export class FormRuntime {
   persistence: FormPersistenceRuntime;
   dynamic: FormDynamicRuntime | null;
   upload: FormUploadRuntime;
+  steps: FormStepRuntime;
   options: Required<Pick<TFormRuntimeOptions, "emitEvent" | "getValues" | "submitValues">>;
 
   constructor(formConfig: TFormConfig | null = null, options: TFormRuntimeOptions = {}) {
@@ -106,6 +120,7 @@ export class FormRuntime {
         throw new Error("unreachable");
       }),
     };
+    this.steps = new FormStepRuntime();
     this.upload = new FormUploadRuntime({
       emitEvent: (eventName, detail) => this.options.emitEvent(eventName, detail),
     });
@@ -115,6 +130,15 @@ export class FormRuntime {
     this.persistence = new FormPersistenceRuntime({
       getFormConfig: () => this.formConfig,
       getValues: () => this.options.getValues(),
+      getCurrentStepIndex: () =>
+        (this.steps.getStepNames().length > 1 ? this.steps.getCurrentStepIndex() : null),
+      setCurrentStepIndex: (index) => {
+        if (this.steps.getStepNames().length) {
+          this.steps.setCurrentStepIndex(
+            Math.max(0, Math.min(index, Math.max(0, this.steps.getStepNames().length - 1))),
+          );
+        }
+      },
       emitEvent: (eventName, detail) => this.options.emitEvent(eventName, detail),
       submitValues: (values, submitConfig) => this.options.submitValues(values, submitConfig),
     });
@@ -173,6 +197,15 @@ export class FormRuntime {
     this.formConfig = formConfig;
     this.engine.setFormConfig(formConfig);
     this.persistence.setFormConfig(formConfig);
+    this.steps.setFormConfig(formConfig);
+    const savedStepIndex = this.persistence.loadCurrentStepIndex();
+    if (
+      typeof savedStepIndex === "number" &&
+      savedStepIndex >= 0 &&
+      savedStepIndex < this.steps.getStepNames().length
+    ) {
+      this.steps.setCurrentStepIndex(savedStepIndex);
+    }
   }
 
   setField(fieldName: string, fieldConfig: TFieldConfig): void {
@@ -239,6 +272,98 @@ export class FormRuntime {
 
   getStorageHealth(): TFormStorageHealth {
     return this.persistence.getStorageHealth();
+  }
+
+  getStepNames(): string[] {
+    return this.steps.getStepNames();
+  }
+
+  getCurrentStepIndex(): number {
+    return this.steps.getCurrentStepIndex();
+  }
+
+  getCurrentStepName(): string | null {
+    return this.steps.getCurrentStepName();
+  }
+
+  getStepProgress(): TFormStepProgress {
+    return this.steps.getStepProgress();
+  }
+
+  getWorkflowState(): string {
+    return this.steps.getWorkflowState();
+  }
+
+  setWorkflowState(nextState: string): void {
+    this.steps.setWorkflowState(nextState);
+  }
+
+  goToWorkflowStep(state?: string): boolean {
+    const moved = this.steps.goToWorkflowStep(state);
+    if (moved) {
+      this.persistence.saveCurrentStepIndex(this.steps.getCurrentStepIndex());
+    }
+    return moved;
+  }
+
+  getWorkflowSnapshot(): TFormWorkflowSnapshot {
+    return this.steps.getWorkflowSnapshot(this.options.getValues());
+  }
+
+  getStepSummary(): Array<{ field: string; label: string; value: any }> {
+    return this.steps.getStepSummary(this.options.getValues(), this.engine.getFields());
+  }
+
+  goToStep(index: number): boolean {
+    if (!this.steps.goToStep(index)) {
+      return false;
+    }
+
+    this.persistence.saveCurrentStepIndex(this.steps.getCurrentStepIndex());
+    return true;
+  }
+
+  nextStep(): boolean {
+    const currentValues = this.options.getValues();
+    const isStepValid = this.validateCurrentStep(currentValues);
+    if (!this.steps.nextStep(currentValues, isStepValid)) {
+      return false;
+    }
+
+    this.persistence.saveCurrentStepIndex(this.steps.getCurrentStepIndex());
+    return true;
+  }
+
+  previousStep(): boolean {
+    const moved = this.steps.previousStep();
+    if (moved) {
+      this.persistence.saveCurrentStepIndex(this.steps.getCurrentStepIndex());
+    }
+    return moved;
+  }
+
+  validateCurrentStep(values?: Record<string, any>): boolean {
+    if (this.steps.getStepNames().length <= 1) {
+      return true;
+    }
+
+    if (!this.steps.shouldValidateCurrentStepForWorkflow()) {
+      return true;
+    }
+
+    const currentStepName = this.steps.getCurrentStepName();
+    if (!currentStepName) {
+      return true;
+    }
+
+    const currentStepFields = this.formConfig?.sections?.[currentStepName] || [];
+    if (!currentStepFields.length) {
+      return true;
+    }
+
+    const nextValues = values || this.options.getValues();
+    const errors = this.engine.validateValues(nextValues);
+    return !currentStepFields.some((field) => Boolean(errors[field.name]));
   }
 
   createResumeToken(): string | null {

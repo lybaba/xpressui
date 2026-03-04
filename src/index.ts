@@ -1,6 +1,5 @@
 import { createForm, FormApi } from "final-form";
 import TFormConfig, { TFormSubmitRequest } from "./common/TFormConfig";
-import { CUSTOM_SECTION } from "./common/Constants";
 import { TValidator } from "./common/Validator";
 import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
@@ -23,12 +22,14 @@ import {
   TFormStorageSnapshot,
 } from "./common/form-persistence";
 import { getRestorableStorageValues } from "./common/form-storage";
+import { FormStepRuntime } from "./common/form-steps";
 import { FormRuntime } from "./common/form-runtime";
 import { FormUploadRuntime, TFormUploadState } from "./common/form-upload";
 import { validatePublicFormConfig } from "./common/public-schema";
 import {
   getProviderErrorEventName,
   getProviderSuccessEventName,
+  resolveProviderTransition,
   registerProvider,
 } from "./common/provider-registry";
 export {
@@ -36,7 +37,7 @@ export {
   createTemplateMarkup,
   mountFormUI,
 } from "./common/form-builder";
-export { createFormPreset, fieldFactory } from "./common/form-presets";
+export { createFormPreset, fieldFactory, stepFactory } from "./common/form-presets";
 export { createLocalFormAdmin } from "./common/form-admin";
 export { attachFormDebugObserver } from "./common/form-debug";
 export { createFormDebugPanel } from "./common/form-debug-panel";
@@ -45,6 +46,7 @@ export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
 export { FormRuntime } from "./common/form-runtime";
 export { FormUploadRuntime } from "./common/form-upload";
+export { FormStepRuntime } from "./common/form-steps";
 export type { TStorageHealth } from "./common/form-storage";
 export {
   PUBLIC_FORM_SCHEMA_VERSION,
@@ -57,6 +59,7 @@ export {
   getProviderDefinition,
   getProviderErrorEventName,
   getProviderSuccessEventName,
+  resolveProviderTransition,
   registerProvider,
 } from "./common/provider-registry";
 export type { TLocalFormAdmin, TLocalQueueQuery } from "./common/form-admin";
@@ -73,6 +76,7 @@ export type {
 export type { TFormDebugPanel, TFormDebugPanelOptions } from "./common/form-debug-panel";
 export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 export type { TFormUploadState } from "./common/form-upload";
+export type { TFormStepProgress, TFormWorkflowSnapshot } from "./common/form-steps";
 export type {
   TFormQueueState,
   TResumeLookupResult,
@@ -81,6 +85,7 @@ export type {
   TFormStorageSnapshot,
 } from "./common/form-persistence";
 export type { TCreateFormPresetOptions, TFormPresetName } from "./common/form-presets";
+export type { TFormProviderTransition } from "./common/provider-registry";
 export type {
   TFormRuntimeDynamicAdapters,
   TFormRuntimeEmitEvent,
@@ -184,6 +189,7 @@ export class FormUI extends HTMLElement {
   dynamic: FormDynamicRuntime;
   persistence: FormPersistenceRuntime;
   upload: FormUploadRuntime;
+  steps: FormStepRuntime;
   filePreviewUrls: Record<string, string[]>;
   fileDragActive: Record<string, boolean>;
   fileUploadState: Record<string, TFormUploadState | null>;
@@ -197,6 +203,11 @@ export class FormUI extends HTMLElement {
   workflowState: TFormWorkflowState;
   stepNames: string[];
   currentStepIndex: number;
+  stepControlContainer: HTMLElement | null;
+  stepProgressElement: HTMLElement | null;
+  stepSummaryElement: HTMLElement | null;
+  stepBackButton: HTMLButtonElement | null;
+  stepNextButton: HTMLButtonElement | null;
 
   constructor() {
     super();
@@ -219,6 +230,11 @@ export class FormUI extends HTMLElement {
     this.workflowState = "draft";
     this.stepNames = [];
     this.currentStepIndex = 0;
+    this.stepControlContainer = null;
+    this.stepProgressElement = null;
+    this.stepSummaryElement = null;
+    this.stepBackButton = null;
+    this.stepNextButton = null;
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
       getRules: () => this.formConfig?.rules || [],
@@ -249,9 +265,13 @@ export class FormUI extends HTMLElement {
         submit: this.formConfig?.submit,
       }),
     });
+    this.steps = new FormStepRuntime();
     this.persistence = new FormPersistenceRuntime({
       getFormConfig: () => this.formConfig,
       getValues: () => this.form?.getState().values || {},
+      getCurrentStepIndex: () =>
+        (this.steps.getStepNames().length > 1 ? this.steps.getCurrentStepIndex() : null),
+      setCurrentStepIndex: (index) => this.setCurrentStepIndex(index),
       emitEvent: (eventName, detail) =>
         this.emitFormEvent(eventName, detail as TFormUISubmitDetail),
       submitValues: (values, submitConfig) => this.submitToApi(values, submitConfig),
@@ -1520,11 +1540,19 @@ export class FormUI extends HTMLElement {
     if (formElem) {
       this.formConfig = validatePublicFormConfig(getFormConfig(formElem) as unknown as Record<string, any>);
       this.engine.setFormConfig(this.formConfig);
+      this.steps.setFormConfig(this.formConfig);
       this.persistence.setFormConfig(this.formConfig);
-      this.stepNames = (this.formConfig.sections?.[CUSTOM_SECTION] || [])
-        .map((section) => section.name)
-        .filter(Boolean);
-      this.currentStepIndex = 0;
+      this.stepNames = this.steps.getStepNames();
+      this.currentStepIndex = this.steps.getCurrentStepIndex();
+      const savedStepIndex = this.persistence.loadCurrentStepIndex();
+      if (
+        typeof savedStepIndex === "number" &&
+        savedStepIndex >= 0 &&
+        savedStepIndex < this.stepNames.length
+      ) {
+        this.steps.setCurrentStepIndex(savedStepIndex);
+        this.currentStepIndex = this.steps.getCurrentStepIndex();
+      }
       const draftValues = this.persistence.loadDraftValues();
 
       this.form = createForm({
@@ -1537,6 +1565,10 @@ export class FormUI extends HTMLElement {
 
       formElem.addEventListener("submit", (event) => {
         event.preventDefault();
+        if (!this.isLastStep()) {
+          this.nextStep();
+          return;
+        }
         this.form?.submit();
       });
 
@@ -1547,9 +1579,18 @@ export class FormUI extends HTMLElement {
         }
       });
 
+      this.ensureStepControls(formElem);
+
       this.dynamic.updateConditionalFields();
       void this.dynamic.refreshRemoteOptions();
       this.syncStepVisibility();
+      this.syncStepControls();
+      this.emitFormEvent("form-ui:workflow-step", {
+        values: this.form?.getState().values || {},
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: this.getWorkflowSnapshot(),
+      });
       this.emitStepChange();
 
       this.persistence.connect();
@@ -1717,15 +1758,126 @@ export class FormUI extends HTMLElement {
   }
 
   getStepNames = (): string[] => {
-    return [...this.stepNames];
+    return this.steps.getStepNames();
   }
 
   getCurrentStepIndex = (): number => {
-    return this.currentStepIndex;
+    return this.steps.getCurrentStepIndex();
   }
 
   getCurrentStepName = (): string | null => {
-    return this.stepNames[this.currentStepIndex] || null;
+    return this.steps.getCurrentStepName();
+  }
+
+  getStepProgress = () => {
+    return this.steps.getStepProgress();
+  }
+
+  getStepButtonLabels = (): { previous: string; next: string } => {
+    return {
+      previous: this.formConfig?.stepLabels?.previous || "Back",
+      next: this.formConfig?.stepLabels?.next || "Next",
+    };
+  }
+
+  getWorkflowSnapshot = () => {
+    const values = this.form?.getState().values || {};
+    return this.steps.getWorkflowSnapshot(values);
+  }
+
+  goToWorkflowStep = (state?: string): boolean => {
+    if (!this.steps.goToWorkflowStep(state)) {
+      return false;
+    }
+
+    this.currentStepIndex = this.steps.getCurrentStepIndex();
+    this.persistence.saveCurrentStepIndex(this.currentStepIndex);
+    this.syncStepVisibility();
+    this.syncStepControls();
+    this.emitFormEvent("form-ui:step-jumped", {
+      values: this.form?.getState().values || {},
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: {
+        state: state || this.workflowState,
+        stepIndex: this.currentStepIndex,
+        stepName: this.getCurrentStepName(),
+      },
+    });
+    this.emitFormEvent("form-ui:workflow-step", {
+      values: this.form?.getState().values || {},
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: this.getWorkflowSnapshot(),
+    });
+    this.emitStepChange();
+    return true;
+  }
+
+  isLastStep = (): boolean => {
+    return this.steps.isLastStep();
+  }
+
+  getCurrentStepConfig = (): TFieldConfig | null => {
+    const currentStepName = this.getCurrentStepName();
+    if (!currentStepName) {
+      return null;
+    }
+
+    return (
+      this.steps.getCurrentStepConfig()
+    );
+  }
+
+  getStepSummary = (): Array<{ field: string; label: string; value: any }> => {
+    const currentStepConfig = this.getCurrentStepConfig();
+    if (!currentStepConfig?.stepSummary) {
+      return [];
+    }
+
+    const values = this.form?.getState().values || {};
+    return this.steps.getStepSummary(values, this.engine.getFields());
+  }
+
+  shouldValidateCurrentStepForWorkflow = (): boolean => {
+    return this.steps.shouldValidateCurrentStepForWorkflow();
+  }
+
+  isCurrentStepSkippable = (): boolean => {
+    return this.steps.isCurrentStepSkippable();
+  }
+
+  getConditionalNextStepName = (): string | null => {
+    if (!this.form) {
+      return null;
+    }
+
+    return this.steps.getConditionalNextStepName(this.form.getState().values || {});
+  }
+
+  setCurrentStepIndex = (index: number): boolean => {
+    if (!this.steps.setCurrentStepIndex(index)) {
+      return false;
+    }
+
+    this.currentStepIndex = this.steps.getCurrentStepIndex();
+    this.syncStepVisibility();
+    this.syncStepControls();
+    this.emitStepChange();
+    return true;
+  }
+
+  getCurrentStepFieldElements = (): Array<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement> => {
+    const currentStepName = this.getCurrentStepName();
+    if (!currentStepName) {
+      return [];
+    }
+
+    return Array.from(
+      this.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+        "input[data-section-name], select[data-section-name], textarea[data-section-name]",
+      ),
+    ).filter((element) => element.getAttribute("data-section-name") === currentStepName);
   }
 
   getStepElements = (sectionName: string): HTMLElement[] => {
@@ -1737,6 +1889,96 @@ export class FormUI extends HTMLElement {
       .map((node) => node as HTMLElement);
 
     return Array.from(new Set([...sectionNodes, ...fieldNodes]));
+  }
+
+  validateCurrentStep = (): boolean => {
+    if (!this.form || this.stepNames.length <= 1) {
+      return true;
+    }
+
+    if (!this.shouldValidateCurrentStepForWorkflow()) {
+      return true;
+    }
+
+    const currentStepFields = this.getCurrentStepFieldElements();
+    if (!currentStepFields.length) {
+      return true;
+    }
+
+    currentStepFields.forEach((fieldElement) => {
+      fieldElement.dispatchEvent(new FocusEvent("blur"));
+    });
+
+    const values = this.form.getState().values || {};
+    const errors = this.engine.validateValues(values);
+    return !currentStepFields.some((fieldElement) => Boolean(errors[fieldElement.name]));
+  }
+
+  ensureStepControls = (formElem: HTMLFormElement) => {
+    if (this.stepNames.length <= 1) {
+      this.stepControlContainer = null;
+      this.stepProgressElement = null;
+      this.stepSummaryElement = null;
+      this.stepBackButton = null;
+      this.stepNextButton = null;
+      return;
+    }
+
+    const existingContainer = formElem.querySelector("[data-form-step-controls]") as HTMLElement | null;
+    if (existingContainer) {
+      this.stepControlContainer = existingContainer;
+      this.stepProgressElement = existingContainer.querySelector(
+        "[data-form-step-progress]",
+      ) as HTMLElement | null;
+      this.stepSummaryElement = existingContainer.querySelector(
+        "[data-form-step-summary]",
+      ) as HTMLElement | null;
+      this.stepBackButton = existingContainer.querySelector(
+        '[data-step-action="back"]',
+      ) as HTMLButtonElement | null;
+      this.stepNextButton = existingContainer.querySelector(
+        '[data-step-action="next"]',
+      ) as HTMLButtonElement | null;
+      return;
+    }
+
+    const controlsContainer = document.createElement("div");
+    controlsContainer.setAttribute("data-form-step-controls", "true");
+    const buttonLabels = this.getStepButtonLabels();
+
+    const progressElement = document.createElement("div");
+    progressElement.setAttribute("data-form-step-progress", "true");
+
+    const summaryElement = document.createElement("div");
+    summaryElement.setAttribute("data-form-step-summary", "true");
+
+    const backButton = document.createElement("button");
+    backButton.type = "button";
+    backButton.textContent = buttonLabels.previous;
+    backButton.setAttribute("data-step-action", "back");
+    backButton.addEventListener("click", () => {
+      this.previousStep();
+    });
+
+    const nextButton = document.createElement("button");
+    nextButton.type = "button";
+    nextButton.textContent = buttonLabels.next;
+    nextButton.setAttribute("data-step-action", "next");
+    nextButton.addEventListener("click", () => {
+      this.nextStep();
+    });
+
+    controlsContainer.appendChild(progressElement);
+    controlsContainer.appendChild(summaryElement);
+    controlsContainer.appendChild(backButton);
+    controlsContainer.appendChild(nextButton);
+    formElem.appendChild(controlsContainer);
+
+    this.stepControlContainer = controlsContainer;
+    this.stepProgressElement = progressElement;
+    this.stepSummaryElement = summaryElement;
+    this.stepBackButton = backButton;
+    this.stepNextButton = nextButton;
   }
 
   syncStepVisibility = () => {
@@ -1762,10 +2004,57 @@ export class FormUI extends HTMLElement {
     });
   }
 
+  syncStepControls = () => {
+    const formElement = this.querySelector("form");
+    if (!formElement || this.stepNames.length <= 1) {
+      return;
+    }
+
+    const isLastStep = this.isLastStep();
+    const progress = this.getStepProgress();
+    if (this.stepProgressElement) {
+      const suffix = this.isCurrentStepSkippable() ? " (Optional)" : "";
+      this.stepProgressElement.textContent =
+        `Step ${progress.stepNumber} of ${progress.stepCount} (${progress.percent}%)${suffix}`;
+    }
+    if (this.stepSummaryElement) {
+      const summary = this.getStepSummary();
+      if (!summary.length) {
+        this.stepSummaryElement.textContent = "";
+        this.stepSummaryElement.style.display = "none";
+      } else {
+        this.stepSummaryElement.textContent = summary
+          .map((entry) => `${entry.label}: ${Array.isArray(entry.value) ? entry.value.join(", ") : String(entry.value)}`)
+          .join(" | ");
+        this.stepSummaryElement.style.display = "";
+      }
+    }
+    if (this.stepBackButton) {
+      this.stepBackButton.disabled = this.currentStepIndex === 0;
+      this.stepBackButton.style.display = this.currentStepIndex === 0 ? "none" : "";
+    }
+    if (this.stepNextButton) {
+      this.stepNextButton.disabled = isLastStep;
+      this.stepNextButton.style.display = isLastStep ? "none" : "";
+    }
+
+    const submitButtons = Array.from(
+      formElement.querySelectorAll<HTMLButtonElement | HTMLInputElement>(
+        'button[type="submit"], input[type="submit"]',
+      ),
+    );
+    submitButtons.forEach((button) => {
+      button.disabled = !isLastStep;
+    });
+  }
+
   emitStepChange = () => {
     if (this.stepNames.length <= 1) {
       return;
     }
+
+    const progress = this.getStepProgress();
+    const conditionalNextStepName = this.getConditionalNextStepName();
 
     this.emitFormEvent("form-ui:step-change", {
       values: this.form?.getState().values || {},
@@ -1775,27 +2064,101 @@ export class FormUI extends HTMLElement {
         stepIndex: this.currentStepIndex,
         stepName: this.getCurrentStepName(),
         stepCount: this.stepNames.length,
+        progress,
+        skippable: this.isCurrentStepSkippable(),
+        summary: this.getStepSummary(),
+        nextStepTarget: conditionalNextStepName,
       },
     });
   }
 
   goToStep = (index: number): boolean => {
-    if (index < 0 || index >= this.stepNames.length || index === this.currentStepIndex) {
+    if (!this.steps.canGoToStep(index)) {
       return false;
     }
 
-    this.currentStepIndex = index;
+    if (!this.steps.goToStep(index)) {
+      return false;
+    }
+    this.currentStepIndex = this.steps.getCurrentStepIndex();
+    this.persistence.saveCurrentStepIndex(this.currentStepIndex);
     this.syncStepVisibility();
+    this.syncStepControls();
     this.emitStepChange();
     return true;
   }
 
   nextStep = (): boolean => {
-    return this.goToStep(this.currentStepIndex + 1);
+    const values = this.form?.getState().values || {};
+    const wasSkippable = this.steps.isCurrentStepSkippable();
+    const conditionalTarget = this.steps.getConditionalNextStepName(values);
+    const isStepValid = this.validateCurrentStep();
+    if (!wasSkippable && !isStepValid) {
+      this.emitFormEvent("form-ui:step-blocked", {
+        values,
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          stepIndex: this.currentStepIndex,
+          stepName: this.getCurrentStepName(),
+        },
+      });
+    }
+    if (!this.steps.nextStep(values, isStepValid)) {
+      return false;
+    }
+    const jumped = Boolean(conditionalTarget);
+    if (jumped) {
+      this.emitFormEvent("form-ui:step-jumped", {
+        values,
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          stepIndex: this.steps.getCurrentStepIndex(),
+          stepName: this.steps.getCurrentStepName(),
+        },
+      });
+    } else if (wasSkippable) {
+      this.emitFormEvent("form-ui:step-skipped", {
+        values,
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          stepIndex: this.currentStepIndex,
+          stepName: this.getCurrentStepName(),
+        },
+      });
+    }
+    this.currentStepIndex = this.steps.getCurrentStepIndex();
+    this.persistence.saveCurrentStepIndex(this.currentStepIndex);
+    this.syncStepVisibility();
+    this.syncStepControls();
+    this.emitFormEvent("form-ui:workflow-step", {
+      values,
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: this.getWorkflowSnapshot(),
+    });
+    this.emitStepChange();
+    return true;
   }
 
   previousStep = (): boolean => {
-    return this.goToStep(this.currentStepIndex - 1);
+    if (!this.steps.previousStep()) {
+      return false;
+    }
+    this.currentStepIndex = this.steps.getCurrentStepIndex();
+    this.persistence.saveCurrentStepIndex(this.currentStepIndex);
+    this.syncStepVisibility();
+    this.syncStepControls();
+    this.emitFormEvent("form-ui:workflow-step", {
+      values: this.form?.getState().values || {},
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: this.getWorkflowSnapshot(),
+    });
+    this.emitStepChange();
+    return true;
   }
 
   syncApprovalStateFields = () => {
@@ -1817,10 +2180,13 @@ export class FormUI extends HTMLElement {
     result?: any,
   ) => {
     if (this.workflowState === nextState) {
+      this.goToWorkflowStep(nextState);
       return;
     }
 
     this.workflowState = nextState;
+    this.steps.setWorkflowState(nextState);
+    this.goToWorkflowStep(nextState);
     this.emitFormEvent("form-ui:workflow-state", {
       ...detail,
       response,
@@ -1829,6 +2195,79 @@ export class FormUI extends HTMLElement {
         approvalState: this.approvalState,
       },
     });
+    this.emitFormEvent("form-ui:workflow-step", {
+      ...detail,
+      response,
+      result: this.getWorkflowSnapshot(),
+    });
+  }
+
+  resolveProviderStepTargetIndex = (target: string | number): number | null => {
+    if (typeof target === "number" && Number.isInteger(target)) {
+      return target;
+    }
+
+    if (typeof target === "string") {
+      const stepNames = this.getStepNames();
+      const stepIndex = stepNames.indexOf(target);
+      return stepIndex >= 0 ? stepIndex : null;
+    }
+
+    return null;
+  }
+
+  applyProviderTransition = (
+    detail: TFormUISubmitDetail,
+    response: Response | undefined,
+    result: any,
+  ) => {
+    const submitConfig = this.formConfig?.submit;
+    const transition = resolveProviderTransition(submitConfig?.action, result, submitConfig || { endpoint: "" });
+    if (!transition) {
+      return false;
+    }
+
+    if (transition.type === "workflow") {
+      this.setWorkflowState(transition.state as TFormWorkflowState, detail, response, result);
+      this.emitFormEvent("form-ui:provider-transition", {
+        ...detail,
+        response,
+        result: {
+          transition,
+          workflow: this.getWorkflowSnapshot(),
+        },
+      });
+      return true;
+    }
+
+    const stepIndex = this.resolveProviderStepTargetIndex(transition.target);
+    if (stepIndex === null || !this.goToStep(stepIndex)) {
+      return false;
+    }
+
+    this.emitFormEvent("form-ui:step-jumped", {
+      ...detail,
+      response,
+      result: {
+        transition,
+        stepIndex: this.getCurrentStepIndex(),
+        stepName: this.getCurrentStepName(),
+      },
+    });
+    this.emitFormEvent("form-ui:workflow-step", {
+      ...detail,
+      response,
+      result: this.getWorkflowSnapshot(),
+    });
+    this.emitFormEvent("form-ui:provider-transition", {
+      ...detail,
+      response,
+      result: {
+        transition,
+        workflow: this.getWorkflowSnapshot(),
+      },
+    });
+    return true;
   }
 
   emitFileValidationErrorEvent = (
@@ -1920,7 +2359,6 @@ export class FormUI extends HTMLElement {
     this.syncApprovalStateFields();
 
     if (status === "pending_approval") {
-      this.setWorkflowState("pending_approval", detail, response, result);
       this.emitFormEvent("form-ui:approval-requested", {
         ...detail,
         response,
@@ -1930,7 +2368,6 @@ export class FormUI extends HTMLElement {
     }
 
     if (status === "approved" || status === "completed") {
-      this.setWorkflowState(status as "approved" | "completed", detail, response, result);
       this.emitFormEvent("form-ui:approval-complete", {
         ...detail,
         response,
@@ -1940,7 +2377,7 @@ export class FormUI extends HTMLElement {
     }
 
     if (status === "rejected") {
-      this.setWorkflowState("rejected", detail, response, result);
+      return;
     }
   }
 
@@ -1977,11 +2414,12 @@ export class FormUI extends HTMLElement {
         response,
         result,
       });
-      if (this.formConfig?.submit?.action !== "approval-request" && this.formConfig?.submit?.action !== "approval-decision") {
+      this.emitApprovalStateEvents(detail, result, response);
+      const appliedProviderTransition = this.applyProviderTransition(detail, response, result);
+      if (!appliedProviderTransition && this.formConfig?.submit?.action !== "approval-request" && this.formConfig?.submit?.action !== "approval-decision") {
         this.setWorkflowState("submitted", detail, response, result);
       }
       this.clearDraft();
-      this.emitApprovalStateEvents(detail, result, response);
       const providerSuccessEvent = getProviderSuccessEventName(this.formConfig?.submit?.action);
       if (providerSuccessEvent) {
         this.emitFormEvent(providerSuccessEvent, {

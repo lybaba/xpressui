@@ -92,6 +92,14 @@ export const ATTR_OPTIONS_ENDPOINT = "optionsEndpoint"
 export const ATTR_OPTIONS_DEPENDS_ON = "optionsDependsOn"
 export const ATTR_OPTIONS_LABEL_KEY = "optionsLabelKey"
 export const ATTR_OPTIONS_VALUE_KEY = "optionsValueKey"
+export const ATTR_STEP_SKIPPABLE = "stepSkippable"
+export const ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES = "stepValidateWhenWorkflowStates"
+export const ATTR_STEP_SUMMARY = "stepSummary"
+export const ATTR_NEXT_STEP_WHEN_FIELD = "nextStepWhenField"
+export const ATTR_NEXT_STEP_WHEN_EQUALS = "nextStepWhenEquals"
+export const ATTR_NEXT_STEP_WHEN_NOT_EQUALS = "nextStepWhenNotEquals"
+export const ATTR_NEXT_STEP_TARGET = "nextStepTarget"
+export const ATTR_STEP_TRANSITIONS = "stepTransitions"
 export const ATTR_STORAGE_MODE = "storageMode"
 export const ATTR_STORAGE_ADAPTER = "storageAdapter"
 export const ATTR_STORAGE_KEY = "storageKey"
@@ -103,6 +111,9 @@ export const ATTR_STORAGE_RETENTION_DAYS = "storageRetentionDays"
 export const ATTR_STORAGE_RETENTION_DRAFT_DAYS = "storageRetentionDraftDays"
 export const ATTR_STORAGE_RETENTION_QUEUE_DAYS = "storageRetentionQueueDays"
 export const ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS = "storageRetentionDeadLetterDays"
+export const ATTR_STEP_PREVIOUS_LABEL = "stepPreviousLabel"
+export const ATTR_STEP_NEXT_LABEL = "stepNextLabel"
+export const ATTR_WORKFLOW_STEP_TARGETS = "workflowStepTargets"
 export const ATTR_VERSION = "version"
 export const ATTR_RULES = "rules"
 
@@ -193,6 +204,14 @@ export const HTML_ATTR_OPTIONS_ENDPOINT = `${HTML_ATTR_PREFIX}options-endpoint`
 export const HTML_ATTR_OPTIONS_DEPENDS_ON = `${HTML_ATTR_PREFIX}options-depends-on`
 export const HTML_ATTR_OPTIONS_LABEL_KEY = `${HTML_ATTR_PREFIX}options-label-key`
 export const HTML_ATTR_OPTIONS_VALUE_KEY = `${HTML_ATTR_PREFIX}options-value-key`
+export const HTML_ATTR_STEP_SKIPPABLE = `${HTML_ATTR_PREFIX}step-skippable`
+export const HTML_ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES = `${HTML_ATTR_PREFIX}step-validate-when-workflow-states`
+export const HTML_ATTR_STEP_SUMMARY = `${HTML_ATTR_PREFIX}step-summary`
+export const HTML_ATTR_NEXT_STEP_WHEN_FIELD = `${HTML_ATTR_PREFIX}next-step-when-field`
+export const HTML_ATTR_NEXT_STEP_WHEN_EQUALS = `${HTML_ATTR_PREFIX}next-step-when-equals`
+export const HTML_ATTR_NEXT_STEP_WHEN_NOT_EQUALS = `${HTML_ATTR_PREFIX}next-step-when-not-equals`
+export const HTML_ATTR_NEXT_STEP_TARGET = `${HTML_ATTR_PREFIX}next-step-target`
+export const HTML_ATTR_STEP_TRANSITIONS = `${HTML_ATTR_PREFIX}step-transitions`
 export const HTML_ATTR_STORAGE_MODE = `${HTML_ATTR_PREFIX}storage-mode`
 export const HTML_ATTR_STORAGE_ADAPTER = `${HTML_ATTR_PREFIX}storage-adapter`
 export const HTML_ATTR_STORAGE_KEY = `${HTML_ATTR_PREFIX}storage-key`
@@ -204,6 +223,9 @@ export const HTML_ATTR_STORAGE_RETENTION_DAYS = `${HTML_ATTR_PREFIX}storage-rete
 export const HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS = `${HTML_ATTR_PREFIX}storage-retention-draft-days`
 export const HTML_ATTR_STORAGE_RETENTION_QUEUE_DAYS = `${HTML_ATTR_PREFIX}storage-retention-queue-days`
 export const HTML_ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS = `${HTML_ATTR_PREFIX}storage-retention-dead-letter-days`
+export const HTML_ATTR_STEP_PREVIOUS_LABEL = `${HTML_ATTR_PREFIX}step-previous-label`
+export const HTML_ATTR_STEP_NEXT_LABEL = `${HTML_ATTR_PREFIX}step-next-label`
+export const HTML_ATTR_WORKFLOW_STEP_TARGETS = `${HTML_ATTR_PREFIX}workflow-step-targets`
 export const HTML_ATTR_VERSION = `${HTML_ATTR_PREFIX}version`
 export const HTML_ATTR_RULES = `${HTML_ATTR_PREFIX}rules`
 
@@ -294,6 +316,14 @@ export const ATTR_MAP = {
     [HTML_ATTR_OPTIONS_DEPENDS_ON]: ATTR_OPTIONS_DEPENDS_ON,
     [HTML_ATTR_OPTIONS_LABEL_KEY]: ATTR_OPTIONS_LABEL_KEY,
     [HTML_ATTR_OPTIONS_VALUE_KEY]: ATTR_OPTIONS_VALUE_KEY,
+    [HTML_ATTR_STEP_SKIPPABLE]: ATTR_STEP_SKIPPABLE,
+    [HTML_ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES]: ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES,
+    [HTML_ATTR_STEP_SUMMARY]: ATTR_STEP_SUMMARY,
+    [HTML_ATTR_NEXT_STEP_WHEN_FIELD]: ATTR_NEXT_STEP_WHEN_FIELD,
+    [HTML_ATTR_NEXT_STEP_WHEN_EQUALS]: ATTR_NEXT_STEP_WHEN_EQUALS,
+    [HTML_ATTR_NEXT_STEP_WHEN_NOT_EQUALS]: ATTR_NEXT_STEP_WHEN_NOT_EQUALS,
+    [HTML_ATTR_NEXT_STEP_TARGET]: ATTR_NEXT_STEP_TARGET,
+    [HTML_ATTR_STEP_TRANSITIONS]: ATTR_STEP_TRANSITIONS,
     [HTML_ATTR_STORAGE_MODE]: ATTR_STORAGE_MODE,
     [HTML_ATTR_STORAGE_ADAPTER]: ATTR_STORAGE_ADAPTER,
     [HTML_ATTR_STORAGE_KEY]: ATTR_STORAGE_KEY,
@@ -305,6 +335,9 @@ export const ATTR_MAP = {
     [HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS]: ATTR_STORAGE_RETENTION_DRAFT_DAYS,
     [HTML_ATTR_STORAGE_RETENTION_QUEUE_DAYS]: ATTR_STORAGE_RETENTION_QUEUE_DAYS,
     [HTML_ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS]: ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS,
+    [HTML_ATTR_STEP_PREVIOUS_LABEL]: ATTR_STEP_PREVIOUS_LABEL,
+    [HTML_ATTR_STEP_NEXT_LABEL]: ATTR_STEP_NEXT_LABEL,
+    [HTML_ATTR_WORKFLOW_STEP_TARGETS]: ATTR_WORKFLOW_STEP_TARGETS,
     [HTML_ATTR_VERSION]: ATTR_VERSION,
     [HTML_ATTR_RULES]: ATTR_RULES,
 }
@@ -353,6 +386,62 @@ export function getFieldConfig(node: Element): TFieldConfig {
 
     if (node.hasAttribute(HTML_ATTR_REQUIRE_VALID_DOCUMENT_MRZ)) {
         fieldConfig.requireValidDocumentMrz = true;
+    }
+
+    if (node.hasAttribute(HTML_ATTR_STEP_SKIPPABLE)) {
+        fieldConfig.stepSkippable = true;
+    }
+
+    if (node.hasAttribute(HTML_ATTR_STEP_SUMMARY)) {
+        fieldConfig.stepSummary = true;
+    }
+
+    const stepValidateWhenWorkflowStates = node.getAttribute(HTML_ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES);
+    if (stepValidateWhenWorkflowStates) {
+        try {
+            const parsed = JSON.parse(stepValidateWhenWorkflowStates);
+            if (Array.isArray(parsed)) {
+                fieldConfig.stepValidateWhenWorkflowStates = parsed.filter((entry) => typeof entry === "string");
+            }
+        } catch {
+            // Ignore invalid JSON.
+        }
+    }
+
+    const nextStepWhenEquals = node.getAttribute(HTML_ATTR_NEXT_STEP_WHEN_EQUALS);
+    if (nextStepWhenEquals) {
+        try {
+            const parsed = JSON.parse(nextStepWhenEquals);
+            if (Array.isArray(parsed)) {
+                fieldConfig.nextStepWhenEquals = parsed.map((entry) => String(entry));
+            }
+        } catch {
+            // Keep attribute string as-is via ATTR_MAP mapping.
+        }
+    }
+
+    const nextStepWhenNotEquals = node.getAttribute(HTML_ATTR_NEXT_STEP_WHEN_NOT_EQUALS);
+    if (nextStepWhenNotEquals) {
+        try {
+            const parsed = JSON.parse(nextStepWhenNotEquals);
+            if (Array.isArray(parsed)) {
+                fieldConfig.nextStepWhenNotEquals = parsed.map((entry) => String(entry));
+            }
+        } catch {
+            // Keep attribute string as-is via ATTR_MAP mapping.
+        }
+    }
+
+    const stepTransitions = node.getAttribute(HTML_ATTR_STEP_TRANSITIONS);
+    if (stepTransitions) {
+        try {
+            const parsed = JSON.parse(stepTransitions);
+            if (Array.isArray(parsed)) {
+                fieldConfig.stepTransitions = parsed.filter((entry) => entry && typeof entry === "object");
+            }
+        } catch {
+            // Ignore invalid JSON.
+        }
     }
 
     const minFiles = node.getAttribute(HTML_ATTR_MIN_FILES);
@@ -471,6 +560,23 @@ export default function getFormConfig(node: Element): TFormConfig {
         (formConfig as any).version = Number((formConfig as any).version);
     }
 
+    if ((formConfig as any).stepPreviousLabel || (formConfig as any).stepNextLabel) {
+        (formConfig as any).stepLabels = {
+            previous: (formConfig as any).stepPreviousLabel,
+            next: (formConfig as any).stepNextLabel,
+        };
+        delete (formConfig as any).stepPreviousLabel;
+        delete (formConfig as any).stepNextLabel;
+    }
+
+    if ((formConfig as any).workflowStepTargets) {
+        try {
+            (formConfig as any).workflowStepTargets = JSON.parse((formConfig as any).workflowStepTargets);
+        } catch {
+            delete (formConfig as any).workflowStepTargets;
+        }
+    }
+
     if ((formConfig as any).rules) {
         try {
             (formConfig as any).rules = JSON.parse((formConfig as any).rules);
@@ -482,6 +588,7 @@ export default function getFormConfig(node: Element): TFormConfig {
     const sectionNodes = node.querySelectorAll('[data-type="section"]');
     const sectionList = getFieldConfigList(sectionNodes);
     formConfig.sections[CUSTOM_SECTION] = sectionList;
+    (formConfig as any).stepSections = sectionList;
 
     sectionList.forEach((sectionConfig: TFieldConfig) => {
         const fieldNodes = node.querySelectorAll(`[data-section-name="${sectionConfig.name}"]`);

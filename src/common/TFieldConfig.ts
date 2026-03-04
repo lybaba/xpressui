@@ -6,6 +6,13 @@ export type ImageSize = {
     height: number;
 };
 
+export type TStepTransition = {
+    whenField: string;
+    operator?: 'equals' | 'not_equals' | 'in' | 'not_in' | 'truthy';
+    value?: any;
+    target: string;
+};
+
 export const HERO_FIELD_NAME = 'hero';
 export const HERO_FIELD_LABEL = 'Hero Image';
 
@@ -93,6 +100,14 @@ type TFieldConfig = {
     optionsDependsOn?: string;
     optionsLabelKey?: string;
     optionsValueKey?: string;
+    stepSkippable?: boolean;
+    stepValidateWhenWorkflowStates?: string[];
+    stepSummary?: boolean;
+    nextStepWhenField?: string;
+    nextStepWhenEquals?: string | string[];
+    nextStepWhenNotEquals?: string | string[];
+    nextStepTarget?: string;
+    stepTransitions?: TStepTransition[];
 };
 
 export type TFieldConfigInfo = {

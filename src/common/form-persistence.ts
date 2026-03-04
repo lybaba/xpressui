@@ -23,6 +23,7 @@ export type TFormStorageSnapshot = {
   draft: Record<string, any> | null;
   queue: TQueuedSubmission[];
   deadLetter: TQueuedSubmission[];
+  currentStepIndex?: number;
 };
 
 export type TFormStorageHealth = TStorageHealth & {
@@ -51,6 +52,8 @@ type TResumeTokenState = {
 type TFormPersistenceRuntimeOptions = {
   getFormConfig(): TFormConfig | null;
   getValues(): Record<string, any>;
+  getCurrentStepIndex?(): number | null;
+  setCurrentStepIndex?(index: number): void;
   emitEvent(eventName: string, detail: Record<string, any>): boolean;
   submitValues(
     values: Record<string, any>,
@@ -153,6 +156,65 @@ export class FormPersistenceRuntime {
     };
   }
 
+  getCurrentStepStorageKey(): string | null {
+    const formConfig = this.options.getFormConfig();
+    if (!formConfig) {
+      return null;
+    }
+
+    const baseKey = formConfig.storage?.key || `xpressui:draft:${formConfig.name}`;
+    return `${baseKey}:step`;
+  }
+
+  loadCurrentStepIndex(): number | null {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const key = this.getCurrentStepStorageKey();
+    if (!key) {
+      return null;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw === null) {
+        return null;
+      }
+
+      const parsed = Number(raw);
+      return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  saveCurrentStepIndex(index?: number | null): void {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const key = this.getCurrentStepStorageKey();
+    if (!key) {
+      return;
+    }
+
+    if (typeof index !== "number" || !Number.isInteger(index) || index < 0) {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        // Ignore storage write failures.
+      }
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(key, String(index));
+    } catch {
+      // Ignore storage write failures.
+    }
+  }
+
   getResumeTokenTtlMs(): number | null {
     const retentionDays = this.options.getFormConfig()?.storage?.resumeTokenTtlDays;
     return typeof retentionDays === "number" && retentionDays > 0
@@ -213,6 +275,13 @@ export class FormPersistenceRuntime {
       }
       this.storageAdapter.saveQueue(Array.isArray(snapshot.queue) ? snapshot.queue : []);
       this.storageAdapter.saveDeadLetterQueue(Array.isArray(snapshot.deadLetter) ? snapshot.deadLetter : []);
+    }
+
+    if (typeof snapshot.currentStepIndex === "number") {
+      this.saveCurrentStepIndex(snapshot.currentStepIndex);
+      this.options.setCurrentStepIndex?.(snapshot.currentStepIndex);
+    } else {
+      this.saveCurrentStepIndex(null);
     }
 
     return getRestorableStorageValues(
@@ -284,6 +353,7 @@ export class FormPersistenceRuntime {
 
     const draftValues = values || this.options.getValues();
     this.storageAdapter.saveDraft(draftValues);
+    this.saveCurrentStepIndex(this.options.getCurrentStepIndex?.() ?? null);
     this.options.emitEvent("form-ui:draft-saved", this.createEventDetail(draftValues));
   }
 
@@ -313,6 +383,7 @@ export class FormPersistenceRuntime {
     }
 
     this.storageAdapter.clearDraft();
+    this.saveCurrentStepIndex(null);
     this.options.emitEvent("form-ui:draft-cleared", this.createEventDetail({}));
   }
 
@@ -365,6 +436,7 @@ export class FormPersistenceRuntime {
       draft: this.storageAdapter?.loadDraft() || null,
       queue: this.storageAdapter?.loadQueue() || [],
       deadLetter: this.storageAdapter?.loadDeadLetterQueue() || [],
+      currentStepIndex: this.loadCurrentStepIndex() ?? undefined,
     };
   }
 

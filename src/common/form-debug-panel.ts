@@ -61,6 +61,12 @@ export function createFormDebugPanel(
   const warnings = document.createElement("pre");
   warnings.className = "xpressui-debug-panel__warnings";
 
+  const workflowTitle = document.createElement("strong");
+  workflowTitle.textContent = "Workflow";
+
+  const workflow = document.createElement("pre");
+  workflow.className = "xpressui-debug-panel__workflow";
+
   element.appendChild(title);
   element.appendChild(counts);
   element.appendChild(status);
@@ -72,6 +78,8 @@ export function createFormDebugPanel(
   element.appendChild(rules);
   element.appendChild(warningsTitle);
   element.appendChild(warnings);
+  element.appendChild(workflowTitle);
+  element.appendChild(workflow);
 
   const render = () => {
     const snapshot = observer.getSnapshot();
@@ -87,6 +95,10 @@ export function createFormDebugPanel(
       : "Last Updated: never";
     rules.textContent = JSON.stringify(snapshot.recentAppliedRules, null, 2);
     warnings.textContent = JSON.stringify(snapshot.activeTemplateWarnings, null, 2);
+    const workflowEvents = observer
+      .getEvents()
+      .filter((event) => event.type === "form-ui:workflow-step" || event.type === "form-ui:workflow-state");
+    workflow.textContent = JSON.stringify(workflowEvents.at(-1)?.detail?.result || null, null, 2);
   };
 
   const observer = attachFormDebugObserver(target, {

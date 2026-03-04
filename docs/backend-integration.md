@@ -339,9 +339,18 @@ Suggested success response:
 ```json
 {
   "confirmed": true,
-  "bookingId": "bk_123"
+  "bookingId": "bk_123",
+  "transition": {
+    "type": "step",
+    "target": "confirmation_step"
+  }
 }
 ```
+
+`transition` is optional. When present, `xpress-ui` will apply it directly after
+the provider succeeds. Supported shapes:
+- `{ "type": "step", "target": "step_name" }`
+- `{ "type": "workflow", "state": "approved" }`
 
 Frontend events:
 - `form-ui:calendar-booking-success`
@@ -477,7 +486,11 @@ Suggested pending response:
 ```json
 {
   "status": "pending_approval",
-  "approvalId": "apr_123"
+  "approvalId": "apr_123",
+  "transition": {
+    "type": "workflow",
+    "state": "pending_approval"
+  }
 }
 ```
 
@@ -486,9 +499,18 @@ Suggested completed response:
 ```json
 {
   "status": "approved",
-  "approvalId": "apr_123"
+  "approvalId": "apr_123",
+  "transition": {
+    "type": "workflow",
+    "state": "approved"
+  }
 }
 ```
+
+For `approval-request` and `approval-decision`, the `transition` block is
+optional. If omitted, the built-in provider still maps known statuses
+(`pending_approval`, `approved`, `completed`, `rejected`) to the same standard
+workflow transitions.
 
 Frontend events:
 - `form-ui:approval-request-success`

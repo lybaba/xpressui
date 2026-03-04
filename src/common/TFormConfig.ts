@@ -82,6 +82,14 @@ export type TFormStorageConfig = {
     retentionDeadLetterDays?: number;
 };
 
+export type TFormStepLabels = {
+    previous?: string;
+    next?: string;
+};
+
+export type TFormStepSection = TFieldConfig;
+export type TFormWorkflowStepTargets = Record<string, string>;
+
 export type TFormRuleCondition = {
     field: string;
     operator?: 'equals' | 'not_equals' | 'contains' | 'in' | 'gt' | 'lt' | 'exists' | 'empty';
@@ -113,6 +121,8 @@ type TFormConfig = {
     title: string;
     timestamp?: number;
     sections: Record<string, TFieldConfig[]>;
+    stepSections?: TFormStepSection[];
+    workflowStepTargets?: TFormWorkflowStepTargets;
     subforms?: TChoice[];
     choices?: TChoice[];
     background?: string;
@@ -128,6 +138,7 @@ type TFormConfig = {
     submit?: TFormSubmitRequest;
     provider?: TFormProviderRequest;
     storage?: TFormStorageConfig;
+    stepLabels?: TFormStepLabels;
     rules?: TFormRule[];
     successMsg?: string;
     errorMsg?: string;

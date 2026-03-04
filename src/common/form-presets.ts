@@ -1,15 +1,18 @@
-import TFieldConfig from "./TFieldConfig";
+import TFieldConfig, { TStepTransition } from "./TFieldConfig";
 import TFormConfig, { TFormProviderRequest, TFormRule, TFormStorageConfig, TFormSubmitRequest } from "./TFormConfig";
 import { CAMERA_PHOTO_TYPE, DOCUMENT_SCAN_TYPE, EMAIL_TYPE, QR_SCAN_TYPE, SELECT_MULTIPLE_TYPE, SELECT_ONE_TYPE, TEL_TYPE, TEXTAREA_TYPE, TEXT_TYPE, normalizeFieldName } from "./field";
 import { createFormConfig, TSimpleFieldInput, TSimpleFormInput } from "./form-builder";
+import { validatePublicFormConfig } from "./public-schema";
 
 type TFieldOverrides = Partial<TFieldConfig>;
 
 export type TFormPresetName =
   | "contact"
   | "booking-request"
+  | "booking-wizard"
   | "payment-request"
-  | "identity-check";
+  | "identity-check"
+  | "identity-onboarding";
 
 export type TCreateFormPresetOptions = {
   name?: string;
@@ -97,7 +100,34 @@ export const fieldFactory = {
   },
 };
 
-function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput {
+export const stepFactory = {
+  section(
+    name: string,
+    label: string,
+    overrides?: Partial<TFieldConfig>,
+  ): TFieldOverrides & Pick<TFieldConfig, "type" | "name" | "label"> {
+    return {
+      type: "section",
+      name,
+      label,
+      ...(overrides || {}),
+    };
+  },
+
+  transition(
+    whenField: string,
+    target: string,
+    options: Partial<Omit<TStepTransition, "whenField" | "target">> = {},
+  ): TStepTransition {
+    return {
+      whenField,
+      target,
+      ...(options || {}),
+    };
+  },
+};
+
+function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput | TFormConfig {
   switch (preset) {
     case "booking-request":
       return {
@@ -147,6 +177,79 @@ function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput {
         ],
       };
 
+    case "booking-wizard":
+      return validatePublicFormConfig({
+        version: 1,
+        id: 'booking_wizard_form',
+        uid: 'booking_wizard_form_uid',
+        name: "booking-wizard-form",
+        title: "Booking Wizard",
+        type: "multistepform",
+        stepLabels: {
+          previous: "Previous",
+          next: "Continue",
+        },
+        stepSections: [
+          stepFactory.section('details_step', 'Details'),
+          stepFactory.section('review_step', 'Review', {
+            stepSummary: true,
+            stepTransitions: [
+              stepFactory.transition('service', 'confirmation_step', {
+                operator: 'in',
+                value: ['follow_up'],
+              }),
+            ],
+          }),
+          stepFactory.section('scheduling_step', 'Scheduling'),
+          stepFactory.section('confirmation_step', 'Confirmation', { stepSummary: true }),
+        ],
+        sections: {
+          custom: [
+            stepFactory.section('details_step', 'Details'),
+            stepFactory.section('review_step', 'Review', {
+              stepSummary: true,
+              stepTransitions: [
+                stepFactory.transition('service', 'confirmation_step', {
+                  operator: 'in',
+                  value: ['follow_up'],
+                }),
+              ],
+            }),
+            stepFactory.section('scheduling_step', 'Scheduling'),
+            stepFactory.section('confirmation_step', 'Confirmation', { stepSummary: true }),
+          ],
+          details_step: [
+            fieldFactory.text("first_name", "First Name", { required: true }),
+            fieldFactory.text("last_name", "Last Name", { required: true }),
+            fieldFactory.email("email", "Email", { required: true }),
+            fieldFactory.selectOne(
+              "service",
+              "Service",
+              [
+                { value: "consultation", label: "Consultation" },
+                { value: "onsite", label: "On-site Visit" },
+                { value: "follow_up", label: "Follow-up" },
+              ],
+              { required: true },
+            ),
+          ],
+          review_step: [
+            fieldFactory.textarea("notes", "Notes"),
+          ],
+          scheduling_step: [
+            buildField("date", "booking_date", "Booking Date", { required: true }),
+            buildField("time", "booking_time", "Booking Time", { required: true }),
+          ],
+          confirmation_step: [
+            buildField("approval-state", "approval_state", "Status"),
+          ],
+        },
+        workflowStepTargets: {
+          pending_approval: "confirmation_step",
+          approved: "confirmation_step",
+        },
+      } as any);
+
     case "identity-check":
       return {
         name: "identity-check-form",
@@ -191,6 +294,43 @@ function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput {
         ],
       };
 
+    case "identity-onboarding":
+      return validatePublicFormConfig({
+        version: 1,
+        id: 'identity_onboarding_form',
+        uid: 'identity_onboarding_form_uid',
+        name: "identity-onboarding-form",
+        title: "Identity Onboarding",
+        type: "multistepform",
+        stepSections: [
+          { type: 'section', name: 'identity_step', label: 'Identity' },
+          { type: 'section', name: 'document_step', label: 'Document' },
+          { type: 'section', name: 'review_step', label: 'Review', stepSummary: true },
+        ],
+        sections: {
+          custom: [
+            { type: 'section', name: 'identity_step', label: 'Identity' },
+            { type: 'section', name: 'document_step', label: 'Document' },
+            { type: 'section', name: 'review_step', label: 'Review', stepSummary: true },
+          ],
+          identity_step: [
+            fieldFactory.email("email", "Email", { required: true }),
+            fieldFactory.text("first_name", "First Name", { required: true }),
+            fieldFactory.text("last_name", "Last Name", { required: true }),
+          ],
+          document_step: [
+            fieldFactory.documentScan("passport", "Passport", {
+              required: true,
+              enableDocumentOcr: true,
+              requireValidDocumentMrz: true,
+            }),
+          ],
+          review_step: [
+            buildField("approval-state", "approval_state", "Status"),
+          ],
+        },
+      } as any);
+
     case "contact":
     default:
       return {
@@ -211,6 +351,20 @@ export function createFormPreset(
   options: TCreateFormPresetOptions = {},
 ): TFormConfig {
   const base = getBasePresetInput(preset);
+
+  if (!('fields' in base)) {
+    return {
+      ...base,
+      name: options.name || base.name,
+      title: options.title || base.title,
+      provider: options.provider || base.provider,
+      submit: options.submit || base.submit,
+      storage: options.storage || base.storage,
+      rules: options.rules || base.rules,
+      successMsg: options.successMsg || base.successMsg,
+      errorMsg: options.errorMsg || base.errorMsg,
+    };
+  }
 
   return createFormConfig({
     ...base,

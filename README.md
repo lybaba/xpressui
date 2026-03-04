@@ -1381,12 +1381,48 @@ Helpers:
 - `form.getStepNames()`
 - `form.getCurrentStepIndex()`
 - `form.getCurrentStepName()`
+- `form.validateCurrentStep()`
 - `form.goToStep(index)`
 - `form.nextStep()`
 - `form.previousStep()`
 
+Behavior:
+- `Back` / `Next` buttons are injected automatically when more than one step exists
+- button labels can be configured with `stepLabels.previous` / `stepLabels.next`
+- a built-in progress indicator shows `Step X of Y` with percentage
+- a section can be marked optional with `data-step-skippable="true"` (or `stepSkippable: true`)
+- a section can be marked `stepSummary: true` to show a simple review summary before submit
+- a section can jump declaratively with `stepTransitions`, or use the older `nextStepWhen*` fields for compatibility
+- `stepFactory.section(...)` and `stepFactory.transition(...)` are available to build wizard presets programmatically
+- `nextStep()` validates the current step before advancing
+- optional steps can advance without passing validation
+- a section can restrict validation to specific workflow states with `stepValidateWhenWorkflowStates`
+- submit buttons stay disabled until the last step
+- submitting before the last step advances to the next valid step instead of final submit
+- the current step is persisted in drafts and resume tokens
+- `stepSections` is available as a clearer public alias for step metadata, while `sections.custom` remains supported for compatibility
+- `FormStepRuntime` now holds the reusable step-navigation logic shared by `FormUI` and `FormRuntime`
+- wizard presets are available through `createFormPreset('booking-wizard')` and `createFormPreset('identity-onboarding')`
+
+Headless runtime:
+- `runtime.getStepNames()`
+- `runtime.getCurrentStepIndex()`
+- `runtime.getCurrentStepName()`
+- `runtime.getStepProgress()`
+- `runtime.getWorkflowState()`
+- `runtime.setWorkflowState(state)`
+- `runtime.validateCurrentStep()`
+- `runtime.goToStep(index)`
+- `runtime.nextStep()`
+- `runtime.previousStep()`
+
 Event:
 - `form-ui:step-change`
+- `form-ui:step-blocked`
+- `form-ui:step-skipped`
+- `form-ui:step-jumped`
+- `form-ui:workflow-step`
+- `form-ui:provider-transition`
 
 ## Events
 

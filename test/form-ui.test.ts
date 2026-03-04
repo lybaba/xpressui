@@ -10,13 +10,16 @@ import {
   attachFormDebugObserver,
   createFormDebugPanel,
   fieldFactory,
+  stepFactory,
   FormEngineRuntime,
   FormDynamicRuntime,
   FormPersistenceRuntime,
+  FormStepRuntime,
   FormRuntime,
   FormUploadRuntime,
   FormUI,
   getProviderDefinition,
+  resolveProviderTransition,
   mountFormUI,
   PUBLIC_FORM_SCHEMA_VERSION,
   registerProvider,
@@ -51,10 +54,12 @@ describe('FormUI', () => {
   it('keeps the main public runtime exports available from the package entrypoint', () => {
     expect(publicApi.FormUI).toBe(FormUI);
     expect(publicApi.FormRuntime).toBe(FormRuntime);
+    expect(publicApi.FormStepRuntime).toBe(FormStepRuntime);
     expect(publicApi.FormUploadRuntime).toBe(FormUploadRuntime);
     expect(publicApi.createFormConfig).toBe(createFormConfig);
     expect(publicApi.createFormPreset).toBe(createFormPreset);
     expect(publicApi.fieldFactory).toBe(fieldFactory);
+    expect(publicApi.stepFactory).toBe(stepFactory);
     expect(publicApi.mountFormUI).toBe(mountFormUI);
     expect(publicApi.createLocalFormAdmin).toBe(createLocalFormAdmin);
     expect(publicApi.validatePublicFormConfig).toBe(validatePublicFormConfig);
@@ -62,6 +67,7 @@ describe('FormUI', () => {
     expect(publicApi.registerProvider).toBe(registerProvider);
     expect(publicApi.getProviderDefinition).toBe(getProviderDefinition);
     expect(publicApi.createSubmitRequestFromProvider).toBe(createSubmitRequestFromProvider);
+    expect(publicApi.resolveProviderTransition).toBe(resolveProviderTransition);
   });
 
   it('provides field factory helpers for common field types', () => {
@@ -117,6 +123,35 @@ describe('FormUI', () => {
     expect(formConfig.sections.main?.some((field) => field.name === 'selfie_capture')).toBe(true);
     expect(markup).toContain('<form-ui name="kyc-form"></form-ui>');
     expect(markup).toContain('data-submit-endpoint="/api/identity/verify"');
+  });
+
+  it('provides wizard presets for booking and identity onboarding flows', () => {
+    const bookingWizard = createFormPreset('booking-wizard');
+    const identityWizard = createFormPreset('identity-onboarding');
+
+    expect(bookingWizard.stepSections?.map((section) => section.name)).toEqual([
+      'details_step',
+      'review_step',
+      'scheduling_step',
+      'confirmation_step',
+    ]);
+    expect(bookingWizard.workflowStepTargets).toEqual({
+      pending_approval: 'confirmation_step',
+      approved: 'confirmation_step',
+    });
+    expect(bookingWizard.stepSections?.[1]?.stepTransitions).toEqual([
+      {
+        whenField: 'service',
+        operator: 'in',
+        value: ['follow_up'],
+        target: 'confirmation_step',
+      },
+    ]);
+    expect(identityWizard.stepSections?.map((section) => section.name)).toEqual([
+      'identity_step',
+      'document_step',
+      'review_step',
+    ]);
   });
 
   it('hydrates a named template into the custom element', () => {
@@ -209,13 +244,741 @@ describe('FormUI', () => {
     expect((lastName.closest('label') || lastName).getAttribute('data-step-hidden') || undefined).toBeUndefined();
     expect(onStepChange).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        result: {
+        result: expect.objectContaining({
           stepIndex: 1,
           stepName: 'step_two',
           stepCount: 2,
-        },
+        }),
       }),
     );
+  });
+
+  it('validates the current step before allowing navigation', () => {
+    const element = renderFixture(`
+      <template id="wizard">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+        >
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-required="true"
+            data-section-name="step_one"
+          />
+          <span id="first_name_error"></span>
+          <input
+            id="last_name"
+            name="last_name"
+            type="text"
+            data-type="text"
+            data-name="last_name"
+            data-label="Last Name"
+            data-section-name="step_two"
+          />
+          <span id="last_name_error"></span>
+        </form>
+      </template>
+      <form-ui name="wizard"></form-ui>
+    `);
+
+    const firstName = element.querySelector('#first_name') as HTMLInputElement;
+    const error = element.querySelector('#first_name_error') as HTMLSpanElement;
+
+    expect(element.nextStep()).toBe(false);
+    expect(element.getCurrentStepIndex()).toBe(0);
+    expect(error.textContent).toBe('This field is required.');
+
+    firstName.value = 'Alice';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    firstName.dispatchEvent(new FocusEvent('blur'));
+
+    expect(element.nextStep()).toBe(true);
+    expect(element.getCurrentStepIndex()).toBe(1);
+  });
+
+  it('adds native step controls and blocks submit before the last step', async () => {
+    const element = renderFixture(`
+      <template id="wizard">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+        >
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-required="true"
+            data-section-name="step_one"
+          />
+          <span id="first_name_error"></span>
+          <input
+            id="last_name"
+            name="last_name"
+            type="text"
+            data-type="text"
+            data-name="last_name"
+            data-label="Last Name"
+            data-section-name="step_two"
+          />
+          <span id="last_name_error"></span>
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </template>
+      <form-ui name="wizard"></form-ui>
+    `);
+    const submitSuccess = vi.fn();
+
+    element.addEventListener('form-ui:submit-success', submitSuccess);
+
+    const form = element.querySelector('#wizard_form') as HTMLFormElement;
+    const firstName = element.querySelector('#first_name') as HTMLInputElement;
+    const submitButton = element.querySelector('#submit_button') as HTMLButtonElement;
+    const backButton = element.querySelector('[data-step-action="back"]') as HTMLButtonElement;
+    const nextButton = element.querySelector('[data-step-action="next"]') as HTMLButtonElement;
+
+    expect(backButton).not.toBeNull();
+    expect(nextButton).not.toBeNull();
+    expect(backButton.style.display).toBe('none');
+    expect(nextButton.style.display).toBe('');
+    expect(submitButton.disabled).toBe(true);
+
+    nextButton.click();
+    expect(element.getCurrentStepIndex()).toBe(0);
+
+    firstName.value = 'Alice';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    nextButton.click();
+
+    expect(element.getCurrentStepIndex()).toBe(1);
+    expect(backButton.style.display).toBe('');
+    expect(nextButton.style.display).toBe('none');
+    expect(submitButton.disabled).toBe(false);
+
+    backButton.click();
+    expect(element.getCurrentStepIndex()).toBe(0);
+
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(element.getCurrentStepIndex()).toBe(1);
+    expect(submitSuccess).not.toHaveBeenCalled();
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await Promise.resolve();
+    expect(submitSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows step progress and allows optional steps to be skipped', () => {
+    const element = renderFixture(`
+      <template id="wizard">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+        >
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two" data-step-skippable="true"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-section-name="step_one"
+          />
+          <span id="first_name_error"></span>
+          <input
+            id="notes"
+            name="notes"
+            type="text"
+            data-type="text"
+            data-name="notes"
+            data-label="Notes"
+            data-required="true"
+            data-section-name="step_two"
+          />
+          <span id="notes_error"></span>
+        </form>
+      </template>
+      <form-ui name="wizard"></form-ui>
+    `);
+
+    const progress = element.querySelector('[data-form-step-progress]') as HTMLElement;
+
+    expect(element.getStepProgress()).toEqual({
+      stepIndex: 0,
+      stepNumber: 1,
+      stepCount: 2,
+      percent: 50,
+    });
+    expect(progress.textContent).toBe('Step 1 of 2 (50%)');
+
+    expect(element.nextStep()).toBe(true);
+    expect(element.getStepProgress()).toEqual({
+      stepIndex: 1,
+      stepNumber: 2,
+      stepCount: 2,
+      percent: 100,
+    });
+    expect(progress.textContent).toBe('Step 2 of 2 (100%) (Optional)');
+    expect(element.nextStep()).toBe(false);
+  });
+
+  it('restores the saved current step from draft storage and supports custom step labels', () => {
+    const markup = `
+      <template id="wizard">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+          data-storage-mode="draft"
+          data-step-previous-label="Previous"
+          data-step-next-label="Continue"
+        >
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-required="true"
+            data-section-name="step_one"
+          />
+          <span id="first_name_error"></span>
+          <input
+            id="last_name"
+            name="last_name"
+            type="text"
+            data-type="text"
+            data-name="last_name"
+            data-label="Last Name"
+            data-section-name="step_two"
+          />
+          <span id="last_name_error"></span>
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </template>
+      <form-ui name="wizard"></form-ui>
+    `;
+
+    const element = renderFixture(markup);
+    const firstName = element.querySelector('#first_name') as HTMLInputElement;
+    const backButton = element.querySelector('[data-step-action="back"]') as HTMLButtonElement;
+    const nextButton = element.querySelector('[data-step-action="next"]') as HTMLButtonElement;
+
+    expect(backButton.textContent).toBe('Previous');
+    expect(nextButton.textContent).toBe('Continue');
+
+    firstName.value = 'Alice';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(element.nextStep()).toBe(true);
+    element.saveDraft();
+
+    const restoredElement = renderFixture(markup);
+    expect(restoredElement.getCurrentStepIndex()).toBe(1);
+    expect(restoredElement.getCurrentStepName()).toBe('step_two');
+  });
+
+  it('supports step validation and step persistence in FormRuntime resume flows', () => {
+    const values = { first_name: '', last_name: '' };
+    const runtime = new FormRuntime(
+      validatePublicFormConfig({
+        version: 1,
+        id: 'runtime_wizard',
+        uid: 'runtime_wizard_uid',
+        type: 'multistepform',
+        name: 'runtime_wizard',
+        title: 'Runtime Wizard',
+        storage: {
+          mode: 'draft',
+        },
+        sections: {
+          custom: [
+            { type: 'section', name: 'step_one', label: 'Step One' },
+            { type: 'section', name: 'step_two', label: 'Step Two' },
+          ],
+          step_one: [
+            { type: 'text', name: 'first_name', label: 'First Name', required: true },
+          ],
+          step_two: [
+            { type: 'text', name: 'last_name', label: 'Last Name', required: true },
+          ],
+        },
+      }),
+      {
+        getValues: () => values,
+      },
+    );
+
+    expect(runtime.validateCurrentStep()).toBe(false);
+    values.first_name = 'Alice';
+    expect(runtime.validateCurrentStep()).toBe(true);
+    expect(runtime.nextStep()).toBe(true);
+    expect(runtime.getCurrentStepIndex()).toBe(1);
+
+    runtime.saveDraft(values);
+
+    const restoredRuntime = new FormRuntime(
+      validatePublicFormConfig({
+        version: 1,
+        id: 'runtime_wizard',
+        uid: 'runtime_wizard_uid',
+        type: 'multistepform',
+        name: 'runtime_wizard',
+        title: 'Runtime Wizard',
+        storage: {
+          mode: 'draft',
+        },
+        sections: {
+          custom: [
+            { type: 'section', name: 'step_one', label: 'Step One' },
+            { type: 'section', name: 'step_two', label: 'Step Two' },
+          ],
+          step_one: [
+            { type: 'text', name: 'first_name', label: 'First Name', required: true },
+          ],
+          step_two: [
+            { type: 'text', name: 'last_name', label: 'Last Name', required: true },
+          ],
+        },
+      }),
+      {
+        getValues: () => values,
+      },
+    );
+
+    expect(restoredRuntime.getCurrentStepIndex()).toBe(1);
+
+    const token = runtime.createResumeToken();
+    expect(token).toBeTruthy();
+    expect(runtime.goToStep(0)).toBe(true);
+    expect(runtime.restoreFromResumeToken(token as string)).toEqual({ first_name: 'Alice', last_name: '' });
+    expect(runtime.getCurrentStepIndex()).toBe(1);
+  });
+
+  it('supports workflow-aware step validation in FormRuntime', () => {
+    const values = { review_notes: '' };
+    const runtime = new FormRuntime(
+      validatePublicFormConfig({
+        version: 1,
+        id: 'runtime_review',
+        uid: 'runtime_review_uid',
+        type: 'multistepform',
+        name: 'runtime_review',
+        title: 'Runtime Review',
+        sections: {
+          custom: [
+            {
+              type: 'section',
+              name: 'intro_step',
+              label: 'Intro Step',
+            },
+            {
+              type: 'section',
+              name: 'review_step',
+              label: 'Review Step',
+              stepValidateWhenWorkflowStates: ['pending_approval'],
+            },
+          ],
+          intro_step: [
+            { type: 'text', name: 'intro_notes', label: 'Intro Notes' },
+          ],
+          review_step: [
+            { type: 'text', name: 'review_notes', label: 'Review Notes', required: true },
+          ],
+        },
+      }),
+      {
+        getValues: () => values,
+      },
+    );
+
+    expect(runtime.getWorkflowState()).toBe('draft');
+    expect(runtime.goToStep(1)).toBe(true);
+    expect(runtime.validateCurrentStep()).toBe(true);
+
+    runtime.setWorkflowState('pending_approval');
+    expect(runtime.validateCurrentStep()).toBe(false);
+
+    values.review_notes = 'Checked';
+    expect(runtime.validateCurrentStep()).toBe(true);
+  });
+
+  it('renders a review summary on summary steps and can jump conditionally to another step', () => {
+    const element = renderFixture(`
+      <template id="wizard">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+        >
+          <div data-type="section" data-name="details_step" data-label="Details"></div>
+          <div
+            data-type="section"
+            data-name="review_step"
+            data-label="Review"
+            data-step-summary="true"
+            data-next-step-when-field="fast_track"
+            data-next-step-when-equals="true"
+            data-next-step-target="final_step"
+          ></div>
+          <div data-type="section" data-name="confirm_step" data-label="Confirm"></div>
+          <div data-type="section" data-name="final_step" data-label="Final"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-section-name="details_step"
+          />
+          <span id="first_name_error"></span>
+          <input
+            id="fast_track"
+            name="fast_track"
+            type="checkbox"
+            data-type="checkbox"
+            data-name="fast_track"
+            data-label="Fast Track"
+            data-section-name="review_step"
+          />
+          <span id="fast_track_error"></span>
+          <input
+            id="confirmation_notes"
+            name="confirmation_notes"
+            type="text"
+            data-type="text"
+            data-name="confirmation_notes"
+            data-label="Confirmation Notes"
+            data-section-name="confirm_step"
+          />
+          <span id="confirmation_notes_error"></span>
+          <input
+            id="final_notes"
+            name="final_notes"
+            type="text"
+            data-type="text"
+            data-name="final_notes"
+            data-label="Final Notes"
+            data-section-name="final_step"
+          />
+          <span id="final_notes_error"></span>
+        </form>
+      </template>
+      <form-ui name="wizard"></form-ui>
+    `);
+
+    const firstName = element.querySelector('#first_name') as HTMLInputElement;
+    firstName.value = 'Alice';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(element.nextStep()).toBe(true);
+    expect(element.getCurrentStepName()).toBe('review_step');
+
+    const summary = element.querySelector('[data-form-step-summary]') as HTMLElement;
+    expect(summary.textContent).toContain('First Name: Alice');
+
+    const fastTrack = element.querySelector('#fast_track') as HTMLInputElement;
+    fastTrack.checked = true;
+    fastTrack.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(element.nextStep()).toBe(true);
+    expect(element.getCurrentStepName()).toBe('final_step');
+  });
+
+  it('uses explicit stepSections in the public config and runtime navigation', () => {
+    const runtime = new FormRuntime(
+      validatePublicFormConfig({
+        version: 1,
+        id: 'runtime_explicit_steps',
+        uid: 'runtime_explicit_steps_uid',
+        type: 'multistepform',
+        name: 'runtime_explicit_steps',
+        title: 'Runtime Explicit Steps',
+        stepSections: [
+          { type: 'section', name: 'step_one', label: 'Step One' },
+          { type: 'section', name: 'step_two', label: 'Step Two', stepSkippable: true },
+        ],
+        sections: {
+          custom: [
+            { type: 'section', name: 'step_one', label: 'Step One' },
+            { type: 'section', name: 'step_two', label: 'Step Two' },
+          ],
+          step_one: [
+            { type: 'text', name: 'first_name', label: 'First Name' },
+          ],
+          step_two: [
+            { type: 'text', name: 'last_name', label: 'Last Name', required: true },
+          ],
+        },
+      }),
+      {
+        getValues: () => ({ first_name: 'Alice', last_name: '' }),
+      },
+    );
+
+    expect(runtime.getStepNames()).toEqual(['step_one', 'step_two']);
+    expect(runtime.nextStep()).toBe(true);
+    expect(runtime.getCurrentStepName()).toBe('step_two');
+    expect(runtime.validateCurrentStep()).toBe(false);
+  });
+
+  it('supports richer conditional step transitions in the extracted step runtime', () => {
+    const steps = new FormStepRuntime({
+      version: 1,
+      id: 'step_runtime',
+      uid: 'step_runtime_uid',
+      type: 'multistepform',
+      name: 'step_runtime',
+      title: 'Step Runtime',
+      stepSections: [
+        {
+          type: 'section',
+          name: 'review',
+          label: 'Review',
+          nextStepWhenField: 'tier',
+          nextStepWhenEquals: ['vip', 'priority'],
+          nextStepTarget: 'fast_lane',
+        },
+        {
+          type: 'section',
+          name: 'fast_lane',
+          label: 'Fast Lane',
+        },
+        {
+          type: 'section',
+          name: 'standard',
+          label: 'Standard',
+        },
+        {
+          type: 'section',
+          name: 'decision',
+          label: 'Decision',
+          nextStepWhenField: 'status',
+          nextStepWhenNotEquals: 'approved',
+          nextStepTarget: 'fallback',
+        },
+        {
+          type: 'section',
+          name: 'fallback',
+          label: 'Fallback',
+        },
+      ],
+      sections: {
+        custom: [],
+      },
+    } as any);
+
+    expect(steps.nextStep({ tier: 'vip' }, true)).toBe(true);
+    expect(steps.getCurrentStepName()).toBe('fast_lane');
+
+    expect(steps.goToStep(3)).toBe(true);
+    expect(steps.nextStep({ status: 'rejected' }, true)).toBe(true);
+    expect(steps.getCurrentStepName()).toBe('fallback');
+    expect(steps.goToWorkflowStep('missing')).toBe(false);
+  });
+
+  it('supports transition DSL operators and workflow snapshots in the extracted step runtime', () => {
+    const steps = new FormStepRuntime({
+      version: 1,
+      id: 'dsl_runtime',
+      uid: 'dsl_runtime_uid',
+      type: 'multistepform',
+      name: 'dsl_runtime',
+      title: 'DSL Runtime',
+      stepSections: [
+        {
+          type: 'section',
+          name: 'entry',
+          label: 'Entry',
+          stepTransitions: [
+            {
+              whenField: 'tier',
+              operator: 'in',
+              value: ['vip', 'priority'],
+              target: 'priority_step',
+            },
+          ],
+        },
+        {
+          type: 'section',
+          name: 'priority_step',
+          label: 'Priority',
+        },
+      ],
+      sections: {
+        custom: [],
+      },
+      workflowStepTargets: {
+        completed: 'priority_step',
+      },
+    } as any);
+
+    expect(steps.getConditionalNextStepName({ tier: 'vip' })).toBe('priority_step');
+    expect(steps.nextStep({ tier: 'vip' }, true)).toBe(true);
+    expect(steps.getWorkflowSnapshot({ tier: 'vip' })).toEqual({
+      workflowState: 'draft',
+      currentStepName: 'priority_step',
+      currentStepIndex: 1,
+      progress: {
+        stepIndex: 1,
+        stepNumber: 2,
+        stepCount: 2,
+        percent: 100,
+      },
+      nextStepTarget: null,
+    });
+
+    steps.setWorkflowState('completed');
+    expect(steps.goToWorkflowStep()).toBe(false);
+  });
+
+  it('emits dedicated step transition events and supports workflow step targets', () => {
+    const element = renderFixture(`
+      <template id="wizard">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+          data-workflow-step-targets='{"approved":"decision_step"}'
+        >
+          <div data-type="section" data-name="first_step" data-label="First"></div>
+          <div
+            data-type="section"
+            data-name="optional_step"
+            data-label="Optional"
+            data-step-skippable="true"
+          ></div>
+          <div
+            data-type="section"
+            data-name="decision_step"
+            data-label="Decision"
+            data-next-step-when-field="path"
+            data-next-step-when-not-equals='["standard","slow"]'
+            data-next-step-target="final_step"
+          ></div>
+          <div data-type="section" data-name="final_step" data-label="Final"></div>
+          <input
+            id="required_name"
+            name="required_name"
+            type="text"
+            data-type="text"
+            data-name="required_name"
+            data-label="Required Name"
+            data-required="true"
+            data-section-name="first_step"
+          />
+          <span id="required_name_error"></span>
+          <input
+            id="path"
+            name="path"
+            type="text"
+            data-type="text"
+            data-name="path"
+            data-label="Path"
+            data-section-name="decision_step"
+          />
+          <span id="path_error"></span>
+        </form>
+      </template>
+      <form-ui name="wizard"></form-ui>
+    `);
+
+    const blocked = vi.fn();
+    const skipped = vi.fn();
+    const jumped = vi.fn();
+
+    element.addEventListener('form-ui:step-blocked', blocked);
+    element.addEventListener('form-ui:step-skipped', skipped);
+    element.addEventListener('form-ui:step-jumped', jumped);
+
+    expect(element.nextStep()).toBe(false);
+    expect(blocked).toHaveBeenCalledTimes(1);
+
+    const requiredName = element.querySelector('#required_name') as HTMLInputElement;
+    requiredName.value = 'Alice';
+    requiredName.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(element.nextStep()).toBe(true);
+    expect(skipped).not.toHaveBeenCalled();
+
+    expect(element.nextStep()).toBe(true);
+    expect(skipped).toHaveBeenCalledTimes(1);
+    expect(element.getCurrentStepName()).toBe('decision_step');
+
+    const path = element.querySelector('#path') as HTMLInputElement;
+    path.value = 'vip';
+    path.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(element.nextStep()).toBe(true);
+    expect(jumped).toHaveBeenCalledTimes(1);
+    expect(element.getCurrentStepName()).toBe('final_step');
+
+    expect(element.goToWorkflowStep('approved')).toBe(true);
+    expect(element.getCurrentStepName()).toBe('decision_step');
+  });
+
+  it('shows workflow state in the debug panel', async () => {
+    const element = renderFixture(`
+      <template id="workflow_debug">
+        <form
+          id="workflow_debug_form"
+          data-type="contactform"
+          data-name="workflow_debug"
+          data-label="Workflow Debug"
+          data-workflow-step-targets='{"approved":"final_step"}'
+        >
+          <div data-type="section" data-name="first_step" data-label="First"></div>
+          <div data-type="section" data-name="final_step" data-label="Final"></div>
+          <input
+            id="required_name"
+            name="required_name"
+            type="text"
+            data-type="text"
+            data-name="required_name"
+            data-label="Required Name"
+            data-required="true"
+            data-section-name="first_step"
+          />
+          <span id="required_name_error"></span>
+        </form>
+      </template>
+      <form-ui name="workflow_debug"></form-ui>
+    `);
+
+    const panel = createFormDebugPanel(element);
+    const input = element.querySelector('#required_name') as HTMLInputElement;
+    input.value = 'Alice';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(element.nextStep()).toBe(true);
+    await flushAsyncWork();
+
+    const workflow = panel.element.querySelector('.xpressui-debug-panel__workflow') as HTMLElement;
+    expect(workflow.textContent).toContain('"currentStepName": "final_step"');
+    panel.detach();
   });
 
   it('can create an indexeddb storage adapter with local cache fallback', () => {
@@ -711,6 +1474,11 @@ describe('FormUI', () => {
 
     expect(observer.getEvents().map((event) => event.type)).toEqual([
       'form-ui:submit',
+      'form-ui:workflow-state',
+      'form-ui:workflow-step',
+      'form-ui:draft-cleared',
+      'form-ui:workflow-state',
+      'form-ui:workflow-step',
       'form-ui:submit-success',
     ]);
 
@@ -3106,6 +3874,7 @@ describe('FormUI', () => {
       )
     );
     const container = document.createElement('div');
+    document.body.appendChild(container);
     const element = mountFormUI(container, {
       name: 'dynamic-form',
       title: 'Dynamic Form',
@@ -3137,8 +3906,9 @@ describe('FormUI', () => {
     expect(slotContainer.style.display).toBe('none');
 
     service.value = 'consulting';
-    service.dispatchEvent(new Event('input', { bubbles: true }));
-    service.dispatchEvent(new Event('change', { bubbles: true }));
+    element.form?.change('service', 'consulting');
+    element.updateConditionalFields();
+    await element.refreshRemoteOptions('service');
     await flushAsyncWork();
 
     expect(slotContainer.style.display).toBe('');
@@ -4629,6 +5399,83 @@ describe('FormUI', () => {
       expect.objectContaining({
         result: { confirmed: true, bookingId: 'bk_123' },
       })
+    );
+  });
+
+  it('applies explicit standardized provider transitions returned by the backend', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          confirmed: true,
+          transition: {
+            type: 'step',
+            target: 'details_step',
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    );
+    const element = renderFixture(`
+      <template id="calendar-transition-form">
+        <form
+          id="calendar-transition-form_form"
+          data-type="multistepform"
+          data-name="calendar-transition-form"
+          data-label="Calendar Transition Form"
+          data-submit-endpoint="https://api.example.test/bookings"
+          data-submit-action="calendar-booking"
+        >
+          <div data-type="section" data-name="details_step" data-label="Details"></div>
+          <div
+            data-type="section"
+            data-name="confirmation_step"
+            data-label="Confirmation"
+            data-step-summary="true"
+          ></div>
+          <input
+            id="booking_id"
+            name="booking_id"
+            type="text"
+            data-type="text"
+            data-name="booking_id"
+            data-label="Booking ID"
+            data-required="true"
+            data-section-name="details_step"
+          />
+          <span id="booking_id_error"></span>
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </template>
+      <form-ui name="calendar-transition-form"></form-ui>
+    `);
+    const bookingId = element.querySelector('#booking_id') as HTMLInputElement;
+    const form = element.querySelector('#calendar-transition-form_form') as HTMLFormElement;
+    const onProviderTransition = vi.fn();
+
+    element.addEventListener('form-ui:provider-transition', (event) => {
+      onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    bookingId.value = 'bk_123';
+    bookingId.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(element.nextStep()).toBe(true);
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(element.getCurrentStepName()).toBe('details_step');
+    expect(onProviderTransition).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          transition: {
+            type: 'step',
+            target: 'details_step',
+          },
+        }),
+      }),
     );
   });
 

@@ -4,6 +4,7 @@ import TFormConfig, {
   CONTACTFORM_TYPE,
   TFormProviderRequest,
   TFormRule,
+  TFormStepLabels,
   TFormStorageConfig,
   TFormSubmitRequest,
 } from './TFormConfig';
@@ -38,6 +39,8 @@ export type TSimpleFormInput = {
   submit?: TFormSubmitRequest;
   provider?: TFormProviderRequest;
   storage?: TFormStorageConfig;
+  workflowStepTargets?: Record<string, string>;
+  stepLabels?: TFormStepLabels;
   rules?: TFormRule[];
   sectionName?: string;
   sectionLabel?: string;
@@ -259,9 +262,18 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
       ],
       [sectionName]: fields,
     },
+    stepSections: [
+      {
+        type: 'section',
+        name: sectionName,
+        label: sectionLabel,
+      },
+    ],
+    workflowStepTargets: 'workflowStepTargets' in input ? (input as any).workflowStepTargets : undefined,
     submit,
     provider,
     storage: input.storage,
+    stepLabels: input.stepLabels,
     rules: input.rules,
     successMsg: input.successMsg,
     errorMsg: input.errorMsg,
@@ -272,11 +284,42 @@ export function createTemplateMarkup(
   config: TFormConfig,
   templateName: string = config.name
 ): string {
-  const section = config.sections[CUSTOM_SECTION]?.[0];
+  const stepSections = config.stepSections?.length ? config.stepSections : config.sections[CUSTOM_SECTION];
+  const section = stepSections?.[0];
   const sectionName = section?.name || 'main';
   const sectionLabel = section?.label || 'Main';
   const fields = config.sections[sectionName] || [];
   const fieldMarkup = fields.map((field) => renderField(field, sectionName)).join('\n');
+  const sectionStepAttrs = [
+    section?.stepSkippable ? ' data-step-skippable="true"' : '',
+    section?.stepSummary ? ' data-step-summary="true"' : '',
+    section?.stepValidateWhenWorkflowStates?.length
+      ? ` data-step-validate-when-workflow-states="${escapeHtml(JSON.stringify(section.stepValidateWhenWorkflowStates))}"`
+      : '',
+    section?.nextStepWhenField
+      ? ` data-next-step-when-field="${escapeHtml(section.nextStepWhenField)}"`
+      : '',
+    section?.nextStepWhenEquals
+      ? ` data-next-step-when-equals="${escapeHtml(
+          Array.isArray(section.nextStepWhenEquals)
+            ? JSON.stringify(section.nextStepWhenEquals)
+            : String(section.nextStepWhenEquals),
+        )}"`
+      : '',
+    section?.nextStepWhenNotEquals
+      ? ` data-next-step-when-not-equals="${escapeHtml(
+          Array.isArray(section.nextStepWhenNotEquals)
+            ? JSON.stringify(section.nextStepWhenNotEquals)
+            : String(section.nextStepWhenNotEquals),
+        )}"`
+      : '',
+    section?.nextStepTarget
+      ? ` data-next-step-target="${escapeHtml(section.nextStepTarget)}"`
+      : '',
+    section?.stepTransitions?.length
+      ? ` data-step-transitions="${escapeHtml(JSON.stringify(section.stepTransitions))}"`
+      : '',
+  ].join('');
 
   const submitAttrs = config.submit
     ? [
@@ -364,10 +407,25 @@ export function createTemplateMarkup(
   const rulesAttr = config.rules?.length
     ? `data-rules="${escapeHtml(JSON.stringify(config.rules))}"`
     : '';
+  const workflowStepTargetsAttr = config.workflowStepTargets
+    ? `data-workflow-step-targets="${escapeHtml(JSON.stringify(config.workflowStepTargets))}"`
+    : '';
+  const stepLabelAttrs = config.stepLabels
+    ? [
+        config.stepLabels.previous
+          ? `data-step-previous-label="${escapeHtml(config.stepLabels.previous)}"`
+          : '',
+        config.stepLabels.next
+          ? `data-step-next-label="${escapeHtml(config.stepLabels.next)}"`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : '';
 
   return `<template id="${escapeHtml(templateName)}">
-  <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs} ${rulesAttr}>
-    <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}" class="flex flex-col gap-4">
+  <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs} ${rulesAttr} ${stepLabelAttrs} ${workflowStepTargetsAttr}>
+    <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}"${sectionStepAttrs} class="flex flex-col gap-4">
       ${fieldMarkup}
       <button type="submit" class="btn btn-primary">Submit</button>
     </div>

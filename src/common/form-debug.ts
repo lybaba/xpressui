@@ -104,6 +104,12 @@ const DEFAULT_DEBUG_EVENTS = [
   "form-ui:webhook-error",
   "form-ui:booking-availability-success",
   "form-ui:booking-availability-error",
+  "form-ui:step-change",
+  "form-ui:step-blocked",
+  "form-ui:step-skipped",
+  "form-ui:step-jumped",
+  "form-ui:workflow-state",
+  "form-ui:workflow-step",
 ];
 
 export function attachFormDebugObserver(

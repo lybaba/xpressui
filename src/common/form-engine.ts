@@ -1,5 +1,6 @@
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig from "./TFormConfig";
+import { CUSTOM_SECTION } from "./Constants";
 import validate, { getValidators, TValidator } from "./Validator";
 import { isFileFieldType, isFileLikeValue, normalizeFormValues } from "./field";
 
@@ -173,6 +174,18 @@ export class FormEngineRuntime {
   setFormConfig(formConfig: TFormConfig | null): void {
     this.formConfig = formConfig;
     this.validators = formConfig ? getValidators(formConfig) : [];
+    this.inputFields = {};
+    if (formConfig?.sections) {
+      Object.entries(formConfig.sections).forEach(([sectionName, fields]) => {
+        if (sectionName === CUSTOM_SECTION) {
+          return;
+        }
+
+        fields.forEach((field) => {
+          this.inputFields[field.name] = field;
+        });
+      });
+    }
   }
 
   setField(fieldName: string, fieldConfig: TFieldConfig): void {

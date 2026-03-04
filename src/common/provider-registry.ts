@@ -8,9 +8,23 @@ export type TFormProviderDefinition = {
     values: Record<string, any>,
     submitConfig: TFormSubmitRequest,
   ): Record<string, any>;
+  resolveTransition?(
+    result: any,
+    submitConfig: TFormSubmitRequest,
+  ): TFormProviderTransition | null;
   successEventName?: string;
   errorEventName?: string;
 };
+
+export type TFormProviderTransition =
+  | {
+      type: "step";
+      target: string | number;
+    }
+  | {
+      type: "workflow";
+      state: string;
+    };
 
 const providerRegistry = new Map<string, TFormProviderDefinition>();
 
@@ -61,6 +75,46 @@ export function getProviderSuccessEventName(action?: string): string | null {
 
 export function getProviderErrorEventName(action?: string): string | null {
   return getProviderDefinition(action)?.errorEventName || null;
+}
+
+function normalizeProviderTransition(result: any): TFormProviderTransition | null {
+  if (!result || typeof result !== "object" || !result.transition || typeof result.transition !== "object") {
+    return null;
+  }
+
+  const transition = result.transition as Record<string, any>;
+  if (
+    transition.type === "step" &&
+    (typeof transition.target === "string" || Number.isFinite(transition.target))
+  ) {
+    return {
+      type: "step",
+      target: transition.target as string | number,
+    };
+  }
+
+  if (transition.type === "workflow" && typeof transition.state === "string" && transition.state) {
+    return {
+      type: "workflow",
+      state: transition.state,
+    };
+  }
+
+  return null;
+}
+
+export function resolveProviderTransition(
+  action: string | undefined,
+  result: any,
+  submitConfig: TFormSubmitRequest,
+): TFormProviderTransition | null {
+  const definition = getProviderDefinition(action);
+  const explicitTransition = normalizeProviderTransition(result);
+  if (explicitTransition) {
+    return explicitTransition;
+  }
+
+  return definition?.resolveTransition?.(result, submitConfig) || null;
 }
 
 registerProvider("reservation", {
@@ -229,6 +283,26 @@ registerProvider("approval-request", {
       approval: values,
     };
   },
+  resolveTransition(result) {
+    if (!result || typeof result !== "object") {
+      return null;
+    }
+
+    const status = typeof result.status === "string" ? result.status : "";
+    if (
+      status === "pending_approval" ||
+      status === "approved" ||
+      status === "completed" ||
+      status === "rejected"
+    ) {
+      return {
+        type: "workflow",
+        state: status,
+      };
+    }
+
+    return null;
+  },
   successEventName: "form-ui:approval-request-success",
   errorEventName: "form-ui:approval-request-error",
 });
@@ -247,6 +321,21 @@ registerProvider("approval-decision", {
       action: "approval-decision",
       decision: values,
     };
+  },
+  resolveTransition(result) {
+    if (!result || typeof result !== "object") {
+      return null;
+    }
+
+    const status = typeof result.status === "string" ? result.status : "";
+    if (status === "approved" || status === "completed" || status === "rejected") {
+      return {
+        type: "workflow",
+        state: status,
+      };
+    }
+
+    return null;
   },
   successEventName: "form-ui:approval-decision-success",
   errorEventName: "form-ui:approval-decision-error",

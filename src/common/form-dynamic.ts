@@ -27,6 +27,7 @@ export type TFormRuleAppliedDetail = {
     field: string;
     value?: any;
     sourceField?: string;
+    transform?: "copy" | "trim" | "lowercase" | "uppercase";
   }>;
 };
 
@@ -52,6 +53,7 @@ type TFormDynamicRuntimeOptions = {
       field: string;
       value?: any;
       sourceField?: string;
+      transform?: "copy" | "trim" | "lowercase" | "uppercase";
     }>;
   }>;
   getFieldContainer(
@@ -76,6 +78,31 @@ export class FormDynamicRuntime {
   constructor(options: TFormDynamicRuntimeOptions) {
     this.options = options;
     this.loadingOptions = {};
+  }
+
+  transformRuleValue(
+    value: any,
+    transform?: "copy" | "trim" | "lowercase" | "uppercase",
+  ): any {
+    const nextTransform = transform || "copy";
+    if (nextTransform === "copy" || value === undefined || value === null) {
+      return value;
+    }
+
+    const normalizedValue = String(value);
+    if (nextTransform === "trim") {
+      return normalizedValue.trim();
+    }
+
+    if (nextTransform === "lowercase") {
+      return normalizedValue.toLowerCase();
+    }
+
+    if (nextTransform === "uppercase") {
+      return normalizedValue.toUpperCase();
+    }
+
+    return value;
   }
 
   matchesCondition(
@@ -174,7 +201,10 @@ export class FormDynamicRuntime {
           const nextValue = action.sourceField
             ? this.options.getFieldValue(action.sourceField)
             : action.value;
-          this.options.setFieldValue(action.field, nextValue);
+          this.options.setFieldValue(
+            action.field,
+            this.transformRuleValue(nextValue, action.transform),
+          );
         } else if (action.type === "fetch-options") {
           void this.fetchOptionsForField(action.field);
         }

@@ -932,6 +932,46 @@ describe('FormUI', () => {
     expect(shippingEmail.value).toBe('billing@example.com');
   });
 
+  it('supports set-value transforms for copied field values', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'set-value-transform-rules-form',
+      title: 'Set Value Transform Rules Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'copySlug', operator: 'equals', value: true },
+          ],
+          actions: [
+            {
+              type: 'set-value',
+              field: 'slug',
+              sourceField: 'name',
+              transform: 'lowercase',
+            },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'name', label: 'Name', type: 'text' },
+        { name: 'slug', label: 'Slug', type: 'text' },
+        { name: 'copySlug', label: 'Copy slug', type: 'checkbox' },
+      ],
+    }) as FormUI;
+    const name = element.querySelector('#name') as HTMLInputElement;
+    const slug = element.querySelector('#slug') as HTMLInputElement;
+    const copySlug = element.querySelector('#copySlug') as HTMLInputElement;
+
+    name.value = '  Hello World  ';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+    copySlug.checked = true;
+    copySlug.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).slug).toBe('  hello world  ');
+    expect(slug.value).toBe('  hello world  ');
+  });
+
   it('supports the fetch-options rule action', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(

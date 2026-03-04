@@ -550,6 +550,7 @@ Current rule scope:
 - condition operators: `equals`, `not_equals`, `contains`, `in`, `gt`, `lt`
 - actions: `show`, `hide`, `enable`, `disable`, `clear-value`, `set-value`, `fetch-options`
 - `set-value` can use either a constant via `value` or another field via `sourceField`
+- `set-value` can also transform the written value with `transform`: `copy`, `trim`, `lowercase`, `uppercase`
 
 ## Local Draft Storage
 

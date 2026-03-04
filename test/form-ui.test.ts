@@ -275,6 +275,515 @@ describe('FormUI', () => {
     expect(element.validators).toHaveLength(1);
   });
 
+  it('renders base output renderer types when mode is set to view', () => {
+    const element = renderFixture(`
+      <template id="view_mvp">
+        <form
+          id="view_mvp_form"
+          data-type="contactform"
+          data-name="view_mvp"
+          data-label="View MVP"
+        >
+          <input
+            id="text_value"
+            name="text_value"
+            type="text"
+            value="Hello MVP"
+            data-type="text"
+            data-name="text_value"
+            data-label="Text"
+            data-section-name="main"
+          />
+          <textarea
+            id="html_value"
+            name="html_value"
+            data-type="html"
+            data-name="html_value"
+            data-label="Html"
+            data-section-name="main"
+          ><strong>Bold</strong> content</textarea>
+          <input
+            id="image_value"
+            name="image_value"
+            type="text"
+            value="https://cdn.example.test/picture.png"
+            data-type="image"
+            data-name="image_value"
+            data-label="Image"
+            data-section-name="main"
+          />
+          <input
+            id="file_value"
+            name="file_value"
+            type="text"
+            value="https://cdn.example.test/docs/spec.pdf"
+            data-type="file"
+            data-name="file_value"
+            data-label="File"
+            data-section-name="main"
+          />
+          <input
+            id="video_value"
+            name="video_value"
+            type="text"
+            value="https://cdn.example.test/media/demo.mp4"
+            data-type="file"
+            data-accept="video/*"
+            data-name="video_value"
+            data-label="Video"
+            data-section-name="main"
+          />
+          <input
+            id="link_value"
+            name="link_value"
+            type="text"
+            value="https://example.test/resource"
+            data-type="link"
+            data-name="link_value"
+            data-label="Link"
+            data-section-name="main"
+          />
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </template>
+      <form-ui name="view_mvp" mode="view"></form-ui>
+    `);
+
+    const textInput = element.querySelector('#text_value') as HTMLInputElement;
+    const htmlInput = element.querySelector('#html_value') as HTMLTextAreaElement;
+    const submitButton = element.querySelector('#submit_button') as HTMLButtonElement;
+
+    expect(textInput.style.display).toBe('none');
+    expect(textInput.disabled).toBe(true);
+    expect(htmlInput.style.display).toBe('none');
+    expect(htmlInput.disabled).toBe(true);
+    expect(submitButton.style.display).toBe('none');
+
+    const textOutput = element.querySelector('#text_value_view span') as HTMLSpanElement;
+    expect(textOutput.textContent).toBe('Hello MVP');
+
+    const htmlOutput = element.querySelector('#html_value_view div') as HTMLDivElement;
+    expect(htmlOutput.innerHTML).toContain('<strong>Bold</strong> content');
+
+    const imageOutput = element.querySelector('#image_value_view img') as HTMLImageElement;
+    expect(imageOutput.getAttribute('src')).toBe('https://cdn.example.test/picture.png');
+
+    const fileOutput = element.querySelector('#file_value_view a') as HTMLAnchorElement;
+    expect(fileOutput.getAttribute('href')).toBe('https://cdn.example.test/docs/spec.pdf');
+    expect(fileOutput.getAttribute('download')).not.toBeNull();
+    expect(fileOutput.textContent).toBe('spec.pdf');
+
+    const videoOutput = element.querySelector('#video_value_view video') as HTMLVideoElement;
+    expect(videoOutput.getAttribute('src')).toBe('https://cdn.example.test/media/demo.mp4');
+
+    const linkOutput = element.querySelector('#link_value_view a') as HTMLAnchorElement;
+    expect(linkOutput.getAttribute('href')).toBe('https://example.test/resource');
+    expect(linkOutput.textContent).toBe('https://example.test/resource');
+  });
+
+  it('uses view-values attribute in view mode to override DOM field values', () => {
+    const element = renderFixture(`
+      <template id="view_override">
+        <form
+          id="view_override_form"
+          data-type="contactform"
+          data-name="view_override"
+          data-label="View Override"
+        >
+          <input
+            id="headline"
+            name="headline"
+            type="text"
+            value="Old value"
+            data-type="text"
+            data-name="headline"
+            data-label="Headline"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui
+        name="view_override"
+        mode="view"
+        view-values='{"headline":"New value"}'
+      ></form-ui>
+    `);
+
+    const output = element.querySelector('#headline_view span') as HTMLSpanElement;
+    expect(output.textContent).toBe('New value');
+  });
+
+  it('sanitizes html output by default in view mode', () => {
+    const element = renderFixture(`
+      <template id="view_html_sanitize">
+        <form
+          id="view_html_sanitize_form"
+          data-type="contactform"
+          data-name="view_html_sanitize"
+          data-label="View Html Sanitize"
+        >
+          <textarea
+            id="html_block"
+            name="html_block"
+            data-type="html"
+            data-name="html_block"
+            data-label="Html Block"
+            data-section-name="main"
+          ><img src="x" onerror="alert(1)"><script>alert(1)</script><a href="javascript:alert(2)">Click</a><p>Safe</p></textarea>
+        </form>
+      </template>
+      <form-ui name="view_html_sanitize" mode="view"></form-ui>
+    `);
+
+    const output = element.querySelector('#html_block_view div') as HTMLDivElement;
+    expect(output.innerHTML).not.toContain('<script');
+    expect(output.innerHTML).not.toContain('onerror=');
+    expect(output.innerHTML).not.toContain('javascript:');
+    expect(output.innerHTML).toContain('<p>Safe</p>');
+  });
+
+  it('allows unsafe html rendering when allow-unsafe-html is enabled', () => {
+    const element = renderFixture(`
+      <template id="view_html_unsafe">
+        <form
+          id="view_html_unsafe_form"
+          data-type="contactform"
+          data-name="view_html_unsafe"
+          data-label="View Html Unsafe"
+        >
+          <textarea
+            id="html_block"
+            name="html_block"
+            data-type="html"
+            data-name="html_block"
+            data-label="Html Block"
+            data-section-name="main"
+          ><script>window.__unsafe_test=true</script><p>Unsafe allowed</p></textarea>
+        </form>
+      </template>
+      <form-ui name="view_html_unsafe" mode="view" allow-unsafe-html="true"></form-ui>
+    `);
+
+    const output = element.querySelector('#html_block_view div') as HTMLDivElement;
+    expect(output.innerHTML).toContain('<script>window.__unsafe_test=true</script>');
+    expect(output.innerHTML).toContain('<p>Unsafe allowed</p>');
+  });
+
+  it('renders image values as a gallery when media display policy is gallery', () => {
+    const element = renderFixture(`
+      <template id="view_media_gallery">
+        <form
+          id="view_media_gallery_form"
+          data-type="contactform"
+          data-name="view_media_gallery"
+          data-label="View Media Gallery"
+        >
+          <input
+            id="photos"
+            name="photos"
+            type="text"
+            data-type="image"
+            data-name="photos"
+            data-label="Photos"
+            data-view-media-display="gallery"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui
+        name="view_media_gallery"
+        mode="view"
+        view-values='{"photos":["https://cdn.example.test/a.png","https://cdn.example.test/b.png"]}'
+      ></form-ui>
+    `);
+
+    const output = element.querySelector('#photos_view') as HTMLElement;
+    const images = output.querySelectorAll('img');
+    expect(images).toHaveLength(2);
+    expect(output.getAttribute('data-media-display-policy')).toBe('gallery');
+  });
+
+  it('renders video values as links when media display policy is link', () => {
+    const element = renderFixture(`
+      <template id="view_video_link">
+        <form
+          id="view_video_link_form"
+          data-type="contactform"
+          data-name="view_video_link"
+          data-label="View Video Link"
+        >
+          <input
+            id="demo_video"
+            name="demo_video"
+            type="text"
+            data-type="file"
+            data-accept="video/*"
+            data-name="demo_video"
+            data-label="Demo Video"
+            data-view-media-display="link"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui
+        name="view_video_link"
+        mode="view"
+        view-values='{"demo_video":"https://cdn.example.test/demo.mp4"}'
+      ></form-ui>
+    `);
+
+    const output = element.querySelector('#demo_video_view') as HTMLElement;
+    expect(output.querySelector('video')).toBeNull();
+    const anchor = output.querySelector('a') as HTMLAnchorElement;
+    expect(anchor.getAttribute('href')).toBe('https://cdn.example.test/demo.mp4');
+    expect(output.getAttribute('data-media-display-policy')).toBe('link');
+  });
+
+  it('renders outputs while keeping inputs interactive in hybrid mode', () => {
+    const element = renderFixture(`
+      <template id="hybrid_mvp">
+        <form
+          id="hybrid_mvp_form"
+          data-type="contactform"
+          data-name="hybrid_mvp"
+          data-label="Hybrid MVP"
+        >
+          <input
+            id="full_name"
+            name="full_name"
+            type="text"
+            value="Alice"
+            data-type="text"
+            data-name="full_name"
+            data-label="Full Name"
+            data-section-name="main"
+          />
+          <input
+            id="website"
+            name="website"
+            type="text"
+            value="https://example.test/profile"
+            data-type="link"
+            data-name="website"
+            data-label="Website"
+            data-section-name="main"
+          />
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </template>
+      <form-ui name="hybrid_mvp" mode="hybrid"></form-ui>
+    `);
+
+    const textInput = element.querySelector('#full_name') as HTMLInputElement;
+    const submitButton = element.querySelector('#submit_button') as HTMLButtonElement;
+    const textOutput = element.querySelector('#full_name_view span') as HTMLSpanElement;
+    const linkOutput = element.querySelector('#website_view a') as HTMLAnchorElement;
+
+    expect(textInput.style.display).toBe('');
+    expect(textInput.disabled).toBe(false);
+    expect(submitButton.style.display).toBe('');
+    expect(textOutput.textContent).toBe('Alice');
+    expect(linkOutput.getAttribute('href')).toBe('https://example.test/profile');
+  });
+
+  it('updates rendered output when input value changes in hybrid mode', () => {
+    const element = renderFixture(`
+      <template id="hybrid_sync">
+        <form
+          id="hybrid_sync_form"
+          data-type="contactform"
+          data-name="hybrid_sync"
+          data-label="Hybrid Sync"
+        >
+          <input
+            id="title"
+            name="title"
+            type="text"
+            value=""
+            data-type="text"
+            data-name="title"
+            data-label="Title"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="hybrid_sync" mode="hybrid"></form-ui>
+    `);
+
+    const input = element.querySelector('#title') as HTMLInputElement;
+    expect((element.querySelector('#title_view span') as HTMLSpanElement).textContent).toBe('');
+
+    input.value = 'New title';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect((element.querySelector('#title_view span') as HTMLSpanElement).textContent).toBe('New title');
+  });
+
+  it('supports custom output renderer registration in view mode', () => {
+    const element = renderFixture(`
+      <template id="view_custom_renderer">
+        <form
+          id="view_custom_renderer_form"
+          data-type="contactform"
+          data-name="view_custom_renderer"
+          data-label="View Custom Renderer"
+        >
+          <input
+            id="status"
+            name="status"
+            type="text"
+            value="approved"
+            data-type="text"
+            data-name="status"
+            data-label="Status"
+            data-view-renderer="badge"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="view_custom_renderer" mode="view"></form-ui>
+    `);
+
+    element.setOutputRenderer('badge', ({ value }) => {
+      const badge = document.createElement('span');
+      badge.className = 'status-badge';
+      badge.textContent = String(value || '').toUpperCase();
+      return badge;
+    });
+
+    const output = element.querySelector('#status_view .status-badge') as HTMLSpanElement;
+    expect(output).not.toBeNull();
+    expect(output.textContent).toBe('APPROVED');
+    expect((element.querySelector('#status_view') as HTMLElement).getAttribute('data-renderer-type')).toBe('badge');
+  });
+
+  it('supports a custom html sanitizer override through runtime API', () => {
+    const element = renderFixture(`
+      <template id="view_html_custom_sanitizer">
+        <form
+          id="view_html_custom_sanitizer_form"
+          data-type="contactform"
+          data-name="view_html_custom_sanitizer"
+          data-label="View Html Custom Sanitizer"
+        >
+          <textarea
+            id="html_block"
+            name="html_block"
+            data-type="html"
+            data-name="html_block"
+            data-label="Html Block"
+            data-section-name="main"
+          ><p>hello world</p></textarea>
+        </form>
+      </template>
+      <form-ui name="view_html_custom_sanitizer" mode="view"></form-ui>
+    `);
+
+    element.setHtmlSanitizer((html) => html.replace('hello', 'safe'));
+    const output = element.querySelector('#html_block_view div') as HTMLDivElement;
+    expect(output.innerHTML).toContain('<p>safe world</p>');
+  });
+
+  it('supports field-level output renderer override through runtime API in hybrid mode', () => {
+    const element = renderFixture(`
+      <template id="hybrid_field_override">
+        <form
+          id="hybrid_field_override_form"
+          data-type="contactform"
+          data-name="hybrid_field_override"
+          data-label="Hybrid Field Override"
+        >
+          <input
+            id="score"
+            name="score"
+            type="text"
+            value="42"
+            data-type="text"
+            data-name="score"
+            data-label="Score"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="hybrid_field_override" mode="hybrid"></form-ui>
+    `);
+
+    element.setFieldOutputRenderer('score', ({ value }) => {
+      const strong = document.createElement('strong');
+      strong.className = 'score-custom';
+      strong.textContent = `Score=${value}`;
+      return strong;
+    });
+
+    const output = element.querySelector('#score_view .score-custom') as HTMLElement;
+    expect(output.textContent).toBe('Score=42');
+    expect((element.querySelector('#score_view') as HTMLElement).getAttribute('data-renderer-type')).toBe('custom');
+  });
+
+  it('supports field-level media policy override through runtime API in hybrid mode', () => {
+    const element = renderFixture(`
+      <template id="hybrid_media_policy">
+        <form
+          id="hybrid_media_policy_form"
+          data-type="contactform"
+          data-name="hybrid_media_policy"
+          data-label="Hybrid Media Policy"
+        >
+          <input
+            id="photo"
+            name="photo"
+            type="text"
+            value="https://cdn.example.test/picture.png"
+            data-type="image"
+            data-name="photo"
+            data-label="Photo"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="hybrid_media_policy" mode="hybrid"></form-ui>
+    `);
+
+    element.setFieldMediaPolicy('photo', 'thumbnail');
+
+    const output = element.querySelector('#photo_view') as HTMLElement;
+    const image = output.querySelector('img') as HTMLImageElement;
+    expect(image.style.maxWidth).toBe('160px');
+    expect(output.getAttribute('data-media-display-policy')).toBe('thumbnail');
+  });
+
+  it('exposes an output snapshot API with renderer metadata', () => {
+    const element = renderFixture(`
+      <template id="view_snapshot">
+        <form
+          id="view_snapshot_form"
+          data-type="contactform"
+          data-name="view_snapshot"
+          data-label="View Snapshot"
+        >
+          <input
+            id="url"
+            name="url"
+            type="text"
+            value="https://example.test"
+            data-type="link"
+            data-name="url"
+            data-label="Url"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="view_snapshot" mode="view"></form-ui>
+    `);
+
+    const snapshot = element.getOutputSnapshot();
+    expect(snapshot.url).toEqual({
+      rendererType: 'link',
+      mediaDisplayPolicy: 'link',
+      value: 'https://example.test',
+    });
+  });
+
   it('supports basic multi-step navigation across existing sections', () => {
     const element = renderFixture(`
       <template id="wizard">

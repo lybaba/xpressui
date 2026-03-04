@@ -10,9 +10,21 @@ import TFieldConfig from "./common/TFieldConfig";
 import { FormEngineRuntime } from "./common/form-engine";
 import {
   APPROVAL_STATE_TYPE,
+  CAMERA_PHOTO_TYPE,
+  HTML_TYPE,
+  IMAGE_TYPE,
   DOCUMENT_SCAN_TYPE,
   isFileLikeValue,
+  LINK_TYPE,
+  MEDIA_TYPE,
+  OUTPUT_TYPE,
   QR_SCAN_TYPE,
+  RICH_EDITOR_TYPE,
+  TEXTAREA_TYPE,
+  TEXT_TYPE,
+  UPLOAD_FILE_TYPE,
+  UPLOAD_IMAGE_TYPE,
+  URL_TYPE,
   UNKNOWN_TYPE,
 } from "./common/field";
 import { FormDynamicRuntime } from "./common/form-dynamic";
@@ -158,6 +170,26 @@ type TProviderTransitionRouteResult = {
   stepName: string | null;
 };
 
+type TFormRenderMode = "form" | "view" | "hybrid";
+type TFormOutputRendererContext = {
+  fieldConfig: TFieldConfig;
+  value: any;
+  mode: TFormRenderMode;
+  unsafeHtml: boolean;
+  mediaDisplayPolicy: TMediaDisplayPolicy;
+};
+type TFormOutputRenderer = (context: TFormOutputRendererContext) => HTMLElement;
+type TOutputRendererType = "text" | "html" | "image" | "file" | "video" | "link";
+type TFieldOutputRendererOverride = string | TFormOutputRenderer;
+type TMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery";
+type TFormHtmlSanitizer = (
+  html: string,
+  context: {
+    fieldConfig: TFieldConfig;
+    mode: TFormRenderMode;
+  },
+) => string;
+
 type TBarcodeDetectorResult = {
   rawValue?: string;
 };
@@ -248,6 +280,12 @@ export class FormUI extends HTMLElement {
   stepSummaryElement: HTMLElement | null;
   stepBackButton: HTMLButtonElement | null;
   stepNextButton: HTMLButtonElement | null;
+  viewValues: Record<string, any>;
+  outputRenderers: Record<string, TFormOutputRenderer>;
+  fieldOutputRenderers: Record<string, TFieldOutputRendererOverride>;
+  fieldMediaPolicies: Record<string, TMediaDisplayPolicy>;
+  htmlSanitizer: TFormHtmlSanitizer;
+  allowUnsafeHtml: boolean;
 
   constructor() {
     super();
@@ -278,6 +316,12 @@ export class FormUI extends HTMLElement {
     this.stepSummaryElement = null;
     this.stepBackButton = null;
     this.stepNextButton = null;
+    this.viewValues = {};
+    this.outputRenderers = this.createDefaultOutputRenderers();
+    this.fieldOutputRenderers = {};
+    this.fieldMediaPolicies = {};
+    this.htmlSanitizer = this.defaultHtmlSanitizer;
+    this.allowUnsafeHtml = false;
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
       getRules: () => this.formConfig?.rules || [],
@@ -397,6 +441,764 @@ export class FormUI extends HTMLElement {
     this.stopAllQrCameras();
     this.clearAllFilePreviewUrls();
     this.persistence.disconnect();
+  }
+
+  normalizeViewValue = (value: any): any => {
+    if (value === undefined || value === null) {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .map((entry) => this.normalizeViewValue(entry))
+        .filter((entry) => entry !== undefined && entry !== null && entry !== "");
+    }
+
+    if (isFileLikeValue(value)) {
+      return value;
+    }
+
+    if (typeof value === "object") {
+      const mediaValue =
+        value.url
+        || value.href
+        || value.src
+        || value.path
+        || value.value
+        || value.fileName
+        || value.name;
+      return mediaValue !== undefined ? mediaValue : value;
+    }
+
+    return value;
+  }
+
+  getDisplayText = (value: any): string => {
+    if (value === undefined || value === null) {
+      return "";
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .map((entry) => this.getDisplayText(entry))
+        .filter(Boolean)
+        .join(", ");
+    }
+
+    if (isFileLikeValue(value)) {
+      return value.name || "";
+    }
+
+    if (typeof value === "object") {
+      return JSON.stringify(value);
+    }
+
+    return String(value);
+  }
+
+  getFileMeta = (value: any): { href: string; label: string } | null => {
+    const normalized = this.normalizeViewValue(value);
+    if (isFileLikeValue(value)) {
+      return {
+        href: "",
+        label: value.name || "file",
+      };
+    }
+
+    const source = Array.isArray(normalized) ? normalized[0] : normalized;
+    if (typeof source !== "string" || !source) {
+      return null;
+    }
+
+    const fileNameCandidate = source.split("?")[0].split("/").pop();
+    return {
+      href: source,
+      label: fileNameCandidate || source,
+    };
+  }
+
+  getFileMetas = (value: any): Array<{ href: string; label: string }> => {
+    if (Array.isArray(value)) {
+      return value
+        .map((entry) => this.getFileMeta(entry))
+        .filter((entry): entry is { href: string; label: string } => Boolean(entry));
+    }
+
+    const meta = this.getFileMeta(value);
+    return meta ? [meta] : [];
+  }
+
+  getMediaSources = (value: any): string[] => {
+    const normalized = this.normalizeViewValue(value);
+    const entries = Array.isArray(normalized) ? normalized : [normalized];
+    return entries.filter((entry): entry is string => typeof entry === "string" && Boolean(entry));
+  }
+
+  resolveMediaDisplayPolicy = (
+    fieldConfig: TFieldConfig,
+    inputElement: HTMLElement | null,
+    rendererType?: string,
+  ): TMediaDisplayPolicy => {
+    const runtimePolicy = this.fieldMediaPolicies[fieldConfig.name];
+    if (runtimePolicy) {
+      return runtimePolicy;
+    }
+
+    const attributePolicy =
+      inputElement?.getAttribute("data-view-media-display")
+      || inputElement?.getAttribute("data-view-resource-display");
+    if (
+      attributePolicy === "thumbnail"
+      || attributePolicy === "large"
+      || attributePolicy === "link"
+      || attributePolicy === "gallery"
+    ) {
+      return attributePolicy;
+    }
+
+    if (rendererType === "file" || rendererType === "link") {
+      return "link";
+    }
+
+    return "large";
+  }
+
+  createDefaultOutputRenderers = (): Record<TOutputRendererType, TFormOutputRenderer> => {
+    const textRenderer: TFormOutputRenderer = ({ value }) => {
+      const element = document.createElement("span");
+      element.textContent = this.getDisplayText(value);
+      return element;
+    };
+
+    const htmlRenderer: TFormOutputRenderer = ({ value, fieldConfig, mode, unsafeHtml }) => {
+      const element = document.createElement("div");
+      const htmlContent = this.getDisplayText(value);
+      element.innerHTML = unsafeHtml
+        ? htmlContent
+        : this.htmlSanitizer(htmlContent, {
+          fieldConfig,
+          mode,
+        });
+      return element;
+    };
+
+    const imageRenderer: TFormOutputRenderer = ({ value, fieldConfig, mediaDisplayPolicy }) => {
+      const element = document.createElement("div");
+      const sources = this.getMediaSources(value);
+      if (!sources.length) {
+        return element;
+      }
+
+      if (mediaDisplayPolicy === "link") {
+        sources.forEach((source) => {
+          const link = document.createElement("a");
+          link.href = source;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.textContent = source;
+          link.style.display = "block";
+          element.appendChild(link);
+        });
+        return element;
+      }
+
+      const renderImage = (source: string) => {
+        const image = document.createElement("img");
+        image.src = source;
+        image.alt = fieldConfig.label || fieldConfig.name || "image";
+        image.style.height = "auto";
+        image.style.display = "block";
+        image.style.maxWidth = mediaDisplayPolicy === "thumbnail" ? "160px" : "100%";
+        image.style.objectFit = mediaDisplayPolicy === "thumbnail" ? "cover" : "contain";
+        return image;
+      };
+
+      if (mediaDisplayPolicy === "gallery") {
+        const gallery = document.createElement("div");
+        gallery.setAttribute("data-media-gallery", "true");
+        gallery.style.display = "grid";
+        gallery.style.gridTemplateColumns = "repeat(auto-fill, minmax(120px, 1fr))";
+        gallery.style.gap = "8px";
+        sources.forEach((source) => {
+          gallery.appendChild(renderImage(source));
+        });
+        element.appendChild(gallery);
+        return element;
+      }
+
+      element.appendChild(renderImage(sources[0]));
+      return element;
+    };
+
+    const linkRenderer: TFormOutputRenderer = ({ value }) => {
+      const element = document.createElement("div");
+      const normalized = this.normalizeViewValue(value);
+      const href = Array.isArray(normalized) ? normalized[0] : normalized;
+      if (typeof href !== "string" || !href) {
+        return element;
+      }
+
+      const link = document.createElement("a");
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      link.textContent = href;
+      element.appendChild(link);
+      return element;
+    };
+
+    const fileRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
+      const element = document.createElement("div");
+      const fileMetas = this.getFileMetas(value);
+      if (!fileMetas.length) {
+        return element;
+      }
+
+      const shouldRenderAll = mediaDisplayPolicy === "gallery";
+      const items = shouldRenderAll ? fileMetas : [fileMetas[0]];
+      items.forEach((fileMeta) => {
+        if (!fileMeta.href) {
+          const text = document.createElement("span");
+          text.textContent = fileMeta.label;
+          text.style.display = "block";
+          element.appendChild(text);
+          return;
+        }
+
+        const link = document.createElement("a");
+        link.href = fileMeta.href;
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        link.download = "";
+        link.textContent = fileMeta.label;
+        link.style.display = "block";
+        element.appendChild(link);
+      });
+      return element;
+    };
+
+    const videoRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
+      const element = document.createElement("div");
+      const sources = this.getMediaSources(value);
+      if (!sources.length) {
+        return element;
+      }
+
+      if (mediaDisplayPolicy === "link") {
+        sources.forEach((source) => {
+          const link = document.createElement("a");
+          link.href = source;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.textContent = source;
+          link.style.display = "block";
+          element.appendChild(link);
+        });
+        return element;
+      }
+
+      const renderVideo = (source: string) => {
+        const video = document.createElement("video");
+        video.controls = true;
+        video.preload = "metadata";
+        video.style.maxWidth = mediaDisplayPolicy === "thumbnail" ? "220px" : "100%";
+        video.src = source;
+        return video;
+      };
+
+      if (mediaDisplayPolicy === "gallery") {
+        const list = document.createElement("div");
+        list.setAttribute("data-media-gallery", "true");
+        list.style.display = "grid";
+        list.style.gap = "8px";
+        sources.forEach((source) => {
+          list.appendChild(renderVideo(source));
+        });
+        element.appendChild(list);
+        return element;
+      }
+
+      element.appendChild(renderVideo(sources[0]));
+      return element;
+    };
+
+    return {
+      text: textRenderer,
+      html: htmlRenderer,
+      image: imageRenderer,
+      file: fileRenderer,
+      video: videoRenderer,
+      link: linkRenderer,
+    };
+  }
+
+  getRenderMode = (): TFormRenderMode => {
+    const mode = (this.getAttribute("mode") || "").trim().toLowerCase();
+    if (mode === "view" || mode === "hybrid") {
+      return mode;
+    }
+
+    return "form";
+  }
+
+  setViewValues = (values: Record<string, any>) => {
+    this.viewValues = values && typeof values === "object" ? { ...values } : {};
+    if (this.initialized && this.getRenderMode() === "view") {
+      const formElement = this.querySelector("form") as HTMLFormElement | null;
+      if (formElement) {
+        this.applyViewMode(formElement);
+      }
+    }
+
+    if (this.initialized && this.getRenderMode() === "hybrid" && this.form) {
+      Object.entries(this.viewValues).forEach(([fieldName, fieldValue]) => {
+        this.form?.change(fieldName, fieldValue);
+      });
+    }
+  }
+
+  getViewValues = (): Record<string, any> => {
+    return { ...this.viewValues };
+  }
+
+  defaultHtmlSanitizer: TFormHtmlSanitizer = (html: string) => {
+    if (typeof document === "undefined") {
+      return html
+        .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+        .replace(/\son[a-z]+\s*=\s*(['"]).*?\1/gi, "");
+    }
+
+    const template = document.createElement("template");
+    template.innerHTML = html;
+
+    const blockedTags = [
+      "script",
+      "style",
+      "iframe",
+      "object",
+      "embed",
+      "link",
+      "meta",
+      "base",
+    ];
+    template.content
+      .querySelectorAll(blockedTags.join(","))
+      .forEach((node) => node.remove());
+
+    template.content.querySelectorAll("*").forEach((element) => {
+      Array.from(element.attributes).forEach((attribute) => {
+        const attributeName = attribute.name.toLowerCase();
+        const attributeValue = String(attribute.value || "").trim().toLowerCase();
+        if (attributeName.startsWith("on")) {
+          element.removeAttribute(attribute.name);
+          return;
+        }
+
+        if (attributeName === "srcdoc") {
+          element.removeAttribute(attribute.name);
+          return;
+        }
+
+        if (
+          (attributeName === "href" || attributeName === "src" || attributeName === "xlink:href")
+          && attributeValue.startsWith("javascript:")
+        ) {
+          element.removeAttribute(attribute.name);
+        }
+      });
+    });
+
+    return template.innerHTML;
+  }
+
+  setHtmlSanitizer = (sanitizer: TFormHtmlSanitizer) => {
+    if (typeof sanitizer !== "function") {
+      return;
+    }
+
+    this.htmlSanitizer = sanitizer;
+    this.refreshOutputRendering();
+  }
+
+  resetHtmlSanitizer = () => {
+    this.htmlSanitizer = this.defaultHtmlSanitizer;
+    this.refreshOutputRendering();
+  }
+
+  setAllowUnsafeHtml = (enabled: boolean) => {
+    this.allowUnsafeHtml = Boolean(enabled);
+    this.refreshOutputRendering();
+  }
+
+  shouldRenderUnsafeHtml = (inputElement: HTMLElement | null): boolean => {
+    if (this.allowUnsafeHtml) {
+      return true;
+    }
+
+    const unsafeGlobalAttr = this.getAttribute("allow-unsafe-html") || this.getAttribute("data-allow-unsafe-html");
+    if (unsafeGlobalAttr === "true") {
+      return true;
+    }
+
+    if (!inputElement) {
+      return false;
+    }
+
+    const unsafeFieldAttr = inputElement.getAttribute("data-view-html-unsafe");
+    return unsafeFieldAttr === "true";
+  }
+
+  setOutputRenderer = (rendererType: string, renderer: TFormOutputRenderer) => {
+    if (!rendererType || typeof renderer !== "function") {
+      return;
+    }
+
+    this.outputRenderers[rendererType] = renderer;
+    this.refreshOutputRendering();
+  }
+
+  removeOutputRenderer = (rendererType: string) => {
+    if (!rendererType || !this.outputRenderers[rendererType]) {
+      return;
+    }
+
+    delete this.outputRenderers[rendererType];
+    this.refreshOutputRendering();
+  }
+
+  setFieldOutputRenderer = (fieldName: string, renderer: TFieldOutputRendererOverride) => {
+    if (!fieldName || !renderer) {
+      return;
+    }
+
+    this.fieldOutputRenderers[fieldName] = renderer;
+    this.refreshOutputRendering();
+  }
+
+  clearFieldOutputRenderer = (fieldName: string) => {
+    if (!fieldName || !this.fieldOutputRenderers[fieldName]) {
+      return;
+    }
+
+    delete this.fieldOutputRenderers[fieldName];
+    this.refreshOutputRendering();
+  }
+
+  setFieldMediaPolicy = (fieldName: string, policy: TMediaDisplayPolicy) => {
+    if (
+      !fieldName
+      || (policy !== "thumbnail" && policy !== "large" && policy !== "link" && policy !== "gallery")
+    ) {
+      return;
+    }
+
+    this.fieldMediaPolicies[fieldName] = policy;
+    this.refreshOutputRendering();
+  }
+
+  clearFieldMediaPolicy = (fieldName: string) => {
+    if (!fieldName || !this.fieldMediaPolicies[fieldName]) {
+      return;
+    }
+
+    delete this.fieldMediaPolicies[fieldName];
+    this.refreshOutputRendering();
+  }
+
+  resolveOutputRendererForField = (
+    fieldConfig: TFieldConfig,
+    inputElement: HTMLElement,
+  ): { rendererType: string; renderer: TFormOutputRenderer } => {
+    const fieldOverride = this.fieldOutputRenderers[fieldConfig.name];
+    if (typeof fieldOverride === "function") {
+      return {
+        rendererType: "custom",
+        renderer: fieldOverride,
+      };
+    }
+
+    if (typeof fieldOverride === "string" && this.outputRenderers[fieldOverride]) {
+      return {
+        rendererType: fieldOverride,
+        renderer: this.outputRenderers[fieldOverride],
+      };
+    }
+
+    const rendererOverride = inputElement.getAttribute("data-view-renderer");
+    if (rendererOverride && this.outputRenderers[rendererOverride]) {
+      return {
+        rendererType: rendererOverride,
+        renderer: this.outputRenderers[rendererOverride],
+      };
+    }
+
+    const defaultRendererType = this.getOutputRendererType(fieldConfig);
+    return {
+      rendererType: defaultRendererType,
+      renderer: this.outputRenderers[defaultRendererType] || this.outputRenderers.text,
+    };
+  }
+
+  getOutputSnapshot = (values?: Record<string, any>) => {
+    const formElem = this.querySelector("form") as HTMLFormElement | null;
+    if (!formElem) {
+      return {};
+    }
+
+    const mode = this.getRenderMode();
+    const fallbackValues = mode === "hybrid"
+      ? (this.form?.getState().values || this.getInitialViewValues(formElem))
+      : this.getInitialViewValues(formElem);
+    const currentValues = values || fallbackValues;
+    const snapshot: Record<string, { rendererType: string; mediaDisplayPolicy: TMediaDisplayPolicy; value: any }> = {};
+
+    Array.from(formElem.elements).forEach((node) => {
+      const fieldConfig = getFieldConfig(node);
+      if (!fieldConfig?.name || fieldConfig.type === UNKNOWN_TYPE) {
+        return;
+      }
+
+      const inputElement = this.querySelector(`#${fieldConfig.name}`) as HTMLElement | null;
+      if (!inputElement) {
+        return;
+      }
+
+      const { rendererType } = this.resolveOutputRendererForField(fieldConfig, inputElement);
+      const mediaDisplayPolicy = this.resolveMediaDisplayPolicy(fieldConfig, inputElement, rendererType);
+      snapshot[fieldConfig.name] = {
+        rendererType,
+        mediaDisplayPolicy,
+        value: currentValues[fieldConfig.name],
+      };
+    });
+
+    return snapshot;
+  }
+
+  refreshOutputRendering = () => {
+    if (!this.initialized) {
+      return;
+    }
+
+    const formElem = this.querySelector("form") as HTMLFormElement | null;
+    if (!formElem) {
+      return;
+    }
+
+    const mode = this.getRenderMode();
+    if (mode === "view") {
+      this.applyViewMode(formElem);
+      return;
+    }
+
+    if (mode === "hybrid") {
+      const values = this.form?.getState().values || this.getInitialViewValues(formElem);
+      this.applyHybridMode(formElem, values);
+    }
+  }
+
+  readViewValuesAttribute = (): Record<string, any> => {
+    const rawAttribute = this.getAttribute("view-values") || this.getAttribute("data-view-values");
+    if (!rawAttribute) {
+      return {};
+    }
+
+    try {
+      const parsed = JSON.parse(rawAttribute);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  collectDomFieldValues = (formElem: HTMLFormElement): Record<string, any> => {
+    const domValues: Record<string, any> = {};
+    Array.from(formElem.elements).forEach((node) => {
+      const fieldConfig = getFieldConfig(node);
+      if (!fieldConfig?.name || fieldConfig.type === UNKNOWN_TYPE) {
+        return;
+      }
+
+      if (node instanceof HTMLInputElement) {
+        if (node.type === "checkbox") {
+          domValues[fieldConfig.name] = node.checked;
+        } else if (node.type === "radio") {
+          if (node.checked) {
+            domValues[fieldConfig.name] = node.value;
+          }
+        } else {
+          domValues[fieldConfig.name] = node.value;
+        }
+        return;
+      }
+
+      if (node instanceof HTMLSelectElement) {
+        domValues[fieldConfig.name] = node.multiple
+          ? Array.from(node.selectedOptions).map((option) => option.value)
+          : node.value;
+        return;
+      }
+
+      if (node instanceof HTMLTextAreaElement) {
+        domValues[fieldConfig.name] = node.value;
+      }
+    });
+    return domValues;
+  }
+
+  getInitialViewValues = (formElem: HTMLFormElement): Record<string, any> => {
+    const domValues = this.collectDomFieldValues(formElem);
+    const persistedValues = this.persistence.loadDraftValues();
+    const attributeValues = this.readViewValuesAttribute();
+    return {
+      ...domValues,
+      ...(persistedValues || {}),
+      ...attributeValues,
+      ...this.viewValues,
+    };
+  }
+
+  getOutputRendererType = (fieldConfig: TFieldConfig): TOutputRendererType => {
+    const subType = String(fieldConfig.subType || fieldConfig.refType || "").toLowerCase();
+    const accept = String(fieldConfig.accept || "").toLowerCase();
+
+    if (fieldConfig.type === OUTPUT_TYPE || fieldConfig.type === MEDIA_TYPE) {
+      if (subType.includes("html")) {
+        return "html";
+      }
+      if (subType.includes("image")) {
+        return "image";
+      }
+      if (subType.includes("video")) {
+        return "video";
+      }
+      if (subType.includes("file") || subType.includes("document")) {
+        return "file";
+      }
+      if (subType.includes("link") || subType.includes("url")) {
+        return "link";
+      }
+    }
+
+    if (fieldConfig.type === HTML_TYPE || fieldConfig.type === RICH_EDITOR_TYPE) {
+      return "html";
+    }
+
+    if (
+      fieldConfig.type === IMAGE_TYPE ||
+      fieldConfig.type === UPLOAD_IMAGE_TYPE ||
+      fieldConfig.type === CAMERA_PHOTO_TYPE
+    ) {
+      return "image";
+    }
+
+    if (fieldConfig.type === UPLOAD_FILE_TYPE || fieldConfig.type === DOCUMENT_SCAN_TYPE) {
+      if (accept.includes("video/")) {
+        return "video";
+      }
+      return "file";
+    }
+
+    if (fieldConfig.type === LINK_TYPE || fieldConfig.type === URL_TYPE) {
+      return "link";
+    }
+
+    if (fieldConfig.type === "video" || accept.includes("video/")) {
+      return "video";
+    }
+
+    if (fieldConfig.type === TEXT_TYPE || fieldConfig.type === TEXTAREA_TYPE) {
+      return "text";
+    }
+
+    return "text";
+  }
+
+  renderViewField = (
+    fieldConfig: TFieldConfig,
+    value: any,
+    inputElement: HTMLElement,
+  ) => {
+    const viewFieldId = `${fieldConfig.name}_view`;
+    let viewElement = this.querySelector(`#${viewFieldId}`) as HTMLElement | null;
+    if (!viewElement) {
+      viewElement = document.createElement("div");
+      viewElement.id = viewFieldId;
+      viewElement.setAttribute("data-view-field", fieldConfig.name);
+      inputElement.insertAdjacentElement("afterend", viewElement);
+    }
+
+    viewElement.innerHTML = "";
+    const { rendererType, renderer } = this.resolveOutputRendererForField(fieldConfig, inputElement);
+    viewElement.setAttribute("data-renderer-type", rendererType);
+    const mediaDisplayPolicy = this.resolveMediaDisplayPolicy(fieldConfig, inputElement, rendererType);
+    viewElement.setAttribute("data-media-display-policy", mediaDisplayPolicy);
+    const unsafeHtml = this.shouldRenderUnsafeHtml(inputElement);
+    const rendered = renderer({
+      fieldConfig,
+      value,
+      mode: this.getRenderMode(),
+      unsafeHtml,
+      mediaDisplayPolicy,
+    });
+    viewElement.appendChild(rendered);
+  }
+
+  applyViewMode = (formElem: HTMLFormElement) => {
+    const values = this.getInitialViewValues(formElem);
+    Array.from(formElem.elements).forEach((node) => {
+      const fieldConfig = getFieldConfig(node);
+      if (!fieldConfig?.name || fieldConfig.type === UNKNOWN_TYPE) {
+        return;
+      }
+
+      const inputElement = this.querySelector(`#${fieldConfig.name}`) as HTMLElement | null;
+      if (!inputElement) {
+        return;
+      }
+
+      this.renderViewField(fieldConfig, values[fieldConfig.name], inputElement);
+      inputElement.style.display = "none";
+      inputElement.setAttribute("aria-hidden", "true");
+      if (
+        inputElement instanceof HTMLInputElement ||
+        inputElement instanceof HTMLSelectElement ||
+        inputElement instanceof HTMLTextAreaElement
+      ) {
+        inputElement.disabled = true;
+      }
+
+      const errorElement = this.querySelector(`#${fieldConfig.name}_error`) as HTMLElement | null;
+      if (errorElement) {
+        errorElement.style.display = "none";
+      }
+
+      const selectionElement = this.querySelector(`#${fieldConfig.name}_selection`) as HTMLElement | null;
+      if (selectionElement) {
+        selectionElement.style.display = "none";
+      }
+    });
+
+    Array.from(formElem.querySelectorAll('button[type="submit"], input[type="submit"]')).forEach((button) => {
+      (button as HTMLElement).style.display = "none";
+    });
+  }
+
+  applyHybridMode = (formElem: HTMLFormElement, values?: Record<string, any>) => {
+    const modeValues = values || this.getInitialViewValues(formElem);
+    Array.from(formElem.elements).forEach((node) => {
+      const fieldConfig = getFieldConfig(node);
+      if (!fieldConfig?.name || fieldConfig.type === UNKNOWN_TYPE) {
+        return;
+      }
+
+      const inputElement = this.querySelector(`#${fieldConfig.name}`) as HTMLElement | null;
+      if (!inputElement) {
+        return;
+      }
+
+      this.renderViewField(fieldConfig, modeValues[fieldConfig.name], inputElement);
+    });
   }
 
   getFileValueList = (value: any) => {
@@ -1647,10 +2449,20 @@ export class FormUI extends HTMLElement {
         this.currentStepIndex = this.steps.getCurrentStepIndex();
       }
       const draftValues = this.persistence.loadDraftValues();
+      const renderMode = this.getRenderMode();
+      const hybridInitialValues =
+        renderMode === "hybrid"
+          ? this.getInitialViewValues(formElem)
+          : null;
+
+      if (renderMode === "view") {
+        this.applyViewMode(formElem);
+        return;
+      }
 
       this.form = createForm({
         onSubmit: this.onSubmit,
-        initialValues: draftValues,
+        initialValues: hybridInitialValues || draftValues,
         validate: (values: Record<string, any>) => this.validateForm(values),
 
       });
@@ -1685,6 +2497,10 @@ export class FormUI extends HTMLElement {
         result: this.getWorkflowSnapshot(),
       });
       this.emitStepChange();
+
+      if (renderMode === "hybrid") {
+        this.applyHybridMode(formElem, hybridInitialValues || undefined);
+      }
 
       this.persistence.connect();
 
@@ -3167,6 +3983,10 @@ export class FormUI extends HTMLElement {
           });
         } else {
           input.value = value === undefined ? "" : value;
+        }
+
+        if (this.getRenderMode() === "hybrid" && inputElement) {
+          this.renderViewField(fieldConfig, value, inputElement);
         }
 
         // show/hide errors

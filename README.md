@@ -542,6 +542,7 @@ Current rule scope:
 - condition logic: `AND`, `OR`
 - condition operators: `equals`, `not_equals`, `contains`, `in`, `gt`, `lt`
 - actions: `show`, `hide`, `enable`, `disable`, `clear-value`, `set-value`, `fetch-options`
+- `set-value` can use either a constant via `value` or another field via `sourceField`
 
 ## Local Draft Storage
 

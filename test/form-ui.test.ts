@@ -859,6 +859,41 @@ describe('FormUI', () => {
     expect(currency.value).toBe('EUR');
   });
 
+  it('supports the set-value rule action from another field', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'set-value-source-field-rules-form',
+      title: 'Set Value Source Field Rules Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'sameAsBilling', operator: 'equals', value: true },
+          ],
+          actions: [
+            { type: 'set-value', field: 'shippingEmail', sourceField: 'billingEmail' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'billingEmail', label: 'Billing Email', type: 'email' },
+        { name: 'shippingEmail', label: 'Shipping Email', type: 'email' },
+        { name: 'sameAsBilling', label: 'Same as billing', type: 'checkbox' },
+      ],
+    }) as FormUI;
+    const billingEmail = element.querySelector('#billingEmail') as HTMLInputElement;
+    const shippingEmail = element.querySelector('#shippingEmail') as HTMLInputElement;
+    const sameAsBilling = element.querySelector('#sameAsBilling') as HTMLInputElement;
+
+    billingEmail.value = 'billing@example.com';
+    billingEmail.dispatchEvent(new Event('input', { bubbles: true }));
+    sameAsBilling.checked = true;
+    sameAsBilling.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).shippingEmail).toBe('billing@example.com');
+    expect(shippingEmail.value).toBe('billing@example.com');
+  });
+
   it('supports the fetch-options rule action', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(

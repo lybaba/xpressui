@@ -74,6 +74,7 @@ export type TFormRuleAction = {
     type: 'show' | 'hide' | 'enable' | 'disable' | 'clear-value' | 'set-value' | 'fetch-options';
     field: string;
     value?: any;
+    sourceField?: string;
 };
 
 export type TFormRule = {

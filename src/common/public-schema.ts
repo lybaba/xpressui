@@ -62,6 +62,7 @@ const PUBLIC_FORM_SCHEMA = {
                   ],
                 },
                 field: { type: "string", minLength: 1 },
+                sourceField: { type: "string", minLength: 1 },
               },
             },
           },

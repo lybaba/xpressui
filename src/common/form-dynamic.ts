@@ -26,6 +26,7 @@ export type TFormRuleAppliedDetail = {
       | "fetch-options";
     field: string;
     value?: any;
+    sourceField?: string;
   }>;
 };
 
@@ -50,6 +51,7 @@ type TFormDynamicRuntimeOptions = {
         | "fetch-options";
       field: string;
       value?: any;
+      sourceField?: string;
     }>;
   }>;
   getFieldContainer(
@@ -169,7 +171,10 @@ export class FormDynamicRuntime {
         } else if (action.type === "clear-value") {
           this.options.clearFieldValue(action.field);
         } else if (action.type === "set-value") {
-          this.options.setFieldValue(action.field, action.value);
+          const nextValue = action.sourceField
+            ? this.options.getFieldValue(action.sourceField)
+            : action.value;
+          this.options.setFieldValue(action.field, nextValue);
         } else if (action.type === "fetch-options") {
           void this.fetchOptionsForField(action.field);
         }

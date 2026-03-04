@@ -295,41 +295,52 @@ export function createTemplateMarkup(
   templateName: string = config.name
 ): string {
   const stepSections = config.stepSections?.length ? config.stepSections : config.sections[CUSTOM_SECTION];
-  const section = stepSections?.[0];
-  const sectionName = section?.name || 'main';
-  const sectionLabel = section?.label || 'Main';
-  const fields = config.sections[sectionName] || [];
-  const fieldMarkup = fields.map((field) => renderField(field, sectionName)).join('\n');
-  const sectionStepAttrs = [
-    section?.stepSkippable ? ' data-step-skippable="true"' : '',
-    section?.stepSummary ? ' data-step-summary="true"' : '',
-    section?.stepValidateWhenWorkflowStates?.length
-      ? ` data-step-validate-when-workflow-states="${escapeHtml(JSON.stringify(section.stepValidateWhenWorkflowStates))}"`
-      : '',
-    section?.nextStepWhenField
-      ? ` data-next-step-when-field="${escapeHtml(section.nextStepWhenField)}"`
-      : '',
-    section?.nextStepWhenEquals
-      ? ` data-next-step-when-equals="${escapeHtml(
-          Array.isArray(section.nextStepWhenEquals)
-            ? JSON.stringify(section.nextStepWhenEquals)
-            : String(section.nextStepWhenEquals),
-        )}"`
-      : '',
-    section?.nextStepWhenNotEquals
-      ? ` data-next-step-when-not-equals="${escapeHtml(
-          Array.isArray(section.nextStepWhenNotEquals)
-            ? JSON.stringify(section.nextStepWhenNotEquals)
-            : String(section.nextStepWhenNotEquals),
-        )}"`
-      : '',
-    section?.nextStepTarget
-      ? ` data-next-step-target="${escapeHtml(section.nextStepTarget)}"`
-      : '',
-    section?.stepTransitions?.length
-      ? ` data-step-transitions="${escapeHtml(JSON.stringify(section.stepTransitions))}"`
-      : '',
-  ].join('');
+  const templateSections: any[] = stepSections?.length
+    ? stepSections
+    : [{ name: 'main', label: 'Main' }];
+  const sectionsMarkup = templateSections
+    .map((section) => {
+      const sectionName = section?.name || 'main';
+      const sectionLabel = section?.label || 'Main';
+      const fields = config.sections[sectionName] || [];
+      const fieldMarkup = fields.map((field) => renderField(field, sectionName)).join('\n');
+      const sectionStepAttrs = [
+        section?.stepSkippable ? ' data-step-skippable="true"' : '',
+        section?.stepSummary ? ' data-step-summary="true"' : '',
+        section?.stepValidateWhenWorkflowStates?.length
+          ? ` data-step-validate-when-workflow-states="${escapeHtml(JSON.stringify(section.stepValidateWhenWorkflowStates))}"`
+          : '',
+        section?.nextStepWhenField
+          ? ` data-next-step-when-field="${escapeHtml(section.nextStepWhenField)}"`
+          : '',
+        section?.nextStepWhenEquals
+          ? ` data-next-step-when-equals="${escapeHtml(
+              Array.isArray(section.nextStepWhenEquals)
+                ? JSON.stringify(section.nextStepWhenEquals)
+                : String(section.nextStepWhenEquals),
+            )}"`
+          : '',
+        section?.nextStepWhenNotEquals
+          ? ` data-next-step-when-not-equals="${escapeHtml(
+              Array.isArray(section.nextStepWhenNotEquals)
+                ? JSON.stringify(section.nextStepWhenNotEquals)
+                : String(section.nextStepWhenNotEquals),
+            )}"`
+          : '',
+        section?.nextStepTarget
+          ? ` data-next-step-target="${escapeHtml(section.nextStepTarget)}"`
+          : '',
+        section?.stepTransitions?.length
+          ? ` data-step-transitions="${escapeHtml(JSON.stringify(section.stepTransitions))}"`
+          : '',
+      ].join('');
+
+      return `    <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}"${sectionStepAttrs} class="flex flex-col gap-4">
+      ${fieldMarkup}
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </div>`;
+    })
+    .join('\n');
 
   const submitAttrs = config.submit
     ? [
@@ -435,10 +446,7 @@ export function createTemplateMarkup(
 
   return `<template id="${escapeHtml(templateName)}">
   <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs} ${rulesAttr} ${stepLabelAttrs} ${workflowStepTargetsAttr}>
-    <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}"${sectionStepAttrs} class="flex flex-col gap-4">
-      ${fieldMarkup}
-      <button type="submit" class="btn btn-primary">Submit</button>
-    </div>
+${sectionsMarkup}
   </form>
 </template>
 <form-ui name="${escapeHtml(templateName)}"></form-ui>`;

@@ -154,6 +154,37 @@ describe('FormUI', () => {
     ]);
   });
 
+  it('renders all step sections in template markup for multi-step forms', () => {
+    const markup = createTemplateMarkup({
+      version: 1,
+      id: 'multi_step_markup',
+      uid: 'multi_step_markup_uid',
+      type: 'multistepform',
+      name: 'multi-step-markup',
+      title: 'Multi Step Markup',
+      stepSections: [
+        { type: 'section', name: 'first_step', label: 'First Step' },
+        { type: 'section', name: 'second_step', label: 'Second Step', stepSummary: true },
+      ],
+      sections: {
+        custom: [
+          { type: 'section', name: 'first_step', label: 'First Step' },
+          { type: 'section', name: 'second_step', label: 'Second Step', stepSummary: true },
+        ],
+        first_step: [
+          { type: 'text', name: 'first_name', label: 'First Name', required: true },
+        ],
+        second_step: [
+          { type: 'output', name: 'review', label: 'Review' },
+        ],
+      },
+    } as any);
+
+    expect(markup).toContain('data-name="first_step"');
+    expect(markup).toContain('data-name="second_step"');
+    expect(markup).toContain('data-step-summary="true"');
+  });
+
   it('hydrates a named template into the custom element', () => {
     const element = renderFixture(`
       <template id="contact">

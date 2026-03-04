@@ -309,6 +309,7 @@ export class FormUI extends HTMLElement {
   stepBackButton: HTMLButtonElement | null;
   stepNextButton: HTMLButtonElement | null;
   productListCartClickBound: boolean;
+  productCartOverlay: HTMLElement | null;
   productGalleryOverlay: HTMLElement | null;
   viewValues: Record<string, any>;
   outputRenderers: Record<string, TFormOutputRenderer>;
@@ -347,6 +348,7 @@ export class FormUI extends HTMLElement {
     this.stepBackButton = null;
     this.stepNextButton = null;
     this.productListCartClickBound = false;
+    this.productCartOverlay = null;
     this.productGalleryOverlay = null;
     this.viewValues = {};
     this.outputRenderers = this.createDefaultOutputRenderers();
@@ -475,6 +477,10 @@ export class FormUI extends HTMLElement {
     if (this.productGalleryOverlay) {
       this.productGalleryOverlay.remove();
       this.productGalleryOverlay = null;
+    }
+    if (this.productCartOverlay) {
+      this.productCartOverlay.remove();
+      this.productCartOverlay = null;
     }
     this.productListCartClickBound = false;
     this.persistence.disconnect();
@@ -2245,61 +2251,136 @@ export class FormUI extends HTMLElement {
       })));
   }
 
+  ensureProductCartTrigger = (): HTMLElement | null => {
+    const formElement = this.querySelector("form");
+    if (!formElement) {
+      return null;
+    }
+
+    let trigger = this.querySelector("[data-product-cart-trigger]") as HTMLButtonElement | null;
+    if (!trigger) {
+      trigger = document.createElement("button");
+      trigger.type = "button";
+      trigger.className = "btn btn-primary";
+      trigger.setAttribute("data-product-cart-trigger", "true");
+      trigger.style.position = "fixed";
+      trigger.style.right = "20px";
+      trigger.style.bottom = "20px";
+      trigger.style.zIndex = "10001";
+      trigger.style.display = "inline-flex";
+      trigger.style.alignItems = "center";
+      trigger.style.gap = "8px";
+      this.appendChild(trigger);
+    }
+
+    return trigger;
+  }
+
   ensureProductListGlobalCart = (): HTMLElement | null => {
     const formElement = this.querySelector("form");
     if (!formElement) {
       return null;
     }
 
-    let cart = this.querySelector("[data-product-list-global-cart]") as HTMLElement | null;
-    if (!cart) {
-      cart = document.createElement("aside");
-      cart.setAttribute("data-product-list-global-cart", "true");
-      cart.className = "rounded border border-base-300 p-3";
-      this.appendChild(cart);
+    if (this.productCartOverlay && this.contains(this.productCartOverlay)) {
+      return this.productCartOverlay.querySelector("[data-product-list-global-cart]") as HTMLElement | null;
     }
 
-    this.style.display = "grid";
-    this.style.gap = "20px";
-    const isDesktop =
-      typeof window !== "undefined"
-      && typeof window.matchMedia === "function"
-      && window.matchMedia("(min-width: 1024px)").matches;
-    if (isDesktop) {
-      this.style.gridTemplateColumns = "minmax(0, 1fr) 320px";
-      cart.style.position = "sticky";
-      cart.style.top = "16px";
-      cart.style.alignSelf = "start";
-      cart.style.height = "fit-content";
-    } else {
-      this.style.gridTemplateColumns = "1fr";
-      cart.style.position = "static";
-      cart.style.top = "";
-      cart.style.alignSelf = "";
-      cart.style.height = "";
-    }
+    const overlay = document.createElement("div");
+    overlay.setAttribute("data-product-cart-overlay", "true");
+    overlay.style.position = "fixed";
+    overlay.style.inset = "0";
+    overlay.style.background = "rgba(15, 23, 42, 0.45)";
+    overlay.style.zIndex = "10002";
+    overlay.style.display = "none";
+    overlay.style.justifyContent = "flex-end";
 
-    return cart;
+    const panel = document.createElement("aside");
+    panel.setAttribute("data-product-list-global-cart", "true");
+    panel.style.width = "min(420px, 92vw)";
+    panel.style.height = "100%";
+    panel.style.background = "#ffffff";
+    panel.style.borderLeft = "1px solid rgba(15, 23, 42, 0.12)";
+    panel.style.padding = "16px";
+    panel.style.overflowY = "auto";
+    panel.style.display = "grid";
+    panel.style.gridTemplateRows = "auto 1fr auto";
+    panel.style.gap = "12px";
+
+    overlay.appendChild(panel);
+    this.appendChild(overlay);
+    this.productCartOverlay = overlay;
+
+    return panel;
+  }
+
+  openProductCartModal = () => {
+    if (!this.productCartOverlay) {
+      this.ensureProductListGlobalCart();
+    }
+    if (!this.productCartOverlay) {
+      return;
+    }
+    this.productCartOverlay.style.display = "flex";
+  }
+
+  closeProductCartModal = () => {
+    if (!this.productCartOverlay) {
+      return;
+    }
+    this.productCartOverlay.style.display = "none";
   }
 
   renderProductListGlobalCart = () => {
+    const hasProductListField = Object.values(this.engine.getFields()).some((fieldConfig) =>
+      this.isProductListField(fieldConfig),
+    );
+    const trigger = hasProductListField ? this.ensureProductCartTrigger() : null;
     const cart = this.ensureProductListGlobalCart();
-    if (!cart) {
+    if (!cart || !trigger) {
       return;
     }
 
     const entries = this.getProductCartEntries();
+    const totalItems = entries.reduce((sum, entry) => sum + entry.item.quantity, 0);
+    const totalAmount = entries.reduce((sum, entry) => {
+      const unit = entry.item.discount_price ?? entry.item.sale_price ?? 0;
+      return sum + unit * entry.item.quantity;
+    }, 0);
+    trigger.innerHTML = "";
+    const triggerIcon = document.createElement("span");
+    triggerIcon.setAttribute("aria-hidden", "true");
+    triggerIcon.textContent = "🛒";
+    const triggerLabel = document.createElement("span");
+    triggerLabel.setAttribute("data-product-cart-summary", "true");
+    triggerLabel.textContent = `Cart ${totalItems} · ${totalAmount.toFixed(2)}€`;
+    trigger.appendChild(triggerIcon);
+    trigger.appendChild(triggerLabel);
+
     cart.innerHTML = "";
+    const header = document.createElement("div");
+    header.className = "flex items-center justify-between";
     const heading = document.createElement("div");
-    heading.className = "mb-2 text-sm font-semibold";
+    heading.className = "text-sm font-semibold";
     heading.textContent = "Mini Cart";
-    cart.appendChild(heading);
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "btn btn-sm btn-ghost";
+    closeButton.textContent = "Close";
+    closeButton.setAttribute("data-product-cart-close", "true");
+    header.appendChild(heading);
+    header.appendChild(closeButton);
+    cart.appendChild(header);
 
     if (!entries.length) {
       const empty = document.createElement("div");
       empty.className = "text-xs opacity-70";
       empty.textContent = "No product added yet.";
       cart.appendChild(empty);
+      const totalBlock = document.createElement("div");
+      totalBlock.className = "text-sm font-semibold";
+      totalBlock.textContent = "Total: 0.00€";
+      cart.appendChild(totalBlock);
       return;
     }
 
@@ -2348,13 +2429,9 @@ export class FormUI extends HTMLElement {
     });
     cart.appendChild(list);
 
-    const total = entries.reduce((sum, entry) => {
-      const unit = entry.item.discount_price ?? entry.item.sale_price ?? 0;
-      return sum + unit * entry.item.quantity;
-    }, 0);
     const totalBlock = document.createElement("div");
-    totalBlock.className = "mt-3 text-sm font-semibold";
-    totalBlock.textContent = `Total: ${total.toFixed(2)}€`;
+    totalBlock.className = "text-sm font-semibold";
+    totalBlock.textContent = `Total: ${totalAmount.toFixed(2)}€`;
     cart.appendChild(totalBlock);
   }
 
@@ -2364,8 +2441,36 @@ export class FormUI extends HTMLElement {
     }
 
     this.productListCartClickBound = true;
+    this.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this.productCartOverlay?.style.display === "flex") {
+        this.closeProductCartModal();
+      }
+    });
     this.addEventListener("click", (event) => {
       const target = event.target as HTMLElement | null;
+      const cartTrigger = target?.closest("[data-product-cart-trigger]") as HTMLElement | null;
+      if (cartTrigger) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.openProductCartModal();
+        return;
+      }
+
+      const cartClose = target?.closest("[data-product-cart-close]") as HTMLElement | null;
+      if (cartClose) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.closeProductCartModal();
+        return;
+      }
+
+      if (this.productCartOverlay && target === this.productCartOverlay) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.closeProductCartModal();
+        return;
+      }
+
       const actionButton = target?.closest("[data-product-cart-action]") as HTMLElement | null;
       if (!actionButton || !this.form) {
         return;

@@ -865,6 +865,18 @@ describe('FormUI', () => {
     await flushAsyncWork();
     expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(2);
     expect(element.querySelectorAll('[data-product-cart-item]').length).toBe(1);
+    expect((element.querySelector('[data-product-cart-summary="true"]') as HTMLElement).textContent).toContain('Cart 2');
+
+    const cartTrigger = element.querySelector('[data-product-cart-trigger="true"]') as HTMLButtonElement;
+    cartTrigger.click();
+    await flushAsyncWork();
+    const cartOverlay = element.querySelector('[data-product-cart-overlay="true"]') as HTMLElement;
+    expect(cartOverlay.style.display).toBe('flex');
+
+    const cartClose = element.querySelector('[data-product-cart-close="true"]') as HTMLButtonElement;
+    cartClose.click();
+    await flushAsyncWork();
+    expect(cartOverlay.style.display).toBe('none');
 
     const card = element.querySelector('[data-product-open-gallery="sku_1"]') as HTMLElement;
     card.click();

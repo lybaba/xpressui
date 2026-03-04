@@ -67,6 +67,12 @@ export function createFormDebugPanel(
   const workflow = document.createElement("pre");
   workflow.className = "xpressui-debug-panel__workflow";
 
+  const outputSnapshotTitle = document.createElement("strong");
+  outputSnapshotTitle.textContent = "Output Snapshot";
+
+  const outputSnapshot = document.createElement("pre");
+  outputSnapshot.className = "xpressui-debug-panel__output-snapshot";
+
   element.appendChild(title);
   element.appendChild(counts);
   element.appendChild(status);
@@ -80,6 +86,8 @@ export function createFormDebugPanel(
   element.appendChild(warnings);
   element.appendChild(workflowTitle);
   element.appendChild(workflow);
+  element.appendChild(outputSnapshotTitle);
+  element.appendChild(outputSnapshot);
 
   const render = () => {
     const snapshot = observer.getSnapshot();
@@ -99,6 +107,7 @@ export function createFormDebugPanel(
       .getEvents()
       .filter((event) => event.type === "form-ui:workflow-step" || event.type === "form-ui:workflow-state");
     workflow.textContent = JSON.stringify(workflowEvents.at(-1)?.detail?.result || null, null, 2);
+    outputSnapshot.textContent = JSON.stringify(snapshot.lastOutputSnapshot?.detail?.result || null, null, 2);
   };
 
   const observer = attachFormDebugObserver(target, {

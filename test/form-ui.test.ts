@@ -2425,6 +2425,7 @@ describe('FormUI', () => {
     expect(panel.element.textContent).toContain('Runtime Debug');
     expect(panel.element.textContent).toContain('Recent Rules');
     expect(panel.element.textContent).toContain('Active Template Warnings');
+    expect(panel.element.textContent).toContain('Output Snapshot');
     expect(panel.element.textContent).toContain('Clear Snapshot');
     expect(panel.element.textContent).toContain('Clear Events');
     expect(panel.element.textContent).toContain('Status: listening');
@@ -2446,6 +2447,43 @@ describe('FormUI', () => {
     panel.detach();
     expect(panel.element.textContent).toContain('Status: detached');
     expect(document.body.contains(panel.element)).toBe(false);
+  });
+
+  it('renders output snapshot details in the debug panel for hybrid mode', async () => {
+    const element = renderFixture(`
+      <template id="debug_output_snapshot">
+        <form
+          id="debug_output_snapshot_form"
+          data-type="contactform"
+          data-name="debug_output_snapshot"
+          data-label="Debug Output Snapshot"
+        >
+          <input
+            id="title"
+            name="title"
+            type="text"
+            data-type="text"
+            data-name="title"
+            data-label="Title"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="debug_output_snapshot" mode="hybrid"></form-ui>
+    `);
+
+    const panel = createFormDebugPanel(element, { title: 'Output Debug' });
+    const input = element.querySelector('#title') as HTMLInputElement;
+    input.value = 'Debug value';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    const outputSnapshot = panel.element.querySelector('.xpressui-debug-panel__output-snapshot') as HTMLElement;
+    expect(outputSnapshot.textContent).toContain('"title"');
+    expect(outputSnapshot.textContent).toContain('"rendererType": "text"');
+    expect(outputSnapshot.textContent).toContain('"value": "Debug value"');
+
+    panel.detach();
   });
 
   it('can observe applied rules through the debug observer helper', async () => {

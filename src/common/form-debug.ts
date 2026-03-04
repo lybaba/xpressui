@@ -41,11 +41,16 @@ export type TFormDebugTemplateWarningStateRecord = TFormDebugEventRecord & {
   };
 };
 
+export type TFormDebugOutputSnapshotRecord = TFormDebugEventRecord & {
+  type: "form-ui:output-snapshot";
+};
+
 export type TFormDebugSnapshot = {
   recentAppliedRules: TFormRuleAppliedDetail[];
   lastRuleState: TFormDebugRuleStateRecord | null;
   activeTemplateWarnings: TFormActiveTemplateWarning[];
   lastTemplateWarningState: TFormDebugTemplateWarningStateRecord | null;
+  lastOutputSnapshot: TFormDebugOutputSnapshotRecord | null;
 };
 
 export type TFormDebugObserver = {
@@ -56,6 +61,7 @@ export type TFormDebugObserver = {
   getTemplateDiagnostics(): TFormDebugTemplateDiagnosticRecord[];
   getActiveTemplateWarnings(): TFormActiveTemplateWarning[];
   getLastTemplateWarningState(): TFormDebugTemplateWarningStateRecord | null;
+  getLastOutputSnapshot(): TFormDebugOutputSnapshotRecord | null;
   getSnapshot(): TFormDebugSnapshot;
   clear(): void;
   clearSnapshot(): void;
@@ -65,6 +71,7 @@ export type TFormDebugObserver = {
   clearTemplateDiagnostics(): void;
   clearActiveTemplateWarnings(): void;
   clearLastTemplateWarningState(): void;
+  clearLastOutputSnapshot(): void;
   detach(): void;
 };
 
@@ -125,6 +132,7 @@ export function attachFormDebugObserver(
   const templateDiagnostics: TFormDebugTemplateDiagnosticRecord[] = [];
   let activeTemplateWarnings: TFormActiveTemplateWarning[] = [];
   let lastTemplateWarningState: TFormDebugTemplateWarningStateRecord | null = null;
+  let lastOutputSnapshot: TFormDebugOutputSnapshotRecord | null = null;
   const listeners = DEFAULT_DEBUG_EVENTS.map((eventName) => {
     const listener = (event: Event) => {
       const customEvent = event as CustomEvent<any>;
@@ -170,6 +178,10 @@ export function attachFormDebugObserver(
         lastTemplateWarningState = record as TFormDebugTemplateWarningStateRecord;
       }
 
+      if (record.type === "form-ui:output-snapshot") {
+        lastOutputSnapshot = record as TFormDebugOutputSnapshotRecord;
+      }
+
       options.onEvent?.(record);
     };
 
@@ -202,12 +214,16 @@ export function attachFormDebugObserver(
     getLastTemplateWarningState() {
       return lastTemplateWarningState ? { ...lastTemplateWarningState } : null;
     },
+    getLastOutputSnapshot() {
+      return lastOutputSnapshot ? { ...lastOutputSnapshot } : null;
+    },
     getSnapshot() {
       return {
         recentAppliedRules: [...recentAppliedRules],
         lastRuleState: lastRuleState ? { ...lastRuleState } : null,
         activeTemplateWarnings: [...activeTemplateWarnings],
         lastTemplateWarningState: lastTemplateWarningState ? { ...lastTemplateWarningState } : null,
+        lastOutputSnapshot: lastOutputSnapshot ? { ...lastOutputSnapshot } : null,
       };
     },
     clear() {
@@ -218,12 +234,14 @@ export function attachFormDebugObserver(
       templateDiagnostics.splice(0, templateDiagnostics.length);
       activeTemplateWarnings = [];
       lastTemplateWarningState = null;
+      lastOutputSnapshot = null;
     },
     clearSnapshot() {
       recentAppliedRules = [];
       lastRuleState = null;
       activeTemplateWarnings = [];
       lastTemplateWarningState = null;
+      lastOutputSnapshot = null;
     },
     clearRuleHistory() {
       ruleEvents.splice(0, ruleEvents.length);
@@ -242,6 +260,9 @@ export function attachFormDebugObserver(
     },
     clearLastTemplateWarningState() {
       lastTemplateWarningState = null;
+    },
+    clearLastOutputSnapshot() {
+      lastOutputSnapshot = null;
     },
     detach() {
       listeners.forEach(({ eventName, listener }) => {

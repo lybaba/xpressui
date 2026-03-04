@@ -82,6 +82,7 @@ export type TFormRuntimePublicApi = Pick<
   | "createResumeTokenAsync"
   | "listResumeTokens"
   | "deleteResumeToken"
+  | "invalidateResumeToken"
   | "lookupResumeToken"
   | "restoreFromResumeToken"
   | "restoreFromResumeTokenAsync"
@@ -380,6 +381,10 @@ export class FormRuntime {
 
   deleteResumeToken(token: string): boolean {
     return this.persistence.deleteResumeToken(token);
+  }
+
+  invalidateResumeToken(token: string): Promise<boolean> {
+    return this.persistence.invalidateResumeToken(token);
   }
 
   restoreFromResumeToken(token: string): Record<string, any> | null {

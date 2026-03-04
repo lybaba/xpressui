@@ -36,6 +36,7 @@ export type TResumeTokenInfo = {
   savedAt: number;
   expired: boolean;
   resumeEndpoint?: string;
+  remote?: boolean;
 };
 
 export type TResumeLookupResult = TResumeTokenInfo & {
@@ -47,6 +48,7 @@ type TResumeTokenState = {
   savedAt: number;
   snapshot: TFormStorageSnapshot;
   resumeEndpoint?: string;
+  remote?: boolean;
 };
 
 type TFormPersistenceRuntimeOptions = {
@@ -156,6 +158,46 @@ export class FormPersistenceRuntime {
     };
   }
 
+  buildResumeSnapshot(): TFormStorageSnapshot {
+    const currentValues = this.options.getValues();
+    const storageSnapshot = this.storageAdapter ? this.getStorageSnapshot() : null;
+
+    return storageSnapshot
+      ? {
+          ...storageSnapshot,
+          draft:
+            storageSnapshot.draft ||
+            (Object.keys(currentValues).length
+              ? getSerializableStorageValues(currentValues)
+              : null),
+        }
+      : {
+          draft: Object.keys(currentValues).length
+            ? getSerializableStorageValues(currentValues)
+            : null,
+          queue: [],
+          deadLetter: [],
+        };
+  }
+
+  persistResumeTokenState(token: string, state: TResumeTokenState): boolean {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    const key = this.getResumeStorageKey(token);
+    if (!key) {
+      return false;
+    }
+
+    try {
+      window.localStorage.setItem(key, JSON.stringify(state));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   getCurrentStepStorageKey(): string | null {
     const formConfig = this.options.getFormConfig();
     if (!formConfig) {
@@ -259,6 +301,7 @@ export class FormPersistenceRuntime {
           typeof parsed?.resumeEndpoint === "string"
             ? parsed.resumeEndpoint
             : this.getResumeEndpoint(),
+        remote: Boolean(parsed?.remote),
         snapshot,
       };
     } catch {
@@ -452,23 +495,7 @@ export class FormPersistenceRuntime {
     }
 
     const currentValues = this.options.getValues();
-    const storageSnapshot = this.storageAdapter ? this.getStorageSnapshot() : null;
-    const snapshot = storageSnapshot
-      ? {
-          ...storageSnapshot,
-          draft:
-            storageSnapshot.draft ||
-            (Object.keys(currentValues).length
-              ? getSerializableStorageValues(currentValues)
-              : null),
-        }
-      : {
-          draft: Object.keys(currentValues).length
-            ? getSerializableStorageValues(currentValues)
-            : null,
-          queue: [],
-          deadLetter: [],
-        };
+    const snapshot = this.buildResumeSnapshot();
 
     const state: TResumeTokenState = {
       version: 1,
@@ -478,7 +505,9 @@ export class FormPersistenceRuntime {
     };
 
     try {
-      window.localStorage.setItem(key, JSON.stringify(state));
+      if (!this.persistResumeTokenState(token, state)) {
+        return null;
+      }
       this.options.emitEvent(
         "form-ui:resume-token-created",
         this.createEventDetail(currentValues, {
@@ -500,23 +529,7 @@ export class FormPersistenceRuntime {
     }
 
     const currentValues = this.options.getValues();
-    const storageSnapshot = this.storageAdapter ? this.getStorageSnapshot() : null;
-    const snapshot = storageSnapshot
-      ? {
-          ...storageSnapshot,
-          draft:
-            storageSnapshot.draft ||
-            (Object.keys(currentValues).length
-              ? getSerializableStorageValues(currentValues)
-              : null),
-        }
-      : {
-          draft: Object.keys(currentValues).length
-            ? getSerializableStorageValues(currentValues)
-            : null,
-          queue: [],
-          deadLetter: [],
-        };
+    const snapshot = this.buildResumeSnapshot();
 
     try {
       const response = await fetch(resumeEndpoint, {
@@ -535,11 +548,20 @@ export class FormPersistenceRuntime {
         throw new Error("Invalid remote resume token response");
       }
 
+      const savedAt = typeof result.savedAt === "number" ? result.savedAt : Date.now();
+      this.persistResumeTokenState(result.token, {
+        version: 1,
+        savedAt,
+        snapshot,
+        resumeEndpoint,
+        remote: true,
+      });
+
       this.options.emitEvent(
         "form-ui:resume-token-created",
         this.createEventDetail(currentValues, {
           token: result.token,
-          savedAt: typeof result.savedAt === "number" ? result.savedAt : Date.now(),
+          savedAt,
           resumeEndpoint,
           remote: true,
         }, response),
@@ -622,6 +644,7 @@ export class FormPersistenceRuntime {
         savedAt: parsed.savedAt,
         expired: false,
         resumeEndpoint: parsed.resumeEndpoint,
+        remote: parsed.remote,
         snapshot: parsed.snapshot,
       };
     }
@@ -639,15 +662,29 @@ export class FormPersistenceRuntime {
         return null;
       }
 
+      const nextToken = typeof result.token === "string" ? result.token : token;
+      const savedAt = typeof result.savedAt === "number" ? result.savedAt : Date.now();
+      const snapshot =
+        result.snapshot && typeof result.snapshot === "object"
+          ? result.snapshot as TFormStorageSnapshot
+          : null;
+      if (snapshot) {
+        this.persistResumeTokenState(nextToken, {
+          version: 1,
+          savedAt,
+          snapshot,
+          resumeEndpoint,
+          remote: true,
+        });
+      }
+
       return {
-        token: typeof result.token === "string" ? result.token : token,
-        savedAt: typeof result.savedAt === "number" ? result.savedAt : Date.now(),
+        token: nextToken,
+        savedAt,
         expired: false,
         resumeEndpoint,
-        snapshot:
-          result.snapshot && typeof result.snapshot === "object"
-            ? result.snapshot as TFormStorageSnapshot
-            : null,
+        remote: true,
+        snapshot,
       };
     } catch {
       return null;
@@ -712,6 +749,7 @@ export class FormPersistenceRuntime {
         savedAt: parsed.savedAt,
         expired: false,
         resumeEndpoint: parsed.resumeEndpoint,
+        remote: parsed.remote,
       });
     }
 
@@ -736,6 +774,49 @@ export class FormPersistenceRuntime {
       }),
     );
     return true;
+  }
+
+  async invalidateResumeToken(token: string): Promise<boolean> {
+    const resumeEndpoint = this.getResumeEndpoint();
+    if (!resumeEndpoint) {
+      const deleted = this.deleteResumeToken(token);
+      if (deleted) {
+        this.options.emitEvent(
+          "form-ui:resume-token-invalidated",
+          this.createEventDetail(this.options.getValues(), {
+            token,
+            remote: false,
+          }),
+        );
+      }
+      return deleted;
+    }
+
+    try {
+      const response = await fetch(
+        `${resumeEndpoint}${resumeEndpoint.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`,
+        { method: "DELETE" },
+      );
+      if (!response.ok) {
+        return false;
+      }
+
+      const key = this.getResumeStorageKey(token);
+      if (key && typeof window !== "undefined") {
+        window.localStorage.removeItem(key);
+      }
+      this.options.emitEvent(
+        "form-ui:resume-token-invalidated",
+        this.createEventDetail(this.options.getValues(), {
+          token,
+          resumeEndpoint,
+          remote: true,
+        }, response),
+      );
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   getStorageHealth(): TFormStorageHealth {

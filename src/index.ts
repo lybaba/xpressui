@@ -1697,6 +1697,10 @@ export class FormUI extends HTMLElement {
     return this.persistence.deleteResumeToken(token);
   }
 
+  invalidateResumeToken = (token: string): Promise<boolean> => {
+    return this.persistence.invalidateResumeToken(token);
+  }
+
   restoreFromResumeToken = (token: string): Record<string, any> | null => {
     const restoredValues = this.persistence.restoreFromResumeToken(token);
     if (!restoredValues || !this.form) {

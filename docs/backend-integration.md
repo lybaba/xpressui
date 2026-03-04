@@ -15,6 +15,44 @@ responses your frontend can rely on.
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events
 
+## Remote Save And Resume Endpoint
+
+If `storage.resumeEndpoint` is configured, `xpressui` can use one endpoint for
+remote save and resume flows:
+
+- `POST /resume` creates or updates a resumable snapshot and returns a token
+- `GET /resume?token=...` looks up a token and returns the stored snapshot
+- `DELETE /resume?token=...` invalidates the token
+
+Suggested `POST` response:
+
+```json
+{
+  "token": "remote_token_123",
+  "savedAt": 123456
+}
+```
+
+Suggested `GET` response:
+
+```json
+{
+  "token": "remote_token_123",
+  "savedAt": 123456,
+  "snapshot": {
+    "draft": {
+      "email": "remote-resume@example.com"
+    },
+    "queue": [],
+    "deadLetter": []
+  }
+}
+```
+
+Suggested `DELETE` response:
+
+HTTP status: `204`
+
 ## Standard Provider Response Envelope
 
 `xpressui` can normalize older provider responses, but the recommended backend

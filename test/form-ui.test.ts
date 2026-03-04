@@ -6965,6 +6965,12 @@ describe('FormUI', () => {
         });
       }
 
+      if (url === 'https://api.example.test/resume?token=remote_token_123' && init?.method === 'DELETE') {
+        return new Response(null, {
+          status: 204,
+        });
+      }
+
       throw new Error(`Unexpected fetch: ${url}`);
     });
 
@@ -6994,6 +7000,15 @@ describe('FormUI', () => {
 
     const token = await element.createResumeTokenAsync();
     expect(token).toBe('remote_token_123');
+    expect(element.listResumeTokens()).toEqual([
+      {
+        token: 'remote_token_123',
+        savedAt: 123456,
+        expired: false,
+        resumeEndpoint: 'https://api.example.test/resume',
+        remote: true,
+      },
+    ]);
 
     const lookup = await element.lookupResumeToken('remote_token_123');
     expect(lookup).toEqual({
@@ -7001,6 +7016,7 @@ describe('FormUI', () => {
       savedAt: 123456,
       expired: false,
       resumeEndpoint: 'https://api.example.test/resume',
+      remote: true,
       snapshot: {
         draft: { email: 'remote-resume@example.com' },
         queue: [],
@@ -7015,6 +7031,8 @@ describe('FormUI', () => {
     const restored = await element.restoreFromResumeTokenAsync('remote_token_123');
     expect(restored).toEqual({ email: 'remote-resume@example.com' });
     expect((element.querySelector('#email') as HTMLInputElement).value).toBe('remote-resume@example.com');
+    await expect(element.invalidateResumeToken('remote_token_123')).resolves.toBe(true);
+    expect(element.listResumeTokens()).toEqual([]);
 
     expect(fetchSpy).toHaveBeenCalledWith(
       'https://api.example.test/resume',
@@ -7026,6 +7044,12 @@ describe('FormUI', () => {
       'https://api.example.test/resume?token=remote_token_123',
       expect.objectContaining({
         method: 'GET',
+      }),
+    );
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/resume?token=remote_token_123',
+      expect.objectContaining({
+        method: 'DELETE',
       }),
     );
   });

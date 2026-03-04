@@ -1236,6 +1236,7 @@ Draft events:
 - `form-ui:resume-token-created`
 - `form-ui:resume-token-restored`
 - `form-ui:resume-token-deleted`
+- `form-ui:resume-token-invalidated`
 - `form-ui:resume-token-expired`
 
 Queue events:
@@ -1258,6 +1259,7 @@ Runtime inspection helpers:
 - `form.createResumeTokenAsync()`
 - `form.listResumeTokens()`
 - `form.deleteResumeToken(token)`
+- `form.invalidateResumeToken(token)`
 - `form.lookupResumeToken(token)`
 - `form.restoreFromResumeToken(token)`
 - `form.restoreFromResumeTokenAsync(token)`
@@ -1273,8 +1275,10 @@ back into the form draft state and restores field values in `FormUI`.
 
 If `resumeEndpoint` is configured:
 - `createResumeTokenAsync()` sends the snapshot to your backend and returns the remote token
+- remote tokens are cached locally so `listResumeTokens()` can still show them
 - `lookupResumeToken(token)` fetches token metadata and snapshot details
 - `restoreFromResumeTokenAsync(token)` restores from the backend snapshot
+- `invalidateResumeToken(token)` sends a `DELETE` request for the token and removes the local token cache
 
 If `resumeTokenTtlDays` is set, expired resume tokens are pruned on listing and
 restoring. `resumeEndpoint` is stored as metadata on each token so the same
@@ -1285,6 +1289,7 @@ Standalone local admin helper:
 - `admin.getStorageHealth()`
 - `admin.listResumeTokens()`
 - `admin.deleteResumeToken(token)`
+- `admin.invalidateResumeToken(token)`
 
 It can inspect and manage local state without a mounted `FormUI` instance:
 - `getSnapshot()`

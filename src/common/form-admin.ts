@@ -127,6 +127,7 @@ export type TLocalFormAdmin = {
   getStorageHealth(): TStorageHealth;
   listResumeTokens(): TResumeTokenInfo[];
   deleteResumeToken(token: string): boolean;
+  invalidateResumeToken(token: string): Promise<boolean>;
   listQueue(query?: TLocalQueueQuery): TQueuedSubmission[];
   listDeadLetter(query?: TLocalQueueQuery): TQueuedSubmission[];
   clearDraft(): void;
@@ -173,7 +174,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       }
 
       try {
-        const parsed = JSON.parse(raw) as { savedAt?: number; resumeEndpoint?: string };
+        const parsed = JSON.parse(raw) as { savedAt?: number; resumeEndpoint?: string; remote?: boolean };
         const savedAt = typeof parsed.savedAt === "number" ? parsed.savedAt : 0;
         const expired = Boolean(ttlMs && savedAt && Date.now() - savedAt > ttlMs);
         if (expired) {
@@ -188,6 +189,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
             typeof parsed.resumeEndpoint === "string"
               ? parsed.resumeEndpoint
               : publicConfig.storage?.resumeEndpoint,
+          remote: Boolean(parsed.remote),
         });
       } catch {
         window.localStorage.removeItem(key);
@@ -304,6 +306,29 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
 
       window.localStorage.removeItem(key);
       return true;
+    },
+    async invalidateResumeToken(token) {
+      const resumeEndpoint = publicConfig.storage?.resumeEndpoint;
+      if (!resumeEndpoint) {
+        return this.deleteResumeToken(token);
+      }
+
+      try {
+        const response = await fetch(
+          `${resumeEndpoint}${resumeEndpoint.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`,
+          { method: "DELETE" },
+        );
+        if (!response.ok) {
+          return false;
+        }
+
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem(`${resumePrefix}${token}`);
+        }
+        return true;
+      } catch {
+        return false;
+      }
     },
     listQueue(query) {
       return applyQuery(storageAdapter?.loadQueue() || [], query);

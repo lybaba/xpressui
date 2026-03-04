@@ -38,6 +38,13 @@ type TFieldConfig = {
     enableDocumentOcr?: boolean;
     documentTextTargetField?: string;
     documentMrzTargetField?: string;
+    documentFirstNameTargetField?: string;
+    documentLastNameTargetField?: string;
+    documentNumberTargetField?: string;
+    documentNationalityTargetField?: string;
+    documentBirthDateTargetField?: string;
+    documentExpiryDateTargetField?: string;
+    documentSexTargetField?: string;
     fileDropMode?: 'replace' | 'append';
     minFiles?: number;
     maxFiles?: number;

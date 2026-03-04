@@ -94,6 +94,7 @@ type TQrScannerState = {
 };
 
 type TDocumentMrzResult = {
+  format: "TD1" | "TD2" | "TD3";
   lines: string[];
   documentCode: string;
   issuingCountry: string;
@@ -104,6 +105,13 @@ type TDocumentMrzResult = {
   sex?: string;
   surnames?: string[];
   givenNames?: string[];
+};
+
+type TDocumentPerspectiveCorners = {
+  topLeft: { x: number; y: number };
+  topRight: { x: number; y: number };
+  bottomRight: { x: number; y: number };
+  bottomLeft: { x: number; y: number };
 };
 
 type TDocumentScanInsight = {
@@ -376,6 +384,24 @@ export class FormUI extends HTMLElement {
       .map((line) => line.trim().toUpperCase())
       .filter((line) => /^[A-Z0-9<]{20,}$/.test(line));
 
+    if (lines.length >= 3) {
+      const [line1, line2, line3] = lines.slice(-3);
+      const nameBlock = line3.split("<<");
+      return {
+        format: "TD1",
+        lines: [line1, line2, line3],
+        documentCode: line1.slice(0, 2).replace(/</g, ""),
+        issuingCountry: line1.slice(2, 5).replace(/</g, ""),
+        documentNumber: line1.slice(5, 14).replace(/</g, ""),
+        birthDate: line2.slice(0, 6).replace(/</g, ""),
+        sex: line2.slice(7, 8).replace(/</g, ""),
+        expiryDate: line2.slice(8, 14).replace(/</g, ""),
+        nationality: line2.slice(15, 18).replace(/</g, ""),
+        surnames: (nameBlock[0] || "").split("<").filter(Boolean),
+        givenNames: (nameBlock.slice(1).join("<<") || "").split("<").filter(Boolean),
+      };
+    }
+
     if (lines.length < 2) {
       return null;
     }
@@ -388,7 +414,9 @@ export class FormUI extends HTMLElement {
     const givenNames = (nameBlock.slice(1).join("<<") || "")
       .split("<")
       .filter(Boolean);
+    const format = line1.length >= 40 || line2.length >= 40 ? "TD3" : "TD2";
     return {
+      format,
       lines: [line1, line2],
       documentCode: line1.slice(0, 2).replace(/</g, ""),
       issuingCountry: line1.slice(2, 5).replace(/</g, ""),
@@ -427,6 +455,48 @@ export class FormUI extends HTMLElement {
     };
   }
 
+  getDocumentPerspectiveCorners = (bounds: ReturnType<FormUI["getDocumentCropBounds"]>): TDocumentPerspectiveCorners => {
+    const topInset = Math.max(2, Math.round(bounds.width * 0.04));
+    const bottomInset = Math.max(1, Math.round(bounds.width * 0.01));
+
+    return {
+      topLeft: { x: bounds.x + topInset, y: bounds.y },
+      topRight: { x: bounds.x + bounds.width - topInset, y: bounds.y },
+      bottomRight: { x: bounds.x + bounds.width - bottomInset, y: bounds.y + bounds.height },
+      bottomLeft: { x: bounds.x + bottomInset, y: bounds.y + bounds.height },
+    };
+  }
+
+  drawPerspectiveCorrectedDocument = (
+    context: CanvasRenderingContext2D,
+    imageBitmap: ImageBitmap,
+    bounds: ReturnType<FormUI["getDocumentCropBounds"]>,
+    corners: TDocumentPerspectiveCorners,
+  ) => {
+    const destinationWidth = bounds.width;
+    const destinationHeight = bounds.height;
+
+    for (let y = 0; y < destinationHeight; y += 1) {
+      const ratio = destinationHeight <= 1 ? 0 : y / (destinationHeight - 1);
+      const sourceLeftX = corners.topLeft.x + (corners.bottomLeft.x - corners.topLeft.x) * ratio;
+      const sourceRightX = corners.topRight.x + (corners.bottomRight.x - corners.topRight.x) * ratio;
+      const sourceY = corners.topLeft.y + (corners.bottomLeft.y - corners.topLeft.y) * ratio;
+      const sourceWidth = Math.max(1, sourceRightX - sourceLeftX);
+
+      context.drawImage(
+        imageBitmap,
+        sourceLeftX,
+        sourceY,
+        sourceWidth,
+        1,
+        0,
+        y,
+        destinationWidth,
+        1,
+      );
+    }
+  }
+
   cropDocumentScanFile = async (fieldConfig: TFieldConfig, file: File, slotIndex: number) => {
     if (
       typeof document === "undefined" ||
@@ -440,6 +510,7 @@ export class FormUI extends HTMLElement {
     try {
       imageBitmap = await createImageBitmap(file);
       const bounds = this.getDocumentCropBounds(imageBitmap.width, imageBitmap.height);
+      const corners = this.getDocumentPerspectiveCorners(bounds);
 
       const canvas = document.createElement("canvas");
       canvas.width = bounds.width;
@@ -449,17 +520,7 @@ export class FormUI extends HTMLElement {
         return file;
       }
 
-      context.drawImage(
-        imageBitmap,
-        bounds.x,
-        bounds.y,
-        bounds.width,
-        bounds.height,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      );
+      this.drawPerspectiveCorrectedDocument(context, imageBitmap, bounds, corners);
 
       const blob = await new Promise<Blob | null>((resolve) => {
         canvas.toBlob((result) => resolve(result), file.type || "image/jpeg");
@@ -487,6 +548,7 @@ export class FormUI extends HTMLElement {
           slot: slotIndex,
           fileName: croppedFile.name,
           bounds,
+          corners,
         },
       });
 
@@ -498,6 +560,7 @@ export class FormUI extends HTMLElement {
           field: fieldConfig.name,
           slot: slotIndex,
           bounds,
+          corners,
         },
       });
 
@@ -565,8 +628,40 @@ export class FormUI extends HTMLElement {
       const mrz = this.parseMrz(detectedText);
       if (mrz) {
         insight.mrzBySlot[slotIndex] = mrz;
+        const normalizedFields = {
+          firstName: mrz.givenNames?.join(" ") || "",
+          lastName: mrz.surnames?.join(" ") || "",
+          documentNumber: mrz.documentNumber || "",
+          nationality: mrz.nationality || "",
+          birthDate: mrz.birthDate || "",
+          expiryDate: mrz.expiryDate || "",
+          sex: mrz.sex || "",
+        };
         if (fieldConfig.documentMrzTargetField && this.form) {
           this.form.change(fieldConfig.documentMrzTargetField, mrz);
+        }
+        if (this.form) {
+          if (fieldConfig.documentFirstNameTargetField) {
+            this.form.change(fieldConfig.documentFirstNameTargetField, normalizedFields.firstName);
+          }
+          if (fieldConfig.documentLastNameTargetField) {
+            this.form.change(fieldConfig.documentLastNameTargetField, normalizedFields.lastName);
+          }
+          if (fieldConfig.documentNumberTargetField) {
+            this.form.change(fieldConfig.documentNumberTargetField, normalizedFields.documentNumber);
+          }
+          if (fieldConfig.documentNationalityTargetField) {
+            this.form.change(fieldConfig.documentNationalityTargetField, normalizedFields.nationality);
+          }
+          if (fieldConfig.documentBirthDateTargetField) {
+            this.form.change(fieldConfig.documentBirthDateTargetField, normalizedFields.birthDate);
+          }
+          if (fieldConfig.documentExpiryDateTargetField) {
+            this.form.change(fieldConfig.documentExpiryDateTargetField, normalizedFields.expiryDate);
+          }
+          if (fieldConfig.documentSexTargetField) {
+            this.form.change(fieldConfig.documentSexTargetField, normalizedFields.sex);
+          }
         }
         this.emitFormEvent("form-ui:document-mrz-detected", {
           values: this.engine.normalizeValues(this.form?.getState().values || {}),
@@ -591,6 +686,27 @@ export class FormUI extends HTMLElement {
           mrz,
         },
       });
+
+      if (mrz) {
+        this.emitFormEvent("form-ui:document-fields-populated", {
+          values: this.engine.normalizeValues(this.form?.getState().values || {}),
+          formConfig: this.formConfig,
+          submit: this.formConfig?.submit,
+          result: {
+            field: fieldConfig.name,
+            slot: slotIndex,
+            fields: {
+              firstName: mrz.givenNames?.join(" ") || "",
+              lastName: mrz.surnames?.join(" ") || "",
+              documentNumber: mrz.documentNumber || "",
+              nationality: mrz.nationality || "",
+              birthDate: mrz.birthDate || "",
+              expiryDate: mrz.expiryDate || "",
+              sex: mrz.sex || "",
+            },
+          },
+        });
+      }
     } catch {
       return;
     } finally {

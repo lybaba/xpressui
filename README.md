@@ -725,6 +725,10 @@ Frontend behavior:
   lightweight MRZ parse for machine-readable identity documents
 - `documentTextTargetField` can mirror detected OCR text into another field
 - `documentMrzTargetField` can mirror parsed MRZ data into another field
+- `documentFirstNameTargetField`, `documentLastNameTargetField`,
+  `documentNumberTargetField`, `documentNationalityTargetField`,
+  `documentBirthDateTargetField`, `documentExpiryDateTargetField`,
+  `documentSexTargetField` can autopopulate normalized identity fields
 
 Extra event:
 - `form-ui:file-validation-error`
@@ -740,6 +744,7 @@ Extra event:
 - `form-ui:document-text-detected`
 - `form-ui:document-mrz-detected`
 - `form-ui:document-data`
+- `form-ui:document-fields-populated`
 
 You can also define basic rules at the form level:
 

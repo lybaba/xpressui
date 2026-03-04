@@ -1421,6 +1421,7 @@ describe('FormUI', () => {
     const onText = vi.fn();
     const onMrz = vi.fn();
     const onData = vi.fn();
+    const onFieldsPopulated = vi.fn();
 
     (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
       width: 1600,
@@ -1457,6 +1458,13 @@ describe('FormUI', () => {
           enableDocumentOcr: true,
           documentTextTargetField: 'passport_text',
           documentMrzTargetField: 'passport_mrz',
+          documentFirstNameTargetField: 'first_name',
+          documentLastNameTargetField: 'last_name',
+          documentNumberTargetField: 'document_number',
+          documentNationalityTargetField: 'nationality',
+          documentBirthDateTargetField: 'birth_date',
+          documentExpiryDateTargetField: 'expiry_date',
+          documentSexTargetField: 'sex',
         },
         {
           name: 'passport_text',
@@ -1468,6 +1476,13 @@ describe('FormUI', () => {
           label: 'Passport MRZ',
           type: 'text',
         },
+        { name: 'first_name', label: 'First Name', type: 'text' },
+        { name: 'last_name', label: 'Last Name', type: 'text' },
+        { name: 'document_number', label: 'Document Number', type: 'text' },
+        { name: 'nationality', label: 'Nationality', type: 'text' },
+        { name: 'birth_date', label: 'Birth Date', type: 'text' },
+        { name: 'expiry_date', label: 'Expiry Date', type: 'text' },
+        { name: 'sex', label: 'Sex', type: 'text' },
       ],
     }) as FormUI;
     const input = element.querySelector('#passport') as HTMLInputElement;
@@ -1487,6 +1502,9 @@ describe('FormUI', () => {
     });
     element.addEventListener('form-ui:document-data', (event) => {
       onData((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+    element.addEventListener('form-ui:document-fields-populated', (event) => {
+      onFieldsPopulated((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
     Object.defineProperty(input, 'files', {
@@ -1520,6 +1538,24 @@ describe('FormUI', () => {
             width: expect.any(Number),
             height: expect.any(Number),
           }),
+          corners: expect.objectContaining({
+            topLeft: expect.objectContaining({
+              x: expect.any(Number),
+              y: expect.any(Number),
+            }),
+            topRight: expect.objectContaining({
+              x: expect.any(Number),
+              y: expect.any(Number),
+            }),
+            bottomRight: expect.objectContaining({
+              x: expect.any(Number),
+              y: expect.any(Number),
+            }),
+            bottomLeft: expect.objectContaining({
+              x: expect.any(Number),
+              y: expect.any(Number),
+            }),
+          }),
         }),
       }),
     );
@@ -1538,6 +1574,7 @@ describe('FormUI', () => {
           field: 'passport',
           slot: 0,
           mrz: expect.objectContaining({
+            format: 'TD3',
             documentCode: 'P',
             issuingCountry: 'UTO',
             documentNumber: 'L898902C3',
@@ -1558,18 +1595,44 @@ describe('FormUI', () => {
           slot: 0,
           text: expect.stringContaining('P<UTOERIKSSON'),
           mrz: expect.objectContaining({
+            format: 'TD3',
             documentNumber: 'L898902C3',
           }),
         }),
       }),
     );
+    expect(onFieldsPopulated).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          field: 'passport',
+          slot: 0,
+          fields: {
+            firstName: 'ANNA MARIA',
+            lastName: 'ERIKSSON',
+            documentNumber: 'L898902C3',
+            nationality: 'UTO',
+            birthDate: '740812',
+            expiryDate: '120415',
+            sex: 'F',
+          },
+        },
+      }),
+    );
     expect((element.form?.getState().values || {}).passport_text).toContain('P<UTOERIKSSON');
     expect((element.form?.getState().values || {}).passport_mrz).toEqual(
       expect.objectContaining({
+        format: 'TD3',
         documentNumber: 'L898902C3',
         issuingCountry: 'UTO',
       }),
     );
+    expect((element.form?.getState().values || {}).first_name).toBe('ANNA MARIA');
+    expect((element.form?.getState().values || {}).last_name).toBe('ERIKSSON');
+    expect((element.form?.getState().values || {}).document_number).toBe('L898902C3');
+    expect((element.form?.getState().values || {}).nationality).toBe('UTO');
+    expect((element.form?.getState().values || {}).birth_date).toBe('740812');
+    expect((element.form?.getState().values || {}).expiry_date).toBe('120415');
+    expect((element.form?.getState().values || {}).sex).toBe('F');
     expect((element.querySelector('#passport_selection') as HTMLElement).textContent).toContain('OCR:');
     expect((element.querySelector('#passport_selection') as HTMLElement).textContent).toContain('MRZ:');
 

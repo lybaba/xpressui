@@ -84,6 +84,27 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   const documentMrzTargetFieldAttr = field.documentMrzTargetField
     ? ` data-document-mrz-target-field="${escapeHtml(String(field.documentMrzTargetField))}"`
     : '';
+  const documentFirstNameTargetFieldAttr = field.documentFirstNameTargetField
+    ? ` data-document-first-name-target-field="${escapeHtml(String(field.documentFirstNameTargetField))}"`
+    : '';
+  const documentLastNameTargetFieldAttr = field.documentLastNameTargetField
+    ? ` data-document-last-name-target-field="${escapeHtml(String(field.documentLastNameTargetField))}"`
+    : '';
+  const documentNumberTargetFieldAttr = field.documentNumberTargetField
+    ? ` data-document-number-target-field="${escapeHtml(String(field.documentNumberTargetField))}"`
+    : '';
+  const documentNationalityTargetFieldAttr = field.documentNationalityTargetField
+    ? ` data-document-nationality-target-field="${escapeHtml(String(field.documentNationalityTargetField))}"`
+    : '';
+  const documentBirthDateTargetFieldAttr = field.documentBirthDateTargetField
+    ? ` data-document-birth-date-target-field="${escapeHtml(String(field.documentBirthDateTargetField))}"`
+    : '';
+  const documentExpiryDateTargetFieldAttr = field.documentExpiryDateTargetField
+    ? ` data-document-expiry-date-target-field="${escapeHtml(String(field.documentExpiryDateTargetField))}"`
+    : '';
+  const documentSexTargetFieldAttr = field.documentSexTargetField
+    ? ` data-document-sex-target-field="${escapeHtml(String(field.documentSexTargetField))}"`
+    : '';
   const fileDropModeAttr = field.fileDropMode
     ? ` data-file-drop-mode="${escapeHtml(String(field.fileDropMode))}"`
     : '';
@@ -191,7 +212,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
     ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>

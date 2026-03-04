@@ -784,7 +784,7 @@ describe('FormUI', () => {
     expect(output.getAttribute('data-media-display-policy')).toBe('thumbnail');
   });
 
-  it('supports product-list fields with a 20-product max catalog and mini cart interactions', async () => {
+  it('supports product-list fields with a 20-product max catalog, global sticky cart and gallery modal', async () => {
     const products = Array.from({ length: 25 }, (_, index) => ({
       value: `sku_${index + 1}`,
       name: `Product ${index + 1}`,
@@ -812,7 +812,7 @@ describe('FormUI', () => {
     }) as FormUI;
 
     expect(element.querySelectorAll('[data-product-card]').length).toBe(20);
-    expect(element.querySelector('[data-product-list-cart="products"]')).not.toBeNull();
+    expect(element.querySelectorAll('[data-product-list-global-cart]').length).toBe(1);
 
     const addFirst = element.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
     addFirst.click();
@@ -836,6 +836,58 @@ describe('FormUI', () => {
     await flushAsyncWork();
     expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(2);
     expect(element.querySelectorAll('[data-product-cart-item]').length).toBe(1);
+
+    const card = element.querySelector('[data-product-open-gallery="sku_1"]') as HTMLElement;
+    card.click();
+    await flushAsyncWork();
+    expect(document.body.querySelector('[data-product-gallery-overlay="true"]')).not.toBeNull();
+    expect(document.body.querySelector('[data-product-gallery-main="true"]')).not.toBeNull();
+  });
+
+  it('renders a single global cart even with multiple product-list fields in the same form', async () => {
+    const products = [
+      {
+        value: 'sku_1',
+        name: 'Product 1',
+        label: 'Product 1',
+        sale_price: 100,
+        discount_price: 90,
+        image_thumbnail: 'https://cdn.example.test/thumb_1.jpg',
+        image_medium: 'https://cdn.example.test/medium_1.jpg',
+        photos_full: ['https://cdn.example.test/full_1.jpg'],
+      },
+    ];
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'product-list-multi-demo',
+      title: 'Product List Multi Demo',
+      fields: [
+        {
+          type: 'product-list',
+          name: 'products_a',
+          label: 'Products A',
+          choices: products as any,
+        },
+        {
+          type: 'product-list',
+          name: 'products_b',
+          label: 'Products B',
+          choices: products as any,
+        },
+      ],
+    }) as FormUI;
+
+    const addA = element.querySelector('#products_a_selection [data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
+    addA.click();
+    await flushAsyncWork();
+
+    const addB = element.querySelector('#products_b_selection [data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
+    addB.click();
+    await flushAsyncWork();
+
+    expect(element.querySelectorAll('[data-product-list-global-cart]').length).toBe(1);
+    expect(element.querySelectorAll('[data-product-cart-item]').length).toBe(2);
   });
 
   it('exposes an output snapshot API with renderer metadata', () => {

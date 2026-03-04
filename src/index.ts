@@ -299,6 +299,8 @@ export class FormUI extends HTMLElement {
   stepSummaryElement: HTMLElement | null;
   stepBackButton: HTMLButtonElement | null;
   stepNextButton: HTMLButtonElement | null;
+  productListCartClickBound: boolean;
+  productGalleryOverlay: HTMLElement | null;
   viewValues: Record<string, any>;
   outputRenderers: Record<string, TFormOutputRenderer>;
   fieldOutputRenderers: Record<string, TFieldOutputRendererOverride>;
@@ -335,6 +337,8 @@ export class FormUI extends HTMLElement {
     this.stepSummaryElement = null;
     this.stepBackButton = null;
     this.stepNextButton = null;
+    this.productListCartClickBound = false;
+    this.productGalleryOverlay = null;
     this.viewValues = {};
     this.outputRenderers = this.createDefaultOutputRenderers();
     this.fieldOutputRenderers = {};
@@ -459,6 +463,11 @@ export class FormUI extends HTMLElement {
   disconnectedCallback() {
     this.stopAllQrCameras();
     this.clearAllFilePreviewUrls();
+    if (this.productGalleryOverlay) {
+      this.productGalleryOverlay.remove();
+      this.productGalleryOverlay = null;
+    }
+    this.productListCartClickBound = false;
     this.persistence.disconnect();
   }
 
@@ -2148,6 +2157,265 @@ export class FormUI extends HTMLElement {
     }, 0);
   }
 
+  getProductCartEntries = (): Array<{ fieldName: string; item: TProductCartItem }> => {
+    return Object.values(this.engine.getFields())
+      .filter((fieldConfig) => this.isProductListField(fieldConfig))
+      .flatMap((fieldConfig) => this.getProductCartItems(this.getFieldValue(fieldConfig.name)).map((item) => ({
+        fieldName: fieldConfig.name,
+        item,
+      })));
+  }
+
+  ensureProductListGlobalCart = (): HTMLElement | null => {
+    const formElement = this.querySelector("form");
+    if (!formElement) {
+      return null;
+    }
+
+    let cart = this.querySelector("[data-product-list-global-cart]") as HTMLElement | null;
+    if (!cart) {
+      cart = document.createElement("aside");
+      cart.setAttribute("data-product-list-global-cart", "true");
+      cart.className = "rounded border border-base-300 p-3";
+      this.appendChild(cart);
+    }
+
+    this.style.display = "grid";
+    this.style.gap = "20px";
+    const isDesktop =
+      typeof window !== "undefined"
+      && typeof window.matchMedia === "function"
+      && window.matchMedia("(min-width: 1024px)").matches;
+    if (isDesktop) {
+      this.style.gridTemplateColumns = "minmax(0, 1fr) 320px";
+      cart.style.position = "sticky";
+      cart.style.top = "16px";
+      cart.style.alignSelf = "start";
+      cart.style.height = "fit-content";
+    } else {
+      this.style.gridTemplateColumns = "1fr";
+      cart.style.position = "static";
+      cart.style.top = "";
+      cart.style.alignSelf = "";
+      cart.style.height = "";
+    }
+
+    return cart;
+  }
+
+  renderProductListGlobalCart = () => {
+    const cart = this.ensureProductListGlobalCart();
+    if (!cart) {
+      return;
+    }
+
+    const entries = this.getProductCartEntries();
+    cart.innerHTML = "";
+    const heading = document.createElement("div");
+    heading.className = "mb-2 text-sm font-semibold";
+    heading.textContent = "Mini Cart";
+    cart.appendChild(heading);
+
+    if (!entries.length) {
+      const empty = document.createElement("div");
+      empty.className = "text-xs opacity-70";
+      empty.textContent = "No product added yet.";
+      cart.appendChild(empty);
+      return;
+    }
+
+    const list = document.createElement("div");
+    list.style.display = "grid";
+    list.style.gap = "8px";
+    entries.forEach(({ fieldName, item }) => {
+      const row = document.createElement("div");
+      row.className = "flex items-center justify-between gap-3 rounded border border-base-300 px-2 py-2";
+      row.setAttribute("data-product-cart-item", `${fieldName}:${item.id}`);
+
+      const details = document.createElement("div");
+      details.className = "min-w-0 flex-1";
+      const name = document.createElement("div");
+      name.className = "text-sm";
+      name.textContent = item.name;
+      details.appendChild(name);
+
+      const meta = document.createElement("div");
+      meta.className = "text-xs opacity-70";
+      const unitPrice = item.discount_price ?? item.sale_price ?? 0;
+      meta.textContent = `Qty: ${item.quantity} · Unit: ${unitPrice.toFixed(2)}€`;
+      details.appendChild(meta);
+
+      const controls = document.createElement("div");
+      controls.className = "flex items-center gap-1";
+
+      const createControl = (action: "inc" | "dec" | "remove", label: string, buttonClass: string) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = buttonClass;
+        button.textContent = label;
+        button.setAttribute("data-product-cart-action", action);
+        button.setAttribute("data-product-field", fieldName);
+        button.setAttribute("data-product-id", item.id);
+        return button;
+      };
+
+      controls.appendChild(createControl("dec", "-", "btn btn-xs btn-outline"));
+      controls.appendChild(createControl("inc", "+", "btn btn-xs btn-outline"));
+      controls.appendChild(createControl("remove", "Remove", "btn btn-xs btn-ghost"));
+
+      row.appendChild(details);
+      row.appendChild(controls);
+      list.appendChild(row);
+    });
+    cart.appendChild(list);
+
+    const total = entries.reduce((sum, entry) => {
+      const unit = entry.item.discount_price ?? entry.item.sale_price ?? 0;
+      return sum + unit * entry.item.quantity;
+    }, 0);
+    const totalBlock = document.createElement("div");
+    totalBlock.className = "mt-3 text-sm font-semibold";
+    totalBlock.textContent = `Total: ${total.toFixed(2)}€`;
+    cart.appendChild(totalBlock);
+  }
+
+  bindProductListGlobalCartEvents = () => {
+    if (this.productListCartClickBound) {
+      return;
+    }
+
+    this.productListCartClickBound = true;
+    this.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement | null;
+      const actionButton = target?.closest("[data-product-cart-action]") as HTMLElement | null;
+      if (!actionButton || !this.form) {
+        return;
+      }
+
+      const action = actionButton.getAttribute("data-product-cart-action");
+      const fieldName = actionButton.getAttribute("data-product-field");
+      const productId = actionButton.getAttribute("data-product-id");
+      if (!fieldName || !productId) {
+        return;
+      }
+
+      const fieldConfig = this.engine.getField(fieldName);
+      if (!fieldConfig || !this.isProductListField(fieldConfig)) {
+        return;
+      }
+
+      if (action !== "inc" && action !== "dec" && action !== "remove") {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      const nextCart = this.getNextProductCartItems(
+        fieldConfig,
+        this.getFieldValue(fieldName),
+        action,
+        productId,
+      );
+      this.form.change(fieldName, nextCart);
+      this.scheduleDraftSave();
+      this.updateConditionalFields();
+      void this.refreshRemoteOptions(fieldName);
+    });
+  }
+
+  openProductListGallery = (product: TProductListItem) => {
+    const photos = product.photos_full.length
+      ? product.photos_full
+      : [product.image_medium || product.image_thumbnail].filter(Boolean);
+    if (!photos.length || typeof document === "undefined") {
+      return;
+    }
+
+    if (this.productGalleryOverlay) {
+      this.productGalleryOverlay.remove();
+    }
+
+    const overlay = document.createElement("div");
+    overlay.setAttribute("data-product-gallery-overlay", "true");
+    overlay.style.position = "fixed";
+    overlay.style.inset = "0";
+    overlay.style.background = "rgba(15, 23, 42, 0.8)";
+    overlay.style.zIndex = "10000";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.padding = "24px";
+
+    const modal = document.createElement("div");
+    modal.setAttribute("data-product-gallery-modal", "true");
+    modal.style.width = "min(960px, 100%)";
+    modal.style.maxHeight = "90vh";
+    modal.style.overflow = "auto";
+    modal.style.background = "#ffffff";
+    modal.style.borderRadius = "14px";
+    modal.style.padding = "14px";
+
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "btn btn-sm btn-ghost";
+    closeButton.textContent = "Close";
+    closeButton.setAttribute("data-product-gallery-close", "true");
+    closeButton.style.float = "right";
+    closeButton.addEventListener("click", () => {
+      overlay.remove();
+      this.productGalleryOverlay = null;
+    });
+    modal.appendChild(closeButton);
+
+    const title = document.createElement("div");
+    title.className = "mb-2 text-sm font-semibold";
+    title.textContent = product.name;
+    modal.appendChild(title);
+
+    const mainImage = document.createElement("img");
+    mainImage.setAttribute("data-product-gallery-main", "true");
+    mainImage.src = photos[0];
+    mainImage.alt = product.name;
+    mainImage.style.width = "100%";
+    mainImage.style.maxHeight = "60vh";
+    mainImage.style.objectFit = "contain";
+    mainImage.style.borderRadius = "10px";
+    modal.appendChild(mainImage);
+
+    const thumbs = document.createElement("div");
+    thumbs.setAttribute("data-product-gallery-thumbs", "true");
+    thumbs.style.display = "flex";
+    thumbs.style.gap = "8px";
+    thumbs.style.marginTop = "10px";
+    thumbs.style.overflowX = "auto";
+    photos.forEach((photo) => {
+      const thumb = document.createElement("img");
+      thumb.setAttribute("data-product-gallery-thumb", photo);
+      thumb.src = photo;
+      thumb.alt = `${product.name} preview`;
+      thumb.style.width = "72px";
+      thumb.style.height = "72px";
+      thumb.style.objectFit = "cover";
+      thumb.style.borderRadius = "8px";
+      thumb.style.cursor = "pointer";
+      thumb.addEventListener("click", () => {
+        mainImage.src = photo;
+      });
+      thumbs.appendChild(thumb);
+    });
+    modal.appendChild(thumbs);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) {
+        overlay.remove();
+        this.productGalleryOverlay = null;
+      }
+    });
+    document.body.appendChild(overlay);
+    this.productGalleryOverlay = overlay;
+  }
+
   getNextProductCartItems = (
     fieldConfig: TFieldConfig,
     currentValue: any,
@@ -2235,8 +2503,10 @@ export class FormUI extends HTMLElement {
 
     products.forEach((product) => {
       const card = document.createElement("div");
+      card.setAttribute("data-product-open-gallery", product.id);
       card.setAttribute("data-product-card", product.id);
       card.className = "rounded border border-base-300 p-2";
+      card.style.cursor = "pointer";
 
       if (product.image_thumbnail) {
         const thumb = document.createElement("img");
@@ -2261,26 +2531,6 @@ export class FormUI extends HTMLElement {
         card.appendChild(medium);
       }
 
-      if (product.photos_full.length) {
-        const fullList = document.createElement("div");
-        fullList.style.display = "flex";
-        fullList.style.gap = "4px";
-        fullList.style.overflowX = "auto";
-        fullList.style.marginTop = "6px";
-        fullList.setAttribute("data-product-full-photos", product.id);
-        product.photos_full.forEach((photoUrl) => {
-          const image = document.createElement("img");
-          image.src = photoUrl;
-          image.alt = `${product.name} full`;
-          image.style.width = "52px";
-          image.style.height = "52px";
-          image.style.objectFit = "cover";
-          image.style.borderRadius = "6px";
-          fullList.appendChild(image);
-        });
-        card.appendChild(fullList);
-      }
-
       const title = document.createElement("div");
       title.className = "mt-2 text-sm font-semibold";
       title.textContent = product.name;
@@ -2292,6 +2542,12 @@ export class FormUI extends HTMLElement {
       const discountText = product.discount_price !== null ? `${product.discount_price.toFixed(2)}€` : "n/a";
       pricing.textContent = `Sale: ${saleText} | Discount: ${discountText}`;
       card.appendChild(pricing);
+
+      const galleryHint = document.createElement("div");
+      galleryHint.className = "mt-1 text-xs opacity-70";
+      const photoCount = product.photos_full.length;
+      galleryHint.textContent = photoCount > 0 ? `${photoCount} full photos` : "No full gallery";
+      card.appendChild(galleryHint);
 
       const buttonRow = document.createElement("div");
       buttonRow.className = "mt-2 flex items-center justify-between";
@@ -2314,83 +2570,7 @@ export class FormUI extends HTMLElement {
     });
 
     selectionElement.appendChild(productList);
-
-    const cart = document.createElement("div");
-    cart.setAttribute("data-product-list-cart", fieldConfig.name);
-    cart.className = "rounded border border-base-300 p-3";
-
-    const cartHeading = document.createElement("div");
-    cartHeading.className = "mb-2 text-sm font-semibold";
-    cartHeading.textContent = "Mini Cart";
-    cart.appendChild(cartHeading);
-
-    if (!cartItems.length) {
-      const empty = document.createElement("div");
-      empty.className = "text-xs opacity-70";
-      empty.textContent = "No product added yet.";
-      cart.appendChild(empty);
-    } else {
-      const cartList = document.createElement("div");
-      cartList.style.display = "grid";
-      cartList.style.gap = "8px";
-      cartItems.forEach((item) => {
-        const row = document.createElement("div");
-        row.className = "flex items-center justify-between gap-3 rounded border border-base-300 px-2 py-2";
-        row.setAttribute("data-product-cart-item", item.id);
-
-        const details = document.createElement("div");
-        details.className = "min-w-0 flex-1";
-        const name = document.createElement("div");
-        name.className = "text-sm";
-        name.textContent = item.name;
-        details.appendChild(name);
-
-        const meta = document.createElement("div");
-        meta.className = "text-xs opacity-70";
-        const unitPrice = item.discount_price ?? item.sale_price ?? 0;
-        meta.textContent = `Qty: ${item.quantity} · Unit: ${unitPrice.toFixed(2)}€`;
-        details.appendChild(meta);
-
-        const controls = document.createElement("div");
-        controls.className = "flex items-center gap-1";
-
-        const dec = document.createElement("button");
-        dec.type = "button";
-        dec.className = "btn btn-xs btn-outline";
-        dec.textContent = "-";
-        dec.setAttribute("data-product-action", "dec");
-        dec.setAttribute("data-product-id", item.id);
-
-        const inc = document.createElement("button");
-        inc.type = "button";
-        inc.className = "btn btn-xs btn-outline";
-        inc.textContent = "+";
-        inc.setAttribute("data-product-action", "inc");
-        inc.setAttribute("data-product-id", item.id);
-
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.className = "btn btn-xs btn-ghost";
-        remove.textContent = "Remove";
-        remove.setAttribute("data-product-action", "remove");
-        remove.setAttribute("data-product-id", item.id);
-
-        controls.appendChild(dec);
-        controls.appendChild(inc);
-        controls.appendChild(remove);
-
-        row.appendChild(details);
-        row.appendChild(controls);
-        cartList.appendChild(row);
-      });
-      cart.appendChild(cartList);
-    }
-
-    const total = document.createElement("div");
-    total.className = "mt-3 text-sm font-semibold";
-    total.textContent = `Total: ${this.getProductCartTotal(cartItems).toFixed(2)}€`;
-    cart.appendChild(total);
-    selectionElement.appendChild(cart);
+    this.renderProductListGlobalCart();
   }
 
   renderDocumentScanSelection = (
@@ -2849,6 +3029,7 @@ export class FormUI extends HTMLElement {
           this.registerField(fieldConfig, input);
         }
       });
+      this.bindProductListGlobalCartEvents();
 
       this.ensureStepControls(formElem);
 
@@ -4280,6 +4461,22 @@ export class FormUI extends HTMLElement {
                   void this.refreshRemoteOptions(name);
                 }
                 return;
+              }
+
+              if (this.isProductListField(fieldConfig)) {
+                const productCard = target?.closest("[data-product-open-gallery]") as HTMLElement | null;
+                if (productCard) {
+                  const productId = productCard.getAttribute("data-product-open-gallery");
+                  if (productId) {
+                    const product = this.getProductListCatalog(fieldConfig).find((entry) => entry.id === productId);
+                    if (product) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      this.openProductListGallery(product);
+                    }
+                  }
+                  return;
+                }
               }
 
               const qrAction = target?.closest("[data-qr-action]") as HTMLElement | null;

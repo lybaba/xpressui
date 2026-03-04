@@ -157,6 +157,63 @@ registerProvider("booking-availability", {
   errorEventName: "form-ui:booking-availability-error",
 });
 
+registerProvider("calendar-booking", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "calendar-booking",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "calendar-booking",
+      booking: values,
+    };
+  },
+  successEventName: "form-ui:calendar-booking-success",
+  errorEventName: "form-ui:calendar-booking-error",
+});
+
+registerProvider("calendar-cancel", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "calendar-cancel",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "calendar-cancel",
+      cancellation: values,
+    };
+  },
+  successEventName: "form-ui:calendar-cancel-success",
+  errorEventName: "form-ui:calendar-cancel-error",
+});
+
+registerProvider("calendar-reschedule", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "calendar-reschedule",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "calendar-reschedule",
+      reschedule: values,
+    };
+  },
+  successEventName: "form-ui:calendar-reschedule-success",
+  errorEventName: "form-ui:calendar-reschedule-error",
+});
+
 registerProvider("email", {
   createSubmitRequest(provider) {
     return {

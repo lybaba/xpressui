@@ -4491,6 +4491,226 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports a calendar booking provider for confirmed slot workflows', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ confirmed: true, bookingId: 'bk_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'calendar-booking-form',
+      title: 'Calendar Booking Form',
+      provider: {
+        type: 'calendar-booking',
+        endpoint: 'https://api.example.test/bookings',
+      },
+      fields: [
+        {
+          name: 'service',
+          label: 'Service',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'date',
+          label: 'Date',
+          type: 'date',
+          required: true,
+        },
+        {
+          name: 'slot',
+          label: 'Slot',
+          type: 'text',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const service = element.querySelector('#service') as HTMLInputElement;
+    const date = element.querySelector('#date') as HTMLInputElement;
+    const slot = element.querySelector('#slot') as HTMLInputElement;
+    const form = element.querySelector('#calendar-booking-form_form') as HTMLFormElement;
+    const onBookingSuccess = vi.fn();
+
+    element.addEventListener('form-ui:calendar-booking-success', (event) => {
+      onBookingSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    service.value = 'massage';
+    service.dispatchEvent(new Event('input', { bubbles: true }));
+    date.value = '2026-03-12';
+    date.dispatchEvent(new Event('input', { bubbles: true }));
+    slot.value = '10:00';
+    slot.dispatchEvent(new Event('input', { bubbles: true }));
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/bookings',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'calendar-booking',
+          booking: {
+            service: 'massage',
+            date: '2026-03-12',
+            slot: '10:00',
+          },
+        }),
+      })
+    );
+    expect(onBookingSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { confirmed: true, bookingId: 'bk_123' },
+      })
+    );
+  });
+
+  it('supports a calendar cancel provider for cancellation workflows', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ cancelled: true, bookingId: 'bk_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'calendar-cancel-form',
+      title: 'Calendar Cancel Form',
+      provider: {
+        type: 'calendar-cancel',
+        endpoint: 'https://api.example.test/bookings/cancel',
+      },
+      fields: [
+        {
+          name: 'booking_id',
+          label: 'Booking ID',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'reason',
+          label: 'Reason',
+          type: 'text',
+        },
+      ],
+    }) as FormUI;
+    const bookingId = element.querySelector('#booking_id') as HTMLInputElement;
+    const reason = element.querySelector('#reason') as HTMLInputElement;
+    const form = element.querySelector('#calendar-cancel-form_form') as HTMLFormElement;
+    const onCancelSuccess = vi.fn();
+
+    element.addEventListener('form-ui:calendar-cancel-success', (event) => {
+      onCancelSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    bookingId.value = 'bk_123';
+    bookingId.dispatchEvent(new Event('input', { bubbles: true }));
+    reason.value = 'User requested change';
+    reason.dispatchEvent(new Event('input', { bubbles: true }));
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/bookings/cancel',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'calendar-cancel',
+          cancellation: {
+            booking_id: 'bk_123',
+            reason: 'User requested change',
+          },
+        }),
+      })
+    );
+    expect(onCancelSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { cancelled: true, bookingId: 'bk_123' },
+      })
+    );
+  });
+
+  it('supports a calendar reschedule provider for slot changes', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ rescheduled: true, bookingId: 'bk_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'calendar-reschedule-form',
+      title: 'Calendar Reschedule Form',
+      provider: {
+        type: 'calendar-reschedule',
+        endpoint: 'https://api.example.test/bookings/reschedule',
+      },
+      fields: [
+        {
+          name: 'booking_id',
+          label: 'Booking ID',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'new_date',
+          label: 'New Date',
+          type: 'date',
+          required: true,
+        },
+        {
+          name: 'new_slot',
+          label: 'New Slot',
+          type: 'text',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const bookingId = element.querySelector('#booking_id') as HTMLInputElement;
+    const newDate = element.querySelector('#new_date') as HTMLInputElement;
+    const newSlot = element.querySelector('#new_slot') as HTMLInputElement;
+    const form = element.querySelector('#calendar-reschedule-form_form') as HTMLFormElement;
+    const onRescheduleSuccess = vi.fn();
+
+    element.addEventListener('form-ui:calendar-reschedule-success', (event) => {
+      onRescheduleSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    bookingId.value = 'bk_123';
+    bookingId.dispatchEvent(new Event('input', { bubbles: true }));
+    newDate.value = '2026-03-18';
+    newDate.dispatchEvent(new Event('input', { bubbles: true }));
+    newSlot.value = '14:00';
+    newSlot.dispatchEvent(new Event('input', { bubbles: true }));
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/bookings/reschedule',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'calendar-reschedule',
+          reschedule: {
+            booking_id: 'bk_123',
+            new_date: '2026-03-18',
+            new_slot: '14:00',
+          },
+        }),
+      })
+    );
+    expect(onRescheduleSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { rescheduled: true, bookingId: 'bk_123' },
+      })
+    );
+  });
+
   it('supports an email provider for outbound messaging workflows', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ delivered: true, messageId: 'msg_123' }), {

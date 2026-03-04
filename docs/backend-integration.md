@@ -299,6 +299,146 @@ Frontend events:
 - `form-ui:crm-success`
 - `form-ui:crm-error`
 
+## Calendar Booking Provider
+
+Use this provider when your backend confirms a selected time slot and creates a
+calendar booking.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'calendar-booking-form',
+  provider: {
+    type: 'calendar-booking',
+    endpoint: '/api/bookings',
+  },
+  fields: [
+    { name: 'service', label: 'Service', type: 'text', required: true },
+    { name: 'date', label: 'Date', type: 'date', required: true },
+    { name: 'slot', label: 'Slot', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "calendar-booking",
+  "booking": {
+    "service": "massage",
+    "date": "2026-03-12",
+    "slot": "10:00"
+  }
+}
+```
+
+Suggested success response:
+
+```json
+{
+  "confirmed": true,
+  "bookingId": "bk_123"
+}
+```
+
+Frontend events:
+- `form-ui:calendar-booking-success`
+- `form-ui:calendar-booking-error`
+
+## Calendar Cancel Provider
+
+Use this provider when your backend cancels an existing booking.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'calendar-cancel-form',
+  provider: {
+    type: 'calendar-cancel',
+    endpoint: '/api/bookings/cancel',
+  },
+  fields: [
+    { name: 'booking_id', label: 'Booking ID', type: 'text', required: true },
+    { name: 'reason', label: 'Reason', type: 'text' },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "calendar-cancel",
+  "cancellation": {
+    "booking_id": "bk_123",
+    "reason": "User requested change"
+  }
+}
+```
+
+Suggested success response:
+
+```json
+{
+  "cancelled": true,
+  "bookingId": "bk_123"
+}
+```
+
+Frontend events:
+- `form-ui:calendar-cancel-success`
+- `form-ui:calendar-cancel-error`
+
+## Calendar Reschedule Provider
+
+Use this provider when your backend changes an existing booking to a new slot.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'calendar-reschedule-form',
+  provider: {
+    type: 'calendar-reschedule',
+    endpoint: '/api/bookings/reschedule',
+  },
+  fields: [
+    { name: 'booking_id', label: 'Booking ID', type: 'text', required: true },
+    { name: 'new_date', label: 'New Date', type: 'date', required: true },
+    { name: 'new_slot', label: 'New Slot', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "calendar-reschedule",
+  "reschedule": {
+    "booking_id": "bk_123",
+    "new_date": "2026-03-18",
+    "new_slot": "14:00"
+  }
+}
+```
+
+Suggested success response:
+
+```json
+{
+  "rescheduled": true,
+  "bookingId": "bk_123"
+}
+```
+
+Frontend events:
+- `form-ui:calendar-reschedule-success`
+- `form-ui:calendar-reschedule-error`
+
 ## Dynamic Options Endpoint
 
 For select fields using `optionsEndpoint`, the component performs a `GET` and

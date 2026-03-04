@@ -565,6 +565,144 @@ Extra events:
 - `form-ui:booking-availability-success`
 - `form-ui:booking-availability-error`
 
+### Calendar Booking
+
+Use `calendar-booking` when your backend confirms a selected slot and creates a
+real booking record.
+
+```ts
+mountFormUI(container, {
+  name: 'calendar-booking-form',
+  title: 'Calendar Booking',
+  provider: {
+    type: 'calendar-booking',
+    endpoint: '/api/bookings',
+  },
+  fields: [
+    { name: 'service', label: 'Service', type: 'text', required: true },
+    { name: 'date', label: 'Date', type: 'date', required: true },
+    { name: 'slot', label: 'Slot', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "calendar-booking",
+  "booking": {
+    "service": "massage",
+    "date": "2026-03-12",
+    "slot": "10:00"
+  }
+}
+```
+
+Typical backend response:
+
+```json
+{
+  "confirmed": true,
+  "bookingId": "bk_123"
+}
+```
+
+Extra events:
+- `form-ui:calendar-booking-success`
+- `form-ui:calendar-booking-error`
+
+### Calendar Cancel
+
+Use `calendar-cancel` when your backend cancels an existing booking.
+
+```ts
+mountFormUI(container, {
+  name: 'calendar-cancel-form',
+  title: 'Calendar Cancel',
+  provider: {
+    type: 'calendar-cancel',
+    endpoint: '/api/bookings/cancel',
+  },
+  fields: [
+    { name: 'booking_id', label: 'Booking ID', type: 'text', required: true },
+    { name: 'reason', label: 'Reason', type: 'text' },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "calendar-cancel",
+  "cancellation": {
+    "booking_id": "bk_123",
+    "reason": "User requested change"
+  }
+}
+```
+
+Typical backend response:
+
+```json
+{
+  "cancelled": true,
+  "bookingId": "bk_123"
+}
+```
+
+Extra events:
+- `form-ui:calendar-cancel-success`
+- `form-ui:calendar-cancel-error`
+
+### Calendar Reschedule
+
+Use `calendar-reschedule` when your backend changes an existing booking to a
+new date or slot.
+
+```ts
+mountFormUI(container, {
+  name: 'calendar-reschedule-form',
+  title: 'Calendar Reschedule',
+  provider: {
+    type: 'calendar-reschedule',
+    endpoint: '/api/bookings/reschedule',
+  },
+  fields: [
+    { name: 'booking_id', label: 'Booking ID', type: 'text', required: true },
+    { name: 'new_date', label: 'New Date', type: 'date', required: true },
+    { name: 'new_slot', label: 'New Slot', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "calendar-reschedule",
+  "reschedule": {
+    "booking_id": "bk_123",
+    "new_date": "2026-03-18",
+    "new_slot": "14:00"
+  }
+}
+```
+
+Typical backend response:
+
+```json
+{
+  "rescheduled": true,
+  "bookingId": "bk_123"
+}
+```
+
+Extra events:
+- `form-ui:calendar-reschedule-success`
+- `form-ui:calendar-reschedule-error`
+
 ### Email
 
 Use `email` when your backend exposes a messaging endpoint and you want a
@@ -1092,6 +1230,12 @@ Provider-specific events:
 - `form-ui:webhook-error`
 - `form-ui:booking-availability-success`
 - `form-ui:booking-availability-error`
+- `form-ui:calendar-booking-success`
+- `form-ui:calendar-booking-error`
+- `form-ui:calendar-cancel-success`
+- `form-ui:calendar-cancel-error`
+- `form-ui:calendar-reschedule-success`
+- `form-ui:calendar-reschedule-error`
 - `form-ui:email-success`
 - `form-ui:email-error`
 - `form-ui:crm-success`
@@ -1153,7 +1297,7 @@ What is stable in the current codebase:
 - Web Component rendering
 - schema-based validation
 - API submission hooks
-- reservation, payment, Stripe, webhook, booking-availability, and email provider flows
+- reservation, payment, Stripe, webhook, booking-availability, calendar booking, calendar cancel, calendar reschedule, and email provider flows
 - conditional fields and remote select loading
 - local draft persistence in the browser
 - local offline submission queue

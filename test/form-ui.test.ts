@@ -374,6 +374,47 @@ describe('FormUI', () => {
     ]);
   });
 
+  it('exposes recently applied rules directly on FormUI', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'form-ui-recent-rules-form',
+      title: 'Form UI Recent Rules Form',
+      rules: [
+        {
+          id: 'set-currency',
+          conditions: [
+            { field: 'country', operator: 'equals', value: 'fr' },
+          ],
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'country', label: 'Country', type: 'text' },
+        { name: 'currency', label: 'Currency', type: 'text' },
+      ],
+    }) as FormUI;
+    const country = element.querySelector('#country') as HTMLInputElement;
+
+    country.value = 'fr';
+    country.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(element.getRecentAppliedRules()).toEqual([
+      {
+        id: 'set-currency',
+        logic: undefined,
+        conditions: [
+          { field: 'country', operator: 'equals', value: 'fr' },
+        ],
+        actions: [
+          { type: 'set-value', field: 'currency', value: 'EUR' },
+        ],
+      },
+    ]);
+  });
+
   it('shows and clears validation errors in the DOM', () => {
     const element = renderFixture(`
       <template id="contact">
@@ -609,6 +650,62 @@ describe('FormUI', () => {
         field: 'fullName',
         template: '{{firstName}} {{missingName}}',
         missingField: 'missingName',
+      },
+    ]);
+  });
+
+  it('exposes recently applied rules through the composed headless runtime', () => {
+    let values: Record<string, any> = {
+      country: '',
+    };
+    const formConfig = createFormConfig({
+      name: 'headless-recent-rules-form',
+      title: 'Headless Recent Rules Form',
+      rules: [
+        {
+          id: 'set-currency',
+          conditions: [
+            { field: 'country', operator: 'equals', value: 'fr' },
+          ],
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'country', label: 'Country', type: 'text' },
+        { name: 'currency', label: 'Currency', type: 'text' },
+      ],
+    });
+    const runtime = new FormRuntime(formConfig, {
+      getValues: () => values,
+      dynamic: {
+        getFieldContainer: () => null,
+        getFieldElement: () => null,
+        getFieldValue: (fieldName) => values[fieldName],
+        clearFieldValue: (fieldName) => {
+          values = { ...values, [fieldName]: undefined };
+        },
+      },
+    });
+
+    (formConfig.sections.main || []).forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+
+    values = { ...values, country: 'fr' };
+    runtime.updateConditionalFields();
+
+    expect(runtime.getRecentAppliedRules()).toEqual([
+      {
+        id: 'set-currency',
+        logic: undefined,
+        conditions: [
+          { field: 'country', operator: 'equals', value: 'fr' },
+        ],
+        actions: [
+          { type: 'set-value', field: 'currency', value: 'EUR' },
+        ],
       },
     ]);
   });
@@ -942,6 +1039,56 @@ describe('FormUI', () => {
         field: 'fullName',
         template: '{{firstName}} {{missingName}}',
         missingField: 'missingName',
+      },
+    ]);
+  });
+
+  it('exposes recently applied rules from the standalone dynamic runtime', () => {
+    let values: Record<string, any> = { country: '' };
+    const runtime = new FormDynamicRuntime({
+      getFieldConfigs: () => [
+        { name: 'country', label: 'Country', type: 'text' },
+        { name: 'currency', label: 'Currency', type: 'text' },
+      ],
+      getRules: () => [
+        {
+          id: 'set-currency',
+          conditions: [
+            { field: 'country', operator: 'equals', value: 'fr' },
+          ],
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        },
+      ],
+      getFieldContainer: () => null,
+      getFieldElement: () => null,
+      setFieldDisabled: () => {},
+      getFieldValue: (fieldName) => values[fieldName],
+      clearFieldValue: (fieldName) => {
+        values = { ...values, [fieldName]: undefined };
+      },
+      setFieldValue: (fieldName, value) => {
+        values = { ...values, [fieldName]: value };
+      },
+      getFormValues: () => values,
+      emitEvent: () => true,
+      getEventContext: () => ({ formConfig: null, submit: undefined }),
+    });
+
+    values = { ...values, country: 'fr' };
+    runtime.updateConditionalFields();
+
+    expect(runtime.getRecentAppliedRules()).toEqual([
+      {
+        id: 'set-currency',
+        logic: undefined,
+        conditions: [
+          { field: 'country', operator: 'equals', value: 'fr' },
+        ],
+        actions: [
+          { type: 'set-value', field: 'currency', value: 'EUR' },
+        ],
       },
     ]);
   });

@@ -58,6 +58,10 @@ export type TFormTemplateWarningStateDetail = {
   warnings: TFormActiveTemplateWarning[];
 };
 
+export type TFormRuleStateDetail = {
+  rules: TFormRuleAppliedDetail[];
+};
+
 type TFormDynamicRuntimeOptions = {
   getFieldConfigs(): TFieldConfig[];
   getRules(): Array<{
@@ -105,11 +109,13 @@ export class FormDynamicRuntime {
   options: TFormDynamicRuntimeOptions;
   loadingOptions: Record<string, boolean>;
   activeTemplateWarnings: Record<string, TFormActiveTemplateWarning>;
+  recentAppliedRules: TFormRuleAppliedDetail[];
 
   constructor(options: TFormDynamicRuntimeOptions) {
     this.options = options;
     this.loadingOptions = {};
     this.activeTemplateWarnings = {};
+    this.recentAppliedRules = [];
   }
 
   transformRuleValue(
@@ -262,22 +268,33 @@ export class FormDynamicRuntime {
   }
 
   emitRuleApplied(rule: TDynamicRule): void {
+    const result: TFormRuleAppliedDetail = {
+      id: rule.id,
+      logic: rule.logic,
+      conditions: rule.conditions,
+      actions: rule.actions,
+    };
+    this.recentAppliedRules.push(result);
+    if (this.recentAppliedRules.length > 20) {
+      this.recentAppliedRules.splice(0, this.recentAppliedRules.length - 20);
+    }
+
     const context = this.options.getEventContext();
     this.options.emitEvent("form-ui:rule-applied", {
       values: this.options.getFormValues(),
       formConfig: context.formConfig,
       submit: context.submit,
-      result: {
-        id: rule.id,
-        logic: rule.logic,
-        conditions: rule.conditions,
-        actions: rule.actions,
-      } satisfies TFormRuleAppliedDetail,
+      result,
     });
+    this.emitRuleState();
   }
 
   getActiveTemplateWarnings(): TFormActiveTemplateWarning[] {
     return Object.values(this.activeTemplateWarnings);
+  }
+
+  getRecentAppliedRules(): TFormRuleAppliedDetail[] {
+    return [...this.recentAppliedRules];
   }
 
   emitTemplateWarningState(): void {
@@ -289,6 +306,18 @@ export class FormDynamicRuntime {
       result: {
         warnings: this.getActiveTemplateWarnings(),
       } satisfies TFormTemplateWarningStateDetail,
+    });
+  }
+
+  emitRuleState(): void {
+    const context = this.options.getEventContext();
+    this.options.emitEvent("form-ui:rule-state", {
+      values: this.options.getFormValues(),
+      formConfig: context.formConfig,
+      submit: context.submit,
+      result: {
+        rules: this.getRecentAppliedRules(),
+      } satisfies TFormRuleStateDetail,
     });
   }
 

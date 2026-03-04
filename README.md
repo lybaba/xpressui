@@ -27,6 +27,8 @@ plain object without hand-writing a full HTML template.
 
 `FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
 active template issues on the mounted component.
+It also exposes `getRecentAppliedRules()` to inspect the latest effective rule
+applications.
 
 For storage/debug tooling outside the component instance, use
 `createLocalFormAdmin(formConfig)`.
@@ -156,11 +158,13 @@ Main `FormRuntime` methods:
 - `getStorageSnapshot()`
 - `flushSubmissionQueue()`
 - `getActiveTemplateWarnings()`
+- `getRecentAppliedRules()`
 
 If you pass DOM adapters through `dynamic`, the same runtime can also handle:
 - `updateConditionalFields()`
 - `refreshRemoteOptions()`
 - `getActiveTemplateWarnings()`
+- `getRecentAppliedRules()`
 
 Public types exported for headless integrations:
 - `TFormRuntimeOptions`
@@ -536,6 +540,7 @@ mountFormUI(container, {
 Extra event:
 - `form-ui:options-loaded`
 - `form-ui:rule-applied`
+- `form-ui:rule-state`
 - `form-ui:rule-template-missing-field`
 - `form-ui:rule-template-warning-cleared`
 - `form-ui:rule-template-warning-state`
@@ -707,6 +712,7 @@ Core events emitted by `<form-ui>`:
 - `form-ui:submit-error`
 - `form-ui:options-loaded`
 - `form-ui:rule-applied`
+- `form-ui:rule-state`
 - `form-ui:rule-template-missing-field`
 - `form-ui:rule-template-warning-cleared`
 - `form-ui:rule-template-warning-state`

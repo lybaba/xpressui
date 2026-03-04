@@ -14,6 +14,7 @@ import {
     SWITCH_TYPE,
     TAX_TYPE,
     TIME_TYPE,
+    isFileFieldType,
 } from "./field";
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { RenderingMode } from "./TFormConfig";
@@ -173,6 +174,15 @@ export const getSectionIndex = (formConfig: TFormConfig, sectionName: string, is
 
 function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
     const res: any = {};
+
+    if (isFileFieldType(fieldConfig.type)) {
+        res.anyOf = [
+            { type: "object" },
+            { type: "array" },
+            { type: "string" },
+        ];
+        return res;
+    }
 
     switch (fieldConfig.type) {
         case NUMBER_TYPE:

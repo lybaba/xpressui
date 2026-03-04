@@ -2434,6 +2434,30 @@ describe('FormUI', () => {
     revokeObjectUrlSpy.mockRestore();
   });
 
+  it('does not apply string-only AJV validation to file fields', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'file-validation-form',
+      title: 'File Validation Form',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const file = new File(['file'], 'doc.pdf', { type: 'application/pdf' });
+
+    const errors = element.engine.validateValues({
+      attachments: [file],
+    });
+
+    expect(errors.attachments).toBeUndefined();
+  });
+
   it('renders native capture attributes for file and camera-photo fields', () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

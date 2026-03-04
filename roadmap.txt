@@ -22,6 +22,7 @@ Current State
 
 Completed foundations already in the codebase:
 - schema-driven form mounting via `mountFormUI(...)`
+- preset-based form creation via `createFormPreset(...)` and `fieldFactory`
 - custom element runtime via `FormUI`
 - AJV + `final-form` validation
 - API submission support

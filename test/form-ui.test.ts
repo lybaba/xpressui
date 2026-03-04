@@ -3,9 +3,12 @@ import * as publicApi from '../src/index';
 import {
   createLocalFormAdmin,
   createFormConfig,
+  createFormPreset,
+  createTemplateMarkup,
   createSubmitRequestFromProvider,
   attachFormDebugObserver,
   createFormDebugPanel,
+  fieldFactory,
   FormEngineRuntime,
   FormDynamicRuntime,
   FormPersistenceRuntime,
@@ -49,6 +52,8 @@ describe('FormUI', () => {
     expect(publicApi.FormRuntime).toBe(FormRuntime);
     expect(publicApi.FormUploadRuntime).toBe(FormUploadRuntime);
     expect(publicApi.createFormConfig).toBe(createFormConfig);
+    expect(publicApi.createFormPreset).toBe(createFormPreset);
+    expect(publicApi.fieldFactory).toBe(fieldFactory);
     expect(publicApi.mountFormUI).toBe(mountFormUI);
     expect(publicApi.createLocalFormAdmin).toBe(createLocalFormAdmin);
     expect(publicApi.validatePublicFormConfig).toBe(validatePublicFormConfig);
@@ -56,6 +61,61 @@ describe('FormUI', () => {
     expect(publicApi.registerProvider).toBe(registerProvider);
     expect(publicApi.getProviderDefinition).toBe(getProviderDefinition);
     expect(publicApi.createSubmitRequestFromProvider).toBe(createSubmitRequestFromProvider);
+  });
+
+  it('provides field factory helpers for common field types', () => {
+    expect(
+      fieldFactory.selectMultiple(
+        'Preferred Topics',
+        'Preferred Topics',
+        [
+          { value: 'sales', label: 'Sales' },
+          { value: 'support', label: 'Support' },
+        ],
+        { required: true },
+      ),
+    ).toEqual({
+      type: 'select-multiple',
+      name: 'preferred_topics',
+      label: 'Preferred Topics',
+      choices: [
+        { value: 'sales', label: 'Sales' },
+        { value: 'support', label: 'Support' },
+      ],
+      required: true,
+    });
+
+    expect(
+      fieldFactory.documentScan('Passport Scan', 'Passport Scan', {
+        enableDocumentOcr: true,
+        requireValidDocumentMrz: true,
+      }),
+    ).toEqual({
+      type: 'document-scan',
+      name: 'passport_scan',
+      label: 'Passport Scan',
+      enableDocumentOcr: true,
+      requireValidDocumentMrz: true,
+    });
+  });
+
+  it('provides business form presets that can be converted to mountable markup', () => {
+    const formConfig = createFormPreset('identity-check', {
+      name: 'kyc-form',
+      fields: [
+        fieldFactory.cameraPhoto('selfie_capture', 'Selfie Capture'),
+      ],
+    });
+    const markup = createTemplateMarkup(formConfig);
+
+    expect(formConfig.name).toBe('kyc-form');
+    expect(formConfig.submit?.includeDocumentData).toBe(true);
+    expect(formConfig.submit?.documentFieldPaths).toContain('mrz.valid');
+    expect(formConfig.provider?.type).toBe('identity-verification');
+    expect(formConfig.sections.main?.some((field) => field.name === 'passport')).toBe(true);
+    expect(formConfig.sections.main?.some((field) => field.name === 'selfie_capture')).toBe(true);
+    expect(markup).toContain('<form-ui name="kyc-form"></form-ui>');
+    expect(markup).toContain('data-submit-endpoint="/api/identity/verify"');
   });
 
   it('hydrates a named template into the custom element', () => {

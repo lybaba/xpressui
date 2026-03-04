@@ -30,6 +30,7 @@ export {
   createTemplateMarkup,
   mountFormUI,
 } from "./common/form-builder";
+export { createFormPreset, fieldFactory } from "./common/form-presets";
 export { createLocalFormAdmin } from "./common/form-admin";
 export { attachFormDebugObserver } from "./common/form-debug";
 export { createFormDebugPanel } from "./common/form-debug-panel";
@@ -66,6 +67,7 @@ export type { TFormDebugPanel, TFormDebugPanelOptions } from "./common/form-debu
 export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 export type { TFormUploadState } from "./common/form-upload";
 export type { TFormQueueState, TFormStorageSnapshot } from "./common/form-persistence";
+export type { TCreateFormPresetOptions, TFormPresetName } from "./common/form-presets";
 export type {
   TFormRuntimeDynamicAdapters,
   TFormRuntimeEmitEvent,

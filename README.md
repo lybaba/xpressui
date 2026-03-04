@@ -21,6 +21,8 @@ The public API is centered on:
 - `FormUploadRuntime` (the dedicated upload runtime)
 - `mountFormUI(...)`
 - `createFormConfig(...)`
+- `createFormPreset(...)`
+- `fieldFactory`
 - `createTemplateMarkup(...)`
 
 The recommended path is `mountFormUI(...)`, which lets you mount a form from a
@@ -39,6 +41,8 @@ For storage/debug tooling outside the component instance, use
 Public API you should treat as stable:
 - `mountFormUI(...)`
 - `createFormConfig(...)`
+- `createFormPreset(...)`
+- `fieldFactory`
 - `createTemplateMarkup(...)`
 - `FormUI`
 - `FormRuntime`
@@ -117,6 +121,29 @@ if (container) {
   });
 }
 ```
+
+## Faster Form Creation
+
+If you want less boilerplate, use the built-in field helpers and presets:
+
+```ts
+import { createFormPreset, fieldFactory, mountFormUI } from '@lybaba/xpressui';
+
+const form = createFormPreset('identity-check', {
+  name: 'onboarding-kyc',
+  fields: [
+    fieldFactory.cameraPhoto('selfie_capture', 'Selfie Capture'),
+  ],
+});
+
+mountFormUI(container, form);
+```
+
+Available presets:
+- `contact`
+- `booking-request`
+- `payment-request`
+- `identity-check`
 
 ## Headless Runtime
 

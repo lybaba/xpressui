@@ -70,6 +70,7 @@ Strategic Objectives
 4. Harden binary/file/document flows for production
 5. Improve bundle discipline and API surface clarity
 6. Keep `FormUI` as a thin UI adapter over runtime services
+7. Allow `FormUI` to operate as a read-oriented `ViewUI` for resource/data rendering
 
 
 Roadmap Phases
@@ -257,6 +258,38 @@ Remaining:
 - dedicated “headless only” demo without `FormUI`
 - docs that mirror demo scenarios exactly
 
+
+Phase 7: View Runtime and Resource Rendering
+Status: Planned
+
+Goal:
+Let one runtime support both data capture and data presentation so a `FormUI`
+instance can behave as a `ViewUI`.
+
+Planned scope:
+- explicit render mode contract:
+  - `form`
+  - `view`
+  - `hybrid`
+- output renderer registry by field type:
+  - text / html / image / file / video / link
+- media/resource display policies:
+  - thumbnail / large / source URL variants
+  - gallery vs link rendering
+  - download/open behavior
+- secure rich content templates for view blocks
+- shared output snapshot API reusable by:
+  - debug/admin tools
+  - headless consumers
+
+Constraints:
+- avoid coupling runtime to WordPress/Ionic/Redux-specific APIs
+- avoid unsafe raw HTML rendering without sanitization controls
+
+Exit criteria:
+- `FormUI` can render read-only resource views from existing form config/data
+- host apps can override output renderers without patching core runtime
+
 Exit criteria:
 - a new user can understand product value from demos without reading the source
 
@@ -324,6 +357,13 @@ P2:
 - reduce bundle size by trimming non-essential runtime paths
 - workflow snapshots reusable by admin/debug tools
 
+P3:
+- FormUI/ViewUI convergence:
+  - add `form|view|hybrid` render mode
+  - implement output renderer registry
+  - add media/resource display policies
+  - add secure template rendering for view content
+
 
 Next Best Task
 --------------
@@ -345,3 +385,9 @@ Suggested first scope:
 - add `payment-capture` with explicit capture-success/failure contracts
 - add `identity-review` for manual decision workflows and provider events
 - document response contracts and add conformance tests for all three
+
+Follow-up scope (after current P0):
+- start Phase 7 MVP:
+  - add `view` mode
+  - ship baseline output renderers (`text`, `html`, `image`, `file`, `video`, `link`)
+  - expose reusable output snapshot for debug/headless adapters

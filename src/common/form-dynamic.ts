@@ -128,12 +128,15 @@ export class FormDynamicRuntime {
   }
 
   renderRuleTemplate(template: string, ruleId?: string, targetField?: string): string {
-    const templateWarningKey = `${ruleId || ""}:${targetField || ""}:${template}`;
-    return template.replace(/\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g, (_, fieldName: string) => {
+    const templateWarningKey = `${ruleId || ""}:${targetField || ""}`;
+    let hasMissingField = false;
+    const renderedValue = template.replace(/\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g, (_, fieldName: string) => {
       const hasField = this.options.getFieldConfigs().some((fieldConfig) => fieldConfig.name === fieldName);
       if (!hasField) {
-        if (this.lastTemplateWarnings[templateWarningKey] !== fieldName) {
-          this.lastTemplateWarnings[templateWarningKey] = fieldName;
+        hasMissingField = true;
+        const warningSignature = `${template}:${fieldName}`;
+        if (this.lastTemplateWarnings[templateWarningKey] !== warningSignature) {
+          this.lastTemplateWarnings[templateWarningKey] = warningSignature;
           const context = this.options.getEventContext();
           this.options.emitEvent("form-ui:rule-template-missing-field", {
             values: this.options.getFormValues(),
@@ -153,6 +156,12 @@ export class FormDynamicRuntime {
       const value = this.options.getFieldValue(fieldName);
       return value === undefined || value === null ? "" : String(value);
     });
+
+    if (!hasMissingField) {
+      delete this.lastTemplateWarnings[templateWarningKey];
+    }
+
+    return renderedValue;
   }
 
   matchesCondition(

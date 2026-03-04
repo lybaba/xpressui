@@ -96,6 +96,16 @@ if (container) {
     title: 'Contact Us',
     fields: [
       { name: 'email', label: 'Email', type: 'email', required: true },
+      {
+        name: 'topics',
+        label: 'Topics',
+        type: 'select-multiple',
+        choices: [
+          { value: 'sales', label: 'Sales' },
+          { value: 'support', label: 'Support' },
+          { value: 'billing', label: 'Billing' },
+        ],
+      },
       { name: 'message', label: 'Message', type: 'textarea', required: true },
     ],
   });
@@ -769,6 +779,7 @@ Common field types used today:
 - `price`
 - `datetime`
 - `select-one`
+- `select-multiple`
 - `checkbox`
 
 ## Events

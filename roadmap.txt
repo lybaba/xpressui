@@ -4,231 +4,302 @@ XPressUI Product Roadmap
 Vision
 ------
 
-XPressUI is positioned as a headless form SDK for business workflows.
+XPressUI is now clearly positioned as a headless form SDK for business workflows.
 
 The product should optimize for:
 - API integrations
-- dynamic frontend form behavior
-- local persistence and offline resilience
-- reliable submission pipelines
-- developer-friendly orchestration
+- dynamic form orchestration
+- multi-step workflow execution
+- resilient local/offline persistence
+- developer-friendly observability
 
-It should not try to become a Gravity Forms clone.
-It should become a strong programmable form engine first.
+It should not become a generic no-code CMS or a Gravity Forms clone.
+Its strength is a programmable, integration-first runtime.
 
 
 Current State
 -------------
 
-Completed foundations already in the codebase:
-- schema-driven form mounting via `mountFormUI(...)`
-- preset-based form creation via `createFormPreset(...)` and `fieldFactory`
-- custom element runtime via `FormUI`
-- AJV + `final-form` validation
-- API submission support
-- built-in providers:
-  - `reservation`
-  - `payment`
-  - `payment-stripe`
-- dynamic field support:
-  - conditional visibility
-  - remote options loading
+Major capabilities already implemented in the codebase:
+- public schema-driven mounting via `mountFormUI(...)`
+- headless runtime via `FormRuntime`
+- Web Component runtime via `FormUI`
+- schema validation + migration helpers
+- provider registry abstraction
+- dynamic rules and conditional field runtime
+- multi-step / wizard runtime:
+  - progress
+  - step validation
+  - conditional jumps
+  - review steps
+  - workflow step targeting
 - local persistence:
   - draft autosave / restore
-  - offline submission queue
-  - retry with backoff
+  - offline queue
   - dead-letter queue
-  - manual requeue
-  - one-shot replay
-- standalone local admin API:
-  - snapshot inspection
-  - queue/dead-letter filtering
-  - purge / replay / requeue helpers
-- test suite and CI
-- rewritten product docs and backend integration guide
+  - replay / requeue
+  - retention policies
+  - IndexedDB hydration + migration
+  - storage health checks
+- standalone local admin/debug APIs
+- file uploads:
+  - `multipart/form-data`
+  - presigned uploads
+  - progress events
+  - drag and drop
+  - previews / thumbnails
+  - camera and document scan flows
+  - OCR / MRZ extraction
+- product demos published via GitHub Pages
+- CI / release checks
+
+Current built-in provider families:
+- booking / reservation
+- payment
+- approval
+- email / crm / webhook
+- identity verification
 
 
 Strategic Objectives
 --------------------
 
-1. Stabilize the public headless schema
-2. Formalize providers as a real extension system
-3. Strengthen local and offline storage for production use
-4. Improve observability and developer operations
-5. Add higher-value integration providers
-6. Separate engine concerns cleanly from UI concerns
+1. Stabilize the provider response contract
+2. Strengthen remote save/resume and workflow continuation
+3. Improve multi-step workflow expressiveness
+4. Harden binary/file/document flows for production
+5. Improve bundle discipline and API surface clarity
+6. Keep `FormUI` as a thin UI adapter over runtime services
 
 
 Roadmap Phases
 --------------
 
-Phase 1: Core Headless Platform
+Phase 1: Core Platform Stabilization
+Status: Mostly complete
+
+Goal:
+Keep the SDK core stable and predictable before adding broader surface area.
+
+Completed:
+- versioned public schema
+- schema validation helpers
+- migration helpers
+- provider registry extraction
+- engine / dynamic / persistence / upload / steps runtimes
+- public headless runtime composition
+
+Remaining:
+- formalize a stricter public API boundary
+- document which exports are stable vs advanced/internal
+- standardize provider response/result contracts
+
+Exit criteria:
+- integrators can rely on a narrow documented contract without reading internals
+
+
+Phase 2: Provider System Maturity
 Status: In progress
 
 Goal:
-Turn the current runtime into a stable, versioned, extensible SDK core.
+Make providers predictable and interoperable across all workflows.
 
-Completed:
-- local draft persistence
-- offline queue
-- dead-letter queue
-- local admin/debug API
-- provider-based submission payloads
-
-Remaining:
-- introduce a versioned public form schema
-- add schema validation for the full public config
-- add migration utilities between schema versions
-- separate provider execution logic from `FormUI`
-- standardize runtime event names and payload contracts
-
-Exit criteria:
-- a form definition can be serialized, validated, migrated, and executed
-- the same schema works across runtime and admin/debug tools
-
-
-Phase 2: Provider System and Business Integrations
-Status: Partially started
-
-Goal:
-Make integrations first-class, composable, and predictable.
-
-Completed:
+Implemented providers:
 - `reservation`
 - `payment`
 - `payment-stripe`
-
-Next provider targets:
 - `webhook`
 - `booking-availability`
+- `calendar-booking`
+- `calendar-cancel`
+- `calendar-reschedule`
+- `approval-request`
+- `approval-decision`
+- `approval-comment`
 - `email`
 - `crm`
+- `identity-verification`
+- `identity-verification-stripe`
+- `identity-verification-webhook`
 
-Required platform work:
-- provider registry
-- provider config schemas
-- request payload transformers
-- response normalizers
-- provider-specific error contracts
-- lifecycle hooks:
-  - before submit
-  - after success
-  - after failure
+Remaining:
+- formal provider result envelope:
+  - `status`
+  - `transition`
+  - `messages`
+  - `errors`
+  - `nextActions`
+- provider config schemas per provider
+- consistent provider-specific error normalization
+- pre-submit / post-success / post-failure lifecycle hooks
+- richer workflow-aware providers:
+  - `calendar-availability-hold`
+  - `payment-capture`
+  - `identity-review`
 
 Exit criteria:
-- adding a new provider does not require hardcoding business logic into `FormUI`
+- new providers can be added with little or no `FormUI` changes
+- provider outputs drive workflow transitions consistently
 
 
-Phase 3: Storage and Offline Maturity
+Phase 3: Save, Resume, and Offline Continuation
 Status: In progress
 
 Goal:
-Make offline behavior robust enough for real business workflows.
+Make interrupted workflows resumable locally and remotely.
 
 Completed:
-- localStorage draft adapter
-- queue retries with backoff
-- dead-letter handling
-- replay and requeue controls
+- local drafts
+- local resume tokens
+- remote `resumeEndpoint` groundwork
+- IndexedDB hydration
+- retention
+- local encryption (best effort)
 
 Remaining:
-- IndexedDB adapter
-- queue retention policy / expiration
-- batch operations in local admin API
-- queue metrics and health snapshots
-- optional encrypted local persistence
-- deterministic queue replay scheduling
+- full remote save/resume contract:
+  - create
+  - lookup
+  - restore
+  - invalidate
+- signed / shareable resume tokens
+- cross-device resume UX
+- deterministic queue replay windows
+- queue scheduling diagnostics
 
 Exit criteria:
-- large queues and drafts can be handled reliably without depending on `localStorage`
+- a user can safely leave and resume a workflow later, on the same device or another one
 
 
-Phase 4: Rules Engine
-Status: Not started
+Phase 4: Workflow and Rules Expansion
+Status: In progress
 
 Goal:
-Move from simple conditional visibility to a real business rules engine.
+Move from strong field logic to stronger workflow orchestration.
 
-Scope:
-- multiple conditions (`AND` / `OR`)
-- comparison operators:
+Completed:
+- rule operators:
   - `equals`
   - `not_equals`
   - `contains`
   - `in`
   - `gt`
   - `lt`
+  - `exists`
+  - `empty`
 - rule actions:
   - show / hide
   - enable / disable
-  - set value
-  - clear value
-  - fetch options
-  - invoke pre-checks
+  - set-value
+  - clear-value
+  - fetch-options
+- step transition DSL
+- step review summaries
+- workflow state integration
+
+Remaining:
+- rule actions:
+  - `set-error`
+  - `emit-event`
+  - `lock-submit`
+- richer step transition operators:
+  - time/date-based branching
+  - compound transition groups
+- provider-driven workflow routing policies
+- workflow snapshots reusable by admin/debug tools
 
 Exit criteria:
-- business flows can be expressed as config instead of custom imperative UI glue
+- complex business flows can be expressed declaratively without ad hoc glue code
 
 
-Phase 5: Developer Operations and Tooling
+Phase 5: File and Identity Flow Hardening
 Status: In progress
 
 Goal:
-Make the SDK easy to inspect, debug, test, and operate.
+Turn current file/document support into production-safe business flows.
 
 Completed:
-- local admin API
-- filtered queue/dead-letter inspection
-- backend integration docs
+- file upload validation
+- preview thumbnails
+- drag-and-drop
+- presigned upload strategy
+- camera capture
+- QR scan
+- document scan
+- OCR / MRZ parsing
+- document data redaction controls
 
 Remaining:
-- batch actions:
-  - requeue all
-  - replay matching entries
-  - purge filtered entries
-- richer query filters:
-  - by age
-  - by retry window
-  - by error text
-- debug event stream helper
-- import/export of local queue state
-- dedicated diagnostics documentation
+- upload retry policy for presigned flows
+- resumable binary uploads
+- stronger OCR / MRZ normalization contracts
+- file/document privacy controls by field
+- upload policy hooks:
+  - virus scan callback
+  - content moderation callback
+  - file acceptance callback
 
 Exit criteria:
-- support/debug workflows are possible without touching browser storage manually
+- file and identity flows are safe enough for real operational workflows
+
+
+Phase 6: Demo and Developer Experience
+Status: In progress
+
+Goal:
+Make the product easy to understand, adopt, and validate quickly.
+
+Completed:
+- static demo gallery
+- code snippets beside demos
+- copy-to-clipboard buttons
+- collapsible code panels
+
+Remaining:
+- richer demo coverage:
+  - simple one-page approval flow
+  - remote save/resume flow
+  - provider transition flow
+- snippet generation directly from form config
+- dedicated “headless only” demo without `FormUI`
+- docs that mirror demo scenarios exactly
+
+Exit criteria:
+- a new user can understand product value from demos without reading the source
 
 
 Architecture Direction
 ----------------------
 
-The target architecture should keep these layers clean:
+Target layer ownership:
 
 1. `schema`
 - public types
 - config validation
-- versioning
 - migrations
 
 2. `engine`
-- form state
+- validation
+- value normalization
+- document data state
+
+3. `workflow`
 - rules
-- validation orchestration
-- event emission
+- step runtime
+- workflow state transitions
 
-3. `providers`
-- integration registry
-- execution pipeline
-- payload/response normalization
+4. `providers`
+- provider registry
+- payload building
+- response normalization
 
-4. `storage`
-- `LocalStorageAdapter`
-- `IndexedDbStorageAdapter`
-- future remote adapters
+5. `storage`
+- local / indexed / future remote persistence
 
-5. `ui`
+6. `ui`
 - `FormUI`
-- DOM rendering helpers
-- adapter layer only
+- DOM rendering only
+- demo helpers only
 
 
 What Not To Do
@@ -236,51 +307,49 @@ What Not To Do
 
 Avoid these for now:
 - building a large visual form builder too early
-- building a full admin back-office before the SDK core is stable
-- coupling provider logic directly into the UI layer
-- expanding features faster than the public schema matures
+- adding many new providers without standardizing their result contract
+- turning demos into a parallel product surface with custom behavior not backed by runtime APIs
+- adding security complexity faster than the save/resume and provider contracts mature
 
 
 Priority Backlog
 ----------------
 
 P0:
-- version the public form schema
-- add schema validation for the full config
-- introduce a provider registry abstraction
+- standardize the provider response envelope
+- finalize remote save/resume contract
+- add workflow-aware provider transition normalization
 
 P1:
-- add IndexedDB storage adapter
-- add batch admin operations for queue/dead-letter
-- add a `webhook` provider
+- add `lock-submit` / `set-error` rule actions
+- add richer workflow routing policies
+- harden presigned upload retries
 
 P2:
-- implement advanced rules engine
-- add richer diagnostics/telemetry helpers
-- add import/export tools for local state
+- add more demos for headless and remote resume flows
+- improve API boundary docs and stable export documentation
+- reduce bundle size by trimming non-essential runtime paths
 
 
-Next Task
----------
+Next Best Task
+--------------
 
-The next highest-value task is:
+The most immediately profitable next feature is:
 
-Define and implement a versioned public form schema.
+- implement a standard provider response envelope
 
-Why this is next:
-- the runtime is now feature-rich enough that the config shape needs to be stabilized
-- providers, storage, rules, and admin tooling all depend on a durable contract
-- without a versioned schema, future changes will become harder to migrate safely
+Why:
+- it improves every existing integration
+- it reduces custom branching in demos and runtime handlers
+- it makes workflow transitions, approvals, payments, and save/resume much more predictable
 
-Concrete deliverable:
-- add `form.version`
-- formalize a public schema object shape
-- validate it with AJV
-- introduce a migration path for older configs
-
-Suggested implementation order:
-- create a new schema module for the public config contract
-- define `version: 1`
-- add a validator function for incoming form configs
-- make `createFormConfig(...)` emit the versioned shape
-- make `mountFormUI(...)` and local admin tools consume the validated shape
+Suggested first scope:
+- normalize provider responses into:
+  - `status`
+  - `transition`
+  - `messages`
+  - `errors`
+  - `data`
+- add a shared helper in the provider layer
+- update `FormUI` to consume the normalized shape first
+- document the contract in `docs/backend-integration.md`

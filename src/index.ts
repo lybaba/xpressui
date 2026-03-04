@@ -292,7 +292,30 @@ export class FormUI extends HTMLElement {
   }
 
   validateForm = (values: Record<string, any>) => {
-    return this.engine.validateValues(values);
+    const errors = this.engine.validateValues(values);
+
+    Object.entries(errors).forEach(([fieldName, errorValue]) => {
+      const validationError = errorValue as TValidationError;
+      const errorType = validationError?.errorData?.type;
+      if (
+        errorType === "file-accept" ||
+        errorType === "file-size" ||
+        errorType === "file-count"
+      ) {
+        this.emitFormEvent("form-ui:file-validation-error", {
+          values: this.engine.normalizeValues(values),
+          formConfig: this.formConfig,
+          submit: this.formConfig?.submit,
+          error: validationError,
+          result: {
+            field: fieldName,
+            code: errorType,
+          },
+        });
+      }
+    });
+
+    return errors;
   }
 
   emitFormEvent = (
@@ -443,6 +466,7 @@ export class FormUI extends HTMLElement {
       (fieldState) => {
         const { blur, change, error, focus, touched, value } = fieldState;
         const errorElement = this.querySelector(`#${name}_error`) as HTMLElement | null;
+        const selectionElement = this.querySelector(`#${name}_selection`) as HTMLElement | null;
         const inputElement = this.querySelector(`#${name}`) as HTMLElement | null;
 
 
@@ -487,6 +511,17 @@ export class FormUI extends HTMLElement {
         if (input.type === "checkbox") {
           (<HTMLInputElement>input).checked = value;
         } else if (input instanceof HTMLInputElement && input.type === "file") {
+          const selectedFiles = Array.isArray(value)
+            ? value
+            : value
+              ? [value]
+              : [];
+          if (selectionElement) {
+            selectionElement.textContent = selectedFiles
+              .map((file) => file?.name)
+              .filter(Boolean)
+              .join(", ");
+          }
           if (!value || (Array.isArray(value) && !value.length)) {
             input.value = "";
           }

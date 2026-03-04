@@ -72,6 +72,9 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   const fileSizeErrorAttr = field.fileSizeErrorMsg
     ? ` data-file-size-error-msg="${escapeHtml(String(field.fileSizeErrorMsg))}"`
     : '';
+  const fileSelectionMarkup = isFileFieldType(field.type)
+    ? `<div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_selection"></span></div>`
+    : '';
   const helpText = field.helpText
     ? `<div class="label"><span class="label-text-alt">${escapeHtml(field.helpText)}</span></div>`
     : '';
@@ -153,6 +156,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
     <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${multipleAttr}${maxFilesAttr}${maxFileSizeAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
+    ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </label>`;

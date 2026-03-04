@@ -694,6 +694,7 @@ Frontend behavior:
 - `fileTypeErrorMsg` and `fileSizeErrorMsg` let you override default validation messages
 
 Extra event:
+- `form-ui:file-validation-error`
 - `form-ui:queue-disabled-for-files`
 
 You can also define basic rules at the form level:

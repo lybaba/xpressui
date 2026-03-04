@@ -260,6 +260,76 @@ If you use custom keys, set:
 - `optionsValueKey`
 - `optionsLabelKey`
 
+## Multipart File Uploads
+
+Use `submit.mode: 'form-data'` for file uploads. The frontend sends real
+browser `File` blobs in a `multipart/form-data` request.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'upload-form',
+  submit: {
+    endpoint: '/api/uploads',
+    method: 'POST',
+    mode: 'form-data',
+  },
+  fields: [
+    {
+      name: 'attachments',
+      label: 'Attachments',
+      type: 'file',
+      accept: '.pdf,image/*',
+      multiple: true,
+    },
+  ],
+});
+```
+
+Generated multipart fields:
+- `attachments[]` for each uploaded file
+
+Minimal Express example:
+
+```ts
+import express from 'express';
+import multer from 'multer';
+
+const app = express();
+const upload = multer({ dest: 'uploads/' });
+
+app.post('/api/uploads', upload.array('attachments[]'), (req, res) => {
+  const files = (req.files || []).map((file) => ({
+    originalName: file.originalname,
+    mimeType: file.mimetype,
+    size: file.size,
+    storedAs: file.filename,
+  }));
+
+  res.json({
+    uploaded: true,
+    files,
+  });
+});
+```
+
+Suggested success response:
+
+```json
+{
+  "uploaded": true,
+  "files": [
+    {
+      "originalName": "report.pdf",
+      "mimeType": "application/pdf",
+      "size": 123456,
+      "storedAs": "9c0a0c2f..."
+    }
+  ]
+}
+```
+
 Frontend event:
 - `form-ui:options-loaded`
 

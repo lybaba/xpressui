@@ -770,6 +770,9 @@ describe('FormUI', () => {
     await flushAsyncWork();
 
     expect((element.form?.getState().values || {}).attachments).toEqual([fileOne, fileTwo]);
+    expect((element.querySelector('#attachments_selection') as HTMLElement).textContent).toBe(
+      'report.pdf, photo.png',
+    );
     expect(JSON.parse(window.localStorage.getItem('xpressui:upload-form') || '{}')).toEqual({
       attachments: [
         expect.objectContaining({
@@ -793,6 +796,44 @@ describe('FormUI', () => {
     const body = request.body as FormData;
     expect(body).toBeInstanceOf(FormData);
     expect(body.getAll('attachments[]')).toEqual([fileOne, fileTwo]);
+  });
+
+  it('emits a dedicated event for file validation errors', () => {
+    const container = document.createElement('div');
+    const onFileValidationError = vi.fn();
+    const element = mountFormUI(container, {
+      name: 'file-validation-event-form',
+      title: 'File Validation Event Form',
+      fields: [
+        {
+          name: 'attachment',
+          label: 'Attachment',
+          type: 'file',
+          accept: '.pdf',
+        },
+      ],
+    }) as FormUI;
+    const wrongType = new File(['image'], 'image.png', { type: 'image/png' });
+
+    element.addEventListener('form-ui:file-validation-error', (event) => {
+      onFileValidationError((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    const errors = element.validateForm({ attachment: wrongType });
+
+    expect(errors).toEqual({
+      attachment: expect.objectContaining({
+        errorMessage: 'File type not allowed: image.png',
+      }),
+    });
+    expect(onFileValidationError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          field: 'attachment',
+          code: 'file-accept',
+        },
+      }),
+    );
   });
 
   it('validates file type and size before submit', () => {

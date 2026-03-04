@@ -98,6 +98,39 @@ export class FormEngineRuntime {
     return normalizeFormValues(this.inputFields, values);
   }
 
+  buildSubmissionValues(
+    values: Record<string, any>,
+    includeDocumentData: boolean = false,
+  ): Record<string, any> {
+    const normalizedValues = this.normalizeValues(values);
+    if (!includeDocumentData) {
+      return normalizedValues;
+    }
+
+    const entries = Object.entries(this.documentData);
+    if (!entries.length) {
+      return normalizedValues;
+    }
+
+    if (entries.length === 1) {
+      const [fieldName, data] = entries[0];
+      return {
+        ...normalizedValues,
+        document: {
+          field: fieldName,
+          ...data,
+        },
+      };
+    }
+
+    return {
+      ...normalizedValues,
+      document: {
+        byField: Object.fromEntries(entries),
+      },
+    };
+  }
+
   validateFileField(
     fieldName: string,
     value: any,

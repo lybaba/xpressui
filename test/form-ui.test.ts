@@ -1584,6 +1584,13 @@ describe('FormUI', () => {
             sex: 'F',
             surnames: ['ERIKSSON'],
             givenNames: ['ANNA', 'MARIA'],
+            valid: true,
+            checksums: expect.objectContaining({
+              composite: true,
+              documentNumber: true,
+              birthDate: true,
+              expiryDate: true,
+            }),
           }),
         }),
       }),
@@ -1597,6 +1604,7 @@ describe('FormUI', () => {
           mrz: expect.objectContaining({
             format: 'TD3',
             documentNumber: 'L898902C3',
+            valid: true,
           }),
         }),
       }),
@@ -1624,6 +1632,7 @@ describe('FormUI', () => {
         format: 'TD3',
         documentNumber: 'L898902C3',
         issuingCountry: 'UTO',
+        valid: true,
       }),
     );
     expect((element.form?.getState().values || {}).first_name).toBe('ANNA MARIA');
@@ -1639,7 +1648,9 @@ describe('FormUI', () => {
         mrz: expect.objectContaining({
           format: 'TD3',
           documentNumber: 'L898902C3',
+          valid: true,
           checksums: expect.objectContaining({
+            composite: true,
             documentNumber: true,
             birthDate: true,
             expiryDate: true,
@@ -2175,6 +2186,10 @@ describe('FormUI', () => {
       mrz: { documentNumber: 'L898902C3' },
       fields: { firstName: 'ANNA MARIA' },
     });
+    expect(runtime.buildSubmissionValues(values)).toEqual({
+      amount: 12.5,
+      email: 'headless@example.com',
+    });
     expect(runtime.getDocumentData('passport')).toEqual({
       text: 'P<UTOERIKSSON',
       mrz: { documentNumber: 'L898902C3' },
@@ -2190,6 +2205,44 @@ describe('FormUI', () => {
 
     values = { amount: '', email: '' };
     expect(Object.keys(runtime.validateValues(values)).length).toBeGreaterThan(0);
+  });
+
+  it('can include normalized document data in headless submission values', () => {
+    const formConfig = createFormConfig({
+      name: 'headless-document-submit-form',
+      title: 'Headless Document Submit Form',
+      submit: {
+        endpoint: '/api/submit',
+        includeDocumentData: true,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const runtime = new FormRuntime(formConfig);
+
+    (formConfig.sections.main || []).forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+    runtime.engine.setDocumentData('passport', {
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3', valid: true },
+      fields: { firstName: 'ANNA MARIA' },
+    });
+
+    expect(runtime.buildSubmissionValues({ email: 'doc@example.com' })).toEqual({
+      email: 'doc@example.com',
+      document: {
+        field: 'passport',
+        text: 'P<UTOERIKSSON',
+        mrz: { documentNumber: 'L898902C3', valid: true },
+        fields: { firstName: 'ANNA MARIA' },
+      },
+    });
   });
 
   it('exposes active template warnings through the composed headless runtime', () => {
@@ -3999,6 +4052,102 @@ describe('FormUI', () => {
     expect(onIdentitySuccess).toHaveBeenCalledWith(
       expect.objectContaining({
         result: { verified: true, verificationId: 'idv_123' },
+      }),
+    );
+  });
+
+  it('supports an identity-verification-stripe provider contract', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ verified: true, sessionId: 'vs_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'identity-stripe-form',
+      title: 'Identity Stripe Form',
+      provider: {
+        type: 'identity-verification-stripe',
+        endpoint: 'https://api.example.test/identity/stripe',
+      },
+      fields: [
+        {
+          name: 'document_number',
+          label: 'Document Number',
+          type: 'text',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#document_number') as HTMLInputElement;
+    const form = element.querySelector('#identity-stripe-form_form') as HTMLFormElement;
+
+    input.value = 'L898902C3';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/identity/stripe',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'identity-verification-stripe',
+          identity: {
+            document_number: 'L898902C3',
+          },
+        }),
+      }),
+    );
+  });
+
+  it('can include normalized document data in submitted FormUI payloads', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ saved: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'document-submit-form',
+      title: 'Document Submit Form',
+      submit: {
+        endpoint: 'https://api.example.test/document-submit',
+        method: 'POST',
+        includeDocumentData: true,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+
+    element.engine.setDocumentData('passport', {
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3', valid: true },
+      fields: { firstName: 'ANNA MARIA' },
+    });
+
+    await element.onSubmit({ email: 'doc@example.com' });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/document-submit',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          email: 'doc@example.com',
+          document: {
+            field: 'passport',
+            text: 'P<UTOERIKSSON',
+            mrz: { documentNumber: 'L898902C3', valid: true },
+            fields: { firstName: 'ANNA MARIA' },
+          },
+        }),
       }),
     );
   });

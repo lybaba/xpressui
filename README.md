@@ -600,6 +600,8 @@ Request shape:
 Extra events:
 - `form-ui:identity-verification-success`
 - `form-ui:identity-verification-error`
+- `identity-verification-stripe` and `identity-verification-webhook` follow the
+  same normalized `identity` payload shape with provider-specific actions
 
 ## Dynamic Forms
 
@@ -748,6 +750,8 @@ Frontend behavior:
   `documentNumberTargetField`, `documentNationalityTargetField`,
   `documentBirthDateTargetField`, `documentExpiryDateTargetField`,
   `documentSexTargetField` can autopopulate normalized identity fields
+- `submit.includeDocumentData: true` injects the normalized `document` object
+  directly into submitted values
 
 Extra event:
 - `form-ui:file-validation-error`

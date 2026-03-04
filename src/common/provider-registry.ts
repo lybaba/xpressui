@@ -194,3 +194,41 @@ registerProvider("identity-verification", {
   successEventName: "form-ui:identity-verification-success",
   errorEventName: "form-ui:identity-verification-error",
 });
+
+registerProvider("identity-verification-stripe", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "identity-verification-stripe",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "identity-verification-stripe",
+      identity: values,
+    };
+  },
+  successEventName: "form-ui:identity-verification-stripe-success",
+  errorEventName: "form-ui:identity-verification-stripe-error",
+});
+
+registerProvider("identity-verification-webhook", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "identity-verification-webhook",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "identity-verification-webhook",
+      identity: values,
+    };
+  },
+  successEventName: "form-ui:identity-verification-webhook-success",
+  errorEventName: "form-ui:identity-verification-webhook-error",
+});

@@ -47,6 +47,7 @@ export type TFormSubmitRequest = {
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: Record<string, string>;
     mode?: 'json' | 'form-data';
+    includeDocumentData?: boolean;
     formDataArrayMode?: 'brackets' | 'repeat';
     uploadStrategy?: 'standard' | 'presigned';
     presignEndpoint?: string;

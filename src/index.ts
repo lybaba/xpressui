@@ -112,6 +112,7 @@ type TDocumentMrzResult = {
     expiryDate?: boolean;
     composite?: boolean;
   };
+  valid?: boolean;
 };
 
 type TDocumentPerspectiveCorners = {
@@ -416,6 +417,19 @@ export class FormUI extends HTMLElement {
     return this.computeMrzChecksum(source) === Number(checkDigit);
   }
 
+  computeMrzValidity = (checksums?: TDocumentMrzResult["checksums"]) => {
+    if (!checksums) {
+      return undefined;
+    }
+
+    const values = Object.values(checksums).filter((entry) => entry !== undefined);
+    if (!values.length) {
+      return undefined;
+    }
+
+    return values.every((entry) => entry === true);
+  }
+
   parseMrz = (text: string): TDocumentMrzResult | null => {
     const lines = text
       .split(/\r?\n/)
@@ -429,6 +443,12 @@ export class FormUI extends HTMLElement {
       const birthDateSource = line2.slice(0, 6);
       const expiryDateSource = line2.slice(8, 14);
       const compositeSource = `${line1.slice(0, 30)}${line2.slice(0, 7)}${line2.slice(8, 15)}${line2.slice(18, 29)}`;
+      const checksums = {
+        documentNumber: this.validateMrzChecksum(documentNumberSource, line1.slice(14, 15)),
+        birthDate: this.validateMrzChecksum(birthDateSource, line2.slice(6, 7)),
+        expiryDate: this.validateMrzChecksum(expiryDateSource, line2.slice(14, 15)),
+        composite: this.validateMrzChecksum(compositeSource, line2.slice(29, 30)),
+      };
       return {
         format: "TD1",
         lines: [line1, line2, line3],
@@ -441,12 +461,8 @@ export class FormUI extends HTMLElement {
         nationality: line2.slice(15, 18).replace(/</g, ""),
         surnames: (nameBlock[0] || "").split("<").filter(Boolean),
         givenNames: (nameBlock.slice(1).join("<<") || "").split("<").filter(Boolean),
-        checksums: {
-          documentNumber: this.validateMrzChecksum(documentNumberSource, line1.slice(14, 15)),
-          birthDate: this.validateMrzChecksum(birthDateSource, line2.slice(6, 7)),
-          expiryDate: this.validateMrzChecksum(expiryDateSource, line2.slice(14, 15)),
-          composite: this.validateMrzChecksum(compositeSource, line2.slice(29, 30)),
-        },
+        checksums,
+        valid: this.computeMrzValidity(checksums),
       };
     }
 
@@ -467,6 +483,23 @@ export class FormUI extends HTMLElement {
     const documentNumberSource = line2.slice(0, 9);
     const birthDateSource = isTd3 ? line2.slice(13, 19) : line2.slice(0, 6);
     const expiryDateSource = isTd3 ? line2.slice(21, 27) : line2.slice(8, 14);
+    const checksums = {
+      documentNumber: this.validateMrzChecksum(documentNumberSource, line2.slice(9, 10)),
+      birthDate: this.validateMrzChecksum(
+        birthDateSource,
+        isTd3 ? line2.slice(19, 20) : line2.slice(6, 7),
+      ),
+      expiryDate: this.validateMrzChecksum(
+        expiryDateSource,
+        isTd3 ? line2.slice(27, 28) : line2.slice(14, 15),
+      ),
+      composite: this.validateMrzChecksum(
+        isTd3
+          ? `${line2.slice(0, 10)}${line2.slice(13, 20)}${line2.slice(21, 43)}`
+          : `${line2.slice(0, 18)}`,
+        isTd3 ? line2.slice(43, 44) : line2.slice(18, 19),
+      ),
+    };
     return {
       format,
       lines: [line1, line2],
@@ -479,23 +512,8 @@ export class FormUI extends HTMLElement {
       expiryDate: expiryDateSource.replace(/</g, ""),
       surnames,
       givenNames,
-      checksums: {
-        documentNumber: this.validateMrzChecksum(documentNumberSource, line2.slice(9, 10)),
-        birthDate: this.validateMrzChecksum(
-          birthDateSource,
-          isTd3 ? line2.slice(19, 20) : line2.slice(6, 7),
-        ),
-        expiryDate: this.validateMrzChecksum(
-          expiryDateSource,
-          isTd3 ? line2.slice(27, 28) : line2.slice(14, 15),
-        ),
-        composite: this.validateMrzChecksum(
-          isTd3
-            ? `${line2.slice(0, 10)}${line2.slice(13, 20)}${line2.slice(21, 43)}`
-            : `${line2.slice(0, 18)}`,
-          isTd3 ? line2.slice(43, 44) : line2.slice(18, 19),
-        ),
-      },
+      checksums,
+      valid: this.computeMrzValidity(checksums),
     };
   }
 
@@ -1630,7 +1648,10 @@ export class FormUI extends HTMLElement {
   }
 
   onSubmit = async (values: Record<string, any>) => {
-    const formValues = this.engine.normalizeValues(values);
+    const formValues = this.engine.buildSubmissionValues(
+      values,
+      Boolean(this.formConfig?.submit?.includeDocumentData),
+    );
     const detail: TFormUISubmitDetail = {
       values: formValues,
       formConfig: this.formConfig,

@@ -50,6 +50,7 @@ export type TFormRuntimePublicApi = Pick<
   | "setField"
   | "getFields"
   | "normalizeValues"
+  | "buildSubmissionValues"
   | "validateValues"
   | "loadDraftValues"
   | "saveDraft"
@@ -172,6 +173,13 @@ export class FormRuntime {
 
   normalizeValues(values: Record<string, any>): Record<string, any> {
     return this.engine.normalizeValues(values);
+  }
+
+  buildSubmissionValues(values: Record<string, any>): Record<string, any> {
+    return this.engine.buildSubmissionValues(
+      values,
+      Boolean(this.formConfig?.submit?.includeDocumentData),
+    );
   }
 
   validateValues(values: Record<string, any>): Record<string, any> {

@@ -212,6 +212,7 @@ The observer API:
 - `clear()`
 - `clearRuleHistory()`
 - `clearTemplateDiagnostics()`
+- `clearActiveTemplateWarnings()`
 - `detach()`
 
 `getRuleHistory()` returns only `form-ui:rule-applied` events. Use
@@ -220,6 +221,9 @@ full event log.
 
 `getTemplateDiagnostics()` returns only `form-ui:rule-template-missing-field`
 and `form-ui:rule-template-warning-cleared` events.
+
+Use `clearActiveTemplateWarnings()` to reset only the observer's local cached
+warning state.
 
 `getActiveTemplateWarnings()` returns the current active template warning state
 without requiring you to keep the latest `form-ui:rule-template-warning-state`

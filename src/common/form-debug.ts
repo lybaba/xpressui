@@ -29,6 +29,7 @@ export type TFormDebugObserver = {
   clear(): void;
   clearRuleHistory(): void;
   clearTemplateDiagnostics(): void;
+  clearActiveTemplateWarnings(): void;
   detach(): void;
 };
 
@@ -150,6 +151,9 @@ export function attachFormDebugObserver(
     },
     clearTemplateDiagnostics() {
       templateDiagnostics.splice(0, templateDiagnostics.length);
+    },
+    clearActiveTemplateWarnings() {
+      activeTemplateWarnings = [];
     },
     detach() {
       listeners.forEach(({ eventName, listener }) => {

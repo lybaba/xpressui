@@ -323,7 +323,7 @@ describe('FormUI', () => {
       },
     ]);
 
-    observer.clear();
+    observer.clearActiveTemplateWarnings();
     expect(observer.getActiveTemplateWarnings()).toEqual([]);
     observer.detach();
   });

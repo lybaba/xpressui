@@ -949,6 +949,10 @@ export class FormPersistenceRuntime {
       if (seenTokens.has(token)) {
         continue;
       }
+      if (storage) {
+        this.resumeTokenMemory.delete(token);
+        continue;
+      }
       const parsed = this.parseResumeToken(token, null);
       if (!parsed || parsed.expired) {
         this.resumeTokenMemory.delete(token);

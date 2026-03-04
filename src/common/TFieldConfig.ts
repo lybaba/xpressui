@@ -7,10 +7,22 @@ export type ImageSize = {
 };
 
 export type TStepTransition = {
-    whenField: string;
-    operator?: 'equals' | 'not_equals' | 'in' | 'not_in' | 'truthy';
+    whenField?: string;
+    operator?: 'equals' | 'not_equals' | 'in' | 'not_in' | 'truthy' | 'date_before' | 'date_after' | 'date_between';
     value?: any;
+    logic?: 'AND' | 'OR';
+    conditions?: Array<{
+        whenField: string;
+        operator?: 'equals' | 'not_equals' | 'in' | 'not_in' | 'truthy' | 'date_before' | 'date_after' | 'date_between';
+        value?: any;
+    }>;
     target: string;
+};
+
+export type TStepTransitionCondition = {
+    whenField: string;
+    operator?: 'equals' | 'not_equals' | 'in' | 'not_in' | 'truthy' | 'date_before' | 'date_after' | 'date_between';
+    value?: any;
 };
 
 export const HERO_FIELD_NAME = 'hero';

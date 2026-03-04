@@ -1,5 +1,9 @@
 import { createForm, FormApi } from "final-form";
-import TFormConfig, { TFormSubmitRequest } from "./common/TFormConfig";
+import TFormConfig, {
+  TFormSubmitLifecycleHook,
+  TFormSubmitLifecycleStage,
+  TFormSubmitRequest,
+} from "./common/TFormConfig";
 import { TValidator } from "./common/Validator";
 import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
@@ -107,6 +111,13 @@ export type {
   TFormRuntimeSubmitValues,
 } from "./common/form-runtime";
 export type { TStoredDocumentData } from "./common/form-engine";
+export type {
+  TFormSubmitLifecycle,
+  TFormSubmitLifecycleContext,
+  TFormSubmitLifecycleHook,
+  TFormSubmitLifecycleHookResult,
+  TFormSubmitLifecycleStage,
+} from "./common/TFormConfig";
 
 export type TFormUISubmitDetail = {
   values: Record<string, any>;
@@ -2568,8 +2579,73 @@ export class FormUI extends HTMLElement {
     });
   }
 
+  getSubmitLifecycleHooks = (
+    stage: TFormSubmitLifecycleStage,
+  ): TFormSubmitLifecycleHook[] => {
+    const lifecycle = this.formConfig?.submit?.lifecycle;
+    const candidate = lifecycle?.[stage];
+    if (!candidate) {
+      return [];
+    }
+    return Array.isArray(candidate) ? candidate : [candidate];
+  }
+
+  emitSubmitHookError = (
+    stage: TFormSubmitLifecycleStage,
+    detail: TFormUISubmitDetail,
+    hookError: unknown,
+  ) => {
+    this.emitFormEvent("form-ui:submit-hook-error", {
+      ...detail,
+      error: hookError,
+      result: {
+        stage,
+      },
+    });
+  }
+
+  runSubmitLifecycleStage = async (
+    stage: TFormSubmitLifecycleStage,
+    detail: TFormUISubmitDetail,
+  ): Promise<{ canceled: boolean; values: Record<string, any> }> => {
+    const hooks = this.getSubmitLifecycleHooks(stage);
+    if (!hooks.length) {
+      return { canceled: false, values: detail.values };
+    }
+
+    let nextValues = detail.values;
+    for (const hook of hooks) {
+      const hookResult = await hook({
+        stage,
+        values: nextValues,
+        formConfig: detail.formConfig,
+        submit: detail.submit,
+        response: detail.response,
+        result: detail.result,
+        providerResult: detail.providerResult,
+        error: detail.error,
+      });
+
+      if (stage === "preSubmit") {
+        if (hookResult === false) {
+          return { canceled: true, values: nextValues };
+        }
+
+        if (
+          hookResult &&
+          typeof hookResult === "object" &&
+          !Array.isArray(hookResult)
+        ) {
+          nextValues = hookResult as Record<string, any>;
+        }
+      }
+    }
+
+    return { canceled: false, values: nextValues };
+  }
+
   onSubmit = async (values: Record<string, any>) => {
-    const formValues = this.engine.buildSubmissionValues(
+    let formValues = this.engine.buildSubmissionValues(
       values,
       Boolean(this.formConfig?.submit?.includeDocumentData),
       this.formConfig?.submit?.documentDataMode || "full",
@@ -2591,6 +2667,30 @@ export class FormUI extends HTMLElement {
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
     };
+    try {
+      const preSubmitResult = await this.runSubmitLifecycleStage("preSubmit", detail);
+      if (preSubmitResult.canceled) {
+        this.emitFormEvent("form-ui:submit-canceled", {
+          ...detail,
+          result: {
+            reason: "pre-submit-canceled",
+          },
+        });
+        return;
+      }
+      formValues = preSubmitResult.values;
+    } catch (hookError) {
+      const hookDetail = {
+        ...detail,
+        values: formValues,
+        error: hookError,
+      };
+      this.emitFormEvent("form-ui:submit-error", hookDetail);
+      this.emitSubmitHookError("preSubmit", hookDetail, hookError);
+      this.setWorkflowState("error", hookDetail, undefined, hookError);
+      throw hookError;
+    }
+    detail.values = formValues;
     const shouldContinue = this.emitFormEvent("form-ui:submit", detail, true);
 
     if (!shouldContinue) {
@@ -2602,6 +2702,11 @@ export class FormUI extends HTMLElement {
       this.clearDraft();
       this.setWorkflowState("submitted", detail);
       this.emitFormEvent("form-ui:submit-success", detail);
+      try {
+        await this.runSubmitLifecycleStage("postSuccess", detail);
+      } catch (hookError) {
+        this.emitSubmitHookError("postSuccess", detail, hookError);
+      }
       return;
     }
 
@@ -2629,6 +2734,11 @@ export class FormUI extends HTMLElement {
       const providerSuccessEvent = getProviderSuccessEventName(this.formConfig?.submit?.action);
       if (providerSuccessEvent) {
         this.emitFormEvent(providerSuccessEvent, successDetail);
+      }
+      try {
+        await this.runSubmitLifecycleStage("postSuccess", successDetail);
+      } catch (hookError) {
+        this.emitSubmitHookError("postSuccess", successDetail, hookError);
       }
     } catch (error: any) {
       const isNetworkError = !error?.response;
@@ -2673,6 +2783,11 @@ export class FormUI extends HTMLElement {
       const providerErrorEvent = getProviderErrorEventName(this.formConfig?.submit?.action);
       if (providerErrorEvent) {
         this.emitFormEvent(providerErrorEvent, errorDetail);
+      }
+      try {
+        await this.runSubmitLifecycleStage("postFailure", errorDetail);
+      } catch (hookError) {
+        this.emitSubmitHookError("postFailure", errorDetail, hookError);
       }
       throw error;
     }

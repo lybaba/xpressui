@@ -73,6 +73,7 @@ export const ATTR_SECTIONS = "sections"
 export const ATTR_SUBFORMS = "subforms"
 export const ATTR_RENDERING_MODE = "RenderingMode"
 export const ATTR_SUBMIT_ENDPOINT = "submitEndpoint"
+export const ATTR_SUBMIT_BASE_URL = "submitBaseUrl"
 export const ATTR_SUBMIT_METHOD = "submitMethod"
 export const ATTR_SUBMIT_MODE = "submitMode"
 export const ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = "submitIncludeDocumentData"
@@ -185,6 +186,7 @@ export const HTML_ATTR_SECTIONS = `${HTML_ATTR_PREFIX}sections`
 export const HTML_ATTR_SUBFORMS = `${HTML_ATTR_PREFIX}subforms`
 export const HTML_ATTR_RENDERING_MODE = `${HTML_ATTR_PREFIX}rendering-mode`
 export const HTML_ATTR_SUBMIT_ENDPOINT = `${HTML_ATTR_PREFIX}submit-endpoint`
+export const HTML_ATTR_SUBMIT_BASE_URL = `${HTML_ATTR_PREFIX}submit-base-url`
 export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
 export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
 export const HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = `${HTML_ATTR_PREFIX}submit-include-document-data`
@@ -297,6 +299,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_SUBFORMS]: ATTR_SUBFORMS,
     [HTML_ATTR_RENDERING_MODE]: ATTR_RENDERING_MODE,
     [HTML_ATTR_SUBMIT_ENDPOINT]: ATTR_SUBMIT_ENDPOINT,
+    [HTML_ATTR_SUBMIT_BASE_URL]: ATTR_SUBMIT_BASE_URL,
     [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
     [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
     [HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA]: ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA,
@@ -469,7 +472,13 @@ export function getFieldConfig(node: Element): TFieldConfig {
 
 
 export default function getFormConfig(node: Element): TFormConfig {
-    const formConfig: TFormConfig = DEFAULT_FORM_CONFIG;
+    const formConfig: TFormConfig = {
+        ...DEFAULT_FORM_CONFIG,
+        sections: {
+            ...DEFAULT_FORM_CONFIG.sections,
+            [CUSTOM_SECTION]: [...(DEFAULT_FORM_CONFIG.sections[CUSTOM_SECTION] || [])],
+        },
+    };
 
     for (const [dashKey, camelKey] of Object.entries(ATTR_MAP)) {
         const attrValue = node.getAttribute(dashKey)
@@ -485,6 +494,7 @@ export default function getFormConfig(node: Element): TFormConfig {
     if ((formConfig as any).submitEndpoint) {
         (formConfig as any).submit = {
             endpoint: (formConfig as any).submitEndpoint,
+            baseUrl: (formConfig as any).submitBaseUrl,
             method: (formConfig as any).submitMethod,
             mode: (formConfig as any).submitMode,
             includeDocumentData: (formConfig as any).submitIncludeDocumentData === 'true',
@@ -502,6 +512,7 @@ export default function getFormConfig(node: Element): TFormConfig {
             action: (formConfig as any).submitAction,
         };
         delete (formConfig as any).submitEndpoint;
+        delete (formConfig as any).submitBaseUrl;
         delete (formConfig as any).submitMethod;
         delete (formConfig as any).submitMode;
         delete (formConfig as any).submitIncludeDocumentData;

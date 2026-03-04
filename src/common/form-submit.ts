@@ -3,6 +3,31 @@ import { TFormSubmitRequest } from "./TFormConfig";
 import { isFileLikeValue } from "./field";
 import { buildProviderPayload } from "./provider-registry";
 
+function isAbsoluteUrl(value: string): boolean {
+  return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(value) || value.startsWith("//");
+}
+
+export function resolveSubmitRequestUrl(
+  endpoint: string,
+  baseUrl?: string,
+): string {
+  const normalizedEndpoint = String(endpoint || "").trim();
+  if (!normalizedEndpoint || isAbsoluteUrl(normalizedEndpoint) || !baseUrl) {
+    return normalizedEndpoint;
+  }
+
+  const normalizedBaseUrl = String(baseUrl).trim();
+  if (!normalizedBaseUrl) {
+    return normalizedEndpoint;
+  }
+
+  if (normalizedEndpoint.startsWith("?") || normalizedEndpoint.startsWith("#")) {
+    return `${normalizedBaseUrl.replace(/\/+$/, "")}${normalizedEndpoint}`;
+  }
+
+  return `${normalizedBaseUrl.replace(/\/+$/, "")}/${normalizedEndpoint.replace(/^\/+/, "")}`;
+}
+
 export function resolveFormDataKey(
   key: string,
   fieldMap?: Record<string, TFieldConfig>,
@@ -87,7 +112,7 @@ export async function submitFormValues(
   const mode = submitConfig.mode || "json";
   const formDataArrayMode = submitConfig.formDataArrayMode || "brackets";
   const headers = { ...(submitConfig.headers || {}) };
-  let url = submitConfig.endpoint;
+  let url = resolveSubmitRequestUrl(submitConfig.endpoint, submitConfig.baseUrl);
   const init: RequestInit = { method, headers };
   const payload = buildSubmitPayload(values, submitConfig);
 

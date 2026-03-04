@@ -33,6 +33,52 @@ function renderFixture(markup: string): FormUI {
   return document.querySelector('form-ui') as FormUI;
 }
 
+function normalizeLocalStorageApi() {
+  const existing = (() => {
+    try {
+      return window.localStorage as Storage | null;
+    } catch {
+      return null;
+    }
+  })();
+  if (
+    existing &&
+    typeof existing.getItem === 'function' &&
+    typeof existing.setItem === 'function' &&
+    typeof existing.removeItem === 'function' &&
+    typeof existing.clear === 'function'
+  ) {
+    return;
+  }
+
+  const values: Record<string, string> = {};
+  const memoryStorage: Storage = {
+    get length() {
+      return Object.keys(values).length;
+    },
+    clear: () => {
+      Object.keys(values).forEach((key) => delete values[key]);
+    },
+    getItem: (key: string) => (Object.prototype.hasOwnProperty.call(values, key) ? values[key] : null),
+    key: (index: number) => Object.keys(values)[index] || null,
+    removeItem: (key: string) => {
+      delete values[key];
+    },
+    setItem: (key: string, value: string) => {
+      values[key] = String(value);
+    },
+  };
+
+  try {
+    Object.defineProperty(window, 'localStorage', {
+      value: memoryStorage,
+      configurable: true,
+    });
+  } catch {
+    (window as any).localStorage = memoryStorage;
+  }
+}
+
 async function flushAsyncWork() {
   await Promise.resolve();
   await Promise.resolve();
@@ -42,6 +88,7 @@ async function flushAsyncWork() {
 
 describe('FormUI', () => {
   beforeEach(() => {
+    normalizeLocalStorageApi();
     document.body.innerHTML = '';
     const storage = window.localStorage as Storage | Record<string, any> | null;
     if (storage && typeof (storage as Storage).clear === 'function') {
@@ -897,6 +944,117 @@ describe('FormUI', () => {
     expect(steps.goToWorkflowStep()).toBe(false);
   });
 
+  it('supports compound transition groups in the extracted step runtime', () => {
+    const steps = new FormStepRuntime({
+      version: 1,
+      id: 'dsl_runtime_grouped',
+      uid: 'dsl_runtime_grouped_uid',
+      type: 'multistepform',
+      name: 'dsl_runtime_grouped',
+      title: 'DSL Runtime Grouped',
+      stepSections: [
+        {
+          type: 'section',
+          name: 'entry',
+          label: 'Entry',
+          stepTransitions: [
+            {
+              logic: 'AND',
+              conditions: [
+                { whenField: 'tier', operator: 'in', value: ['vip', 'priority'] },
+                { whenField: 'region', operator: 'equals', value: 'eu' },
+              ],
+              target: 'priority_step',
+            },
+            {
+              logic: 'OR',
+              conditions: [
+                { whenField: 'manual', operator: 'truthy' },
+                { whenField: 'forceFast', operator: 'equals', value: 'yes' },
+              ],
+              target: 'priority_step',
+            },
+          ],
+        },
+        {
+          type: 'section',
+          name: 'priority_step',
+          label: 'Priority',
+        },
+      ],
+      sections: {
+        custom: [],
+      },
+    } as any);
+
+    expect(
+      steps.getConditionalNextStepName({
+        tier: 'vip',
+        region: 'eu',
+      }),
+    ).toBe('priority_step');
+    expect(
+      steps.getConditionalNextStepName({
+        tier: 'vip',
+        region: 'us',
+      }),
+    ).toBe(null);
+    expect(
+      steps.getConditionalNextStepName({
+        manual: true,
+      }),
+    ).toBe('priority_step');
+  });
+
+  it('supports time and date transition operators in the extracted step runtime', () => {
+    const steps = new FormStepRuntime({
+      version: 1,
+      id: 'dsl_runtime_date_ops',
+      uid: 'dsl_runtime_date_ops_uid',
+      type: 'multistepform',
+      name: 'dsl_runtime_date_ops',
+      title: 'DSL Runtime Date Operators',
+      stepSections: [
+        {
+          type: 'section',
+          name: 'entry',
+          label: 'Entry',
+          stepTransitions: [
+            {
+              whenField: 'appointment',
+              operator: 'date_before',
+              value: '2026-01-01T00:00:00Z',
+              target: 'before_cutoff',
+            },
+            {
+              whenField: 'appointment',
+              operator: 'date_between',
+              value: ['2026-01-01T00:00:00Z', '2026-12-31T23:59:59Z'],
+              target: 'inside_window',
+            },
+            {
+              whenField: 'appointment',
+              operator: 'date_after',
+              value: '2026-12-31T23:59:59Z',
+              target: 'after_cutoff',
+            },
+          ],
+        },
+        { type: 'section', name: 'before_cutoff', label: 'Before Cutoff' },
+        { type: 'section', name: 'inside_window', label: 'Inside Window' },
+        { type: 'section', name: 'after_cutoff', label: 'After Cutoff' },
+      ],
+      sections: {
+        custom: [],
+      },
+    } as any);
+
+    expect(steps.getConditionalNextStepName({ appointment: '2025-12-31T10:00:00Z' })).toBe('before_cutoff');
+    expect(steps.getConditionalNextStepName({ appointment: '2026-06-15T10:00:00Z' })).toBe('inside_window');
+    expect(steps.getConditionalNextStepName({ appointment: '2027-01-01T10:00:00Z' })).toBe('after_cutoff');
+    expect(steps.getConditionalNextStepName({ appointment: 'invalid-date' })).toBe(null);
+  });
+
   it('emits dedicated step transition events and supports workflow step targets', () => {
     const element = renderFixture(`
       <template id="wizard">
@@ -1473,6 +1631,163 @@ describe('FormUI', () => {
     );
   });
 
+  it('resolves relative submit endpoints against submit.baseUrl', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-base-url-form',
+      title: 'Submit Base URL Form',
+      submit: {
+        baseUrl: 'https://api.example.test/v1',
+        endpoint: 'payments',
+        method: 'POST',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    await element.onSubmit({ email: 'base-url@example.com' });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/v1/payments',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'base-url@example.com' }),
+      }),
+    );
+  });
+
+  it('runs submit lifecycle hooks for preSubmit and postSuccess', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ status: 'confirmed' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const preSubmit = vi.fn().mockReturnValue({ email: 'normalized@example.com' });
+    const postSuccess = vi.fn();
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-lifecycle-success-form',
+      title: 'Submit Lifecycle Success Form',
+      submit: {
+        endpoint: '/api/submit-lifecycle-success',
+        method: 'POST',
+        lifecycle: {
+          preSubmit,
+          postSuccess,
+        },
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    await element.onSubmit({ email: 'INITIAL@example.com' });
+
+    expect(preSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stage: 'preSubmit',
+        values: { email: 'INITIAL@example.com' },
+      }),
+    );
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/submit-lifecycle-success',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'normalized@example.com' }),
+      }),
+    );
+    expect(postSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stage: 'postSuccess',
+        values: { email: 'normalized@example.com' },
+      }),
+    );
+  });
+
+  it('cancels submission when a preSubmit lifecycle hook returns false', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const onSubmitCanceled = vi.fn();
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-lifecycle-cancel-form',
+      title: 'Submit Lifecycle Cancel Form',
+      submit: {
+        endpoint: '/api/submit-lifecycle-cancel',
+        method: 'POST',
+        lifecycle: {
+          preSubmit: () => false,
+        },
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    element.addEventListener('form-ui:submit-canceled', (event) => {
+      onSubmitCanceled((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await element.onSubmit({ email: 'cancel@example.com' });
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(onSubmitCanceled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: { email: 'cancel@example.com' },
+        result: { reason: 'pre-submit-canceled' },
+      }),
+    );
+  });
+
+  it('runs postFailure lifecycle hooks when submit fails', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ code: 'validation_error' }), {
+        status: 422,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const postFailure = vi.fn();
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-lifecycle-failure-form',
+      title: 'Submit Lifecycle Failure Form',
+      submit: {
+        endpoint: '/api/submit-lifecycle-failure',
+        method: 'POST',
+        lifecycle: {
+          postFailure,
+        },
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    await expect(
+      element.onSubmit({ email: 'failure@example.com' }),
+    ).rejects.toBeTruthy();
+
+    expect(postFailure).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stage: 'postFailure',
+        values: { email: 'failure@example.com' },
+        result: { code: 'validation_error' },
+      }),
+    );
+  });
+
   it('can observe form events through the debug observer helper', async () => {
     const element = renderFixture(`
       <template id="debug">
@@ -1517,7 +1832,6 @@ describe('FormUI', () => {
       'form-ui:submit',
       'form-ui:workflow-state',
       'form-ui:workflow-step',
-      'form-ui:draft-cleared',
       'form-ui:workflow-state',
       'form-ui:workflow-step',
       'form-ui:submit-success',
@@ -3496,6 +3810,33 @@ describe('FormUI', () => {
     expect(formConfig.version).toBe(PUBLIC_FORM_SCHEMA_VERSION);
   });
 
+  it('preserves submit lifecycle functions in validated form config', () => {
+    const preSubmit = vi.fn();
+    const postSuccess = vi.fn();
+
+    const formConfig = createFormConfig({
+      name: 'lifecycle-config-form',
+      title: 'Lifecycle Config Form',
+      submit: {
+        endpoint: '/api/lifecycle-config',
+        lifecycle: {
+          preSubmit,
+          postSuccess,
+        },
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+
+    expect(formConfig.submit?.lifecycle?.preSubmit).toBe(preSubmit);
+    expect(formConfig.submit?.lifecycle?.postSuccess).toBe(postSuccess);
+  });
+
   it('supports standalone normalization and validation without mounting FormUI', () => {
     const formConfig = createFormConfig({
       name: 'engine-form',
@@ -5178,6 +5519,57 @@ describe('FormUI', () => {
     expect(error.style.display).toBe('none');
     expect(submitButton.disabled).toBe(false);
     expect(submitButton.title).toBe('');
+  });
+
+  it('supports emit-event rule actions', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'emit-event-rules-form',
+      title: 'Emit Event Rules Form',
+      rules: [
+        {
+          id: 'emit-review-event',
+          conditions: [
+            { field: 'status', operator: 'equals', value: 'review' },
+          ],
+          actions: [
+            {
+              type: 'emit-event',
+              field: 'form-ui:custom-review',
+              template: 'Review requested for {{email}}',
+            },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'status', label: 'Status', type: 'text' },
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const status = element.querySelector('#status') as HTMLInputElement;
+    const email = element.querySelector('#email') as HTMLInputElement;
+    const onCustomReview = vi.fn();
+
+    element.addEventListener('form-ui:custom-review', (event) => {
+      onCustomReview((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    email.value = 'review@example.com';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+    status.value = 'review';
+    status.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(onCustomReview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          ruleId: 'emit-review-event',
+          action: 'emit-event',
+          eventName: 'form-ui:custom-review',
+          payload: 'Review requested for review@example.com',
+        }),
+      }),
+    );
   });
 
   it('supports a payment provider with a normalized payload', async () => {

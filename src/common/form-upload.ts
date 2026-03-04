@@ -1,7 +1,7 @@
 import TFieldConfig from "./TFieldConfig";
 import { TFormSubmitRequest } from "./TFormConfig";
 import { isFileLikeValue } from "./field";
-import { buildFormDataBody, submitFormValues } from "./form-submit";
+import { buildFormDataBody, resolveSubmitRequestUrl, submitFormValues } from "./form-submit";
 
 export type TFormUploadState = {
   phase: "upload";
@@ -170,6 +170,10 @@ export class FormUploadRuntime {
     const body = buildFormDataBody(values, submitConfig, fieldMap);
     const headers = { ...(submitConfig.headers || {}) };
     const method = submitConfig.method || "POST";
+    const endpoint = resolveSubmitRequestUrl(
+      submitConfig.endpoint,
+      submitConfig.baseUrl,
+    );
 
     this.emitUploadEvent(
       "form-ui:upload-start",
@@ -179,7 +183,7 @@ export class FormUploadRuntime {
     );
 
     const result = await uploadWithProgress(
-      submitConfig.endpoint,
+      endpoint,
       method,
       headers,
       body,
@@ -238,7 +242,11 @@ export class FormUploadRuntime {
     );
 
     for (const { fieldName, file } of allFiles) {
-      const presignResponse = await fetch(submitConfig.presignEndpoint as string, {
+      const presignUrl = resolveSubmitRequestUrl(
+        submitConfig.presignEndpoint as string,
+        submitConfig.baseUrl,
+      );
+      const presignResponse = await fetch(presignUrl, {
         method: submitConfig.presignMethod || "POST",
         headers: {
           "Content-Type": "application/json",

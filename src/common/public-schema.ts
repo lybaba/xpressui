@@ -61,6 +61,7 @@ const PUBLIC_FORM_SCHEMA = {
                     "fetch-options",
                     "set-error",
                     "lock-submit",
+                    "emit-event",
                   ],
                 },
                 field: { type: "string", minLength: 1 },
@@ -100,7 +101,22 @@ const PUBLIC_FORM_SCHEMA = {
 const validateSchema = ajv.compile(PUBLIC_FORM_SCHEMA);
 
 function cloneObject<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value));
+  if (Array.isArray(value)) {
+    return value.map((entry) => cloneObject(entry)) as unknown as T;
+  }
+
+  if (value && typeof value === "object") {
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype === Object.prototype || prototype === null) {
+      const result: Record<string, unknown> = {};
+      Object.entries(value as Record<string, unknown>).forEach(([key, entry]) => {
+        result[key] = cloneObject(entry);
+      });
+      return result as T;
+    }
+  }
+
+  return value;
 }
 
 export function migratePublicFormConfig(input: Record<string, any>): TFormConfig {

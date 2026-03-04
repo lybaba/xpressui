@@ -56,6 +56,79 @@ type TDraftState = {
   values: Record<string, any>;
 };
 
+type TStorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem" | "clear" | "key" | "length">;
+
+function toStorageLike(storage: Storage | Record<string, any> | null | undefined): TStorageLike | null {
+  if (!storage || typeof storage !== "object") {
+    return null;
+  }
+
+  if (
+    typeof (storage as Storage).getItem === "function" &&
+    typeof (storage as Storage).setItem === "function" &&
+    typeof (storage as Storage).removeItem === "function" &&
+    typeof (storage as Storage).clear === "function"
+  ) {
+    return storage as Storage;
+  }
+
+  const objectStorage = storage as Record<string, any>;
+  const shim: TStorageLike = {
+    get length() {
+      return Object.keys(objectStorage).length;
+    },
+    clear() {
+      Object.keys(objectStorage).forEach((key) => {
+        delete objectStorage[key];
+      });
+    },
+    getItem(key: string) {
+      return Object.prototype.hasOwnProperty.call(objectStorage, key)
+        ? String(objectStorage[key])
+        : null;
+    },
+    key(index: number) {
+      return Object.keys(objectStorage)[index] || null;
+    },
+    removeItem(key: string) {
+      delete objectStorage[key];
+    },
+    setItem(key: string, value: string) {
+      objectStorage[key] = String(value);
+    },
+  };
+
+  const descriptors: Partial<Record<keyof TStorageLike, PropertyDescriptor>> = {
+    getItem: { value: shim.getItem, configurable: true },
+    setItem: { value: shim.setItem, configurable: true },
+    removeItem: { value: shim.removeItem, configurable: true },
+    clear: { value: shim.clear, configurable: true },
+    key: { value: shim.key, configurable: true },
+    length: { get: () => Object.keys(objectStorage).length, configurable: true },
+  };
+  try {
+    Object.entries(descriptors).forEach(([key, descriptor]) => {
+      if (descriptor) {
+        Object.defineProperty(objectStorage, key, descriptor);
+      }
+    });
+    return objectStorage as unknown as TStorageLike;
+  } catch {
+    return shim;
+  }
+}
+
+function getWindowStorage(): TStorageLike | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return toStorageLike(window.localStorage as Storage | Record<string, any> | undefined);
+}
+
+// Ensure Storage-like helpers exist in non-browser test environments.
+void getWindowStorage();
+
 function toStoredFileMetadata(value: File | Blob): TStoredFileMetadata {
   return {
     __type: "file-metadata",
@@ -296,24 +369,36 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
   }
 
   getStorageValue(key: string): string | null {
+    const storage = getWindowStorage();
+    if (!storage) {
+      return null;
+    }
     try {
-      return window.localStorage.getItem(key);
+      return storage.getItem(key);
     } catch {
       return null;
     }
   }
 
   setStorageValue(key: string, value: string): void {
+    const storage = getWindowStorage();
+    if (!storage) {
+      return;
+    }
     try {
-      window.localStorage.setItem(key, value);
+      storage.setItem(key, value);
     } catch {
       // Ignore storage write failures (quota/private mode).
     }
   }
 
   removeStorageValue(key: string): void {
+    const storage = getWindowStorage();
+    if (!storage) {
+      return;
+    }
     try {
-      window.localStorage.removeItem(key);
+      storage.removeItem(key);
     } catch {
       // Ignore storage clear failures.
     }

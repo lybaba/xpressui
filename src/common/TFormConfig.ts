@@ -44,6 +44,7 @@ export enum RenderingMode {
 
 export type TFormSubmitRequest = {
     endpoint: string;
+    baseUrl?: string;
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: Record<string, string>;
     mode?: 'json' | 'form-data';
@@ -59,6 +60,32 @@ export type TFormSubmitRequest = {
     presignFileUrlKey?: string;
     uploadMethod?: 'POST' | 'PUT';
     action?: string;
+    lifecycle?: TFormSubmitLifecycle;
+};
+
+export type TFormSubmitLifecycleStage = 'preSubmit' | 'postSuccess' | 'postFailure';
+
+export type TFormSubmitLifecycleContext = {
+    stage: TFormSubmitLifecycleStage;
+    values: Record<string, any>;
+    formConfig: TFormConfig | null;
+    submit?: TFormSubmitRequest;
+    response?: Response;
+    result?: any;
+    providerResult?: any;
+    error?: unknown;
+};
+
+export type TFormSubmitLifecycleHookResult = void | boolean | Record<string, any>;
+
+export type TFormSubmitLifecycleHook = (
+    context: TFormSubmitLifecycleContext,
+) => TFormSubmitLifecycleHookResult | Promise<TFormSubmitLifecycleHookResult>;
+
+export type TFormSubmitLifecycle = {
+    preSubmit?: TFormSubmitLifecycleHook | TFormSubmitLifecycleHook[];
+    postSuccess?: TFormSubmitLifecycleHook | TFormSubmitLifecycleHook[];
+    postFailure?: TFormSubmitLifecycleHook | TFormSubmitLifecycleHook[];
 };
 
 export type TFormProviderRequest = {
@@ -98,7 +125,7 @@ export type TFormRuleCondition = {
 };
 
 export type TFormRuleAction = {
-    type: 'show' | 'hide' | 'enable' | 'disable' | 'clear-value' | 'set-value' | 'fetch-options' | 'set-error' | 'lock-submit';
+    type: 'show' | 'hide' | 'enable' | 'disable' | 'clear-value' | 'set-value' | 'fetch-options' | 'set-error' | 'lock-submit' | 'emit-event';
     field: string;
     value?: any;
     message?: string;

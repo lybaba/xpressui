@@ -345,6 +345,9 @@ export function createTemplateMarkup(
   const submitAttrs = config.submit
     ? [
         `data-submit-endpoint="${escapeHtml(config.submit.endpoint)}"`,
+        config.submit.baseUrl
+          ? `data-submit-base-url="${escapeHtml(config.submit.baseUrl)}"`
+          : '',
         config.submit.method
           ? `data-submit-method="${escapeHtml(config.submit.method)}"`
           : '',
@@ -468,6 +471,20 @@ export function mountFormUI(
     !(element as any).initialized
   ) {
     (element as any).initialize();
+  }
+
+  const lifecycle = config.submit?.lifecycle;
+  if (
+    lifecycle &&
+    element &&
+    'formConfig' in element &&
+    (element as any).formConfig &&
+    (element as any).formConfig.submit
+  ) {
+    (element as any).formConfig.submit = {
+      ...(element as any).formConfig.submit,
+      lifecycle,
+    };
   }
 
   return element;

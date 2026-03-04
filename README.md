@@ -360,10 +360,41 @@ mountFormUI(container, {
 
 Supported submit options:
 - `endpoint`
+- `baseUrl` (prefix used for relative `endpoint` and `presignEndpoint` values)
 - `method`
 - `headers`
 - `mode` (`json` or `form-data`)
 - `action`
+- `lifecycle` (`preSubmit`, `postSuccess`, `postFailure`)
+
+Example lifecycle hooks:
+
+```ts
+mountFormUI(container, {
+  name: 'booking-form',
+  title: 'Book a Table',
+  submit: {
+    baseUrl: 'https://api.example.com/v1',
+    endpoint: 'bookings',
+    method: 'POST',
+    lifecycle: {
+      preSubmit: ({ values }) => ({
+        ...values,
+        email: String(values.email || '').trim().toLowerCase(),
+      }),
+      postSuccess: ({ result }) => {
+        console.log('submit success', result);
+      },
+      postFailure: ({ error, result }) => {
+        console.error('submit failure', error, result);
+      },
+    },
+  },
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+```
 
 ## Built-in Providers
 

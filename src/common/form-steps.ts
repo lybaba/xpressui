@@ -1,5 +1,5 @@
 import { CUSTOM_SECTION } from "./Constants";
-import TFieldConfig, { TStepTransition } from "./TFieldConfig";
+import TFieldConfig, { TStepTransition, TStepTransitionCondition } from "./TFieldConfig";
 import TFormConfig from "./TFormConfig";
 
 export type TFormStepProgress = {
@@ -120,34 +120,97 @@ export class FormStepRuntime {
     return Boolean(this.getCurrentStepConfig()?.stepSkippable);
   }
 
-  matchesTransition(transition: TStepTransition, values: Record<string, any>): boolean {
-    const observedValue = values[transition.whenField];
-    const operator = transition.operator || "equals";
+  toTimestamp(value: any): number | null {
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
+
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : null;
+    }
+
+    const parsed = Date.parse(String(value));
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  matchesTransitionCondition(
+    condition: TStepTransitionCondition,
+    values: Record<string, any>,
+  ): boolean {
+    const observedValue = values[condition.whenField];
+    const operator = condition.operator || "equals";
 
     switch (operator) {
       case "truthy":
         return Boolean(observedValue);
+      case "date_before": {
+        const observedTs = this.toTimestamp(observedValue);
+        const targetTs = this.toTimestamp(condition.value);
+        return observedTs !== null && targetTs !== null
+          ? observedTs < targetTs
+          : false;
+      }
+      case "date_after": {
+        const observedTs = this.toTimestamp(observedValue);
+        const targetTs = this.toTimestamp(condition.value);
+        return observedTs !== null && targetTs !== null
+          ? observedTs > targetTs
+          : false;
+      }
+      case "date_between": {
+        const range = Array.isArray(condition.value) ? condition.value : [];
+        const [start, end] = range;
+        const observedTs = this.toTimestamp(observedValue);
+        const startTs = this.toTimestamp(start);
+        const endTs = this.toTimestamp(end);
+        return observedTs !== null && startTs !== null && endTs !== null
+          ? observedTs >= startTs && observedTs <= endTs
+          : false;
+      }
       case "not_equals":
-        return String(observedValue) !== String(transition.value);
+        return String(observedValue) !== String(condition.value);
       case "in":
-        return Array.isArray(transition.value)
-          ? transition.value.map((entry) => String(entry)).includes(String(observedValue))
+        return Array.isArray(condition.value)
+          ? condition.value.map((entry) => String(entry)).includes(String(observedValue))
           : false;
       case "not_in":
-        return Array.isArray(transition.value)
-          ? !transition.value.map((entry) => String(entry)).includes(String(observedValue))
+        return Array.isArray(condition.value)
+          ? !condition.value.map((entry) => String(entry)).includes(String(observedValue))
           : true;
       case "equals":
       default:
-        return String(observedValue) === String(transition.value);
+        return String(observedValue) === String(condition.value);
     }
+  }
+
+  matchesTransition(transition: TStepTransition, values: Record<string, any>): boolean {
+    if (Array.isArray(transition.conditions) && transition.conditions.length) {
+      const logic = transition.logic || "AND";
+      const matches = transition.conditions.map((condition) =>
+        this.matchesTransitionCondition(condition, values),
+      );
+      return logic === "OR" ? matches.some(Boolean) : matches.every(Boolean);
+    }
+
+    if (!transition.whenField) {
+      return false;
+    }
+
+    return this.matchesTransitionCondition(
+      {
+        whenField: transition.whenField,
+        operator: transition.operator,
+        value: transition.value,
+      },
+      values,
+    );
   }
 
   getConditionalNextStepName(values: Record<string, any>): string | null {
     const stepConfig = this.getCurrentStepConfig();
     const explicitTransitions = stepConfig?.stepTransitions || [];
     for (const transition of explicitTransitions) {
-      if (transition?.target && transition.whenField && this.matchesTransition(transition, values)) {
+      if (transition?.target && this.matchesTransition(transition, values)) {
         return transition.target;
       }
     }

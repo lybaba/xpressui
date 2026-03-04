@@ -11,9 +11,22 @@ responses your frontend can rely on.
 
 - Default method is `POST`
 - Default payload mode is JSON
+- `submit.baseUrl` can prefix relative `endpoint` and `presignEndpoint` values
 - The component emits `form-ui:submit-success` on successful HTTP responses
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events
+
+### Submit Lifecycle Hooks
+
+`submit.lifecycle` supports three runtime hooks:
+- `preSubmit`: runs before request dispatch. Return:
+  - `false` to cancel submission
+  - a values object to replace the outbound payload
+- `postSuccess`: runs after success events
+- `postFailure`: runs after error events
+
+If a lifecycle hook throws, `xpressui` emits `form-ui:submit-hook-error` with
+`detail.result.stage` set to `preSubmit`, `postSuccess`, or `postFailure`.
 
 ## Provider Config Schemas
 

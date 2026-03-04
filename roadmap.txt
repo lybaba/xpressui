@@ -123,12 +123,14 @@ Implemented providers:
 - `identity-verification-webhook`
 
 Remaining:
-- consistent provider-specific error normalization
-- pre-submit / post-success / post-failure lifecycle hooks
 - richer workflow-aware providers:
   - `calendar-availability-hold`
   - `payment-capture`
   - `identity-review`
+
+Completed:
+- consistent provider-specific error normalization
+- pre-submit / post-success / post-failure lifecycle hooks
 
 Exit criteria:
 - new providers can be added with little or no `FormUI` changes
@@ -186,18 +188,17 @@ Completed:
   - set-value
   - clear-value
   - fetch-options
+  - set-error
+  - lock-submit
+  - emit-event
 - step transition DSL
+- compound transition groups
+- time/date-based branching
 - step review summaries
 - workflow state integration
 
 Remaining:
-- rule actions:
-  - `set-error`
-  - `emit-event`
-  - `lock-submit`
 - richer step transition operators:
-  - time/date-based branching
-  - compound transition groups
 - provider-driven workflow routing policies
 - workflow snapshots reusable by admin/debug tools
 
@@ -309,8 +310,10 @@ Priority Backlog
 ----------------
 
 P0:
-- consistent provider-specific error normalization
-- pre-submit / post-success / post-failure lifecycle hooks
+- richer workflow-aware providers:
+  - `calendar-availability-hold`
+  - `payment-capture`
+  - `identity-review`
 
 P1:
 - add richer workflow routing policies
@@ -327,17 +330,15 @@ Next Best Task
 
 The most immediately profitable next feature is:
 
-- implement consistent provider-specific error normalization
+- add richer workflow routing policies
 
 Why:
-- it removes backend-specific error parsing from integrator code
-- it keeps failure handling consistent across payment, approval, booking, and identity flows
-- it enables predictable retry and UX messaging policies
+- it improves deterministic orchestration after provider transitions and rule outcomes
+- it removes ad hoc step-jump logic from host applications
+- it unlocks complex multi-step processes without imperative glue code
 
 Suggested first scope:
-- add a provider-layer helper that maps raw backend errors to:
-  - `errors[]` (machine-readable)
-  - `messages[]` (user-safe)
-- apply the helper to built-in providers first (`payment`, `approval-request`, `identity-verification`)
-- expose normalized error detail consistently in emitted submit/provider error events
-- document the error contract in `docs/backend-integration.md`
+- add declarative routing policies with priorities and fallback behavior
+- support compound predicates for transition routing (`AND` / `OR`)
+- emit routing decision diagnostics in `form-ui:provider-transition`
+- document route policy contracts and examples

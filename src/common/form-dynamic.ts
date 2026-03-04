@@ -26,7 +26,8 @@ export type TFormRuleAppliedDetail = {
       | "set-value"
       | "fetch-options"
       | "set-error"
-      | "lock-submit";
+      | "lock-submit"
+      | "emit-event";
     field: string;
     value?: any;
     message?: string;
@@ -85,7 +86,8 @@ type TFormDynamicRuntimeOptions = {
         | "set-value"
         | "fetch-options"
         | "set-error"
-        | "lock-submit";
+        | "lock-submit"
+        | "emit-event";
       field: string;
       value?: any;
       message?: string;
@@ -458,6 +460,29 @@ export class FormDynamicRuntime {
           submitLocked = true;
           submitLockMessage = action.message
             || (action.value !== undefined ? String(action.value) : undefined);
+          matchedRule.changed = true;
+        } else if (action.type === "emit-event") {
+          const eventName = String(action.field || "").trim();
+          if (!eventName) {
+            return;
+          }
+          const payload = action.template !== undefined
+            ? this.renderRuleTemplate(action.template, rule.id, action.field)
+            : action.sourceField
+              ? this.options.getFieldValue(action.sourceField)
+              : action.value;
+          const context = this.options.getEventContext();
+          this.options.emitEvent(eventName, {
+            values: this.options.getFormValues(),
+            formConfig: context.formConfig,
+            submit: context.submit,
+            result: {
+              ruleId: rule.id,
+              action: "emit-event",
+              eventName,
+              payload,
+            },
+          });
           matchedRule.changed = true;
         }
       });

@@ -78,6 +78,111 @@ export class FormEngineRuntime {
     return normalizeFormValues(this.inputFields, values);
   }
 
+  validateFileField(
+    fieldName: string,
+    value: any,
+  ): { errorMessage: string; errorData?: any } | null {
+    const fieldConfig = this.inputFields[fieldName];
+    if (!fieldConfig || !isFileFieldType(fieldConfig.type)) {
+      return null;
+    }
+
+    const files = getFileList(value);
+
+    if (
+      typeof fieldConfig.minFiles === "number" &&
+      fieldConfig.minFiles > 0 &&
+      files.length < fieldConfig.minFiles
+    ) {
+      return {
+        errorMessage:
+          fieldConfig.errorMsg ||
+          `Not enough files: minimum ${fieldConfig.minFiles} required`,
+        errorData: {
+          type: "file-min-count",
+          minFiles: fieldConfig.minFiles,
+          fileCount: files.length,
+        },
+      };
+    }
+
+    if (!files.length) {
+      return null;
+    }
+
+    if (
+      typeof fieldConfig.maxFiles === "number" &&
+      fieldConfig.maxFiles > 0 &&
+      files.length > fieldConfig.maxFiles
+    ) {
+      return {
+        errorMessage:
+          fieldConfig.errorMsg ||
+          `Too many files: maximum ${fieldConfig.maxFiles} allowed`,
+        errorData: {
+          type: "file-count",
+          maxFiles: fieldConfig.maxFiles,
+          fileCount: files.length,
+        },
+      };
+    }
+
+    const invalidFile = files.find((file) => !matchesAccept(file, fieldConfig.accept));
+    if (invalidFile) {
+      return {
+        errorMessage:
+          fieldConfig.fileTypeErrorMsg ||
+          fieldConfig.errorMsg ||
+          `File type not allowed: ${invalidFile.name}`,
+        errorData: {
+          type: "file-accept",
+          fileName: invalidFile.name,
+          accept: fieldConfig.accept,
+        },
+      };
+    }
+
+    if (typeof fieldConfig.maxFileSizeMb === "number" && fieldConfig.maxFileSizeMb > 0) {
+      const maxBytes = fieldConfig.maxFileSizeMb * 1024 * 1024;
+      const oversizedFile = files.find((file) => file.size > maxBytes);
+      if (oversizedFile) {
+        return {
+          errorMessage:
+            fieldConfig.fileSizeErrorMsg ||
+            fieldConfig.errorMsg ||
+            `File too large: ${oversizedFile.name} exceeds ${fieldConfig.maxFileSizeMb} MB`,
+          errorData: {
+            type: "file-size",
+            fileName: oversizedFile.name,
+            maxFileSizeMb: fieldConfig.maxFileSizeMb,
+          },
+        };
+      }
+    }
+
+    if (
+      typeof fieldConfig.maxTotalFileSizeMb === "number" &&
+      fieldConfig.maxTotalFileSizeMb > 0
+    ) {
+      const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+      const maxTotalBytes = fieldConfig.maxTotalFileSizeMb * 1024 * 1024;
+      if (totalBytes > maxTotalBytes) {
+        return {
+          errorMessage:
+            fieldConfig.errorMsg ||
+            `Files too large together: total exceeds ${fieldConfig.maxTotalFileSizeMb} MB`,
+          errorData: {
+            type: "file-total-size",
+            maxTotalFileSizeMb: fieldConfig.maxTotalFileSizeMb,
+            totalBytes,
+          },
+        };
+      }
+    }
+
+    return null;
+  }
+
   validateValues(values: Record<string, any>): Record<string, any> {
     const formValues = this.normalizeValues(values);
     const validationErrors = this.validators.length
@@ -90,101 +195,9 @@ export class FormEngineRuntime {
       }
 
       const fieldName = fieldConfig.name;
-      const files = getFileList(formValues[fieldName]);
-
-      if (
-        typeof fieldConfig.minFiles === "number" &&
-        fieldConfig.minFiles > 0 &&
-        files.length < fieldConfig.minFiles
-      ) {
-        validationErrors[fieldName] = {
-          errorMessage:
-            fieldConfig.errorMsg ||
-            `Not enough files: minimum ${fieldConfig.minFiles} required`,
-          errorData: {
-            type: "file-min-count",
-            minFiles: fieldConfig.minFiles,
-            fileCount: files.length,
-          },
-        };
-        return;
-      }
-
-      if (!files.length) {
-        return;
-      }
-
-      if (
-        typeof fieldConfig.maxFiles === "number" &&
-        fieldConfig.maxFiles > 0 &&
-        files.length > fieldConfig.maxFiles
-      ) {
-        validationErrors[fieldName] = {
-          errorMessage:
-            fieldConfig.errorMsg ||
-            `Too many files: maximum ${fieldConfig.maxFiles} allowed`,
-          errorData: {
-            type: "file-count",
-            maxFiles: fieldConfig.maxFiles,
-            fileCount: files.length,
-          },
-        };
-        return;
-      }
-
-      const invalidFile = files.find((file) => !matchesAccept(file, fieldConfig.accept));
-      if (invalidFile) {
-        validationErrors[fieldName] = {
-          errorMessage:
-            fieldConfig.fileTypeErrorMsg ||
-            fieldConfig.errorMsg ||
-            `File type not allowed: ${invalidFile.name}`,
-          errorData: {
-            type: "file-accept",
-            fileName: invalidFile.name,
-            accept: fieldConfig.accept,
-          },
-        };
-        return;
-      }
-
-      if (typeof fieldConfig.maxFileSizeMb === "number" && fieldConfig.maxFileSizeMb > 0) {
-        const maxBytes = fieldConfig.maxFileSizeMb * 1024 * 1024;
-        const oversizedFile = files.find((file) => file.size > maxBytes);
-        if (oversizedFile) {
-          validationErrors[fieldName] = {
-            errorMessage:
-              fieldConfig.fileSizeErrorMsg ||
-              fieldConfig.errorMsg ||
-              `File too large: ${oversizedFile.name} exceeds ${fieldConfig.maxFileSizeMb} MB`,
-            errorData: {
-              type: "file-size",
-              fileName: oversizedFile.name,
-              maxFileSizeMb: fieldConfig.maxFileSizeMb,
-            },
-          };
-          return;
-        }
-      }
-
-      if (
-        typeof fieldConfig.maxTotalFileSizeMb === "number" &&
-        fieldConfig.maxTotalFileSizeMb > 0
-      ) {
-        const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
-        const maxTotalBytes = fieldConfig.maxTotalFileSizeMb * 1024 * 1024;
-        if (totalBytes > maxTotalBytes) {
-          validationErrors[fieldName] = {
-            errorMessage:
-              fieldConfig.errorMsg ||
-              `Files too large together: total exceeds ${fieldConfig.maxTotalFileSizeMb} MB`,
-            errorData: {
-              type: "file-total-size",
-              maxTotalFileSizeMb: fieldConfig.maxTotalFileSizeMb,
-              totalBytes,
-            },
-          };
-        }
+      const fileError = this.validateFileField(fieldName, formValues[fieldName]);
+      if (fileError) {
+        validationErrors[fieldName] = fileError;
       }
     });
 

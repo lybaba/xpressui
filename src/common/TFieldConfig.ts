@@ -33,10 +33,12 @@ type TFieldConfig = {
     placeholder?: string;
     accept?: string;
     multiple?: boolean;
+    fileDropMode?: 'replace' | 'append';
     minFiles?: number;
     maxFiles?: number;
     maxFileSizeMb?: number;
     maxTotalFileSizeMb?: number;
+    formDataFieldName?: string;
     fileTypeErrorMsg?: string;
     fileSizeErrorMsg?: string;
     pattern?: string;

@@ -306,6 +306,22 @@ Then the frontend sends:
 - `attachments`
 - `attachments`
 
+If one field needs a different backend name, set it directly on the field:
+
+```ts
+{
+  name: 'attachments',
+  label: 'Attachments',
+  type: 'file',
+  multiple: true,
+  formDataFieldName: 'documents',
+}
+```
+
+Then the frontend sends:
+- `documents[]` in `brackets` mode
+- `documents` in `repeat` mode
+
 Minimal Express example:
 
 ```ts

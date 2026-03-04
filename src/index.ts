@@ -302,7 +302,25 @@ export class FormUI extends HTMLElement {
       return;
     }
 
-    const nextValue = fieldConfig.multiple ? files : files[0];
+    const currentFiles = this.getFileValueList(this.getFieldValue(fieldName));
+    const mergedFiles =
+      fieldConfig.multiple && fieldConfig.fileDropMode === "append"
+        ? [...currentFiles, ...files]
+        : files;
+    const nextValue = fieldConfig.multiple ? mergedFiles : mergedFiles[0];
+    const fileValidationError = this.engine.validateFileField(fieldName, nextValue);
+    if (fileValidationError) {
+      this.emitFileValidationErrorEvent(
+        fieldName,
+        {
+          ...(this.form.getState().values || {}),
+          [fieldName]: nextValue,
+        },
+        fileValidationError as TValidationError,
+      );
+      return;
+    }
+
     this.form.change(fieldName, nextValue);
     this.scheduleDraftSave();
     this.updateConditionalFields();
@@ -457,6 +475,23 @@ export class FormUI extends HTMLElement {
     this.dynamic.clearRecentAppliedRules();
   }
 
+  emitFileValidationErrorEvent = (
+    fieldName: string,
+    values: Record<string, any>,
+    validationError: TValidationError,
+  ) => {
+    this.emitFormEvent("form-ui:file-validation-error", {
+      values: this.engine.normalizeValues(values),
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      error: validationError,
+      result: {
+        field: fieldName,
+        code: validationError?.errorData?.type,
+      },
+    });
+  }
+
   validateForm = (values: Record<string, any>) => {
     const errors = this.engine.validateValues(values);
 
@@ -470,16 +505,7 @@ export class FormUI extends HTMLElement {
         errorType === "file-min-count" ||
         errorType === "file-total-size"
       ) {
-        this.emitFormEvent("form-ui:file-validation-error", {
-          values: this.engine.normalizeValues(values),
-          formConfig: this.formConfig,
-          submit: this.formConfig?.submit,
-          error: validationError,
-          result: {
-            field: fieldName,
-            code: errorType,
-          },
-        });
+        this.emitFileValidationErrorEvent(fieldName, values, validationError);
       }
     });
 
@@ -504,7 +530,7 @@ export class FormUI extends HTMLElement {
     formValues: Record<string, any>,
     submitConfig: TFormSubmitRequest,
   ) => {
-    return submitFormValues(formValues, submitConfig);
+    return submitFormValues(formValues, submitConfig, this.engine.getFields());
   }
 
   onSubmit = async (values: Record<string, any>) => {

@@ -161,6 +161,32 @@ export const getIsChoiceField = (type: string): boolean => {
         type === SELECT_ONE_TYPE
 }
 
+export const isFileFieldType = (type: string): boolean => {
+    return type === UPLOAD_FILE_TYPE || type === UPLOAD_IMAGE_TYPE;
+}
+
+export const isFileLikeValue = (value: any): boolean => {
+    if (!value) {
+        return false;
+    }
+
+    if (typeof File !== 'undefined' && value instanceof File) {
+        return true;
+    }
+
+    if (typeof Blob !== 'undefined' && value instanceof Blob) {
+        return true;
+    }
+
+    return Boolean(
+        typeof value === 'object' &&
+        typeof value.name === 'string' &&
+        typeof value.size === 'number' &&
+        typeof value.type === 'string' &&
+        typeof value.arrayBuffer === 'function'
+    );
+}
+
 export const buildSlug = (name: string) => {
     return slugify(lowerCase(name), { replacement: '-' });
 }
@@ -228,7 +254,10 @@ export function normalizeFormValues(fieldMap: Record<string, TFieldConfig>, form
 
     for (const [fieldName, fieldVal] of Object.entries(formValues)) {
         const fieldConfig = fieldMap[fieldName];
-        if (!isEmpty(fieldVal) && fieldConfig) {
+        const hasValue = isFileLikeValue(fieldVal) ||
+            (Array.isArray(fieldVal) && fieldVal.some((entry) => isFileLikeValue(entry))) ||
+            !isEmpty(fieldVal);
+        if (hasValue && fieldConfig) {
             res[fieldName] = doNormalizeFieldValue(fieldConfig, fieldVal);
         }
     }
@@ -275,6 +304,10 @@ export const getHtmlInputType = (fieldType: string): string => {
 
         case COLOR_TYPE:
             return "color";
+
+        case UPLOAD_FILE_TYPE:
+        case UPLOAD_IMAGE_TYPE:
+            return "file";
 
         default:
             return fieldType

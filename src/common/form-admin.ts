@@ -1,3 +1,4 @@
+import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
 import {
   createStorageAdapter,
@@ -10,8 +11,19 @@ import { validatePublicFormConfig } from "./public-schema";
 async function submitNow(
   values: Record<string, any>,
   submitConfig: TFormSubmitRequest,
+  fieldMap?: Record<string, TFieldConfig>,
 ): Promise<{ response: Response; result: any }> {
-  return submitFormValues(values, submitConfig);
+  return submitFormValues(values, submitConfig, fieldMap);
+}
+
+function getFieldMap(formConfig: TFormConfig): Record<string, TFieldConfig> {
+  const fieldMap: Record<string, TFieldConfig> = {};
+  Object.values(formConfig.sections || {})
+    .flat()
+    .forEach((field) => {
+      fieldMap[field.name] = field;
+    });
+  return fieldMap;
 }
 
 export type TLocalFormAdminSnapshot = {
@@ -126,6 +138,7 @@ export type TLocalFormAdmin = {
 export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
   const publicConfig = validatePublicFormConfig(formConfig as unknown as Record<string, any>);
   const storageAdapter: TFormStorageAdapter | null = createStorageAdapter(publicConfig);
+  const fieldMap = getFieldMap(publicConfig);
 
   const getSnapshot = (): TLocalFormAdminSnapshot => ({
     draft: storageAdapter?.loadDraft() || null,
@@ -282,7 +295,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       }
 
       try {
-        await submitNow(entry.values, publicConfig.submit);
+        await submitNow(entry.values, publicConfig.submit, fieldMap);
         return true;
       } catch (error: any) {
         storageAdapter.enqueueDeadLetter({
@@ -316,7 +329,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
         }
 
         try {
-          await submitNow(entry.values, publicConfig.submit);
+          await submitNow(entry.values, publicConfig.submit, fieldMap);
           succeeded += 1;
         } catch (error: any) {
           failed += 1;

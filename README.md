@@ -673,10 +673,12 @@ mountFormUI(container, {
       type: 'file',
       accept: '.pdf,image/*,video/*',
       multiple: true,
+      fileDropMode: 'append',
       minFiles: 1,
       maxFiles: 3,
       maxFileSizeMb: 10,
       maxTotalFileSizeMb: 20,
+      formDataFieldName: 'documents',
       fileTypeErrorMsg: 'Only PDF, image, or video files are allowed.',
       fileSizeErrorMsg: 'Each file must stay below 10 MB.',
     },
@@ -694,12 +696,14 @@ Frontend behavior:
 - local draft storage only keeps file metadata, not blobs
 - offline queue is disabled for forms that include file fields
 - the default upload area accepts drag-and-drop
+- `fileDropMode: 'append'` merges dropped files with the current selection
 - selected files can be removed one by one in the default UI
 - `accept: 'image/*'` shows a simple image preview before submit
 - `minFiles` sets a minimum file count for multi-upload fields
 - `maxFiles` limits how many files can be selected
 - `maxTotalFileSizeMb` limits the total size across all selected files
 - `fileTypeErrorMsg` and `fileSizeErrorMsg` let you override default validation messages
+- `formDataFieldName` overrides the multipart field key for one file field
 - `submit.formDataArrayMode: 'brackets' | 'repeat'` controls whether repeated
   file fields are sent as `attachments[]` or `attachments`
 
@@ -863,10 +867,12 @@ Useful field capabilities supported by the current builder:
 - `optionsValueKey`
 - `accept` for file fields
 - `multiple` for file fields
+- `fileDropMode` for file fields
 - `minFiles` for file fields
 - `maxFiles` for file fields
 - `maxFileSizeMb` for file fields
 - `maxTotalFileSizeMb` for file fields
+- `formDataFieldName` for file fields
 
 Common field types used today:
 - `text`

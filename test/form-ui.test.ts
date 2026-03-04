@@ -834,6 +834,91 @@ describe('FormUI', () => {
     expect(selection.textContent).toContain('drop.pdf');
   });
 
+  it('rejects invalid dropped files before updating the field value', async () => {
+    const container = document.createElement('div');
+    const onFileValidationError = vi.fn();
+    const element = mountFormUI(container, {
+      name: 'file-drop-validated-form',
+      title: 'File Drop Validated Form',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+          fileDropMode: 'append',
+          maxFiles: 1,
+        },
+      ],
+    }) as FormUI;
+    const selection = element.querySelector('#attachments_selection') as HTMLElement;
+    const initialFile = new File(['one'], 'one.pdf', { type: 'application/pdf' });
+    const rejectedFile = new File(['two'], 'two.pdf', { type: 'application/pdf' });
+
+    element.addEventListener('form-ui:file-validation-error', (event) => {
+      onFileValidationError((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    element.form?.change('attachments', [initialFile]);
+
+    const dropEvent = new Event('drop', { bubbles: true }) as DragEvent;
+    Object.defineProperty(dropEvent, 'dataTransfer', {
+      configurable: true,
+      value: {
+        files: [rejectedFile],
+      },
+    });
+
+    selection.dispatchEvent(dropEvent);
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).attachments).toEqual([initialFile]);
+    expect(onFileValidationError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          field: 'attachments',
+          code: 'file-count',
+        },
+      }),
+    );
+  });
+
+  it('can append dropped files when fileDropMode is append', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'file-drop-append-form',
+      title: 'File Drop Append Form',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+          fileDropMode: 'append',
+          maxFiles: 3,
+        },
+      ],
+    }) as FormUI;
+    const selection = element.querySelector('#attachments_selection') as HTMLElement;
+    const firstFile = new File(['one'], 'one.pdf', { type: 'application/pdf' });
+    const secondFile = new File(['two'], 'two.pdf', { type: 'application/pdf' });
+
+    element.form?.change('attachments', [firstFile]);
+
+    const dropEvent = new Event('drop', { bubbles: true }) as DragEvent;
+    Object.defineProperty(dropEvent, 'dataTransfer', {
+      configurable: true,
+      value: {
+        files: [secondFile],
+      },
+    });
+
+    selection.dispatchEvent(dropEvent);
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).attachments).toEqual([firstFile, secondFile]);
+  });
+
   it('can remove a selected file from the default upload UI', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {
@@ -1116,6 +1201,46 @@ describe('FormUI', () => {
     const body = request.body as FormData;
     expect(body.getAll('attachments')).toEqual([fileOne, fileTwo]);
     expect(body.getAll('attachments[]')).toEqual([]);
+  });
+
+  it('supports custom form-data field names for file uploads', async () => {
+    const fetchMock = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ uploaded: true }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'upload-custom-field-form',
+      title: 'Upload Custom Field Form',
+      submit: {
+        endpoint: '/api/uploads',
+        method: 'POST',
+        mode: 'form-data',
+        formDataArrayMode: 'repeat',
+      },
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+          formDataFieldName: 'documents',
+        },
+      ],
+    }) as FormUI;
+    const fileOne = new File(['one'], 'one.pdf', { type: 'application/pdf' });
+    const fileTwo = new File(['two'], 'two.pdf', { type: 'application/pdf' });
+
+    await element.onSubmit({ attachments: [fileOne, fileTwo] });
+
+    const request = fetchMock.mock.calls[0][1] as RequestInit;
+    const body = request.body as FormData;
+    expect(body.getAll('documents')).toEqual([fileOne, fileTwo]);
+    expect(body.getAll('attachments')).toEqual([]);
   });
 
   it('disables offline queue for forms that include file fields', async () => {

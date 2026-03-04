@@ -1,12 +1,21 @@
+import TFieldConfig from "./TFieldConfig";
 import { TFormSubmitRequest } from "./TFormConfig";
 import { isFileLikeValue } from "./field";
 import { buildProviderPayload } from "./provider-registry";
+
+function resolveFormDataKey(
+  key: string,
+  fieldMap?: Record<string, TFieldConfig>,
+): string {
+  return fieldMap?.[key]?.formDataFieldName || key;
+}
 
 function appendFormDataValue(
   formData: FormData,
   key: string,
   value: any,
   arrayMode: "brackets" | "repeat",
+  fieldMap?: Record<string, TFieldConfig>,
 ): void {
   if (value === undefined) {
     return;
@@ -24,6 +33,7 @@ function appendFormDataValue(
         arrayMode === "brackets" ? `${key}[]` : key,
         entry,
         arrayMode,
+        fieldMap,
       );
     });
     return;
@@ -31,7 +41,14 @@ function appendFormDataValue(
 
   if (value && typeof value === "object") {
     Object.entries(value).forEach(([childKey, childValue]) => {
-      appendFormDataValue(formData, `${key}[${childKey}]`, childValue, arrayMode);
+      const resolvedChildKey = resolveFormDataKey(childKey, fieldMap);
+      appendFormDataValue(
+        formData,
+        `${key}[${resolvedChildKey}]`,
+        childValue,
+        arrayMode,
+        fieldMap,
+      );
     });
     return;
   }
@@ -42,6 +59,7 @@ function appendFormDataValue(
 export async function submitFormValues(
   values: Record<string, any>,
   submitConfig: TFormSubmitRequest,
+  fieldMap?: Record<string, TFieldConfig>,
 ): Promise<{ response: Response; result: any }> {
   const method = submitConfig.method || "POST";
   const mode = submitConfig.mode || "json";
@@ -63,7 +81,8 @@ export async function submitFormValues(
   } else if (mode === "form-data") {
     const body = new FormData();
     Object.entries(payload).forEach(([key, value]) => {
-      appendFormDataValue(body, key, value, formDataArrayMode);
+      const resolvedKey = resolveFormDataKey(key, fieldMap);
+      appendFormDataValue(body, resolvedKey, value, formDataArrayMode, fieldMap);
     });
     init.body = body;
   } else {

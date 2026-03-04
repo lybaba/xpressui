@@ -1203,6 +1203,10 @@ export class FormUI extends HTMLElement {
         image.src = previewUrl;
         image.alt = file.name;
         image.className = "h-full w-full object-cover";
+        image.style.display = "block";
+        image.style.width = "100%";
+        image.style.height = "100%";
+        image.style.objectFit = "cover";
         previewFrame.appendChild(image);
       } else {
         const placeholder = document.createElement("div");
@@ -1399,6 +1403,13 @@ export class FormUI extends HTMLElement {
         image.src = previewUrl;
         image.alt = file.name;
         image.className = "mt-2 h-20 w-20 rounded object-cover";
+        image.style.display = "block";
+        image.style.width = "72px";
+        image.style.height = "72px";
+        image.style.marginTop = "8px";
+        image.style.borderRadius = "8px";
+        image.style.objectFit = "cover";
+        image.style.flexShrink = "0";
         details.appendChild(image);
       }
 

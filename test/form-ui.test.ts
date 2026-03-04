@@ -2420,6 +2420,9 @@ describe('FormUI', () => {
     const preview = element.querySelector('#image_selection img') as HTMLImageElement;
     expect(preview).not.toBeNull();
     expect(preview.src).toContain('blob:test-preview');
+    expect(preview.style.width).toBe('72px');
+    expect(preview.style.height).toBe('72px');
+    expect(preview.style.objectFit).toBe('cover');
 
     element.remove();
     expect(revokeObjectUrlSpy).toHaveBeenCalledWith('blob:test-preview');

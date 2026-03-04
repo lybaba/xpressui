@@ -1518,8 +1518,6 @@ export class FormUI extends HTMLElement {
   }
 
   initialize = () => {
-    this.initialized = true;
-
     let formElem: HTMLFormElement | null = null;
 
     if ("content" in document.createElement("template")) {
@@ -1536,6 +1534,12 @@ export class FormUI extends HTMLElement {
       }
     }
 
+    if (!formElem) {
+      this.initialized = false;
+      return;
+    }
+
+    this.initialized = true;
 
     if (formElem) {
       this.formConfig = validatePublicFormConfig(getFormConfig(formElem) as unknown as Record<string, any>);

@@ -549,7 +549,7 @@ Current rule scope:
 - condition logic: `AND`, `OR`
 - condition operators: `equals`, `not_equals`, `contains`, `in`, `gt`, `lt`
 - actions: `show`, `hide`, `enable`, `disable`, `clear-value`, `set-value`, `fetch-options`
-- `set-value` can use either a constant via `value` or another field via `sourceField`
+- `set-value` can use a constant via `value`, copy another field via `sourceField`, or compose multiple fields via `template` (`{{firstName}} {{lastName}}`)
 - `set-value` can also transform the written value with `transform`: `copy`, `trim`, `lowercase`, `uppercase`, `slugify`
 
 ## Local Draft Storage

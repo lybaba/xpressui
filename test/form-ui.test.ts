@@ -1012,6 +1012,50 @@ describe('FormUI', () => {
     expect(slug.value).toBe('hello-world');
   });
 
+  it('supports set-value templates built from multiple fields', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'set-value-template-rules-form',
+      title: 'Set Value Template Rules Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'autoFullName', operator: 'equals', value: true },
+          ],
+          actions: [
+            {
+              type: 'set-value',
+              field: 'fullName',
+              template: '{{firstName}} {{lastName}}',
+              transform: 'trim',
+            },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'firstName', label: 'First name', type: 'text' },
+        { name: 'lastName', label: 'Last name', type: 'text' },
+        { name: 'fullName', label: 'Full name', type: 'text' },
+        { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
+      ],
+    }) as FormUI;
+    const firstName = element.querySelector('#firstName') as HTMLInputElement;
+    const lastName = element.querySelector('#lastName') as HTMLInputElement;
+    const fullName = element.querySelector('#fullName') as HTMLInputElement;
+    const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
+
+    firstName.value = 'Ada';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    lastName.value = 'Lovelace';
+    lastName.dispatchEvent(new Event('input', { bubbles: true }));
+    autoFullName.checked = true;
+    autoFullName.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).fullName).toBe('Ada Lovelace');
+    expect(fullName.value).toBe('Ada Lovelace');
+  });
+
   it('supports the fetch-options rule action', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(

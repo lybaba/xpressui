@@ -28,6 +28,7 @@ export type TFormRuleAppliedDetail = {
     field: string;
     value?: any;
     sourceField?: string;
+    template?: string;
     transform?: "copy" | "trim" | "lowercase" | "uppercase" | "slugify";
   }>;
 };
@@ -54,6 +55,7 @@ type TFormDynamicRuntimeOptions = {
       field: string;
       value?: any;
       sourceField?: string;
+      template?: string;
       transform?: "copy" | "trim" | "lowercase" | "uppercase" | "slugify";
     }>;
   }>;
@@ -112,6 +114,13 @@ export class FormDynamicRuntime {
     }
 
     return value;
+  }
+
+  renderRuleTemplate(template: string): string {
+    return template.replace(/\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g, (_, fieldName: string) => {
+      const value = this.options.getFieldValue(fieldName);
+      return value === undefined || value === null ? "" : String(value);
+    });
   }
 
   matchesCondition(
@@ -207,9 +216,11 @@ export class FormDynamicRuntime {
         } else if (action.type === "clear-value") {
           this.options.clearFieldValue(action.field);
         } else if (action.type === "set-value") {
-          const nextValue = action.sourceField
-            ? this.options.getFieldValue(action.sourceField)
-            : action.value;
+          const nextValue = action.template !== undefined
+            ? this.renderRuleTemplate(action.template)
+            : action.sourceField
+              ? this.options.getFieldValue(action.sourceField)
+              : action.value;
           this.options.setFieldValue(
             action.field,
             this.transformRuleValue(nextValue, action.transform),

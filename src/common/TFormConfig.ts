@@ -75,6 +75,7 @@ export type TFormRuleAction = {
     field: string;
     value?: any;
     sourceField?: string;
+    template?: string;
     transform?: 'copy' | 'trim' | 'lowercase' | 'uppercase' | 'slugify';
 };
 

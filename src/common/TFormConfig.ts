@@ -97,9 +97,10 @@ export type TFormRuleCondition = {
 };
 
 export type TFormRuleAction = {
-    type: 'show' | 'hide' | 'enable' | 'disable' | 'clear-value' | 'set-value' | 'fetch-options';
+    type: 'show' | 'hide' | 'enable' | 'disable' | 'clear-value' | 'set-value' | 'fetch-options' | 'set-error' | 'lock-submit';
     field: string;
     value?: any;
+    message?: string;
     sourceField?: string;
     template?: string;
     transform?: 'copy' | 'trim' | 'lowercase' | 'uppercase' | 'slugify';

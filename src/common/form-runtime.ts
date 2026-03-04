@@ -155,6 +155,15 @@ export class FormRuntime {
               fieldElement.disabled = disabled;
             }
           },
+          setFieldError: () => {
+            // No built-in error surface in the headless runtime.
+          },
+          clearFieldErrors: () => {
+            // No built-in error surface in the headless runtime.
+          },
+          setSubmitLocked: () => {
+            // The headless runtime does not manage submit button state.
+          },
           getFieldValue: (fieldName) => options.dynamic!.getFieldValue(fieldName),
           clearFieldValue: (fieldName) => options.dynamic!.clearFieldValue(fieldName),
           setFieldValue: (fieldName, value) => {

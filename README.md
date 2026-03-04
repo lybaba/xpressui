@@ -1162,9 +1162,11 @@ Current rule scope:
 - optional rule id: `id`
 - condition logic: `AND`, `OR`
 - condition operators: `equals`, `not_equals`, `contains`, `in`, `gt`, `lt`, `exists`, `empty`
-- actions: `show`, `hide`, `enable`, `disable`, `clear-value`, `set-value`, `fetch-options`
+- actions: `show`, `hide`, `enable`, `disable`, `clear-value`, `set-value`, `fetch-options`, `set-error`, `lock-submit`
 - `set-value` can use a constant via `value`, copy another field via `sourceField`, or compose multiple fields via `template` (`{{firstName}} {{lastName}}`)
 - `set-value` can also transform the written value with `transform`: `copy`, `trim`, `lowercase`, `uppercase`, `slugify`
+- `set-error` shows a field-level error message through the normal form error UI
+- `lock-submit` disables submit buttons and emits `form-ui:submit-locked` until the rule no longer matches
 
 ## Local Draft Storage
 

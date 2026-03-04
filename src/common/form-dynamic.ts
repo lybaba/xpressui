@@ -24,9 +24,12 @@ export type TFormRuleAppliedDetail = {
       | "disable"
       | "clear-value"
       | "set-value"
-      | "fetch-options";
+      | "fetch-options"
+      | "set-error"
+      | "lock-submit";
     field: string;
     value?: any;
+    message?: string;
     sourceField?: string;
     template?: string;
     transform?: "copy" | "trim" | "lowercase" | "uppercase" | "slugify";
@@ -80,9 +83,12 @@ type TFormDynamicRuntimeOptions = {
         | "disable"
         | "clear-value"
         | "set-value"
-        | "fetch-options";
+        | "fetch-options"
+        | "set-error"
+        | "lock-submit";
       field: string;
       value?: any;
+      message?: string;
       sourceField?: string;
       template?: string;
       transform?: "copy" | "trim" | "lowercase" | "uppercase" | "slugify";
@@ -95,6 +101,9 @@ type TFormDynamicRuntimeOptions = {
     fieldName: string,
   ): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
   setFieldDisabled(fieldName: string, disabled: boolean): void;
+  setFieldError?(fieldName: string, message?: string): void;
+  clearFieldErrors?(): void;
+  setSubmitLocked?(locked: boolean, message?: string): void;
   getFieldValue(fieldName: string): any;
   clearFieldValue(fieldName: string): void;
   setFieldValue(fieldName: string, value: any): void;
@@ -363,9 +372,14 @@ export class FormDynamicRuntime {
   updateConditionalFields(): void {
     const visibilityOverrides: Record<string, boolean> = {};
     const disabledOverrides: Record<string, boolean> = {};
+    let submitLocked = false;
+    let submitLockMessage: string | undefined;
     const visibilityRuleByField: Record<string, TDynamicRule> = {};
     const disabledRuleByField: Record<string, TDynamicRule> = {};
     const matchedRules: Array<{ rule: TDynamicRule; changed: boolean }> = [];
+
+    this.options.clearFieldErrors?.();
+    this.options.setSubmitLocked?.(false);
 
     this.options.getFieldConfigs().forEach((fieldConfig) => {
       if (!fieldConfig.visibleWhenField) {
@@ -434,6 +448,17 @@ export class FormDynamicRuntime {
             matchedRule.changed = true;
             void this.fetchOptionsForField(action.field);
           }
+        } else if (action.type === "set-error") {
+          const nextMessage = action.message || action.value;
+          if (nextMessage !== undefined) {
+            matchedRule.changed = true;
+            this.options.setFieldError?.(action.field, String(nextMessage));
+          }
+        } else if (action.type === "lock-submit") {
+          submitLocked = true;
+          submitLockMessage = action.message
+            || (action.value !== undefined ? String(action.value) : undefined);
+          matchedRule.changed = true;
         }
       });
     });
@@ -481,6 +506,8 @@ export class FormDynamicRuntime {
     matchedRules
       .filter((matchedRule) => matchedRule.changed)
       .forEach((matchedRule) => this.emitRuleApplied(matchedRule.rule));
+
+    this.options.setSubmitLocked?.(submitLocked, submitLockMessage);
   }
 
   normalizeRemoteChoices(payload: any, fieldConfig: TFieldConfig): TChoice[] {

@@ -200,6 +200,9 @@ export class FormUI extends HTMLElement {
   filePreviewUrls: Record<string, string[]>;
   fileDragActive: Record<string, boolean>;
   fileUploadState: Record<string, TFormUploadState | null>;
+  ruleFieldErrors: Record<string, string>;
+  submitLockedByRules: boolean;
+  submitLockMessage: string | null;
   qrScannerState: Record<string, TQrScannerState>;
   qrScannerStreams: Record<string, MediaStream | null>;
   qrScannerTimers: Record<string, number | null>;
@@ -225,6 +228,9 @@ export class FormUI extends HTMLElement {
     this.form = null;
     this.initialized = false;
     this.fileUploadState = {};
+    this.ruleFieldErrors = {};
+    this.submitLockedByRules = false;
+    this.submitLockMessage = null;
     this.filePreviewUrls = {};
     this.fileDragActive = {};
     this.qrScannerState = {};
@@ -251,6 +257,41 @@ export class FormUI extends HTMLElement {
         const fieldElement = this.getFieldElement(fieldName);
         if (fieldElement) {
           fieldElement.disabled = disabled;
+        }
+      },
+      setFieldError: (fieldName, message) => {
+        if (!message) {
+          delete this.ruleFieldErrors[fieldName];
+          this.syncFieldErrorDisplay(fieldName);
+          return;
+        }
+        this.ruleFieldErrors[fieldName] = message;
+        this.syncFieldErrorDisplay(fieldName);
+      },
+      clearFieldErrors: () => {
+        const previousFieldNames = Object.keys(this.ruleFieldErrors);
+        this.ruleFieldErrors = {};
+        previousFieldNames.forEach((fieldName) => this.syncFieldErrorDisplay(fieldName));
+      },
+      setSubmitLocked: (locked, message) => {
+        const nextLocked = Boolean(locked);
+        const nextMessage = message || null;
+        const changed =
+          this.submitLockedByRules !== nextLocked
+          || this.submitLockMessage !== nextMessage;
+        this.submitLockedByRules = nextLocked;
+        this.submitLockMessage = nextMessage;
+        if (changed) {
+          this.syncStepControls();
+          this.emitFormEvent("form-ui:submit-lock", {
+            values: this.form?.getState().values || {},
+            formConfig: this.formConfig,
+            submit: this.formConfig?.submit,
+            result: {
+              locked: this.submitLockedByRules,
+              message: this.submitLockMessage,
+            },
+          });
         }
       },
       getFieldValue: (fieldName) => this.getFieldValue(fieldName),
@@ -2047,7 +2088,26 @@ export class FormUI extends HTMLElement {
 
   syncStepControls = () => {
     const formElement = this.querySelector("form");
-    if (!formElement || this.stepNames.length <= 1) {
+    if (!formElement) {
+      return;
+    }
+
+    const submitButtons = Array.from(
+      formElement.querySelectorAll<HTMLButtonElement | HTMLInputElement>(
+        'button[type="submit"], input[type="submit"]',
+      ),
+    );
+
+    if (this.stepNames.length <= 1) {
+      submitButtons.forEach((button) => {
+        button.disabled = this.submitLockedByRules;
+        (button as HTMLElement).style.display = "";
+        if (button instanceof HTMLButtonElement) {
+          button.title = this.submitLockedByRules && this.submitLockMessage
+            ? this.submitLockMessage
+            : "";
+        }
+      });
       return;
     }
 
@@ -2079,14 +2139,14 @@ export class FormUI extends HTMLElement {
       this.stepNextButton.style.display = isLastStep ? "none" : "";
     }
 
-    const submitButtons = Array.from(
-      formElement.querySelectorAll<HTMLButtonElement | HTMLInputElement>(
-        'button[type="submit"], input[type="submit"]',
-      ),
-    );
     submitButtons.forEach((button) => {
-      button.disabled = !isLastStep;
+      button.disabled = !isLastStep || this.submitLockedByRules;
       (button as HTMLElement).style.display = isLastStep ? "" : "none";
+      if (button instanceof HTMLButtonElement) {
+        button.title = this.submitLockedByRules && this.submitLockMessage
+          ? this.submitLockMessage
+          : "";
+      }
     });
   }
 
@@ -2438,6 +2498,17 @@ export class FormUI extends HTMLElement {
       this.formConfig?.submit?.documentDataMode || "full",
       this.formConfig?.submit?.documentFieldPaths,
     );
+    if (this.submitLockedByRules) {
+      this.emitFormEvent("form-ui:submit-locked", {
+        values: formValues,
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          message: this.submitLockMessage,
+        },
+      });
+      return;
+    }
     const detail: TFormUISubmitDetail = {
       values: formValues,
       formConfig: this.formConfig,
@@ -2537,6 +2608,56 @@ export class FormUI extends HTMLElement {
     }
 
     return null;
+  }
+
+  renderFieldErrorState = (
+    fieldName: string,
+    inputElement:
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement
+      | null,
+    errorElement: HTMLElement | null,
+    touched?: boolean,
+    error?: unknown,
+  ) => {
+    if (!errorElement || !inputElement) {
+      return;
+    }
+
+    const ruleError = this.ruleFieldErrors[fieldName];
+    const displayedError = ruleError || (touched ? error : undefined);
+    if (displayedError) {
+      const errorClass = getErrorClass(inputElement);
+      errorElement.innerHTML = ruleError
+        ? ruleError
+        : (displayedError as TValidationError).errorMessage;
+      errorElement.style.display = "block";
+      inputElement.classList.add(errorClass);
+      this.errors[fieldName] = true;
+      return;
+    }
+
+    if (this.errors[fieldName]) {
+      errorElement.innerHTML = "";
+      errorElement.style.display = "none";
+      const errorClass = getErrorClass(inputElement);
+      inputElement.classList.remove(errorClass);
+    }
+    this.errors[fieldName] = false;
+  }
+
+  syncFieldErrorDisplay = (fieldName: string) => {
+    const inputElement = this.getFieldElement(fieldName);
+    const errorElement = this.querySelector(`#${fieldName}_error`) as HTMLElement | null;
+    const fieldState = this.form?.getFieldState(fieldName);
+    this.renderFieldErrorState(
+      fieldName,
+      inputElement,
+      errorElement,
+      Boolean(fieldState?.touched),
+      fieldState?.error,
+    );
   }
 
   getFieldContainer = (fieldName: string) => {
@@ -2710,21 +2831,13 @@ export class FormUI extends HTMLElement {
 
         // show/hide errors
         if (errorElement && inputElement) {
-          if (touched && error) {
-            const errorClass = getErrorClass(inputElement)
-            errorElement.innerHTML = (error as TValidationError).errorMessage;
-            errorElement.style.display = "block";
-            inputElement.classList.add(errorClass);
-            this.errors[name] = true;
-          } else {
-            if (this.errors[name]) {
-              errorElement.innerHTML = "";
-              errorElement.style.display = "none";
-              const errorClass = getErrorClass(inputElement)
-              inputElement.classList.remove(errorClass);
-            }
-            this.errors[name] = false;
-          }
+          this.renderFieldErrorState(
+            name,
+            inputElement as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+            errorElement,
+            touched,
+            error,
+          );
         }
       },
       {

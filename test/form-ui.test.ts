@@ -5107,6 +5107,71 @@ describe('FormUI', () => {
     expect(notes.disabled).toBe(false);
   });
 
+  it('supports set-error and lock-submit rule actions', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'set-error-lock-submit-rules-form',
+      title: 'Set Error And Lock Submit Rules Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'email', operator: 'contains', value: 'blocked' },
+          ],
+          actions: [
+            { type: 'set-error', field: 'email', message: 'This email is not allowed.' },
+            { type: 'lock-submit', field: 'submit', message: 'Resolve the blocked email first.' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const email = element.querySelector('#email') as HTMLInputElement;
+    const error = element.querySelector('#email_error') as HTMLSpanElement;
+    const submitButton = element.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const form = element.querySelector('#set-error-lock-submit-rules-form_form') as HTMLFormElement;
+    const onSubmitLocked = vi.fn();
+    const onSubmitSuccess = vi.fn();
+
+    element.addEventListener('form-ui:submit-locked', (event) => {
+      onSubmitLocked((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+    element.addEventListener('form-ui:submit-success', (event) => {
+      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    email.value = 'blocked@example.com';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(error.textContent).toBe('This email is not allowed.');
+    expect(error.style.display).toBe('block');
+    expect(submitButton.disabled).toBe(true);
+    expect(submitButton.title).toBe('Resolve the blocked email first.');
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(onSubmitLocked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          message: 'Resolve the blocked email first.',
+        },
+      })
+    );
+    expect(onSubmitSuccess).not.toHaveBeenCalled();
+
+    email.value = 'ok@example.com';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(error.textContent).toBe('');
+    expect(error.style.display).toBe('none');
+    expect(submitButton.disabled).toBe(false);
+    expect(submitButton.title).toBe('');
+  });
+
   it('supports a payment provider with a normalized payload', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ clientSecret: 'pi_secret_123' }), {

@@ -59,9 +59,12 @@ const PUBLIC_FORM_SCHEMA = {
                     "clear-value",
                     "set-value",
                     "fetch-options",
+                    "set-error",
+                    "lock-submit",
                   ],
                 },
                 field: { type: "string", minLength: 1 },
+                message: { type: "string" },
                 sourceField: { type: "string", minLength: 1 },
                 template: { type: "string" },
                 transform: {

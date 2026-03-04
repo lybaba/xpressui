@@ -1,7 +1,7 @@
 import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
-import * as shortUUID from "short-uuid";
 import { CUSTOM_SECTION } from "./Constants";
+import { generateRuntimeId } from "./id";
 
 
 export const BODY_SECTION_NAME = 'body';
@@ -128,8 +128,8 @@ type TFormConfig = {
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {
     version: 1,
-    id: shortUUID.generate(),
-    uid: shortUUID.generate(),
+    id: generateRuntimeId(),
+    uid: generateRuntimeId(),
     timestamp: Math.floor(Date.now() / 1000),
     type: CONTACTFORM_TYPE,
     name: 'demo',

@@ -1,4 +1,3 @@
-import * as shortUUID from 'short-uuid';
 import { CUSTOM_SECTION } from './Constants';
 import TFieldConfig from './TFieldConfig';
 import TFormConfig, {
@@ -8,6 +7,7 @@ import TFormConfig, {
   TFormStorageConfig,
   TFormSubmitRequest,
 } from './TFormConfig';
+import { generateRuntimeId } from './id';
 import { createSubmitRequestFromProvider } from './provider-registry';
 import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-schema';
 import {
@@ -233,8 +233,8 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
 
   return validatePublicFormConfig({
     version: PUBLIC_FORM_SCHEMA_VERSION,
-    id: shortUUID.generate(),
-    uid: shortUUID.generate(),
+    id: generateRuntimeId(),
+    uid: generateRuntimeId(),
     timestamp: Math.floor(Date.now() / 1000),
     type: input.type || CONTACTFORM_TYPE,
     name: input.name,

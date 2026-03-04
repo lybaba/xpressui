@@ -1,8 +1,8 @@
-import * as shortUUID from "short-uuid"
 import { TEXT_TYPE, TEXTAREA_TYPE, UNKNOWN_TYPE } from "./common/field"
 import TFieldConfig from "./common/TFieldConfig"
 import TFormConfig, { DEFAULT_FORM_CONFIG } from "./common/TFormConfig"
 import { CUSTOM_SECTION } from "./common/Constants"
+import { generateRuntimeId } from "./common/id"
 
 export const HTML_ATTR_PREFIX = "data-"
 
@@ -303,7 +303,7 @@ function getFieldConfigList(nodes: NodeListOf<Element>): TFieldConfig[] {
 }
 
 export function getFieldConfig(node: Element): TFieldConfig {
-    const randomId = shortUUID.generate();
+    const randomId = generateRuntimeId();
     const fieldConfig: TFieldConfig = { type: UNKNOWN_TYPE, name: randomId, label: randomId }
     for (const [dashKey, camelKey] of Object.entries(ATTR_MAP)) {
         const attrValue = node.getAttribute(dashKey)

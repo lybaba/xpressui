@@ -2577,6 +2577,8 @@ export class FormUI extends HTMLElement {
               const target = event.target as HTMLElement | null;
               const qrAction = target?.closest("[data-qr-action]") as HTMLElement | null;
               if (qrAction) {
+                event.preventDefault();
+                event.stopPropagation();
                 const action = qrAction.getAttribute("data-qr-action");
                 if (action === "start") {
                   void this.startQrCamera(fieldConfig);
@@ -2590,6 +2592,8 @@ export class FormUI extends HTMLElement {
 
               const documentScanSlotButton = target?.closest("[data-document-scan-slot]") as HTMLElement | null;
               if (documentScanSlotButton) {
+                event.preventDefault();
+                event.stopPropagation();
                 const slotIndex = Number(documentScanSlotButton.getAttribute("data-document-scan-slot"));
                 if (!Number.isNaN(slotIndex)) {
                   this.activeDocumentScanSlot[name] = slotIndex;
@@ -2605,6 +2609,9 @@ export class FormUI extends HTMLElement {
               if (!removeButton) {
                 return;
               }
+
+              event.preventDefault();
+              event.stopPropagation();
 
               const fileIndex = Number(removeButton.getAttribute("data-remove-file-index"));
               if (Number.isNaN(fileIndex)) {

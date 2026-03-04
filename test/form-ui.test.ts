@@ -2373,10 +2373,13 @@ describe('FormUI', () => {
       element.querySelectorAll('#attachments_selection [data-remove-file-index]'),
     ) as HTMLButtonElement[];
     expect(removeButtons).toHaveLength(2);
+    expect(removeButtons[0].closest('label')).toBeNull();
+    const inputClickSpy = vi.spyOn(input, 'click');
 
     removeButtons[0].click();
     await flushAsyncWork();
 
+    expect(inputClickSpy).not.toHaveBeenCalled();
     expect((element.form?.getState().values || {}).attachments).toEqual([fileTwo]);
     expect((element.querySelector('#attachments_selection') as HTMLElement).textContent).toContain(
       'two.pdf',
@@ -2384,6 +2387,7 @@ describe('FormUI', () => {
     expect((element.querySelector('#attachments_selection') as HTMLElement).textContent).not.toContain(
       'one.pdf',
     );
+    inputClickSpy.mockRestore();
   });
 
   it('renders a simple image preview when image uploads are allowed', async () => {

@@ -33,6 +33,13 @@ export type TFormRuleAppliedDetail = {
   }>;
 };
 
+export type TFormRuleTemplateMissingFieldDetail = {
+  ruleId?: string;
+  field: string;
+  template: string;
+  missingField: string;
+};
+
 type TFormDynamicRuntimeOptions = {
   getFieldConfigs(): TFieldConfig[];
   getRules(): Array<{
@@ -116,8 +123,25 @@ export class FormDynamicRuntime {
     return value;
   }
 
-  renderRuleTemplate(template: string): string {
+  renderRuleTemplate(template: string, ruleId?: string, targetField?: string): string {
     return template.replace(/\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g, (_, fieldName: string) => {
+      const hasField = this.options.getFieldConfigs().some((fieldConfig) => fieldConfig.name === fieldName);
+      if (!hasField) {
+        const context = this.options.getEventContext();
+        this.options.emitEvent("form-ui:rule-template-missing-field", {
+          values: this.options.getFormValues(),
+          formConfig: context.formConfig,
+          submit: context.submit,
+          result: {
+            ruleId,
+            field: targetField || "",
+            template,
+            missingField: fieldName,
+          } satisfies TFormRuleTemplateMissingFieldDetail,
+        });
+        return "";
+      }
+
       const value = this.options.getFieldValue(fieldName);
       return value === undefined || value === null ? "" : String(value);
     });
@@ -217,7 +241,7 @@ export class FormDynamicRuntime {
           this.options.clearFieldValue(action.field);
         } else if (action.type === "set-value") {
           const nextValue = action.template !== undefined
-            ? this.renderRuleTemplate(action.template)
+            ? this.renderRuleTemplate(action.template, rule.id, action.field)
             : action.sourceField
               ? this.options.getFieldValue(action.sourceField)
               : action.value;

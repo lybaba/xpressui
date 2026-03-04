@@ -1056,6 +1056,63 @@ describe('FormUI', () => {
     expect(fullName.value).toBe('Ada Lovelace');
   });
 
+  it('emits a debug event when a set-value template references a missing field', async () => {
+    const container = document.createElement('div');
+    const onMissingField = vi.fn();
+    const element = mountFormUI(container, {
+      name: 'set-value-missing-template-field-rules-form',
+      title: 'Set Value Missing Template Field Rules Form',
+      rules: [
+        {
+          id: 'compose-full-name',
+          conditions: [
+            { field: 'autoFullName', operator: 'equals', value: true },
+          ],
+          actions: [
+            {
+              type: 'set-value',
+              field: 'fullName',
+              template: '{{firstName}} {{missingName}}',
+              transform: 'trim',
+            },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'firstName', label: 'First name', type: 'text' },
+        { name: 'fullName', label: 'Full name', type: 'text' },
+        { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
+      ],
+    }) as FormUI;
+    const firstName = element.querySelector('#firstName') as HTMLInputElement;
+    const fullName = element.querySelector('#fullName') as HTMLInputElement;
+    const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
+
+    element.addEventListener('form-ui:rule-template-missing-field', (event) => {
+      onMissingField((event as CustomEvent<any>).detail);
+    });
+
+    firstName.value = 'Ada';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    autoFullName.checked = true;
+    autoFullName.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(onMissingField).toHaveBeenCalledTimes(1);
+    expect(onMissingField).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          ruleId: 'compose-full-name',
+          field: 'fullName',
+          template: '{{firstName}} {{missingName}}',
+          missingField: 'missingName',
+        }),
+      })
+    );
+    expect((element.form?.getState().values || {}).fullName).toBe('Ada');
+    expect(fullName.value).toBe('Ada');
+  });
+
   it('supports the fetch-options rule action', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(

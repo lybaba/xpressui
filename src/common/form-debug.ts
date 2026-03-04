@@ -33,6 +33,7 @@ const DEFAULT_DEBUG_EVENTS = [
   "form-ui:submit-error",
   "form-ui:options-loaded",
   "form-ui:rule-applied",
+  "form-ui:rule-template-missing-field",
   "form-ui:draft-saved",
   "form-ui:draft-restored",
   "form-ui:draft-cleared",

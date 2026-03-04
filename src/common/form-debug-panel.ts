@@ -27,26 +27,57 @@ export function createFormDebugPanel(
   const title = document.createElement("strong");
   title.textContent = options.title || "Form Debug";
 
-  const snapshot = document.createElement("pre");
-  snapshot.className = "xpressui-debug-panel__snapshot";
+  const counts = document.createElement("div");
+  counts.className = "xpressui-debug-panel__counts";
+
+  const actions = document.createElement("div");
+  actions.className = "xpressui-debug-panel__actions";
+
+  const clearButton = document.createElement("button");
+  clearButton.type = "button";
+  clearButton.className = "xpressui-debug-panel__clear";
+  clearButton.textContent = "Clear Snapshot";
+
+  const rulesTitle = document.createElement("strong");
+  rulesTitle.textContent = "Recent Rules";
+
+  const rules = document.createElement("pre");
+  rules.className = "xpressui-debug-panel__rules";
+
+  const warningsTitle = document.createElement("strong");
+  warningsTitle.textContent = "Active Template Warnings";
+
+  const warnings = document.createElement("pre");
+  warnings.className = "xpressui-debug-panel__warnings";
 
   element.appendChild(title);
-  element.appendChild(snapshot);
+  element.appendChild(counts);
+  actions.appendChild(clearButton);
+  element.appendChild(actions);
+  element.appendChild(rulesTitle);
+  element.appendChild(rules);
+  element.appendChild(warningsTitle);
+  element.appendChild(warnings);
 
   const render = () => {
-    snapshot.textContent = JSON.stringify({
-      snapshot: observer.getSnapshot(),
-      counts: {
-        events: observer.getEvents().length,
-        ruleHistory: observer.getRuleHistory().length,
-        templateDiagnostics: observer.getTemplateDiagnostics().length,
-      },
-    }, null, 2);
+    const snapshot = observer.getSnapshot();
+    counts.textContent = [
+      `events: ${observer.getEvents().length}`,
+      `ruleHistory: ${observer.getRuleHistory().length}`,
+      `templateDiagnostics: ${observer.getTemplateDiagnostics().length}`,
+    ].join(" | ");
+    rules.textContent = JSON.stringify(snapshot.recentAppliedRules, null, 2);
+    warnings.textContent = JSON.stringify(snapshot.activeTemplateWarnings, null, 2);
   };
 
   const observer = attachFormDebugObserver(target, {
     maxEvents: options.maxEvents,
     onEvent: () => render(),
+  });
+
+  clearButton.addEventListener("click", () => {
+    observer.clearSnapshot();
+    render();
   });
 
   render();

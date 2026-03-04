@@ -225,10 +225,14 @@ describe('FormUI', () => {
     await flushAsyncWork();
 
     expect(panel.element.textContent).toContain('Runtime Debug');
+    expect(panel.element.textContent).toContain('Recent Rules');
+    expect(panel.element.textContent).toContain('Active Template Warnings');
+    expect(panel.element.textContent).toContain('Clear Snapshot');
     expect(panel.element.textContent).toContain('set-currency');
 
-    panel.clearSnapshot();
-    expect(panel.element.textContent).toContain('"recentAppliedRules": []');
+    const clearButton = panel.element.querySelector('button') as HTMLButtonElement;
+    clearButton.click();
+    expect(panel.element.textContent).toContain('[]');
 
     panel.detach();
     expect(document.body.contains(panel.element)).toBe(false);

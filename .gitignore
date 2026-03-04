@@ -40,3 +40,4 @@ tsconfig.tsbuildinfo
 lib.tsconfig.tsbuildinfo
 .tsbuildinfo
 .npm-cache
+.pages-site

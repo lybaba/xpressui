@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui file uploads demo</title>
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #fff7ed; color: #1f2937; }
+      main { max-width: 840px; margin: 0 auto; padding: 32px 20px 60px; }
+      h1 { margin: 0 0 8px; }
+      p { color: #57534e; }
+      .shell { margin-top: 24px; padding: 20px; background: #fff; border: 1px solid #fed7aa; border-radius: 16px; }
+      a { color: #c2410c; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>File Uploads</h1>
+      <p>Champ fichier multiple avec drag-and-drop, validation et previews.</p>
+      <div class="shell" id="app"></div>
+    </main>
+    <script type="module">
+      import { mountFormUI } from "../dist/xpressui.mjs";
+
+      const container = document.getElementById("app");
+      mountFormUI(container, {
+        version: 1,
+        id: "upload_demo",
+        uid: "upload_demo_uid",
+        type: "contactform",
+        name: "upload-demo",
+        title: "Upload Demo",
+        submit: {
+          endpoint: "/api/uploads",
+          mode: "form-data",
+          formDataArrayMode: "repeat",
+        },
+        sections: {
+          main: [
+            { type: "text", name: "full_name", label: "Full Name", required: true },
+            {
+              type: "file",
+              name: "attachments",
+              label: "Attachments",
+              multiple: true,
+              minFiles: 1,
+              maxFiles: 4,
+              maxFileSizeMb: 5,
+              maxTotalFileSizeMb: 12,
+              accept: ".pdf,image/*",
+              fileDropMode: "append",
+              formDataFieldName: "attachments[]",
+            },
+          ],
+        },
+      });
+    </script>
+  </body>
+  </html>

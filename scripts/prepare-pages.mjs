@@ -5,6 +5,7 @@ const projectRoot = resolve(process.cwd());
 const outputDir = resolve(projectRoot, ".pages-site");
 const demosDir = resolve(projectRoot, "demos");
 const distDir = resolve(projectRoot, "dist");
+const cssFile = resolve(projectRoot, "index.css");
 
 rmSync(outputDir, { recursive: true, force: true });
 mkdirSync(outputDir, { recursive: true });
@@ -15,6 +16,10 @@ if (existsSync(demosDir)) {
 
 if (existsSync(distDir)) {
   cpSync(distDir, resolve(outputDir, "dist"), { recursive: true });
+}
+
+if (existsSync(cssFile)) {
+  cpSync(cssFile, resolve(outputDir, "index.css"));
 }
 
 writeFileSync(

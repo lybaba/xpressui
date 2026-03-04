@@ -176,6 +176,25 @@ registerProvider("email", {
   errorEventName: "form-ui:email-error",
 });
 
+registerProvider("crm", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "crm",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "crm",
+      contact: values,
+    };
+  },
+  successEventName: "form-ui:crm-success",
+  errorEventName: "form-ui:crm-error",
+});
+
 registerProvider("identity-verification", {
   createSubmitRequest(provider) {
     return {

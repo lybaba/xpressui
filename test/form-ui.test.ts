@@ -4101,6 +4101,72 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports a crm provider for lead capture workflows', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ accepted: true, leadId: 'lead_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'crm-form',
+      title: 'CRM Form',
+      provider: {
+        type: 'crm',
+        endpoint: 'https://api.example.test/crm/leads',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+        },
+        {
+          name: 'full_name',
+          label: 'Full Name',
+          type: 'text',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const email = element.querySelector('#email') as HTMLInputElement;
+    const name = element.querySelector('#full_name') as HTMLInputElement;
+    const form = element.querySelector('#crm-form_form') as HTMLFormElement;
+    const onCrmSuccess = vi.fn();
+
+    element.addEventListener('form-ui:crm-success', (event) => {
+      onCrmSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    email.value = 'lead@example.com';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+    name.value = 'Alice Prospect';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/crm/leads',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'crm',
+          contact: {
+            email: 'lead@example.com',
+            full_name: 'Alice Prospect',
+          },
+        }),
+      })
+    );
+    expect(onCrmSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { accepted: true, leadId: 'lead_123' },
+      })
+    );
+  });
+
   it('supports an identity-verification provider for document workflows', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ verified: true, verificationId: 'idv_123' }), {

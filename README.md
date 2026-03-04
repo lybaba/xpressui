@@ -609,6 +609,51 @@ Extra events:
 - `form-ui:email-success`
 - `form-ui:email-error`
 
+### CRM
+
+Use `crm` when your backend creates or updates leads in a CRM system with a
+normalized contact payload.
+
+```ts
+mountFormUI(container, {
+  name: 'crm-form',
+  title: 'CRM Form',
+  provider: {
+    type: 'crm',
+    endpoint: '/api/crm/leads',
+  },
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+    { name: 'full_name', label: 'Full Name', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "crm",
+  "contact": {
+    "email": "lead@example.com",
+    "full_name": "Alice Prospect"
+  }
+}
+```
+
+Typical backend response:
+
+```json
+{
+  "accepted": true,
+  "leadId": "lead_123"
+}
+```
+
+Extra events:
+- `form-ui:crm-success`
+- `form-ui:crm-error`
+
 Use `identity-verification` when your backend verifies scanned identity data
 and you want a normalized request contract for KYC / onboarding workflows.
 
@@ -1018,6 +1063,8 @@ Provider-specific events:
 - `form-ui:booking-availability-error`
 - `form-ui:email-success`
 - `form-ui:email-error`
+- `form-ui:crm-success`
+- `form-ui:crm-error`
 
 Event detail includes:
 - `values`

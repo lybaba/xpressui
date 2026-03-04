@@ -254,6 +254,51 @@ Frontend events:
 - `form-ui:identity-verification-webhook-success`
 - `form-ui:identity-verification-webhook-error`
 
+## CRM Provider
+
+Use this provider when your backend creates or updates leads in a CRM system.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'crm-form',
+  provider: {
+    type: 'crm',
+    endpoint: '/api/crm/leads',
+  },
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+    { name: 'full_name', label: 'Full Name', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "crm",
+  "contact": {
+    "email": "lead@example.com",
+    "full_name": "Alice Prospect"
+  }
+}
+```
+
+Suggested success response:
+
+```json
+{
+  "accepted": true,
+  "leadId": "lead_123"
+}
+```
+
+Frontend events:
+- `form-ui:crm-success`
+- `form-ui:crm-error`
+
 ## Dynamic Options Endpoint
 
 For select fields using `optionsEndpoint`, the component performs a `GET` and

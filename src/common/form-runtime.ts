@@ -2,12 +2,12 @@ import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
 import { FormDynamicRuntime, TFormActiveTemplateWarning } from "./form-dynamic";
 import { FormEngineRuntime } from "./form-engine";
+import { FormUploadRuntime } from "./form-upload";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
   TFormStorageSnapshot,
 } from "./form-persistence";
-import { submitFormValues } from "./form-submit";
 
 export type TFormRuntimeSubmitResult = {
   response: Response;
@@ -78,6 +78,7 @@ export class FormRuntime {
   engine: FormEngineRuntime;
   persistence: FormPersistenceRuntime;
   dynamic: FormDynamicRuntime | null;
+  upload: FormUploadRuntime;
   options: Required<Pick<TFormRuntimeOptions, "emitEvent" | "getValues" | "submitValues">>;
 
   constructor(formConfig: TFormConfig | null = null, options: TFormRuntimeOptions = {}) {
@@ -86,10 +87,16 @@ export class FormRuntime {
     this.options = {
       emitEvent: options.emitEvent || noopEmitEvent,
       getValues: options.getValues || (() => ({})),
-      submitValues:
-        options.submitValues ||
-        ((values, submitConfig) => submitFormValues(values, submitConfig, this.engine.getFields())),
+      submitValues: options.submitValues || (() => {
+        throw new Error("unreachable");
+      }),
     };
+    this.upload = new FormUploadRuntime({
+      emitEvent: (eventName, detail) => this.options.emitEvent(eventName, detail),
+    });
+    this.options.submitValues =
+      options.submitValues ||
+      ((values, submitConfig) => this.upload.submit(values, submitConfig, this.engine.getFields()));
     this.persistence = new FormPersistenceRuntime({
       getFormConfig: () => this.formConfig,
       getValues: () => this.options.getValues(),

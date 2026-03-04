@@ -10,6 +10,7 @@ import {
   FormDynamicRuntime,
   FormPersistenceRuntime,
   FormRuntime,
+  FormUploadRuntime,
   FormUI,
   getProviderDefinition,
   mountFormUI,
@@ -46,6 +47,7 @@ describe('FormUI', () => {
   it('keeps the main public runtime exports available from the package entrypoint', () => {
     expect(publicApi.FormUI).toBe(FormUI);
     expect(publicApi.FormRuntime).toBe(FormRuntime);
+    expect(publicApi.FormUploadRuntime).toBe(FormUploadRuntime);
     expect(publicApi.createFormConfig).toBe(createFormConfig);
     expect(publicApi.mountFormUI).toBe(mountFormUI);
     expect(publicApi.createLocalFormAdmin).toBe(createLocalFormAdmin);
@@ -724,14 +726,29 @@ describe('FormUI', () => {
   });
 
   it('stores file metadata locally and submits file blobs with form-data', async () => {
-    const fetchMock = vi.spyOn(window, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ uploaded: true }), {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-        },
-      })
-    );
+    const originalXhr = window.XMLHttpRequest;
+
+    class MockXhr {
+      static sentBodies: Array<FormData | File> = [];
+      upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      status = 200;
+      responseText = JSON.stringify({ uploaded: true });
+
+      open() {}
+      setRequestHeader() {}
+      getResponseHeader(name: string) {
+        return name.toLowerCase() === 'content-type' ? 'application/json' : null;
+      }
+      send(body: FormData | File) {
+        MockXhr.sentBodies.push(body);
+        this.onload?.();
+      }
+    }
+
+    (window as any).XMLHttpRequest = MockXhr;
+    (globalThis as any).XMLHttpRequest = MockXhr;
     const container = document.createElement('div');
     const element = mountFormUI(container, {
       name: 'upload-form',
@@ -794,12 +811,94 @@ describe('FormUI', () => {
 
     await element.onSubmit((element.form?.getState().values || {}) as Record<string, any>);
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-
-    const request = fetchMock.mock.calls[0][1] as RequestInit;
-    const body = request.body as FormData;
+    const body = MockXhr.sentBodies[0] as FormData;
     expect(body).toBeInstanceOf(FormData);
     expect(body.getAll('attachments[]')).toEqual([fileOne, fileTwo]);
+
+    (window as any).XMLHttpRequest = originalXhr;
+    (globalThis as any).XMLHttpRequest = originalXhr;
+  });
+
+  it('emits upload progress events and shows upload state in the default UI', async () => {
+    const originalXhr = window.XMLHttpRequest;
+    const eventTypes: string[] = [];
+
+    class MockXhr {
+      static sentBodies: Array<FormData | File> = [];
+      upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      status = 200;
+      responseText = JSON.stringify({ uploaded: true });
+
+      open() {}
+      setRequestHeader() {}
+      getResponseHeader(name: string) {
+        return name.toLowerCase() === 'content-type' ? 'application/json' : null;
+      }
+      send(body: FormData | File) {
+        MockXhr.sentBodies.push(body);
+        this.upload.onprogress?.({
+          lengthComputable: true,
+          loaded: 50,
+          total: 100,
+        } as ProgressEvent);
+        this.upload.onprogress?.({
+          lengthComputable: true,
+          loaded: 100,
+          total: 100,
+        } as ProgressEvent);
+        this.onload?.();
+      }
+    }
+
+    (window as any).XMLHttpRequest = MockXhr;
+    (globalThis as any).XMLHttpRequest = MockXhr;
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'upload-progress-form',
+      title: 'Upload Progress Form',
+      submit: {
+        endpoint: '/api/uploads',
+        method: 'POST',
+        mode: 'form-data',
+      },
+      fields: [
+        {
+          name: 'attachment',
+          label: 'Attachment',
+          type: 'file',
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#attachment') as HTMLInputElement;
+    const file = new File(['upload'], 'upload.pdf', { type: 'application/pdf' });
+
+    ['form-ui:upload-start', 'form-ui:upload-progress', 'form-ui:upload-complete'].forEach((type) => {
+      element.addEventListener(type, () => {
+        eventTypes.push(type);
+      });
+    });
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [file],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+    await element.onSubmit((element.form?.getState().values || {}) as Record<string, any>);
+
+    expect(eventTypes).toContain('form-ui:upload-start');
+    expect(eventTypes).toContain('form-ui:upload-progress');
+    expect(eventTypes).toContain('form-ui:upload-complete');
+    expect((element.querySelector('#attachment_selection') as HTMLElement).textContent).toContain(
+      'Uploaded',
+    );
+
+    (window as any).XMLHttpRequest = originalXhr;
+    (globalThis as any).XMLHttpRequest = originalXhr;
   });
 
   it('supports drag and drop for file fields in the default UI', async () => {
@@ -1165,14 +1264,29 @@ describe('FormUI', () => {
   });
 
   it('supports repeat form-data array keys for file uploads', async () => {
-    const fetchMock = vi.spyOn(window, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ uploaded: true }), {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-        },
-      })
-    );
+    const originalXhr = window.XMLHttpRequest;
+
+    class MockXhr {
+      static sentBodies: Array<FormData | File> = [];
+      upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      status = 200;
+      responseText = JSON.stringify({ uploaded: true });
+
+      open() {}
+      setRequestHeader() {}
+      getResponseHeader(name: string) {
+        return name.toLowerCase() === 'content-type' ? 'application/json' : null;
+      }
+      send(body: FormData | File) {
+        MockXhr.sentBodies.push(body);
+        this.onload?.();
+      }
+    }
+
+    (window as any).XMLHttpRequest = MockXhr;
+    (globalThis as any).XMLHttpRequest = MockXhr;
     const container = document.createElement('div');
     const element = mountFormUI(container, {
       name: 'upload-repeat-form',
@@ -1196,22 +1310,38 @@ describe('FormUI', () => {
     const fileTwo = new File(['two'], 'two.pdf', { type: 'application/pdf' });
 
     await element.onSubmit({ attachments: [fileOne, fileTwo] });
-
-    const request = fetchMock.mock.calls[0][1] as RequestInit;
-    const body = request.body as FormData;
+    const body = MockXhr.sentBodies[0] as FormData;
     expect(body.getAll('attachments')).toEqual([fileOne, fileTwo]);
     expect(body.getAll('attachments[]')).toEqual([]);
+
+    (window as any).XMLHttpRequest = originalXhr;
+    (globalThis as any).XMLHttpRequest = originalXhr;
   });
 
   it('supports custom form-data field names for file uploads', async () => {
-    const fetchMock = vi.spyOn(window, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ uploaded: true }), {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-        },
-      })
-    );
+    const originalXhr = window.XMLHttpRequest;
+
+    class MockXhr {
+      static sentBodies: Array<FormData | File> = [];
+      upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      status = 200;
+      responseText = JSON.stringify({ uploaded: true });
+
+      open() {}
+      setRequestHeader() {}
+      getResponseHeader(name: string) {
+        return name.toLowerCase() === 'content-type' ? 'application/json' : null;
+      }
+      send(body: FormData | File) {
+        MockXhr.sentBodies.push(body);
+        this.onload?.();
+      }
+    }
+
+    (window as any).XMLHttpRequest = MockXhr;
+    (globalThis as any).XMLHttpRequest = MockXhr;
     const container = document.createElement('div');
     const element = mountFormUI(container, {
       name: 'upload-custom-field-form',
@@ -1236,15 +1366,108 @@ describe('FormUI', () => {
     const fileTwo = new File(['two'], 'two.pdf', { type: 'application/pdf' });
 
     await element.onSubmit({ attachments: [fileOne, fileTwo] });
-
-    const request = fetchMock.mock.calls[0][1] as RequestInit;
-    const body = request.body as FormData;
+    const body = MockXhr.sentBodies[0] as FormData;
     expect(body.getAll('documents')).toEqual([fileOne, fileTwo]);
     expect(body.getAll('attachments')).toEqual([]);
+
+    (window as any).XMLHttpRequest = originalXhr;
+    (globalThis as any).XMLHttpRequest = originalXhr;
+  });
+
+  it('supports presigned upload flows through the upload runtime', async () => {
+    const originalXhr = window.XMLHttpRequest;
+    const emittedEvents: string[] = [];
+
+    class MockXhr {
+      upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      status = 200;
+      responseText = '';
+
+      open() {}
+      setRequestHeader() {}
+      getResponseHeader() {
+        return 'text/plain';
+      }
+      send() {
+        this.upload.onprogress?.({
+          lengthComputable: true,
+          loaded: 100,
+          total: 100,
+        } as ProgressEvent);
+        this.onload?.();
+      }
+    }
+
+    (window as any).XMLHttpRequest = MockXhr;
+    (globalThis as any).XMLHttpRequest = MockXhr;
+
+    const fetchMock = vi.spyOn(window, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({
+          uploadUrl: 'https://upload.example.test/file',
+          fileUrl: 'https://cdn.example.test/file.pdf',
+        }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ saved: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+
+    const runtime = new FormUploadRuntime({
+      emitEvent: (eventName) => {
+        emittedEvents.push(eventName);
+        return true;
+      },
+    });
+    const file = new File(['content'], 'file.pdf', { type: 'application/pdf' });
+
+    await runtime.submit(
+      { attachment: file },
+      {
+        endpoint: 'https://api.example.test/finalize',
+        method: 'POST',
+        mode: 'form-data',
+        uploadStrategy: 'presigned',
+        presignEndpoint: 'https://api.example.test/presign',
+      },
+      {
+        attachment: {
+          name: 'attachment',
+          label: 'Attachment',
+          type: 'file',
+        },
+      },
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(emittedEvents).toContain('form-ui:upload-start');
+    expect(emittedEvents).toContain('form-ui:upload-progress');
+    expect(emittedEvents).toContain('form-ui:upload-complete');
+
+    const presignRequest = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(presignRequest.body).toBe(JSON.stringify({
+      fieldName: 'attachment',
+      fileName: 'file.pdf',
+      contentType: 'application/pdf',
+      size: file.size,
+    }));
+
+    const finalizeRequest = fetchMock.mock.calls[1][1] as RequestInit;
+    const finalizeBody = finalizeRequest.body as FormData;
+    expect(finalizeBody.get('attachment')).toBe('https://cdn.example.test/file.pdf');
+
+    (window as any).XMLHttpRequest = originalXhr;
+    (globalThis as any).XMLHttpRequest = originalXhr;
   });
 
   it('disables offline queue for forms that include file fields', async () => {
-    const fetchSpy = vi.spyOn(window, 'fetch').mockRejectedValue(new Error('offline'));
     const container = document.createElement('div');
     const element = mountFormUI(container, {
       name: 'queued-upload-form',
@@ -1276,8 +1499,6 @@ describe('FormUI', () => {
     });
 
     await element.onSubmit({ attachment: upload });
-
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(onQueueDisabled).toHaveBeenCalledWith(
       expect.objectContaining({
         error: expect.any(Error),

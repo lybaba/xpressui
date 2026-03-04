@@ -14,6 +14,7 @@
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
     --text-sm--line-height: calc(1.25 / 0.875);
+    --font-weight-medium: 500;
     --default-transition-duration: 150ms;
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: var(--font-sans);
@@ -1335,6 +1336,9 @@
   .mt-5 {
     margin-top: calc(var(--spacing) * 5);
   }
+  .mb-2 {
+    margin-bottom: calc(var(--spacing) * 2);
+  }
   .status {
     @layer daisyui.l1.l2.l3 {
       display: inline-block;
@@ -1535,6 +1539,10 @@
     @layer daisyui.l1.l2 {
       font-size: max(var(--font-size, 0.75rem), 0.75rem);
     }
+  }
+  .font-medium {
+    --tw-font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-medium);
   }
   .lowercase {
     text-transform: lowercase;
@@ -1892,6 +1900,10 @@
   inherits: false;
   initial-value: solid;
 }
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}
 @property --tw-blur {
   syntax: "*";
   inherits: false;
@@ -1955,6 +1967,7 @@
       --tw-skew-y: initial;
       --tw-space-y-reverse: 0;
       --tw-border-style: solid;
+      --tw-font-weight: initial;
       --tw-blur: initial;
       --tw-brightness: initial;
       --tw-contrast: initial;

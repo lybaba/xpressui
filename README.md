@@ -18,6 +18,7 @@ not the old React `PostUI` API shown in earlier versions of the README.
 The public API is centered on:
 - `FormUI` (the custom element class)
 - `FormRuntime` (the composed headless runtime)
+- `FormUploadRuntime` (the dedicated upload runtime)
 - `mountFormUI(...)`
 - `createFormConfig(...)`
 - `createTemplateMarkup(...)`
@@ -41,6 +42,7 @@ Public API you should treat as stable:
 - `createTemplateMarkup(...)`
 - `FormUI`
 - `FormRuntime`
+- `FormUploadRuntime`
 - `createLocalFormAdmin(...)`
 - public schema helpers (`validatePublicFormConfig`, `migratePublicFormConfig`)
 
@@ -665,6 +667,7 @@ mountFormUI(container, {
     method: 'POST',
     mode: 'form-data',
     formDataArrayMode: 'brackets',
+    uploadStrategy: 'standard',
   },
   fields: [
     {
@@ -706,10 +709,16 @@ Frontend behavior:
 - `formDataFieldName` overrides the multipart field key for one file field
 - `submit.formDataArrayMode: 'brackets' | 'repeat'` controls whether repeated
   file fields are sent as `attachments[]` or `attachments`
+- `submit.uploadStrategy: 'presigned'` uploads files first, then submits the
+  resulting URLs to your backend
 
 Extra event:
 - `form-ui:file-validation-error`
 - `form-ui:queue-disabled-for-files`
+- `form-ui:upload-start`
+- `form-ui:upload-progress`
+- `form-ui:upload-complete`
+- `form-ui:upload-error`
 
 You can also define basic rules at the form level:
 

@@ -232,6 +232,24 @@ export function createTemplateMarkup(
         config.submit.formDataArrayMode
           ? `data-submit-form-data-array-mode="${escapeHtml(config.submit.formDataArrayMode)}"`
           : '',
+        config.submit.uploadStrategy
+          ? `data-submit-upload-strategy="${escapeHtml(config.submit.uploadStrategy)}"`
+          : '',
+        config.submit.presignEndpoint
+          ? `data-submit-presign-endpoint="${escapeHtml(config.submit.presignEndpoint)}"`
+          : '',
+        config.submit.presignMethod
+          ? `data-submit-presign-method="${escapeHtml(config.submit.presignMethod)}"`
+          : '',
+        config.submit.presignUploadUrlKey
+          ? `data-submit-presign-upload-url-key="${escapeHtml(config.submit.presignUploadUrlKey)}"`
+          : '',
+        config.submit.presignFileUrlKey
+          ? `data-submit-presign-file-url-key="${escapeHtml(config.submit.presignFileUrlKey)}"`
+          : '',
+        config.submit.uploadMethod
+          ? `data-submit-upload-method="${escapeHtml(config.submit.uploadMethod)}"`
+          : '',
         config.submit.action
           ? `data-submit-action="${escapeHtml(config.submit.action)}"`
           : '',

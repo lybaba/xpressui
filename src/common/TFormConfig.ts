@@ -48,6 +48,13 @@ export type TFormSubmitRequest = {
     headers?: Record<string, string>;
     mode?: 'json' | 'form-data';
     formDataArrayMode?: 'brackets' | 'repeat';
+    uploadStrategy?: 'standard' | 'presigned';
+    presignEndpoint?: string;
+    presignMethod?: 'POST' | 'PUT' | 'PATCH';
+    presignHeaders?: Record<string, string>;
+    presignUploadUrlKey?: string;
+    presignFileUrlKey?: string;
+    uploadMethod?: 'POST' | 'PUT';
     action?: string;
 };
 

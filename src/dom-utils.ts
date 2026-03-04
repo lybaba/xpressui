@@ -63,6 +63,12 @@ export const ATTR_SUBMIT_ENDPOINT = "submitEndpoint"
 export const ATTR_SUBMIT_METHOD = "submitMethod"
 export const ATTR_SUBMIT_MODE = "submitMode"
 export const ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = "submitFormDataArrayMode"
+export const ATTR_SUBMIT_UPLOAD_STRATEGY = "submitUploadStrategy"
+export const ATTR_SUBMIT_PRESIGN_ENDPOINT = "submitPresignEndpoint"
+export const ATTR_SUBMIT_PRESIGN_METHOD = "submitPresignMethod"
+export const ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY = "submitPresignUploadUrlKey"
+export const ATTR_SUBMIT_PRESIGN_FILE_URL_KEY = "submitPresignFileUrlKey"
+export const ATTR_SUBMIT_UPLOAD_METHOD = "submitUploadMethod"
 export const ATTR_SUBMIT_ACTION = "submitAction"
 export const ATTR_VISIBLE_WHEN_FIELD = "visibleWhenField"
 export const ATTR_VISIBLE_WHEN_EQUALS = "visibleWhenEquals"
@@ -135,6 +141,12 @@ export const HTML_ATTR_SUBMIT_ENDPOINT = `${HTML_ATTR_PREFIX}submit-endpoint`
 export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
 export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
 export const HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = `${HTML_ATTR_PREFIX}submit-form-data-array-mode`
+export const HTML_ATTR_SUBMIT_UPLOAD_STRATEGY = `${HTML_ATTR_PREFIX}submit-upload-strategy`
+export const HTML_ATTR_SUBMIT_PRESIGN_ENDPOINT = `${HTML_ATTR_PREFIX}submit-presign-endpoint`
+export const HTML_ATTR_SUBMIT_PRESIGN_METHOD = `${HTML_ATTR_PREFIX}submit-presign-method`
+export const HTML_ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY = `${HTML_ATTR_PREFIX}submit-presign-upload-url-key`
+export const HTML_ATTR_SUBMIT_PRESIGN_FILE_URL_KEY = `${HTML_ATTR_PREFIX}submit-presign-file-url-key`
+export const HTML_ATTR_SUBMIT_UPLOAD_METHOD = `${HTML_ATTR_PREFIX}submit-upload-method`
 export const HTML_ATTR_SUBMIT_ACTION = `${HTML_ATTR_PREFIX}submit-action`
 export const HTML_ATTR_VISIBLE_WHEN_FIELD = `${HTML_ATTR_PREFIX}visible-when-field`
 export const HTML_ATTR_VISIBLE_WHEN_EQUALS = `${HTML_ATTR_PREFIX}visible-when-equals`
@@ -207,6 +219,12 @@ export const ATTR_MAP = {
     [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
     [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
     [HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE]: ATTR_SUBMIT_FORM_DATA_ARRAY_MODE,
+    [HTML_ATTR_SUBMIT_UPLOAD_STRATEGY]: ATTR_SUBMIT_UPLOAD_STRATEGY,
+    [HTML_ATTR_SUBMIT_PRESIGN_ENDPOINT]: ATTR_SUBMIT_PRESIGN_ENDPOINT,
+    [HTML_ATTR_SUBMIT_PRESIGN_METHOD]: ATTR_SUBMIT_PRESIGN_METHOD,
+    [HTML_ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY]: ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY,
+    [HTML_ATTR_SUBMIT_PRESIGN_FILE_URL_KEY]: ATTR_SUBMIT_PRESIGN_FILE_URL_KEY,
+    [HTML_ATTR_SUBMIT_UPLOAD_METHOD]: ATTR_SUBMIT_UPLOAD_METHOD,
     [HTML_ATTR_SUBMIT_ACTION]: ATTR_SUBMIT_ACTION,
     [HTML_ATTR_VISIBLE_WHEN_FIELD]: ATTR_VISIBLE_WHEN_FIELD,
     [HTML_ATTR_VISIBLE_WHEN_EQUALS]: ATTR_VISIBLE_WHEN_EQUALS,
@@ -299,12 +317,24 @@ export default function getFormConfig(node: Element): TFormConfig {
             method: (formConfig as any).submitMethod,
             mode: (formConfig as any).submitMode,
             formDataArrayMode: (formConfig as any).submitFormDataArrayMode,
+            uploadStrategy: (formConfig as any).submitUploadStrategy,
+            presignEndpoint: (formConfig as any).submitPresignEndpoint,
+            presignMethod: (formConfig as any).submitPresignMethod,
+            presignUploadUrlKey: (formConfig as any).submitPresignUploadUrlKey,
+            presignFileUrlKey: (formConfig as any).submitPresignFileUrlKey,
+            uploadMethod: (formConfig as any).submitUploadMethod,
             action: (formConfig as any).submitAction,
         };
         delete (formConfig as any).submitEndpoint;
         delete (formConfig as any).submitMethod;
         delete (formConfig as any).submitMode;
         delete (formConfig as any).submitFormDataArrayMode;
+        delete (formConfig as any).submitUploadStrategy;
+        delete (formConfig as any).submitPresignEndpoint;
+        delete (formConfig as any).submitPresignMethod;
+        delete (formConfig as any).submitPresignUploadUrlKey;
+        delete (formConfig as any).submitPresignFileUrlKey;
+        delete (formConfig as any).submitUploadMethod;
         delete (formConfig as any).submitAction;
     }
 

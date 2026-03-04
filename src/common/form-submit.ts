@@ -3,7 +3,7 @@ import { TFormSubmitRequest } from "./TFormConfig";
 import { isFileLikeValue } from "./field";
 import { buildProviderPayload } from "./provider-registry";
 
-function resolveFormDataKey(
+export function resolveFormDataKey(
   key: string,
   fieldMap?: Record<string, TFieldConfig>,
 ): string {
@@ -56,6 +56,28 @@ function appendFormDataValue(
   formData.append(key, value === null ? "" : String(value));
 }
 
+export function buildSubmitPayload(
+  values: Record<string, any>,
+  submitConfig: TFormSubmitRequest,
+): Record<string, any> {
+  return buildProviderPayload(values, submitConfig);
+}
+
+export function buildFormDataBody(
+  values: Record<string, any>,
+  submitConfig: TFormSubmitRequest,
+  fieldMap?: Record<string, TFieldConfig>,
+): FormData {
+  const formDataArrayMode = submitConfig.formDataArrayMode || "brackets";
+  const payload = buildSubmitPayload(values, submitConfig);
+  const body = new FormData();
+  Object.entries(payload).forEach(([key, value]) => {
+    const resolvedKey = resolveFormDataKey(key, fieldMap);
+    appendFormDataValue(body, resolvedKey, value, formDataArrayMode, fieldMap);
+  });
+  return body;
+}
+
 export async function submitFormValues(
   values: Record<string, any>,
   submitConfig: TFormSubmitRequest,
@@ -67,7 +89,7 @@ export async function submitFormValues(
   const headers = { ...(submitConfig.headers || {}) };
   let url = submitConfig.endpoint;
   const init: RequestInit = { method, headers };
-  const payload = buildProviderPayload(values, submitConfig);
+  const payload = buildSubmitPayload(values, submitConfig);
 
   if (method === "GET") {
     const searchParams = new URLSearchParams();
@@ -79,11 +101,7 @@ export async function submitFormValues(
       url += (url.includes("?") ? "&" : "?") + query;
     }
   } else if (mode === "form-data") {
-    const body = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      const resolvedKey = resolveFormDataKey(key, fieldMap);
-      appendFormDataValue(body, resolvedKey, value, formDataArrayMode, fieldMap);
-    });
+    const body = buildFormDataBody(values, submitConfig, fieldMap);
     init.body = body;
   } else {
     headers["Content-Type"] = headers["Content-Type"] || "application/json";

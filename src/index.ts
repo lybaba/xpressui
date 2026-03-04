@@ -13,13 +13,13 @@ import {
   TFormStorageSnapshot,
 } from "./common/form-persistence";
 import { FormRuntime } from "./common/form-runtime";
+import { FormUploadRuntime, TFormUploadState } from "./common/form-upload";
 import { validatePublicFormConfig } from "./common/public-schema";
 import {
   getProviderErrorEventName,
   getProviderSuccessEventName,
   registerProvider,
 } from "./common/provider-registry";
-import { submitFormValues } from "./common/form-submit";
 export {
   createFormConfig,
   createTemplateMarkup,
@@ -32,6 +32,7 @@ export { FormEngineRuntime } from "./common/form-engine";
 export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
 export { FormRuntime } from "./common/form-runtime";
+export { FormUploadRuntime } from "./common/form-upload";
 export {
   PUBLIC_FORM_SCHEMA_VERSION,
   getPublicFormSchemaErrors,
@@ -58,6 +59,7 @@ export type {
 } from "./common/form-debug";
 export type { TFormDebugPanel, TFormDebugPanelOptions } from "./common/form-debug-panel";
 export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
+export type { TFormUploadState } from "./common/form-upload";
 export type { TFormQueueState, TFormStorageSnapshot } from "./common/form-persistence";
 export type {
   TFormRuntimeDynamicAdapters,
@@ -102,8 +104,10 @@ export class FormUI extends HTMLElement {
   initialized: boolean;
   dynamic: FormDynamicRuntime;
   persistence: FormPersistenceRuntime;
+  upload: FormUploadRuntime;
   filePreviewUrls: Record<string, string[]>;
   fileDragActive: Record<string, boolean>;
+  fileUploadState: Record<string, TFormUploadState | null>;
 
   constructor() {
     super();
@@ -113,6 +117,7 @@ export class FormUI extends HTMLElement {
     this.errors = {}
     this.form = null;
     this.initialized = false;
+    this.fileUploadState = {};
     this.filePreviewUrls = {};
     this.fileDragActive = {};
     this.dynamic = new FormDynamicRuntime({
@@ -151,6 +156,29 @@ export class FormUI extends HTMLElement {
       emitEvent: (eventName, detail) =>
         this.emitFormEvent(eventName, detail as TFormUISubmitDetail),
       submitValues: (values, submitConfig) => this.submitToApi(values, submitConfig),
+    });
+    this.upload = new FormUploadRuntime({
+      emitEvent: (eventName, detail) => {
+        const uploadState = detail.result as TFormUploadState | undefined;
+        if (uploadState?.fieldNames?.length) {
+          uploadState.fieldNames.forEach((fieldName) => {
+            this.fileUploadState[fieldName] =
+              uploadState.status === "complete" || uploadState.status === "error"
+                ? uploadState
+                : uploadState;
+            const fieldConfig = this.engine.getField(fieldName);
+            const selectionElement = this.querySelector(`#${fieldName}_selection`) as HTMLElement | null;
+            if (fieldConfig) {
+              this.renderFileSelection(fieldConfig, this.getFieldValue(fieldName), selectionElement);
+            }
+          });
+        }
+
+        return this.emitFormEvent(eventName, {
+          ...(detail as TFormUISubmitDetail),
+          formConfig: this.formConfig,
+        });
+      },
     });
   }
 
@@ -215,9 +243,22 @@ export class FormUI extends HTMLElement {
     selectionElement.innerHTML = "";
     const selectedFiles = this.getFileValueList(value);
     const isDragActive = Boolean(this.fileDragActive[fieldConfig.name]);
+    const uploadState = this.fileUploadState[fieldConfig.name];
 
     selectionElement.classList.toggle("border-primary", isDragActive);
     selectionElement.classList.toggle("bg-base-200", isDragActive);
+
+    if (uploadState) {
+      const status = document.createElement("div");
+      status.className = "mb-2 text-xs font-medium";
+      status.textContent =
+        uploadState.status === "uploading"
+          ? `Uploading... ${uploadState.progress}%`
+          : uploadState.status === "complete"
+            ? "Uploaded"
+            : "Upload failed";
+      selectionElement.appendChild(status);
+    }
 
     if (!selectedFiles.length) {
       const placeholder = document.createElement("div");
@@ -530,7 +571,7 @@ export class FormUI extends HTMLElement {
     formValues: Record<string, any>,
     submitConfig: TFormSubmitRequest,
   ) => {
-    return submitFormValues(formValues, submitConfig, this.engine.getFields());
+    return this.upload.submit(formValues, submitConfig, this.engine.getFields());
   }
 
   onSubmit = async (values: Record<string, any>) => {

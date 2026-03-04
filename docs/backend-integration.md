@@ -322,6 +322,57 @@ Then the frontend sends:
 - `documents[]` in `brackets` mode
 - `documents` in `repeat` mode
 
+## Presigned Uploads
+
+Use `uploadStrategy: 'presigned'` when your backend signs an upload URL first,
+then the browser uploads the binary directly before sending the final form
+submission.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'presigned-upload-form',
+  submit: {
+    endpoint: '/api/uploads/complete',
+    method: 'POST',
+    mode: 'form-data',
+    uploadStrategy: 'presigned',
+    presignEndpoint: '/api/uploads/presign',
+  },
+  fields: [
+    {
+      name: 'attachment',
+      label: 'Attachment',
+      type: 'file',
+    },
+  ],
+});
+```
+
+Presign request body:
+
+```json
+{
+  "fieldName": "attachment",
+  "fileName": "report.pdf",
+  "contentType": "application/pdf",
+  "size": 123456
+}
+```
+
+Expected presign response:
+
+```json
+{
+  "uploadUrl": "https://bucket.s3.amazonaws.com/...",
+  "fileUrl": "https://cdn.example.com/report.pdf"
+}
+```
+
+After the direct upload completes, the final form submission sends `fileUrl`
+instead of the original `File` object.
+
 Minimal Express example:
 
 ```ts

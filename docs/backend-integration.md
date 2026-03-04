@@ -142,6 +142,12 @@ Normalized frontend event detail:
 - `detail.providerResult.nextActions`: normalized next-action list when provided
 - `detail.providerResult.data`: normalized provider data payload
 
+Provider-aware error normalization:
+- payment providers map `code`, `message`, and field-level `errors` to normalized `errors[]`
+- approval providers map `reason` to a normalized approval error entry
+- identity providers map `verificationErrors` / `documentErrors` to normalized entries
+- when explicit `messages` are missing, `xpressui` derives `messages[]` from normalized errors
+
 Legacy responses such as `{ "status": "approved", "approvalId": "apr_123" }`
 still work. `xpressui` will normalize them into the same `providerResult`
 shape for event consumers.
@@ -255,7 +261,10 @@ HTTP status: `402`
 ```json
 {
   "code": "payment_failed",
-  "message": "Card authorization failed"
+  "message": "Card authorization failed",
+  "errors": {
+    "amount": "Amount is below minimum charge"
+  }
 }
 ```
 
@@ -638,6 +647,16 @@ Suggested completed response:
     "state": "approved"
   }
 }
+
+Suggested failure response:
+
+HTTP status: `409`
+
+```json
+{
+  "reason": "Approver is unavailable"
+}
+```
 ```
 
 For `approval-request` and `approval-decision`, the `transition` block is
@@ -737,6 +756,21 @@ Suggested success response:
 {
   "saved": true,
   "commentId": "cmt_123"
+}
+```
+
+## Identity Verification Provider
+
+Suggested failure response:
+
+HTTP status: `422`
+
+```json
+{
+  "verificationErrors": [
+    { "code": "mrz_invalid", "message": "MRZ checksum failed", "field": "document_number" },
+    "Image quality is too low"
+  ]
 }
 ```
 

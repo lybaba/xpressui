@@ -296,6 +296,29 @@ function normalizeProviderTransition(result: any): TFormProviderTransition | nul
   return null;
 }
 
+const WORKFLOW_STATUS_TRANSITIONS = new Set([
+  "draft",
+  "submitting",
+  "submitted",
+  "pending_approval",
+  "approved",
+  "completed",
+  "rejected",
+  "error",
+]);
+
+const PAYMENT_PROVIDER_ACTIONS = new Set(["payment", "payment-stripe"]);
+const APPROVAL_PROVIDER_ACTIONS = new Set([
+  "approval-request",
+  "approval-decision",
+  "approval-comment",
+]);
+const IDENTITY_PROVIDER_ACTIONS = new Set([
+  "identity-verification",
+  "identity-verification-stripe",
+  "identity-verification-webhook",
+]);
+
 function normalizeProviderStatus(result: any): string | null {
   if (!result || typeof result !== "object") {
     return null;
@@ -317,6 +340,18 @@ function normalizeProviderStatus(result: any): string | null {
   return null;
 }
 
+function normalizeProviderStatusTransition(result: any): TFormProviderTransition | null {
+  const status = normalizeProviderStatus(result);
+  if (!status || !WORKFLOW_STATUS_TRANSITIONS.has(status)) {
+    return null;
+  }
+
+  return {
+    type: "workflow",
+    state: status,
+  };
+}
+
 function normalizeProviderMessages(result: any): string[] {
   if (!result || typeof result !== "object") {
     return [];
@@ -336,24 +371,149 @@ function normalizeProviderMessages(result: any): string[] {
   return [];
 }
 
-function normalizeProviderErrors(result: any): any[] {
+function isRecord(value: unknown): value is Record<string, any> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function toProviderErrorEntry(
+  action: string | undefined,
+  value: unknown,
+  fallback: { code?: string; field?: string } = {},
+): Record<string, any> | null {
+  if (typeof value === "string") {
+    return {
+      source: action || "provider",
+      ...(fallback.code ? { code: fallback.code } : {}),
+      ...(fallback.field ? { field: fallback.field } : {}),
+      message: value,
+    };
+  }
+
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const message =
+    typeof value.message === "string"
+      ? value.message
+      : typeof value.error === "string"
+        ? value.error
+        : typeof value.detail === "string"
+          ? value.detail
+          : typeof value.reason === "string"
+            ? value.reason
+            : undefined;
+  const code =
+    typeof value.code === "string"
+      ? value.code
+      : typeof value.type === "string"
+        ? value.type
+        : fallback.code;
+  const field =
+    typeof value.field === "string"
+      ? value.field
+      : typeof value.path === "string"
+        ? value.path
+        : fallback.field;
+
+  return {
+    source: action || "provider",
+    ...(code ? { code } : {}),
+    ...(field ? { field } : {}),
+    ...(message ? { message } : {}),
+    raw: value,
+  };
+}
+
+function normalizeProviderErrors(
+  action: string | undefined,
+  result: any,
+): any[] {
   if (!result || typeof result !== "object") {
     return [];
   }
 
-  if (Array.isArray(result.errors)) {
-    return result.errors;
-  }
+  const normalizedErrors: Record<string, any>[] = [];
+  const appendError = (value: unknown, fallback: { code?: string; field?: string } = {}) => {
+    const entry = toProviderErrorEntry(action, value, fallback);
+    if (entry) {
+      normalizedErrors.push(entry);
+    }
+  };
 
-  if (result.errors && typeof result.errors === "object") {
-    return [result.errors];
+  if (Array.isArray(result.errors)) {
+    result.errors.forEach((entry: unknown) => appendError(entry));
+  } else if (result.errors && typeof result.errors === "object") {
+    Object.entries(result.errors).forEach(([field, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((entry) => appendError(entry, { code: "field_error", field }));
+        return;
+      }
+      appendError(value, { code: "field_error", field });
+    });
   }
 
   if (result.error !== undefined) {
-    return [result.error];
+    appendError(result.error, { code: "provider_error" });
   }
 
-  return [];
+  if (typeof result.code === "string") {
+    appendError(
+      {
+        code: result.code,
+        message: typeof result.message === "string" ? result.message : undefined,
+      },
+      { code: result.code },
+    );
+  }
+
+  if (PAYMENT_PROVIDER_ACTIONS.has(action || "")) {
+    if (typeof result.declineCode === "string") {
+      appendError({ code: result.declineCode, message: result.message }, { code: result.declineCode });
+    }
+    if (typeof result.decline_code === "string") {
+      appendError({ code: result.decline_code, message: result.message }, { code: result.decline_code });
+    }
+  } else if (APPROVAL_PROVIDER_ACTIONS.has(action || "")) {
+    if (typeof result.reason === "string") {
+      appendError({ code: "approval_error", message: result.reason }, { code: "approval_error" });
+    }
+  } else if (IDENTITY_PROVIDER_ACTIONS.has(action || "")) {
+    if (Array.isArray(result.verificationErrors)) {
+      result.verificationErrors.forEach((entry: unknown) => appendError(entry, { code: "verification_error" }));
+    }
+    if (isRecord(result.documentErrors)) {
+      Object.entries(result.documentErrors).forEach(([field, value]) => {
+        appendError(value, { code: "document_error", field });
+      });
+    }
+  }
+
+  const seen = new Set<string>();
+  return normalizedErrors.filter((entry) => {
+    const key = JSON.stringify({
+      source: entry.source,
+      code: entry.code,
+      field: entry.field,
+      message: entry.message,
+    });
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+function normalizeProviderMessagesFromErrors(errors: any[]): string[] {
+  const messages: string[] = [];
+  errors.forEach((entry: unknown) => {
+    if (isRecord(entry) && typeof entry.message === "string" && entry.message.length > 0) {
+      messages.push(entry.message);
+    }
+  });
+
+  return Array.from(new Set(messages));
 }
 
 function normalizeProviderNextActions(result: any): any[] | undefined {
@@ -429,7 +589,12 @@ export function resolveProviderTransition(
     return explicitTransition;
   }
 
-  return definition?.resolveTransition?.(result, submitConfig) || null;
+  const providerTransition = definition?.resolveTransition?.(result, submitConfig);
+  if (providerTransition) {
+    return providerTransition;
+  }
+
+  return normalizeProviderStatusTransition(result);
 }
 
 export function normalizeProviderResult(
@@ -438,11 +603,19 @@ export function normalizeProviderResult(
   submitConfig: TFormSubmitRequest,
 ): TNormalizedProviderResult {
   const nextActions = normalizeProviderNextActions(result);
+  const normalizedErrors = normalizeProviderErrors(action, result);
+  const explicitMessages = normalizeProviderMessages(result);
+  const normalizedMessages = Array.from(
+    new Set([
+      ...explicitMessages,
+      ...normalizeProviderMessagesFromErrors(normalizedErrors),
+    ]),
+  );
   return {
     status: normalizeProviderStatus(result),
     transition: resolveProviderTransition(action, result, submitConfig),
-    messages: normalizeProviderMessages(result),
-    errors: normalizeProviderErrors(result),
+    messages: normalizedMessages,
+    errors: normalizedErrors,
     ...(nextActions ? { nextActions } : {}),
     data: normalizeProviderData(result),
   };

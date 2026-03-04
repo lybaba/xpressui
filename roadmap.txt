@@ -123,13 +123,6 @@ Implemented providers:
 - `identity-verification-webhook`
 
 Remaining:
-- formal provider result envelope:
-  - `status`
-  - `transition`
-  - `messages`
-  - `errors`
-  - `nextActions`
-- provider config schemas per provider
 - consistent provider-specific error normalization
 - pre-submit / post-success / post-failure lifecycle hooks
 - richer workflow-aware providers:
@@ -152,20 +145,20 @@ Completed:
 - local drafts
 - local resume tokens
 - remote `resumeEndpoint` groundwork
-- IndexedDB hydration
-- retention
-- local encryption (best effort)
-
-Remaining:
 - full remote save/resume contract:
   - create
   - lookup
   - restore
   - invalidate
-- signed / shareable resume tokens
-- cross-device resume UX
+- IndexedDB hydration
+- retention
+- local encryption (best effort)
 - deterministic queue replay windows
 - queue scheduling diagnostics
+
+Remaining:
+- signed / shareable resume tokens
+- cross-device resume UX
 
 Exit criteria:
 - a user can safely leave and resume a workflow later, on the same device or another one
@@ -316,12 +309,10 @@ Priority Backlog
 ----------------
 
 P0:
-- standardize the provider response envelope
-- finalize remote save/resume contract
-- add workflow-aware provider transition normalization
+- consistent provider-specific error normalization
+- pre-submit / post-success / post-failure lifecycle hooks
 
 P1:
-- add `lock-submit` / `set-error` rule actions
 - add richer workflow routing policies
 - harden presigned upload retries
 
@@ -336,20 +327,17 @@ Next Best Task
 
 The most immediately profitable next feature is:
 
-- implement a standard provider response envelope
+- implement consistent provider-specific error normalization
 
 Why:
-- it improves every existing integration
-- it reduces custom branching in demos and runtime handlers
-- it makes workflow transitions, approvals, payments, and save/resume much more predictable
+- it removes backend-specific error parsing from integrator code
+- it keeps failure handling consistent across payment, approval, booking, and identity flows
+- it enables predictable retry and UX messaging policies
 
 Suggested first scope:
-- normalize provider responses into:
-  - `status`
-  - `transition`
-  - `messages`
-  - `errors`
-  - `data`
-- add a shared helper in the provider layer
-- update `FormUI` to consume the normalized shape first
-- document the contract in `docs/backend-integration.md`
+- add a provider-layer helper that maps raw backend errors to:
+  - `errors[]` (machine-readable)
+  - `messages[]` (user-safe)
+- apply the helper to built-in providers first (`payment`, `approval-request`, `identity-verification`)
+- expose normalized error detail consistently in emitted submit/provider error events
+- document the error contract in `docs/backend-integration.md`

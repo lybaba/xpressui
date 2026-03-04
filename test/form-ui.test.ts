@@ -19,6 +19,7 @@ import {
   FormUploadRuntime,
   FormUI,
   getProviderDefinition,
+  normalizeProviderResult,
   resolveProviderTransition,
   mountFormUI,
   PUBLIC_FORM_SCHEMA_VERSION,
@@ -5808,6 +5809,78 @@ describe('FormUI', () => {
     );
   });
 
+  it('derives workflow routing from provider status when transition is omitted', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        status: 'pending_approval',
+        data: {
+          approvalId: 'apr_status_only',
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const element = renderFixture(`
+      <template id="approval-status-derived-form">
+        <form
+          id="approval-status-derived-form_form"
+          data-name="approval-status-derived-form"
+          data-label="Approval Status Derived Form"
+          data-type="multistepform"
+          data-version="1"
+          data-submit-endpoint="https://api.example.test/approvals/status-only"
+          data-submit-action="approval-request"
+          data-workflow-step-targets='{"pending_approval":"review_step"}'
+        >
+          <div data-type="section" data-name="request_step" data-label="Request"></div>
+          <div data-type="section" data-name="review_step" data-label="Review" data-step-summary="true"></div>
+          <input
+            id="request_email_derived"
+            name="request_email_derived"
+            type="email"
+            data-type="email"
+            data-name="request_email_derived"
+            data-label="Requester Email"
+            data-required="true"
+            data-section-name="request_step"
+          />
+          <span id="request_email_derived_error"></span>
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </template>
+      <form-ui name="approval-status-derived-form"></form-ui>
+    `);
+    const input = element.querySelector('#request_email_derived') as HTMLInputElement;
+    const form = element.querySelector('#approval-status-derived-form_form') as HTMLFormElement;
+    const onProviderTransition = vi.fn();
+
+    element.addEventListener('form-ui:provider-transition', (event) => {
+      onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    input.value = 'derived@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(element.nextStep()).toBe(true);
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(element.getWorkflowState()).toBe('pending_approval');
+    expect(element.getCurrentStepName()).toBe('review_step');
+    expect(onProviderTransition).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerResult: expect.objectContaining({
+          status: 'pending_approval',
+          transition: {
+            type: 'workflow',
+            state: 'pending_approval',
+          },
+        }),
+      }),
+    );
+  });
+
   it('supports a calendar cancel provider for cancellation workflows', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ cancelled: true, bookingId: 'bk_123' }), {
@@ -6950,6 +7023,94 @@ describe('FormUI', () => {
       headers: undefined,
       action: 'quote-request',
     });
+  });
+
+  it('normalizes provider-specific error payloads into consistent errors and messages', () => {
+    const paymentErrorResult = normalizeProviderResult(
+      'payment',
+      {
+        code: 'payment_failed',
+        message: 'Card authorization failed',
+        errors: {
+          amount: 'Amount is below minimum charge',
+        },
+      },
+      {
+        endpoint: 'https://api.example.test/payments',
+        action: 'payment',
+      },
+    );
+    expect(paymentErrorResult.messages).toEqual([
+      'Card authorization failed',
+      'Amount is below minimum charge',
+    ]);
+    expect(paymentErrorResult.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: 'payment',
+          code: 'field_error',
+          field: 'amount',
+          message: 'Amount is below minimum charge',
+        }),
+        expect.objectContaining({
+          source: 'payment',
+          code: 'payment_failed',
+          message: 'Card authorization failed',
+        }),
+      ]),
+    );
+
+    const approvalErrorResult = normalizeProviderResult(
+      'approval-request',
+      {
+        reason: 'Approver is unavailable',
+      },
+      {
+        endpoint: 'https://api.example.test/approvals',
+        action: 'approval-request',
+      },
+    );
+    expect(approvalErrorResult.messages).toEqual(['Approver is unavailable']);
+    expect(approvalErrorResult.errors).toEqual([
+      expect.objectContaining({
+        source: 'approval-request',
+        code: 'approval_error',
+        message: 'Approver is unavailable',
+      }),
+    ]);
+
+    const identityErrorResult = normalizeProviderResult(
+      'identity-verification',
+      {
+        verificationErrors: [
+          { code: 'mrz_invalid', message: 'MRZ checksum failed', field: 'document_number' },
+          'Image quality is too low',
+        ],
+      },
+      {
+        endpoint: 'https://api.example.test/identity/verify',
+        action: 'identity-verification',
+      },
+    );
+    expect(identityErrorResult.messages).toEqual([
+      'MRZ checksum failed',
+      'Image quality is too low',
+    ]);
+    expect(identityErrorResult.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: 'identity-verification',
+          code: 'mrz_invalid',
+          field: 'document_number',
+          message: 'MRZ checksum failed',
+        }),
+        expect.objectContaining({
+          source: 'identity-verification',
+          code: 'verification_error',
+          message: 'Image quality is too low',
+        }),
+      ]),
+    );
   });
 
   it('validates provider config schemas when provider.config is provided', () => {

@@ -58,6 +58,7 @@ export type TFormDebugObserver = {
   getLastTemplateWarningState(): TFormDebugTemplateWarningStateRecord | null;
   getSnapshot(): TFormDebugSnapshot;
   clear(): void;
+  clearSnapshot(): void;
   clearRuleHistory(): void;
   clearRecentAppliedRules(): void;
   clearLastRuleState(): void;
@@ -208,6 +209,12 @@ export function attachFormDebugObserver(
       recentAppliedRules = [];
       lastRuleState = null;
       templateDiagnostics.splice(0, templateDiagnostics.length);
+      activeTemplateWarnings = [];
+      lastTemplateWarningState = null;
+    },
+    clearSnapshot() {
+      recentAppliedRules = [];
+      lastRuleState = null;
       activeTemplateWarnings = [];
       lastTemplateWarningState = null;
     },

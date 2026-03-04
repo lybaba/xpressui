@@ -282,10 +282,11 @@ describe('FormUI', () => {
 
     observer.clearRuleHistory();
     expect(observer.getRuleHistory()).toEqual([]);
-    observer.clearRecentAppliedRules();
+    observer.clearSnapshot();
     expect(observer.getRecentAppliedRules()).toEqual([]);
-    observer.clearLastRuleState();
     expect(observer.getLastRuleState()).toBeNull();
+    expect(observer.getActiveTemplateWarnings()).toEqual([]);
+    expect(observer.getLastTemplateWarningState()).toBeNull();
     expect(observer.getEvents().some((event) => event.type === 'form-ui:rule-applied')).toBe(true);
 
     observer.detach();
@@ -442,6 +443,12 @@ describe('FormUI', () => {
     expect(observer.getActiveTemplateWarnings()).toEqual([]);
     observer.clearLastTemplateWarningState();
     expect(observer.getLastTemplateWarningState()).toBeNull();
+    expect(observer.getSnapshot()).toEqual(
+      expect.objectContaining({
+        activeTemplateWarnings: [],
+        lastTemplateWarningState: null,
+      })
+    );
     observer.detach();
   });
 

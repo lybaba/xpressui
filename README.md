@@ -218,6 +218,7 @@ The observer API:
 - `getLastTemplateWarningState()`
 - `getSnapshot()`
 - `clear()`
+- `clearSnapshot()`
 - `clearRuleHistory()`
 - `clearRecentAppliedRules()`
 - `clearLastRuleState()`
@@ -252,6 +253,9 @@ event yourself.
 `getSnapshot()` returns the observer's current derived state in one read:
 recent rules, last rule-state event, active template warnings, and the last
 template warning-state event.
+
+`clearSnapshot()` resets only that derived state bundle. It does not clear the
+raw event history or diagnostic history.
 
 ## Submission Modes
 

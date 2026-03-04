@@ -1379,6 +1379,9 @@
       }
     }
   }
+  .mt-1 {
+    margin-top: calc(var(--spacing) * 1);
+  }
   .mt-2 {
     margin-top: calc(var(--spacing) * 2);
   }
@@ -1620,6 +1623,9 @@
     font-size: var(--text-xs);
     line-height: var(--tw-leading, var(--text-xs--line-height));
   }
+  .text-\[11px\] {
+    font-size: 11px;
+  }
   .textarea-sm {
     @layer daisyui.l1.l2 {
       font-size: max(var(--font-size, 0.75rem), 0.75rem);
@@ -1637,6 +1643,9 @@
   }
   .opacity-70 {
     opacity: 70%;
+  }
+  .opacity-80 {
+    opacity: 80%;
   }
   .btn-ghost {
     @layer daisyui.l1 {

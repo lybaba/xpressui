@@ -35,6 +35,7 @@ type TFieldConfig = {
     capture?: 'user' | 'environment';
     multiple?: boolean;
     documentScanMode?: 'single' | 'double';
+    enableDocumentOcr?: boolean;
     fileDropMode?: 'replace' | 'append';
     minFiles?: number;
     maxFiles?: number;

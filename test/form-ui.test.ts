@@ -1301,6 +1301,55 @@ describe('FormUI', () => {
     playSpy.mockRestore();
   });
 
+  it('can auto-scan qr codes continuously once the live camera starts', async () => {
+    const originalBarcodeDetector = (globalThis as any).BarcodeDetector;
+    const originalMediaDevices = navigator.mediaDevices;
+    const playSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockResolvedValue(undefined as unknown as void);
+
+    class MockBarcodeDetector {
+      detect = vi.fn().mockResolvedValue([{ rawValue: 'AUTO-QR-456' }]);
+    }
+
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: vi.fn().mockResolvedValue({
+          getTracks: () => [{ stop: vi.fn() }],
+        }),
+      },
+    });
+    (globalThis as any).BarcodeDetector = MockBarcodeDetector;
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'qr-auto-form',
+      title: 'QR Auto Form',
+      fields: [
+        {
+          name: 'scan_code',
+          label: 'Scan Code',
+          type: 'qr-scan',
+        },
+      ],
+    }) as FormUI;
+
+    const startButton = element.querySelector('[data-qr-action="start"]') as HTMLButtonElement;
+    startButton.click();
+    await new Promise((resolve) => setTimeout(resolve, 320));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).scan_code).toBe('AUTO-QR-456');
+
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: originalMediaDevices,
+    });
+    (globalThis as any).BarcodeDetector = originalBarcodeDetector;
+    playSpy.mockRestore();
+  });
+
   it('supports document-scan front and back slots with framed previews', async () => {
     const createObjectUrlSpy = vi
       .spyOn(URL, 'createObjectURL')
@@ -1359,6 +1408,115 @@ describe('FormUI', () => {
 
     createObjectUrlSpy.mockRestore();
     revokeObjectUrlSpy.mockRestore();
+  });
+
+  it('crops document scans and emits OCR and MRZ events when native text detection is available', async () => {
+    const originalCreateImageBitmap = (globalThis as any).createImageBitmap;
+    const originalTextDetector = (globalThis as any).TextDetector;
+    const drawImageSpy = vi.fn();
+    const originalGetContext = HTMLCanvasElement.prototype.getContext;
+    const originalToBlob = HTMLCanvasElement.prototype.toBlob;
+    const onCrop = vi.fn();
+    const onText = vi.fn();
+    const onMrz = vi.fn();
+
+    (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
+      width: 1600,
+      height: 1200,
+      close: vi.fn(),
+    });
+
+    class MockTextDetector {
+      detect = vi.fn().mockResolvedValue([
+        {
+          rawValue: 'P<UTOERIKSSON<<ANNA<MARIA\nL898902C36UTO7408122F1204159ZE184226B<<<<<10',
+        },
+      ]);
+    }
+
+    (globalThis as any).TextDetector = MockTextDetector;
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+      drawImage: drawImageSpy,
+    }) as any;
+    HTMLCanvasElement.prototype.toBlob = function toBlob(callback: BlobCallback) {
+      callback(new Blob(['cropped'], { type: 'image/png' }));
+    };
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'document-ocr-form',
+      title: 'Document OCR Form',
+      fields: [
+        {
+          name: 'passport',
+          label: 'Passport',
+          type: 'document-scan',
+          documentScanMode: 'single',
+          enableDocumentOcr: true,
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#passport') as HTMLInputElement;
+    const sourceFile = new File(['passport'], 'passport.png', { type: 'image/png' });
+
+    element.addEventListener('form-ui:document-scan-cropped', (event) => {
+      onCrop((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+    element.addEventListener('form-ui:document-text-detected', (event) => {
+      onText((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+    element.addEventListener('form-ui:document-mrz-detected', (event) => {
+      onMrz((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [sourceFile],
+    });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    const savedFile = (element.form?.getState().values || {}).passport as File;
+    expect(savedFile).toBeInstanceOf(File);
+    expect(savedFile).not.toBe(sourceFile);
+    expect(drawImageSpy).toHaveBeenCalled();
+    expect(onCrop).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          field: 'passport',
+          slot: 0,
+          fileName: 'passport.png',
+        },
+      }),
+    );
+    expect(onText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          field: 'passport',
+          slot: 0,
+          text: expect.stringContaining('P<UTOERIKSSON'),
+        }),
+      }),
+    );
+    expect(onMrz).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          field: 'passport',
+          slot: 0,
+          mrz: expect.objectContaining({
+            documentCode: 'P',
+            issuingCountry: 'UTO',
+          }),
+        }),
+      }),
+    );
+    expect((element.querySelector('#passport_selection') as HTMLElement).textContent).toContain('OCR:');
+    expect((element.querySelector('#passport_selection') as HTMLElement).textContent).toContain('MRZ:');
+
+    (globalThis as any).createImageBitmap = originalCreateImageBitmap;
+    (globalThis as any).TextDetector = originalTextDetector;
+    HTMLCanvasElement.prototype.getContext = originalGetContext;
+    HTMLCanvasElement.prototype.toBlob = originalToBlob;
   });
 
   it('emits a dedicated event for file validation errors', () => {

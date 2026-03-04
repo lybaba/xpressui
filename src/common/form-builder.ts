@@ -77,6 +77,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   const documentScanModeAttr = field.documentScanMode
     ? ` data-document-scan-mode="${escapeHtml(String(field.documentScanMode))}"`
     : '';
+  const documentOcrAttr = field.enableDocumentOcr ? ' data-enable-document-ocr="true"' : '';
   const fileDropModeAttr = field.fileDropMode
     ? ` data-file-drop-mode="${escapeHtml(String(field.fileDropMode))}"`
     : '';
@@ -184,7 +185,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
     ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>

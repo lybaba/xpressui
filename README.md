@@ -720,7 +720,9 @@ Frontend behavior:
 - `qr-scan` can start a live camera session and scan directly from the video
   stream when `getUserMedia` and `BarcodeDetector` are available
 - `document-scan` keeps a lightweight two-slot front/back workflow; its
-  "cropping" is a visual framed preview, not a destructive image transform
+  images are now center-cropped to an ID-card ratio before submit
+- when `TextDetector` is available, `document-scan` can emit OCR text and a
+  lightweight MRZ parse for machine-readable identity documents
 
 Extra event:
 - `form-ui:file-validation-error`
@@ -731,6 +733,9 @@ Extra event:
 - `form-ui:upload-error`
 - `form-ui:qr-scan-success`
 - `form-ui:qr-scan-error`
+- `form-ui:document-scan-cropped`
+- `form-ui:document-text-detected`
+- `form-ui:document-mrz-detected`
 
 You can also define basic rules at the form level:
 

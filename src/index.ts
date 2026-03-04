@@ -93,6 +93,17 @@ type TQrScannerState = {
   message?: string;
 };
 
+type TDocumentMrzResult = {
+  lines: string[];
+  documentCode: string;
+  issuingCountry: string;
+};
+
+type TDocumentScanInsight = {
+  textBySlot: Array<string | null>;
+  mrzBySlot: Array<TDocumentMrzResult | null>;
+};
+
 function hasFileValues(value: any): boolean {
   if (isFileLikeValue(value)) {
     return true;
@@ -124,7 +135,10 @@ export class FormUI extends HTMLElement {
   fileUploadState: Record<string, TFormUploadState | null>;
   qrScannerState: Record<string, TQrScannerState>;
   qrScannerStreams: Record<string, MediaStream | null>;
+  qrScannerTimers: Record<string, number | null>;
+  qrScannerRunning: Record<string, boolean>;
   activeDocumentScanSlot: Record<string, number>;
+  documentScanInsights: Record<string, TDocumentScanInsight>;
 
   constructor() {
     super();
@@ -139,7 +153,10 @@ export class FormUI extends HTMLElement {
     this.fileDragActive = {};
     this.qrScannerState = {};
     this.qrScannerStreams = {};
+    this.qrScannerTimers = {};
+    this.qrScannerRunning = {};
     this.activeDocumentScanSlot = {};
+    this.documentScanInsights = {};
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
       getRules: () => this.formConfig?.rules || [],
@@ -242,6 +259,18 @@ export class FormUI extends HTMLElement {
     return fieldConfig.documentScanMode === "single" ? 1 : 2;
   }
 
+  getDocumentScanInsight = (fieldConfig: TFieldConfig): TDocumentScanInsight => {
+    const slotCount = this.getDocumentScanSlotCount(fieldConfig);
+    if (!this.documentScanInsights[fieldConfig.name]) {
+      this.documentScanInsights[fieldConfig.name] = {
+        textBySlot: Array.from({ length: slotCount }, () => null),
+        mrzBySlot: Array.from({ length: slotCount }, () => null),
+      };
+    }
+
+    return this.documentScanInsights[fieldConfig.name];
+  }
+
   resolveFileInputValue = async (fieldConfig: TFieldConfig, input: HTMLInputElement) => {
     const files = input.multiple
       ? Array.from(input.files || [])
@@ -263,7 +292,9 @@ export class FormUI extends HTMLElement {
         { length: slotCount },
         (_, index) => currentFiles[index] instanceof File ? currentFiles[index] : undefined,
       );
-      nextFiles[activeSlot] = selectedFile;
+      const croppedFile = await this.cropDocumentScanFile(fieldConfig, selectedFile, activeSlot);
+      nextFiles[activeSlot] = croppedFile;
+      await this.analyzeDocumentScanFile(fieldConfig, croppedFile, activeSlot);
       return slotCount === 1 ? nextFiles[0] : nextFiles;
     }
 
@@ -319,6 +350,191 @@ export class FormUI extends HTMLElement {
     }
   }
 
+  getTextDetector = () => {
+    const textDetector = (globalThis as any).TextDetector;
+    if (!textDetector) {
+      return null;
+    }
+
+    try {
+      return new textDetector();
+    } catch {
+      return null;
+    }
+  }
+
+  parseMrz = (text: string): TDocumentMrzResult | null => {
+    const lines = text
+      .split(/\r?\n/)
+      .map((line) => line.trim().toUpperCase())
+      .filter((line) => /^[A-Z0-9<]{20,}$/.test(line));
+
+    if (lines.length < 2) {
+      return null;
+    }
+
+    const [line1, line2] = lines.slice(-2);
+    return {
+      lines: [line1, line2],
+      documentCode: line1.slice(0, 2).replace(/</g, ""),
+      issuingCountry: line1.slice(2, 5).replace(/</g, ""),
+    };
+  }
+
+  cropDocumentScanFile = async (fieldConfig: TFieldConfig, file: File, slotIndex: number) => {
+    if (
+      typeof document === "undefined" ||
+      typeof createImageBitmap !== "function"
+    ) {
+      return file;
+    }
+
+    let imageBitmap: ImageBitmap | null = null;
+
+    try {
+      imageBitmap = await createImageBitmap(file);
+      const targetRatio = 1.586;
+      let sourceWidth = imageBitmap.width;
+      let sourceHeight = imageBitmap.height;
+      let sourceX = 0;
+      let sourceY = 0;
+
+      if (sourceWidth / sourceHeight > targetRatio) {
+        sourceWidth = Math.round(sourceHeight * targetRatio);
+        sourceX = Math.max(0, Math.round((imageBitmap.width - sourceWidth) / 2));
+      } else {
+        sourceHeight = Math.round(sourceWidth / targetRatio);
+        sourceY = Math.max(0, Math.round((imageBitmap.height - sourceHeight) / 2));
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, sourceWidth);
+      canvas.height = Math.max(1, sourceHeight);
+      const context = canvas.getContext("2d");
+      if (!context) {
+        return file;
+      }
+
+      context.drawImage(
+        imageBitmap,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((result) => resolve(result), file.type || "image/jpeg");
+      });
+
+      if (!blob) {
+        return file;
+      }
+
+      const croppedFile = new File(
+        [blob],
+        file.name,
+        {
+          type: blob.type || file.type,
+          lastModified: file.lastModified,
+        },
+      );
+
+      this.emitFormEvent("form-ui:document-scan-cropped", {
+        values: this.engine.normalizeValues(this.form?.getState().values || {}),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          field: fieldConfig.name,
+          slot: slotIndex,
+          fileName: croppedFile.name,
+        },
+      });
+
+      return croppedFile;
+    } catch {
+      return file;
+    } finally {
+      if (imageBitmap && typeof imageBitmap.close === "function") {
+        imageBitmap.close();
+      }
+    }
+  }
+
+  analyzeDocumentScanFile = async (fieldConfig: TFieldConfig, file: File, slotIndex: number) => {
+    if (fieldConfig.enableDocumentOcr === false) {
+      return;
+    }
+
+    const detector = this.getTextDetector();
+    if (!detector || typeof detector.detect !== "function") {
+      return;
+    }
+
+    let scanSource: any = file;
+    let imageBitmap: ImageBitmap | null = null;
+
+    if (typeof createImageBitmap === "function") {
+      try {
+        imageBitmap = await createImageBitmap(file);
+        scanSource = imageBitmap;
+      } catch {
+        scanSource = file;
+      }
+    }
+
+    try {
+      const textBlocks = await detector.detect(scanSource);
+      const detectedText = (textBlocks || [])
+        .map((entry: { rawValue?: string }) => String(entry?.rawValue || "").trim())
+        .filter(Boolean)
+        .join("\n");
+
+      if (!detectedText) {
+        return;
+      }
+
+      const insight = this.getDocumentScanInsight(fieldConfig);
+      insight.textBySlot[slotIndex] = detectedText;
+
+      this.emitFormEvent("form-ui:document-text-detected", {
+        values: this.engine.normalizeValues(this.form?.getState().values || {}),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          field: fieldConfig.name,
+          slot: slotIndex,
+          text: detectedText,
+        },
+      });
+
+      const mrz = this.parseMrz(detectedText);
+      if (mrz) {
+        insight.mrzBySlot[slotIndex] = mrz;
+        this.emitFormEvent("form-ui:document-mrz-detected", {
+          values: this.engine.normalizeValues(this.form?.getState().values || {}),
+          formConfig: this.formConfig,
+          submit: this.formConfig?.submit,
+          result: {
+            field: fieldConfig.name,
+            slot: slotIndex,
+            mrz,
+          },
+        });
+      }
+    } catch {
+      return;
+    } finally {
+      if (imageBitmap && typeof imageBitmap.close === "function") {
+        imageBitmap.close();
+      }
+    }
+  }
+
   assignQrVideoStream = (fieldName: string) => {
     const video = this.querySelector(`[data-qr-video="${fieldName}"]`) as HTMLVideoElement | null;
     const stream = this.qrScannerStreams[fieldName];
@@ -337,7 +553,17 @@ export class FormUI extends HTMLElement {
     }
   }
 
+  clearQrScanTimer = (fieldName: string) => {
+    const timerId = this.qrScannerTimers[fieldName];
+    if (typeof timerId === "number") {
+      window.clearTimeout(timerId);
+    }
+    this.qrScannerTimers[fieldName] = null;
+  }
+
   stopQrCamera = (fieldName: string, rerender: boolean = true) => {
+    this.clearQrScanTimer(fieldName);
+    this.qrScannerRunning[fieldName] = false;
     const stream = this.qrScannerStreams[fieldName];
     stream?.getTracks?.().forEach((track) => track.stop());
     this.qrScannerStreams[fieldName] = null;
@@ -355,6 +581,33 @@ export class FormUI extends HTMLElement {
     Object.keys(this.qrScannerStreams).forEach((fieldName) => {
       this.stopQrCamera(fieldName, false);
     });
+  }
+
+  scheduleContinuousQrScan = (fieldConfig: TFieldConfig) => {
+    const fieldName = fieldConfig.name;
+    this.clearQrScanTimer(fieldName);
+
+    if (!this.qrScannerStreams[fieldName]) {
+      return;
+    }
+
+    this.qrScannerTimers[fieldName] = window.setTimeout(async () => {
+      if (!this.qrScannerStreams[fieldName] || this.qrScannerRunning[fieldName]) {
+        this.scheduleContinuousQrScan(fieldConfig);
+        return;
+      }
+
+      this.qrScannerRunning[fieldName] = true;
+      try {
+        await this.scanQrFromLiveVideo(fieldConfig, true);
+      } finally {
+        this.qrScannerRunning[fieldName] = false;
+      }
+
+      if (this.qrScannerStreams[fieldName]) {
+        this.scheduleContinuousQrScan(fieldConfig);
+      }
+    }, 250);
   }
 
   startQrCamera = async (fieldConfig: TFieldConfig) => {
@@ -386,6 +639,7 @@ export class FormUI extends HTMLElement {
       this.qrScannerState[fieldConfig.name] = { status: "live" };
       const selectionElement = this.querySelector(`#${fieldConfig.name}_selection`) as HTMLElement | null;
       this.renderFileSelection(fieldConfig, this.getFieldValue(fieldConfig.name), selectionElement);
+      this.scheduleContinuousQrScan(fieldConfig);
     } catch {
       this.qrScannerState[fieldConfig.name] = {
         status: "error",
@@ -396,19 +650,21 @@ export class FormUI extends HTMLElement {
     }
   }
 
-  scanQrFromLiveVideo = async (fieldConfig: TFieldConfig) => {
+  scanQrFromLiveVideo = async (fieldConfig: TFieldConfig, silent: boolean = false) => {
     const detector = this.getBarcodeDetector();
     if (!detector || typeof detector.detect !== "function") {
-      this.emitFormEvent("form-ui:qr-scan-error", {
-        values: this.engine.normalizeValues(this.form?.getState().values || {}),
-        formConfig: this.formConfig,
-        submit: this.formConfig?.submit,
-        error: new Error("QR scan is not available in this browser."),
-        result: {
-          field: fieldConfig.name,
-          reason: "barcode-detector-unavailable",
-        },
-      });
+      if (!silent) {
+        this.emitFormEvent("form-ui:qr-scan-error", {
+          values: this.engine.normalizeValues(this.form?.getState().values || {}),
+          formConfig: this.formConfig,
+          submit: this.formConfig?.submit,
+          error: new Error("QR scan is not available in this browser."),
+          result: {
+            field: fieldConfig.name,
+            reason: "barcode-detector-unavailable",
+          },
+        });
+      }
       return;
     }
 
@@ -450,16 +706,18 @@ export class FormUI extends HTMLElement {
         this.querySelector(`#${fieldConfig.name}_selection`) as HTMLElement | null,
       );
     } catch (error) {
-      this.emitFormEvent("form-ui:qr-scan-error", {
-        values: this.engine.normalizeValues(this.form?.getState().values || {}),
-        formConfig: this.formConfig,
-        submit: this.formConfig?.submit,
-        error,
-        result: {
-          field: fieldConfig.name,
-          reason: "decode-failed",
-        },
-      });
+      if (!silent) {
+        this.emitFormEvent("form-ui:qr-scan-error", {
+          values: this.engine.normalizeValues(this.form?.getState().values || {}),
+          formConfig: this.formConfig,
+          submit: this.formConfig?.submit,
+          error,
+          result: {
+            field: fieldConfig.name,
+            reason: "decode-failed",
+          },
+        });
+      }
     }
   }
 
@@ -563,6 +821,7 @@ export class FormUI extends HTMLElement {
   ) => {
     const slotCount = this.getDocumentScanSlotCount(fieldConfig);
     const activeSlot = this.activeDocumentScanSlot[fieldConfig.name] || 0;
+    const insight = this.getDocumentScanInsight(fieldConfig);
     const controls = document.createElement("div");
     controls.className = "mb-3 flex flex-wrap gap-2";
 
@@ -627,10 +886,31 @@ export class FormUI extends HTMLElement {
         card.appendChild(name);
       }
 
+      const textInsight = insight.textBySlot[slotIndex];
+      if (textInsight) {
+        const textBlock = document.createElement("div");
+        textBlock.className = "mt-2 text-[11px] opacity-80";
+        textBlock.textContent = `OCR: ${textInsight.slice(0, 80)}`;
+        card.appendChild(textBlock);
+      }
+
+      const mrzInsight = insight.mrzBySlot[slotIndex];
+      if (mrzInsight) {
+        const mrzBlock = document.createElement("div");
+        mrzBlock.className = "mt-1 text-[11px] font-medium";
+        mrzBlock.textContent = `MRZ: ${mrzInsight.documentCode} ${mrzInsight.issuingCountry}`;
+        card.appendChild(mrzBlock);
+      }
+
       slotGrid.appendChild(card);
     });
 
     selectionElement.appendChild(slotGrid);
+
+    const helper = document.createElement("div");
+    helper.className = "mt-2 text-xs opacity-70";
+    helper.textContent = "Scans are center-cropped to an ID card frame before submit.";
+    selectionElement.appendChild(helper);
   }
 
   renderQrSelection = (fieldConfig: TFieldConfig, value: any, selectionElement: HTMLElement) => {
@@ -860,7 +1140,10 @@ export class FormUI extends HTMLElement {
         { length: slotCount },
         (_, index) => currentFiles[index] instanceof File ? currentFiles[index] : undefined,
       );
-      nextFiles[Math.min(this.activeDocumentScanSlot[fieldName] || 0, slotCount - 1)] = files[0];
+      const targetSlot = Math.min(this.activeDocumentScanSlot[fieldName] || 0, slotCount - 1);
+      const croppedFile = await this.cropDocumentScanFile(fieldConfig, files[0], targetSlot);
+      nextFiles[targetSlot] = croppedFile;
+      await this.analyzeDocumentScanFile(fieldConfig, croppedFile, targetSlot);
       const nextDocumentValue = slotCount === 1 ? nextFiles[0] : nextFiles;
       this.form.change(fieldName, nextDocumentValue);
       this.scheduleDraftSave();

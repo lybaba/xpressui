@@ -1403,6 +1403,91 @@ describe('FormUI', () => {
     );
   });
 
+  it('emits the current template warning state when warnings appear and clear', async () => {
+    const container = document.createElement('div');
+    const onWarningState = vi.fn();
+    const element = mountFormUI(container, {
+      name: 'set-value-template-warning-state-form',
+      title: 'Set Value Template Warning State Form',
+      rules: [
+        {
+          id: 'compose-full-name',
+          conditions: [
+            { field: 'autoFullName', operator: 'equals', value: true },
+          ],
+          actions: [
+            {
+              type: 'set-value',
+              field: 'fullName',
+              template: '{{firstName}} {{missingName}}',
+              transform: 'trim',
+            },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'firstName', label: 'First name', type: 'text' },
+        { name: 'fullName', label: 'Full name', type: 'text' },
+        { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
+      ],
+    }) as FormUI;
+    const firstName = element.querySelector('#firstName') as HTMLInputElement;
+    const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
+
+    element.addEventListener('form-ui:rule-template-warning-state', (event) => {
+      onWarningState((event as CustomEvent<any>).detail);
+    });
+
+    firstName.value = 'Ada';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    autoFullName.checked = true;
+    autoFullName.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    element.formConfig!.rules = [
+      {
+        id: 'compose-full-name',
+        conditions: [
+          { field: 'autoFullName', operator: 'equals', value: true },
+        ],
+        actions: [
+          {
+            type: 'set-value',
+            field: 'fullName',
+            template: '{{firstName}}',
+            transform: 'trim',
+          },
+        ],
+      },
+    ];
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(onWarningState).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        result: {
+          warnings: [
+            {
+              ruleId: 'compose-full-name',
+              field: 'fullName',
+              template: '{{firstName}} {{missingName}}',
+              missingField: 'missingName',
+            },
+          ],
+        },
+      })
+    );
+    expect(onWarningState).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        result: {
+          warnings: [],
+        },
+      })
+    );
+  });
+
   it('supports the fetch-options rule action', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(

@@ -47,6 +47,17 @@ export type TFormRuleTemplateWarningClearedDetail = {
   previousMissingField: string;
 };
 
+export type TFormActiveTemplateWarning = {
+  ruleId?: string;
+  field: string;
+  template: string;
+  missingField: string;
+};
+
+export type TFormTemplateWarningStateDetail = {
+  warnings: TFormActiveTemplateWarning[];
+};
+
 type TFormDynamicRuntimeOptions = {
   getFieldConfigs(): TFieldConfig[];
   getRules(): Array<{
@@ -93,12 +104,12 @@ type TDynamicRule = ReturnType<TFormDynamicRuntimeOptions["getRules"]>[number];
 export class FormDynamicRuntime {
   options: TFormDynamicRuntimeOptions;
   loadingOptions: Record<string, boolean>;
-  lastTemplateWarnings: Record<string, string>;
+  activeTemplateWarnings: Record<string, TFormActiveTemplateWarning>;
 
   constructor(options: TFormDynamicRuntimeOptions) {
     this.options = options;
     this.loadingOptions = {};
-    this.lastTemplateWarnings = {};
+    this.activeTemplateWarnings = {};
   }
 
   transformRuleValue(
@@ -141,21 +152,31 @@ export class FormDynamicRuntime {
       const hasField = this.options.getFieldConfigs().some((fieldConfig) => fieldConfig.name === fieldName);
       if (!hasField) {
         hasMissingField = true;
-        const warningSignature = `${template}:${fieldName}`;
-        if (this.lastTemplateWarnings[templateWarningKey] !== warningSignature) {
-          this.lastTemplateWarnings[templateWarningKey] = warningSignature;
+        const nextWarning: TFormActiveTemplateWarning = {
+          ruleId,
+          field: targetField || "",
+          template,
+          missingField: fieldName,
+        };
+        const previousWarning = this.activeTemplateWarnings[templateWarningKey];
+        const warningChanged = !previousWarning
+          || previousWarning.template !== nextWarning.template
+          || previousWarning.missingField !== nextWarning.missingField;
+        if (warningChanged) {
+          this.activeTemplateWarnings[templateWarningKey] = nextWarning;
           const context = this.options.getEventContext();
           this.options.emitEvent("form-ui:rule-template-missing-field", {
             values: this.options.getFormValues(),
             formConfig: context.formConfig,
             submit: context.submit,
             result: {
-              ruleId,
-              field: targetField || "",
-              template,
-              missingField: fieldName,
+              ruleId: nextWarning.ruleId,
+              field: nextWarning.field,
+              template: nextWarning.template,
+              missingField: nextWarning.missingField,
             } satisfies TFormRuleTemplateMissingFieldDetail,
           });
+          this.emitTemplateWarningState();
         }
         return "";
       }
@@ -165,13 +186,9 @@ export class FormDynamicRuntime {
     });
 
     if (!hasMissingField) {
-      const previousWarningSignature = this.lastTemplateWarnings[templateWarningKey];
-      if (previousWarningSignature) {
-        delete this.lastTemplateWarnings[templateWarningKey];
-        const separatorIndex = previousWarningSignature.indexOf(":");
-        const previousMissingField = separatorIndex >= 0
-          ? previousWarningSignature.slice(separatorIndex + 1)
-          : previousWarningSignature;
+      const previousWarning = this.activeTemplateWarnings[templateWarningKey];
+      if (previousWarning) {
+        delete this.activeTemplateWarnings[templateWarningKey];
         const context = this.options.getEventContext();
         this.options.emitEvent("form-ui:rule-template-warning-cleared", {
           values: this.options.getFormValues(),
@@ -181,9 +198,10 @@ export class FormDynamicRuntime {
             ruleId,
             field: targetField || "",
             template,
-            previousMissingField,
+            previousMissingField: previousWarning.missingField,
           } satisfies TFormRuleTemplateWarningClearedDetail,
         });
+        this.emitTemplateWarningState();
       }
     }
 
@@ -255,6 +273,22 @@ export class FormDynamicRuntime {
         conditions: rule.conditions,
         actions: rule.actions,
       } satisfies TFormRuleAppliedDetail,
+    });
+  }
+
+  getActiveTemplateWarnings(): TFormActiveTemplateWarning[] {
+    return Object.values(this.activeTemplateWarnings);
+  }
+
+  emitTemplateWarningState(): void {
+    const context = this.options.getEventContext();
+    this.options.emitEvent("form-ui:rule-template-warning-state", {
+      values: this.options.getFormValues(),
+      formConfig: context.formConfig,
+      submit: context.submit,
+      result: {
+        warnings: this.getActiveTemplateWarnings(),
+      } satisfies TFormTemplateWarningStateDetail,
     });
   }
 

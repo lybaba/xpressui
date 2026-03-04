@@ -41,6 +41,7 @@ const DEFAULT_DEBUG_EVENTS = [
   "form-ui:rule-applied",
   "form-ui:rule-template-missing-field",
   "form-ui:rule-template-warning-cleared",
+  "form-ui:rule-template-warning-state",
   "form-ui:draft-saved",
   "form-ui:draft-restored",
   "form-ui:draft-cleared",

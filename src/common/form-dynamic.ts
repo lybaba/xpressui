@@ -17,7 +17,7 @@ type TFormDynamicRuntimeOptions = {
       value?: any;
     }>;
     actions: Array<{
-      type: "show" | "hide" | "clear-value" | "set-value";
+      type: "show" | "hide" | "clear-value" | "set-value" | "fetch-options";
       field: string;
       value?: any;
     }>;
@@ -134,6 +134,8 @@ export class FormDynamicRuntime {
           this.options.clearFieldValue(action.field);
         } else if (action.type === "set-value") {
           this.options.setFieldValue(action.field, action.value);
+        } else if (action.type === "fetch-options") {
+          void this.fetchOptionsForField(action.field);
         }
       });
     });
@@ -221,6 +223,48 @@ export class FormDynamicRuntime {
     });
   }
 
+  async fetchOptionsForField(fieldName: string, sourceFieldName?: string): Promise<void> {
+    const fieldConfig = this.options
+      .getFieldConfigs()
+      .find((candidate) => candidate.name === fieldName && Boolean(candidate.optionsEndpoint));
+    if (!fieldConfig) {
+      return;
+    }
+
+    if (this.loadingOptions[fieldConfig.name]) {
+      return;
+    }
+
+    const dependencyValue = fieldConfig.optionsDependsOn
+      ? this.options.getFieldValue(fieldConfig.optionsDependsOn)
+      : undefined;
+
+    if (fieldConfig.optionsDependsOn && !dependencyValue) {
+      this.populateSelectOptions(fieldConfig.name, [], sourceFieldName || fieldConfig.optionsDependsOn);
+      return;
+    }
+
+    this.loadingOptions[fieldConfig.name] = true;
+    try {
+      let url = fieldConfig.optionsEndpoint as string;
+      if (fieldConfig.optionsDependsOn) {
+        const query = new URLSearchParams({
+          [fieldConfig.optionsDependsOn]: String(dependencyValue),
+        }).toString();
+        url += (url.includes("?") ? "&" : "?") + query;
+      }
+
+      const response = await fetch(url);
+      const payload = await response.json();
+      const options = this.normalizeRemoteChoices(payload, fieldConfig);
+      this.populateSelectOptions(fieldConfig.name, options, sourceFieldName);
+    } catch {
+      this.populateSelectOptions(fieldConfig.name, [], sourceFieldName);
+    } finally {
+      this.loadingOptions[fieldConfig.name] = false;
+    }
+  }
+
   async refreshRemoteOptions(sourceFieldName?: string): Promise<void> {
     const fieldConfigs = this.options.getFieldConfigs().filter(
       (fieldConfig) =>
@@ -228,39 +272,8 @@ export class FormDynamicRuntime {
         (!sourceFieldName || fieldConfig.optionsDependsOn === sourceFieldName),
     );
 
-    await Promise.all(fieldConfigs.map(async (fieldConfig) => {
-      if (this.loadingOptions[fieldConfig.name]) {
-        return;
-      }
-
-      const dependencyValue = fieldConfig.optionsDependsOn
-        ? this.options.getFieldValue(fieldConfig.optionsDependsOn)
-        : undefined;
-
-      if (fieldConfig.optionsDependsOn && !dependencyValue) {
-        this.populateSelectOptions(fieldConfig.name, [], fieldConfig.optionsDependsOn);
-        return;
-      }
-
-      this.loadingOptions[fieldConfig.name] = true;
-      try {
-        let url = fieldConfig.optionsEndpoint as string;
-        if (fieldConfig.optionsDependsOn) {
-          const query = new URLSearchParams({
-            [fieldConfig.optionsDependsOn]: String(dependencyValue),
-          }).toString();
-          url += (url.includes("?") ? "&" : "?") + query;
-        }
-
-        const response = await fetch(url);
-        const payload = await response.json();
-        const options = this.normalizeRemoteChoices(payload, fieldConfig);
-        this.populateSelectOptions(fieldConfig.name, options, sourceFieldName);
-      } catch {
-        this.populateSelectOptions(fieldConfig.name, [], sourceFieldName);
-      } finally {
-        this.loadingOptions[fieldConfig.name] = false;
-      }
-    }));
+    await Promise.all(
+      fieldConfigs.map((fieldConfig) => this.fetchOptionsForField(fieldConfig.name, sourceFieldName))
+    );
   }
 }

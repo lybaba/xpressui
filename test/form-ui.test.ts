@@ -809,6 +809,62 @@ describe('FormUI', () => {
     expect(currency.value).toBe('EUR');
   });
 
+  it('supports the fetch-options rule action', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          { value: '09:00', label: '09:00' },
+          { value: '10:00', label: '10:00' },
+        ]),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'fetch-options-rules-form',
+      title: 'Fetch Options Rules Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'service', operator: 'equals', value: 'consulting' },
+          ],
+          actions: [
+            { type: 'fetch-options', field: 'slot' },
+          ],
+        },
+      ],
+      fields: [
+        {
+          name: 'service',
+          label: 'Service',
+          type: 'text',
+        },
+        {
+          name: 'slot',
+          label: 'Slot',
+          type: 'select-one',
+          optionsEndpoint: 'https://api.example.test/slots',
+          optionsDependsOn: 'service',
+        },
+      ],
+    }) as FormUI;
+    const service = element.querySelector('#service') as HTMLInputElement;
+    const slot = element.querySelector('#slot') as HTMLSelectElement;
+
+    service.value = 'consulting';
+    service.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/slots?service=consulting'
+    );
+    expect(slot.options.length).toBe(3);
+    expect(slot.options[1].value).toBe('09:00');
+  });
+
   it('supports a payment provider with a normalized payload', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ clientSecret: 'pi_secret_123' }), {

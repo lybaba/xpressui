@@ -2554,6 +2554,9 @@ export class FormUI extends HTMLElement {
         status: providerResult.status,
         source,
         messages: providerResult.messages,
+        ...(providerResult.nextActions?.length
+          ? { nextActions: providerResult.nextActions }
+          : {}),
       },
     });
   }

@@ -31,6 +31,7 @@ export type TNormalizedProviderResult = {
   transition: TFormProviderTransition | null;
   messages: string[];
   errors: any[];
+  nextActions?: any[];
   data: any;
 };
 
@@ -138,7 +139,10 @@ function normalizeProviderMessages(result: any): string[] {
   }
 
   if (Array.isArray(result.messages)) {
-    return result.messages.filter((entry) => typeof entry === "string" && entry);
+    return result.messages.filter(
+      (entry: unknown): entry is string =>
+        typeof entry === "string" && entry.length > 0,
+    );
   }
 
   if (typeof result.message === "string" && result.message) {
@@ -168,6 +172,34 @@ function normalizeProviderErrors(result: any): any[] {
   return [];
 }
 
+function normalizeProviderNextActions(result: any): any[] | undefined {
+  if (!result || typeof result !== "object") {
+    return undefined;
+  }
+
+  const explicitNextActions = (result as Record<string, any>).nextActions;
+  if (Array.isArray(explicitNextActions)) {
+    return explicitNextActions;
+  }
+  if (explicitNextActions !== undefined && explicitNextActions !== null) {
+    return [explicitNextActions];
+  }
+
+  const nestedData = (result as Record<string, any>).data;
+  if (!nestedData || typeof nestedData !== "object") {
+    return undefined;
+  }
+  const nestedNextActions = (nestedData as Record<string, any>).nextActions;
+  if (Array.isArray(nestedNextActions)) {
+    return nestedNextActions;
+  }
+  if (nestedNextActions !== undefined && nestedNextActions !== null) {
+    return [nestedNextActions];
+  }
+
+  return undefined;
+}
+
 function normalizeProviderData(result: any): any {
   if (!result || typeof result !== "object") {
     return result;
@@ -184,6 +216,7 @@ function normalizeProviderData(result: any): any {
     messages,
     error,
     errors,
+    nextActions,
     ...rest
   } = result as Record<string, any>;
   void status;
@@ -192,6 +225,7 @@ function normalizeProviderData(result: any): any {
   void messages;
   void error;
   void errors;
+  void nextActions;
 
   if (Object.keys(rest).length > 0) {
     return rest;
@@ -219,11 +253,13 @@ export function normalizeProviderResult(
   result: any,
   submitConfig: TFormSubmitRequest,
 ): TNormalizedProviderResult {
+  const nextActions = normalizeProviderNextActions(result);
   return {
     status: normalizeProviderStatus(result),
     transition: resolveProviderTransition(action, result, submitConfig),
     messages: normalizeProviderMessages(result),
     errors: normalizeProviderErrors(result),
+    ...(nextActions ? { nextActions } : {}),
     data: normalizeProviderData(result),
   };
 }

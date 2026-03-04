@@ -42,7 +42,14 @@ async function flushAsyncWork() {
 describe('FormUI', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    window.localStorage.clear();
+    const storage = window.localStorage as Storage | Record<string, any> | null;
+    if (storage && typeof (storage as Storage).clear === 'function') {
+      (storage as Storage).clear();
+    } else if (storage) {
+      Object.keys(storage).forEach((key) => {
+        delete (storage as Record<string, any>)[key];
+      });
+    }
     vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
@@ -5404,6 +5411,7 @@ describe('FormUI', () => {
       new Response(JSON.stringify({
         status: 'accepted',
         messages: ['Webhook accepted', 'Processing asynchronously'],
+        nextActions: ['refresh-status', { type: 'poll', delayMs: 2000 }],
         data: {
           webhookId: 'wh_123',
         },
@@ -5448,6 +5456,7 @@ describe('FormUI', () => {
           transition: null,
           messages: ['Webhook accepted', 'Processing asynchronously'],
           errors: [],
+          nextActions: ['refresh-status', { type: 'poll', delayMs: 2000 }],
           data: {
             webhookId: 'wh_123',
           },
@@ -5456,6 +5465,7 @@ describe('FormUI', () => {
           status: 'accepted',
           source: 'success',
           messages: ['Webhook accepted', 'Processing asynchronously'],
+          nextActions: ['refresh-status', { type: 'poll', delayMs: 2000 }],
         },
       }),
     );

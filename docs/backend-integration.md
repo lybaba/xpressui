@@ -67,6 +67,9 @@ contract is a shared envelope that keeps all providers consistent:
   },
   "messages": ["Waiting for manager approval"],
   "errors": [],
+  "nextActions": [
+    "check-approval-status"
+  ],
   "data": {
     "approvalId": "apr_123"
   }
@@ -79,6 +82,7 @@ Normalized frontend event detail:
 - `detail.providerResult.transition`: normalized workflow or step transition
 - `detail.providerResult.messages`: normalized message list
 - `detail.providerResult.errors`: normalized error list
+- `detail.providerResult.nextActions`: normalized next-action list when provided
 - `detail.providerResult.data`: normalized provider data payload
 
 Legacy responses such as `{ "status": "approved", "approvalId": "apr_123" }`

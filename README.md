@@ -144,6 +144,7 @@ Available presets:
 - `booking-request`
 - `payment-request`
 - `identity-check`
+- `ecommerce-checkout`
 
 ## Demo Gallery
 

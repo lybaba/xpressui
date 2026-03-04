@@ -1,6 +1,6 @@
 import TFieldConfig, { TStepTransition } from "./TFieldConfig";
 import TFormConfig, { TFormProviderRequest, TFormRule, TFormStorageConfig, TFormSubmitRequest } from "./TFormConfig";
-import { CAMERA_PHOTO_TYPE, DOCUMENT_SCAN_TYPE, EMAIL_TYPE, QR_SCAN_TYPE, SELECT_MULTIPLE_TYPE, SELECT_ONE_TYPE, TEL_TYPE, TEXTAREA_TYPE, TEXT_TYPE, normalizeFieldName } from "./field";
+import { CAMERA_PHOTO_TYPE, DOCUMENT_SCAN_TYPE, EMAIL_TYPE, PRODUCT_LIST_TYPE, QR_SCAN_TYPE, SELECT_MULTIPLE_TYPE, SELECT_ONE_TYPE, TEL_TYPE, TEXTAREA_TYPE, TEXT_TYPE, normalizeFieldName } from "./field";
 import { createFormConfig, TSimpleFieldInput, TSimpleFormInput } from "./form-builder";
 import { validatePublicFormConfig } from "./public-schema";
 
@@ -12,7 +12,8 @@ export type TFormPresetName =
   | "booking-wizard"
   | "payment-request"
   | "identity-check"
-  | "identity-onboarding";
+  | "identity-onboarding"
+  | "ecommerce-checkout";
 
 export type TCreateFormPresetOptions = {
   name?: string;
@@ -97,6 +98,18 @@ export const fieldFactory = {
 
   qrScan(name: string, label: string, overrides?: TFieldOverrides): TSimpleFieldInput {
     return buildField(QR_SCAN_TYPE, name, label, overrides);
+  },
+
+  productList(
+    name: string,
+    label: string,
+    choices: NonNullable<TFieldConfig["choices"]>,
+    overrides?: TFieldOverrides,
+  ): TSimpleFieldInput {
+    return buildField(PRODUCT_LIST_TYPE, name, label, {
+      choices,
+      ...(overrides || {}),
+    });
   },
 };
 
@@ -330,6 +343,51 @@ function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput | TFormCo
           ],
         },
       } as any);
+
+    case "ecommerce-checkout":
+      return {
+        name: "ecommerce-checkout-form",
+        title: "E-commerce Checkout",
+        fields: [
+          fieldFactory.text("customer_name", "Customer Name", { required: true }),
+          fieldFactory.email("customer_email", "Email", { required: true }),
+          fieldFactory.productList(
+            "products",
+            "Products",
+            [
+              {
+                value: "sku_camera",
+                name: "Nomad Camera Bag",
+                label: "Nomad Camera Bag",
+                sale_price: 129,
+                discount_price: 99,
+                image_thumbnail: "https://cdn.example.test/products/camera-thumb.jpg",
+                image_medium: "https://cdn.example.test/products/camera-medium.jpg",
+                photos_full: [
+                  "https://cdn.example.test/products/camera-full-1.jpg",
+                  "https://cdn.example.test/products/camera-full-2.jpg",
+                ],
+              },
+              {
+                value: "sku_headset",
+                name: "Studio Headset",
+                label: "Studio Headset",
+                sale_price: 189,
+                discount_price: 159,
+                image_thumbnail: "https://cdn.example.test/products/headset-thumb.jpg",
+                image_medium: "https://cdn.example.test/products/headset-medium.jpg",
+                photos_full: [
+                  "https://cdn.example.test/products/headset-full-1.jpg",
+                  "https://cdn.example.test/products/headset-full-2.jpg",
+                ],
+              },
+            ],
+            { required: true },
+          ),
+          fieldFactory.text("coupon", "Coupon"),
+          fieldFactory.textarea("shipping_notes", "Shipping Notes"),
+        ],
+      };
 
     case "contact":
     default:

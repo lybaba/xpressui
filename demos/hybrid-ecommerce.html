@@ -111,34 +111,15 @@
             <div class="code-tools">
               <button class="copy-btn" type="button" data-copy-code>Copy</button>
             </div>
-            <pre><code>import { mountFormUI } from "../dist/xpressui.mjs";
+            <pre><code>import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
 
-const form = mountFormUI(app, {
-  version: 1,
-  id: "hybrid_ecommerce_demo",
-  uid: "hybrid_ecommerce_demo_uid",
-  type: "contactform",
-  name: "hybrid-ecommerce-demo",
-  title: "E-commerce Checkout",
-  submit: {
-    endpoint: "/api/orders",
-  },
-  sections: {
-    main: [
-      { type: "text", name: "customer_name", label: "Customer Name", required: true },
-      { type: "email", name: "customer_email", label: "Email", required: true },
-      {
-        type: "product-list",
-        name: "products",
-        label: "Products",
-        required: true,
-        choices: products,
-      },
-      { type: "text", name: "coupon", label: "Coupon" },
-      { type: "textarea", name: "shipping_notes", label: "Shipping Notes" },
-    ],
-  },
-});
+const config = createFormPreset("ecommerce-checkout");
+const productsField = (config.sections.main || []).find((field) => field.name === "products");
+if (productsField) {
+  productsField.choices = products;
+}
+
+const form = mountFormUI(app, config);
 
 form.setAttribute("mode", "hybrid");
 form.setFieldOutputRenderer("products", ({ value }) => {
@@ -164,7 +145,7 @@ form.refreshOutputRendering();</code></pre>
     </main>
 
     <script type="module">
-      import { mountFormUI } from "../dist/xpressui.mjs";
+      import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
 
       const products = [
         {
@@ -235,32 +216,12 @@ form.refreshOutputRendering();</code></pre>
       renderResult("Latest Submit", {});
 
       const app = document.getElementById("app");
-      const form = mountFormUI(app, {
-        version: 1,
-        id: "hybrid_ecommerce_demo",
-        uid: "hybrid_ecommerce_demo_uid",
-        type: "contactform",
-        name: "hybrid-ecommerce-demo",
-        title: "E-commerce Checkout",
-        submit: {
-          endpoint: "/api/orders",
-        },
-        sections: {
-          main: [
-            { type: "text", name: "customer_name", label: "Customer Name", required: true },
-            { type: "email", name: "customer_email", label: "Email", required: true },
-            {
-              type: "product-list",
-              name: "products",
-              label: "Products",
-              required: true,
-              choices: products,
-            },
-            { type: "text", name: "coupon", label: "Coupon" },
-            { type: "textarea", name: "shipping_notes", label: "Shipping Notes" },
-          ],
-        },
-      });
+      const config = createFormPreset("ecommerce-checkout");
+      const productsField = (config.sections.main || []).find((field) => field.name === "products");
+      if (productsField) {
+        productsField.choices = products;
+      }
+      const form = mountFormUI(app, config);
 
       form.setAttribute("mode", "hybrid");
       form.setFieldOutputRenderer("products", ({ value }) => {

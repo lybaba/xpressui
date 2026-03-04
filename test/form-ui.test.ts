@@ -159,6 +159,35 @@ describe('FormUI', () => {
       enableDocumentOcr: true,
       requireValidDocumentMrz: true,
     });
+
+    expect(
+      fieldFactory.productList(
+        'products',
+        'Products',
+        [
+          {
+            value: 'sku_camera',
+            label: 'Nomad Camera Bag',
+            sale_price: 129,
+            discount_price: 99,
+          } as any,
+        ],
+        { required: true },
+      ),
+    ).toEqual({
+      type: 'product-list',
+      name: 'products',
+      label: 'Products',
+      choices: [
+        {
+          value: 'sku_camera',
+          label: 'Nomad Camera Bag',
+          sale_price: 129,
+          discount_price: 99,
+        },
+      ],
+      required: true,
+    });
   });
 
   it('provides business form presets that can be converted to mountable markup', () => {
@@ -183,6 +212,7 @@ describe('FormUI', () => {
   it('provides wizard presets for booking and identity onboarding flows', () => {
     const bookingWizard = createFormPreset('booking-wizard');
     const identityWizard = createFormPreset('identity-onboarding');
+    const ecommercePreset = createFormPreset('ecommerce-checkout');
 
     expect(bookingWizard.stepSections?.map((section) => section.name)).toEqual([
       'details_step',
@@ -207,6 +237,8 @@ describe('FormUI', () => {
       'document_step',
       'review_step',
     ]);
+    expect(ecommercePreset.sections.main?.some((field) => field.type === 'product-list')).toBe(true);
+    expect(ecommercePreset.sections.main?.some((field) => field.name === 'products')).toBe(true);
   });
 
   it('renders all step sections in template markup for multi-step forms', () => {

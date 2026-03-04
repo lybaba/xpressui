@@ -37,6 +37,10 @@ export type TResumeTokenInfo = {
   resumeEndpoint?: string;
 };
 
+export type TResumeLookupResult = TResumeTokenInfo & {
+  snapshot: TFormStorageSnapshot | null;
+};
+
 type TResumeTokenState = {
   version: 1;
   savedAt: number;
@@ -142,6 +146,13 @@ export class FormPersistenceRuntime {
     return `xpressui:resume:${formName}:`;
   }
 
+  getResumeCreatePayload(snapshot: TFormStorageSnapshot): Record<string, any> {
+    return {
+      formName: this.options.getFormConfig()?.name,
+      snapshot,
+    };
+  }
+
   getResumeTokenTtlMs(): number | null {
     const retentionDays = this.options.getFormConfig()?.storage?.resumeTokenTtlDays;
     return typeof retentionDays === "number" && retentionDays > 0
@@ -191,6 +202,22 @@ export class FormPersistenceRuntime {
     } catch {
       return null;
     }
+  }
+
+  applyResumeSnapshot(snapshot: TFormStorageSnapshot): Record<string, any> {
+    if (this.storageAdapter) {
+      if (snapshot.draft) {
+        this.storageAdapter.saveDraft(snapshot.draft);
+      } else {
+        this.storageAdapter.clearDraft();
+      }
+      this.storageAdapter.saveQueue(Array.isArray(snapshot.queue) ? snapshot.queue : []);
+      this.storageAdapter.saveDeadLetterQueue(Array.isArray(snapshot.deadLetter) ? snapshot.deadLetter : []);
+    }
+
+    return getRestorableStorageValues(
+      snapshot.draft && typeof snapshot.draft === "object" ? snapshot.draft : null,
+    );
   }
 
   getRetryDelayMs(attempts: number): number {
@@ -394,6 +421,63 @@ export class FormPersistenceRuntime {
     }
   }
 
+  async createResumeTokenAsync(): Promise<string | null> {
+    const resumeEndpoint = this.getResumeEndpoint();
+    if (!resumeEndpoint) {
+      return this.createResumeToken();
+    }
+
+    const currentValues = this.options.getValues();
+    const storageSnapshot = this.storageAdapter ? this.getStorageSnapshot() : null;
+    const snapshot = storageSnapshot
+      ? {
+          ...storageSnapshot,
+          draft:
+            storageSnapshot.draft ||
+            (Object.keys(currentValues).length
+              ? getSerializableStorageValues(currentValues)
+              : null),
+        }
+      : {
+          draft: Object.keys(currentValues).length
+            ? getSerializableStorageValues(currentValues)
+            : null,
+          queue: [],
+          deadLetter: [],
+        };
+
+    try {
+      const response = await fetch(resumeEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(this.getResumeCreatePayload(snapshot)),
+      });
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+
+      if (!response.ok || !result || typeof result !== "object" || typeof result.token !== "string") {
+        throw new Error("Invalid remote resume token response");
+      }
+
+      this.options.emitEvent(
+        "form-ui:resume-token-created",
+        this.createEventDetail(currentValues, {
+          token: result.token,
+          savedAt: typeof result.savedAt === "number" ? result.savedAt : Date.now(),
+          resumeEndpoint,
+          remote: true,
+        }, response),
+      );
+      return result.token;
+    } catch {
+      return null;
+    }
+  }
+
   restoreFromResumeToken(token: string): Record<string, any> | null {
     if (typeof window === "undefined") {
       return null;
@@ -428,21 +512,7 @@ export class FormPersistenceRuntime {
       }
       const snapshot = parsed.snapshot;
 
-      if (this.storageAdapter) {
-        if (snapshot.draft) {
-          this.storageAdapter.saveDraft(snapshot.draft);
-        } else {
-          this.storageAdapter.clearDraft();
-        }
-        this.storageAdapter.saveQueue(Array.isArray(snapshot.queue) ? snapshot.queue : []);
-        this.storageAdapter.saveDeadLetterQueue(
-          Array.isArray(snapshot.deadLetter) ? snapshot.deadLetter : [],
-        );
-      }
-
-      const restoredDraft = getRestorableStorageValues(
-        snapshot.draft && typeof snapshot.draft === "object" ? snapshot.draft : null,
-      );
+      const restoredDraft = this.applyResumeSnapshot(snapshot);
       this.options.emitEvent(
         "form-ui:resume-token-restored",
         this.createEventDetail(restoredDraft, {
@@ -456,6 +526,84 @@ export class FormPersistenceRuntime {
     } catch {
       return null;
     }
+  }
+
+  async lookupResumeToken(token: string): Promise<TResumeLookupResult | null> {
+    const resumeEndpoint = this.getResumeEndpoint();
+    if (!resumeEndpoint) {
+      const key = this.getResumeStorageKey(token);
+      if (!key) {
+        return null;
+      }
+
+      const parsed = this.parseResumeToken(token, window.localStorage.getItem(key));
+      if (!parsed) {
+        return null;
+      }
+      if (parsed.expired) {
+        this.deleteResumeToken(token);
+        return null;
+      }
+
+      return {
+        token: parsed.token,
+        savedAt: parsed.savedAt,
+        expired: false,
+        resumeEndpoint: parsed.resumeEndpoint,
+        snapshot: parsed.snapshot,
+      };
+    }
+
+    try {
+      const response = await fetch(
+        `${resumeEndpoint}${resumeEndpoint.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`,
+        { method: "GET" },
+      );
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : null;
+      if (!response.ok || !result || typeof result !== "object") {
+        return null;
+      }
+
+      return {
+        token: typeof result.token === "string" ? result.token : token,
+        savedAt: typeof result.savedAt === "number" ? result.savedAt : Date.now(),
+        expired: false,
+        resumeEndpoint,
+        snapshot:
+          result.snapshot && typeof result.snapshot === "object"
+            ? result.snapshot as TFormStorageSnapshot
+            : null,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async restoreFromResumeTokenAsync(token: string): Promise<Record<string, any> | null> {
+    const lookup = await this.lookupResumeToken(token);
+    if (!lookup) {
+      return null;
+    }
+
+    if (lookup.resumeEndpoint && lookup.snapshot) {
+      const restoredDraft = this.applyResumeSnapshot(lookup.snapshot);
+      this.options.emitEvent(
+        "form-ui:resume-token-restored",
+        this.createEventDetail(restoredDraft, {
+          token: lookup.token,
+          snapshot: lookup.snapshot,
+          savedAt: lookup.savedAt,
+          resumeEndpoint: lookup.resumeEndpoint,
+          remote: true,
+        }),
+      );
+      return restoredDraft;
+    }
+
+    return this.restoreFromResumeToken(token);
   }
 
   listResumeTokens(): TResumeTokenInfo[] {

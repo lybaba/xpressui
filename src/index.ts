@@ -1,5 +1,6 @@
 import { createForm, FormApi } from "final-form";
 import TFormConfig, { TFormSubmitRequest } from "./common/TFormConfig";
+import { CUSTOM_SECTION } from "./common/Constants";
 import { TValidator } from "./common/Validator";
 import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
@@ -16,6 +17,7 @@ import type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
+  TResumeLookupResult,
   TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
@@ -73,6 +75,7 @@ export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 export type { TFormUploadState } from "./common/form-upload";
 export type {
   TFormQueueState,
+  TResumeLookupResult,
   TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
@@ -192,6 +195,8 @@ export class FormUI extends HTMLElement {
   documentScanInsights: Record<string, TDocumentScanInsight>;
   approvalState: TFormApprovalState | null;
   workflowState: TFormWorkflowState;
+  stepNames: string[];
+  currentStepIndex: number;
 
   constructor() {
     super();
@@ -212,6 +217,8 @@ export class FormUI extends HTMLElement {
     this.documentScanInsights = {};
     this.approvalState = null;
     this.workflowState = "draft";
+    this.stepNames = [];
+    this.currentStepIndex = 0;
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
       getRules: () => this.formConfig?.rules || [],
@@ -1514,6 +1521,10 @@ export class FormUI extends HTMLElement {
       this.formConfig = validatePublicFormConfig(getFormConfig(formElem) as unknown as Record<string, any>);
       this.engine.setFormConfig(this.formConfig);
       this.persistence.setFormConfig(this.formConfig);
+      this.stepNames = (this.formConfig.sections?.[CUSTOM_SECTION] || [])
+        .map((section) => section.name)
+        .filter(Boolean);
+      this.currentStepIndex = 0;
       const draftValues = this.persistence.loadDraftValues();
 
       this.form = createForm({
@@ -1538,6 +1549,8 @@ export class FormUI extends HTMLElement {
 
       this.dynamic.updateConditionalFields();
       void this.dynamic.refreshRemoteOptions();
+      this.syncStepVisibility();
+      this.emitStepChange();
 
       this.persistence.connect();
 
@@ -1609,6 +1622,10 @@ export class FormUI extends HTMLElement {
     return this.persistence.createResumeToken();
   }
 
+  createResumeTokenAsync = (): Promise<string | null> => {
+    return this.persistence.createResumeTokenAsync();
+  }
+
   listResumeTokens = (): TResumeTokenInfo[] => {
     return this.persistence.listResumeTokens();
   }
@@ -1629,6 +1646,25 @@ export class FormUI extends HTMLElement {
     this.persistence.emitDraftRestored(restoredValues);
     this.updateConditionalFields();
     void this.refreshRemoteOptions();
+    return restoredValues;
+  }
+
+  lookupResumeToken = (token: string): Promise<TResumeLookupResult | null> => {
+    return this.persistence.lookupResumeToken(token);
+  }
+
+  restoreFromResumeTokenAsync = async (token: string): Promise<Record<string, any> | null> => {
+    const restoredValues = await this.persistence.restoreFromResumeTokenAsync(token);
+    if (!restoredValues || !this.form) {
+      return restoredValues;
+    }
+
+    Object.entries(restoredValues).forEach(([fieldName, fieldValue]) => {
+      this.form?.change(fieldName, fieldValue);
+    });
+    this.persistence.emitDraftRestored(restoredValues);
+    this.updateConditionalFields();
+    await this.refreshRemoteOptions();
     return restoredValues;
   }
 
@@ -1678,6 +1714,88 @@ export class FormUI extends HTMLElement {
 
   getWorkflowState = (): TFormWorkflowState => {
     return this.workflowState;
+  }
+
+  getStepNames = (): string[] => {
+    return [...this.stepNames];
+  }
+
+  getCurrentStepIndex = (): number => {
+    return this.currentStepIndex;
+  }
+
+  getCurrentStepName = (): string | null => {
+    return this.stepNames[this.currentStepIndex] || null;
+  }
+
+  getStepElements = (sectionName: string): HTMLElement[] => {
+    const fieldNodes = Array.from(this.querySelectorAll("[data-section-name]"))
+      .filter((node) => node.getAttribute("data-section-name") === sectionName)
+      .map((node) => (node.closest("label") as HTMLElement | null) || node as HTMLElement);
+    const sectionNodes = Array.from(this.querySelectorAll('[data-type="section"]'))
+      .filter((node) => node.getAttribute("data-name") === sectionName)
+      .map((node) => node as HTMLElement);
+
+    return Array.from(new Set([...sectionNodes, ...fieldNodes]));
+  }
+
+  syncStepVisibility = () => {
+    if (this.stepNames.length <= 1) {
+      return;
+    }
+
+    this.stepNames.forEach((sectionName, index) => {
+      const isActive = index === this.currentStepIndex;
+      this.getStepElements(sectionName).forEach((element) => {
+        const isStepHidden = element.getAttribute("data-step-hidden") === "true";
+        if (!isActive) {
+          element.setAttribute("data-step-hidden", "true");
+          element.style.display = "none";
+          return;
+        }
+
+        if (isStepHidden) {
+          element.removeAttribute("data-step-hidden");
+          element.style.display = "";
+        }
+      });
+    });
+  }
+
+  emitStepChange = () => {
+    if (this.stepNames.length <= 1) {
+      return;
+    }
+
+    this.emitFormEvent("form-ui:step-change", {
+      values: this.form?.getState().values || {},
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: {
+        stepIndex: this.currentStepIndex,
+        stepName: this.getCurrentStepName(),
+        stepCount: this.stepNames.length,
+      },
+    });
+  }
+
+  goToStep = (index: number): boolean => {
+    if (index < 0 || index >= this.stepNames.length || index === this.currentStepIndex) {
+      return false;
+    }
+
+    this.currentStepIndex = index;
+    this.syncStepVisibility();
+    this.emitStepChange();
+    return true;
+  }
+
+  nextStep = (): boolean => {
+    return this.goToStep(this.currentStepIndex + 1);
+  }
+
+  previousStep = (): boolean => {
+    return this.goToStep(this.currentStepIndex - 1);
   }
 
   syncApprovalStateFields = () => {

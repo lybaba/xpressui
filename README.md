@@ -1255,9 +1255,12 @@ Runtime inspection helpers:
 - `form.getStorageSnapshot()`
 - `form.getStorageHealth()`
 - `form.createResumeToken()`
+- `form.createResumeTokenAsync()`
 - `form.listResumeTokens()`
 - `form.deleteResumeToken(token)`
+- `form.lookupResumeToken(token)`
 - `form.restoreFromResumeToken(token)`
+- `form.restoreFromResumeTokenAsync(token)`
 - `form.clearDeadLetterQueue()`
 - `form.requeueDeadLetterEntry(entryId)`
 - `form.replayDeadLetterEntry(entryId)`
@@ -1267,6 +1270,11 @@ to the current form name. `restoreFromResumeToken(token)` reloads that snapshot
 back into the form draft state and restores field values in `FormUI`.
 `listResumeTokens()` returns the local token inventory for the current form, and
 `deleteResumeToken(token)` removes one.
+
+If `resumeEndpoint` is configured:
+- `createResumeTokenAsync()` sends the snapshot to your backend and returns the remote token
+- `lookupResumeToken(token)` fetches token metadata and snapshot details
+- `restoreFromResumeTokenAsync(token)` restores from the backend snapshot
 
 If `resumeTokenTtlDays` is set, expired resume tokens are pruned on listing and
 restoring. `resumeEndpoint` is stored as metadata on each token so the same
@@ -1363,6 +1371,22 @@ Common field types used today:
 - `document-scan`
 - `approval-state`
 - `checkbox`
+
+## Multi-step Forms
+
+If a form defines multiple sections, `FormUI` can now navigate them as a simple
+wizard without changing your submit contract.
+
+Helpers:
+- `form.getStepNames()`
+- `form.getCurrentStepIndex()`
+- `form.getCurrentStepName()`
+- `form.goToStep(index)`
+- `form.nextStep()`
+- `form.previousStep()`
+
+Event:
+- `form-ui:step-change`
 
 ## Events
 

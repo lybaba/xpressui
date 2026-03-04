@@ -154,6 +154,70 @@ describe('FormUI', () => {
     expect(element.validators).toHaveLength(1);
   });
 
+  it('supports basic multi-step navigation across existing sections', () => {
+    const element = renderFixture(`
+      <template id="wizard">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+        >
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-section-name="step_one"
+          />
+          <span id="first_name_error"></span>
+          <input
+            id="last_name"
+            name="last_name"
+            type="text"
+            data-type="text"
+            data-name="last_name"
+            data-label="Last Name"
+            data-section-name="step_two"
+          />
+          <span id="last_name_error"></span>
+        </form>
+      </template>
+      <form-ui name="wizard"></form-ui>
+    `);
+    const onStepChange = vi.fn();
+
+    element.addEventListener('form-ui:step-change', (event) => {
+      onStepChange((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    const firstName = element.querySelector('#first_name') as HTMLInputElement;
+    const lastName = element.querySelector('#last_name') as HTMLInputElement;
+
+    expect(element.getStepNames()).toEqual(['step_one', 'step_two']);
+    expect(element.getCurrentStepIndex()).toBe(0);
+    expect((firstName.closest('label') || firstName).getAttribute('data-step-hidden') || undefined).toBeUndefined();
+    expect((lastName.closest('label') || lastName).getAttribute('data-step-hidden')).toBe('true');
+
+    expect(element.nextStep()).toBe(true);
+    expect(element.getCurrentStepIndex()).toBe(1);
+    expect((firstName.closest('label') || firstName).getAttribute('data-step-hidden')).toBe('true');
+    expect((lastName.closest('label') || lastName).getAttribute('data-step-hidden') || undefined).toBeUndefined();
+    expect(onStepChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        result: {
+          stepIndex: 1,
+          stepName: 'step_two',
+          stepCount: 2,
+        },
+      }),
+    );
+  });
+
   it('can create an indexeddb storage adapter with local cache fallback', () => {
     const records = new Map<string, any>();
     const open = vi.fn(() => {
@@ -5847,6 +5911,96 @@ describe('FormUI', () => {
     expect(runtime.listResumeTokens()).toEqual([]);
     expect(runtime.restoreFromResumeToken(token)).toBeNull();
     expect(window.localStorage.getItem(storageKey)).toBeNull();
+  });
+
+  it('supports remote save and resume flows through resumeEndpoint', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === 'https://api.example.test/resume' && init?.method === 'POST') {
+        return new Response(JSON.stringify({ token: 'remote_token_123', savedAt: 123456 }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url === 'https://api.example.test/resume?token=remote_token_123' && init?.method === 'GET') {
+        return new Response(JSON.stringify({
+          token: 'remote_token_123',
+          savedAt: 123456,
+          snapshot: {
+            draft: { email: 'remote-resume@example.com' },
+            queue: [],
+            deadLetter: [],
+          },
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'remote-resume-form',
+      title: 'Remote Resume Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-remote-resume',
+        resumeEndpoint: 'https://api.example.test/resume',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#email') as HTMLInputElement;
+
+    input.value = 'remote-resume@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    const token = await element.createResumeTokenAsync();
+    expect(token).toBe('remote_token_123');
+
+    const lookup = await element.lookupResumeToken('remote_token_123');
+    expect(lookup).toEqual({
+      token: 'remote_token_123',
+      savedAt: 123456,
+      expired: false,
+      resumeEndpoint: 'https://api.example.test/resume',
+      snapshot: {
+        draft: { email: 'remote-resume@example.com' },
+        queue: [],
+        deadLetter: [],
+      },
+    });
+
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    const restored = await element.restoreFromResumeTokenAsync('remote_token_123');
+    expect(restored).toEqual({ email: 'remote-resume@example.com' });
+    expect((element.querySelector('#email') as HTMLInputElement).value).toBe('remote-resume@example.com');
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/resume',
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    );
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/resume?token=remote_token_123',
+      expect.objectContaining({
+        method: 'GET',
+      }),
+    );
   });
 
   it('queues submissions locally when the network fails', async () => {

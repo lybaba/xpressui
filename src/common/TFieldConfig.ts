@@ -33,6 +33,7 @@ type TFieldConfig = {
     placeholder?: string;
     accept?: string;
     multiple?: boolean;
+    minFiles?: number;
     maxFiles?: number;
     maxFileSizeMb?: number;
     fileTypeErrorMsg?: string;

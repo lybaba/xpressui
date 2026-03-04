@@ -770,8 +770,11 @@ describe('FormUI', () => {
     await flushAsyncWork();
 
     expect((element.form?.getState().values || {}).attachments).toEqual([fileOne, fileTwo]);
-    expect((element.querySelector('#attachments_selection') as HTMLElement).textContent).toBe(
-      'report.pdf, photo.png',
+    expect((element.querySelector('#attachments_selection') as HTMLElement).textContent).toContain(
+      'report.pdf',
+    );
+    expect((element.querySelector('#attachments_selection') as HTMLElement).textContent).toContain(
+      'photo.png',
     );
     expect(JSON.parse(window.localStorage.getItem('xpressui:upload-form') || '{}')).toEqual({
       attachments: [
@@ -796,6 +799,90 @@ describe('FormUI', () => {
     const body = request.body as FormData;
     expect(body).toBeInstanceOf(FormData);
     expect(body.getAll('attachments[]')).toEqual([fileOne, fileTwo]);
+  });
+
+  it('can remove a selected file from the default upload UI', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'file-remove-form',
+      title: 'File Remove Form',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#attachments') as HTMLInputElement;
+    const fileOne = new File(['one'], 'one.pdf', { type: 'application/pdf' });
+    const fileTwo = new File(['two'], 'two.pdf', { type: 'application/pdf' });
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [fileOne, fileTwo],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    const removeButtons = Array.from(
+      element.querySelectorAll('#attachments_selection [data-remove-file-index]'),
+    ) as HTMLButtonElement[];
+    expect(removeButtons).toHaveLength(2);
+
+    removeButtons[0].click();
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).attachments).toEqual([fileTwo]);
+    expect((element.querySelector('#attachments_selection') as HTMLElement).textContent).toContain(
+      'two.pdf',
+    );
+    expect((element.querySelector('#attachments_selection') as HTMLElement).textContent).not.toContain(
+      'one.pdf',
+    );
+  });
+
+  it('renders a simple image preview when image uploads are allowed', async () => {
+    const createObjectUrlSpy = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockReturnValue('blob:test-preview');
+    const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'image-preview-form',
+      title: 'Image Preview Form',
+      fields: [
+        {
+          name: 'image',
+          label: 'Image',
+          type: 'file',
+          accept: 'image/*',
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#image') as HTMLInputElement;
+    const imageFile = new File(['image'], 'photo.png', { type: 'image/png' });
+
+    document.body.appendChild(container);
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [imageFile],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    const preview = element.querySelector('#image_selection img') as HTMLImageElement;
+    expect(preview).not.toBeNull();
+    expect(preview.src).toContain('blob:test-preview');
+
+    element.remove();
+    expect(revokeObjectUrlSpy).toHaveBeenCalledWith('blob:test-preview');
+    createObjectUrlSpy.mockRestore();
+    revokeObjectUrlSpy.mockRestore();
   });
 
   it('emits a dedicated event for file validation errors', () => {
@@ -906,6 +993,30 @@ describe('FormUI', () => {
     expect(element.validateForm({ attachments: [largePdf] })).toEqual({
       attachments: expect.objectContaining({
         errorMessage: 'Custom size error',
+      }),
+    });
+  });
+
+  it('supports minFiles validation for multiple uploads', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'min-files-form',
+      title: 'Min Files Form',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+          minFiles: 2,
+        },
+      ],
+    }) as FormUI;
+    const fileOne = new File(['one'], 'one.pdf', { type: 'application/pdf' });
+
+    expect(element.validateForm({ attachments: [fileOne] })).toEqual({
+      attachments: expect.objectContaining({
+        errorMessage: 'Not enough files: minimum 2 required',
       }),
     });
   });

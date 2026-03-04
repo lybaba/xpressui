@@ -672,6 +672,7 @@ mountFormUI(container, {
       type: 'file',
       accept: '.pdf,image/*,video/*',
       multiple: true,
+      minFiles: 1,
       maxFiles: 3,
       maxFileSizeMb: 10,
       fileTypeErrorMsg: 'Only PDF, image, or video files are allowed.',
@@ -690,6 +691,9 @@ Frontend behavior:
 - file inputs keep real `File` objects in memory until submit
 - local draft storage only keeps file metadata, not blobs
 - offline queue is disabled for forms that include file fields
+- selected files can be removed one by one in the default UI
+- `accept: 'image/*'` shows a simple image preview before submit
+- `minFiles` sets a minimum file count for multi-upload fields
 - `maxFiles` limits how many files can be selected
 - `fileTypeErrorMsg` and `fileSizeErrorMsg` let you override default validation messages
 
@@ -853,6 +857,7 @@ Useful field capabilities supported by the current builder:
 - `optionsValueKey`
 - `accept` for file fields
 - `multiple` for file fields
+- `minFiles` for file fields
 - `maxFiles` for file fields
 - `maxFileSizeMb` for file fields
 

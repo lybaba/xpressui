@@ -60,6 +60,9 @@ function renderField(field: TFieldConfig, sectionName: string): string {
       ? ' accept="image/*"'
       : '';
   const multipleAttr = field.multiple ? ' multiple' : '';
+  const minFilesAttr = field.minFiles !== undefined
+    ? ` data-min-files="${escapeHtml(String(field.minFiles))}"`
+    : '';
   const maxFilesAttr = field.maxFiles !== undefined
     ? ` data-max-files="${escapeHtml(String(field.maxFiles))}"`
     : '';
@@ -73,7 +76,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     ? ` data-file-size-error-msg="${escapeHtml(String(field.fileSizeErrorMsg))}"`
     : '';
   const fileSelectionMarkup = isFileFieldType(field.type)
-    ? `<div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_selection"></span></div>`
+    ? `<div class="mt-2 space-y-2" id="${escapeHtml(field.name)}_selection"></div>`
     : '';
   const helpText = field.helpText
     ? `<div class="label"><span class="label-text-alt">${escapeHtml(field.helpText)}</span></div>`
@@ -155,7 +158,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${multipleAttr}${maxFilesAttr}${maxFileSizeAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${multipleAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
     ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>

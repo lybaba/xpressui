@@ -92,6 +92,24 @@ export class FormEngineRuntime {
       const fieldName = fieldConfig.name;
       const files = getFileList(formValues[fieldName]);
 
+      if (
+        typeof fieldConfig.minFiles === "number" &&
+        fieldConfig.minFiles > 0 &&
+        files.length < fieldConfig.minFiles
+      ) {
+        validationErrors[fieldName] = {
+          errorMessage:
+            fieldConfig.errorMsg ||
+            `Not enough files: minimum ${fieldConfig.minFiles} required`,
+          errorData: {
+            type: "file-min-count",
+            minFiles: fieldConfig.minFiles,
+            fileCount: files.length,
+          },
+        };
+        return;
+      }
+
       if (!files.length) {
         return;
       }

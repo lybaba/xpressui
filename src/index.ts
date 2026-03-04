@@ -102,6 +102,7 @@ export class FormUI extends HTMLElement {
   initialized: boolean;
   dynamic: FormDynamicRuntime;
   persistence: FormPersistenceRuntime;
+  filePreviewUrls: Record<string, string[]>;
 
   constructor() {
     super();
@@ -111,6 +112,7 @@ export class FormUI extends HTMLElement {
     this.errors = {}
     this.form = null;
     this.initialized = false;
+    this.filePreviewUrls = {};
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
       getRules: () => this.formConfig?.rules || [],
@@ -165,7 +167,133 @@ export class FormUI extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.clearAllFilePreviewUrls();
     this.persistence.disconnect();
+  }
+
+  getFileValueList = (value: any) => {
+    return Array.isArray(value)
+      ? value
+      : value
+        ? [value]
+        : [];
+  }
+
+  clearFilePreviewUrls = (fieldName: string) => {
+    const urls = this.filePreviewUrls[fieldName] || [];
+    if (typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") {
+      urls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    }
+    this.filePreviewUrls[fieldName] = [];
+  }
+
+  clearAllFilePreviewUrls = () => {
+    Object.keys(this.filePreviewUrls).forEach((fieldName) => {
+      this.clearFilePreviewUrls(fieldName);
+    });
+  }
+
+  shouldShowImagePreview = (fieldConfig: TFieldConfig, file: File) => {
+    const accept = String(fieldConfig.accept || "").toLowerCase();
+    return accept.includes("image/*") && String(file.type || "").startsWith("image/");
+  }
+
+  renderFileSelection = (
+    fieldConfig: TFieldConfig,
+    value: any,
+    selectionElement: HTMLElement | null,
+  ) => {
+    if (!selectionElement) {
+      return;
+    }
+
+    this.clearFilePreviewUrls(fieldConfig.name);
+    selectionElement.innerHTML = "";
+    const selectedFiles = this.getFileValueList(value);
+
+    if (!selectedFiles.length) {
+      return;
+    }
+
+    const list = document.createElement("div");
+    list.className = "space-y-2";
+
+    selectedFiles.forEach((file, index) => {
+      const row = document.createElement("div");
+      row.className = "flex items-start justify-between gap-3 rounded border border-base-300 px-3 py-2";
+
+      const details = document.createElement("div");
+      details.className = "min-w-0 flex-1";
+
+      const name = document.createElement("div");
+      name.className = "text-sm";
+      name.textContent = file?.name || "";
+      details.appendChild(name);
+
+      if (typeof file?.size === "number") {
+        const meta = document.createElement("div");
+        meta.className = "text-xs opacity-70";
+        meta.textContent = `${Math.max(1, Math.round(file.size / 1024))} KB`;
+        details.appendChild(meta);
+      }
+
+      if (
+        file instanceof File &&
+        this.shouldShowImagePreview(fieldConfig, file) &&
+        typeof URL !== "undefined" &&
+        typeof URL.createObjectURL === "function"
+      ) {
+        const previewUrl = URL.createObjectURL(file);
+        this.filePreviewUrls[fieldConfig.name] = [
+          ...(this.filePreviewUrls[fieldConfig.name] || []),
+          previewUrl,
+        ];
+        const image = document.createElement("img");
+        image.src = previewUrl;
+        image.alt = file.name;
+        image.className = "mt-2 h-20 w-20 rounded object-cover";
+        details.appendChild(image);
+      }
+
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "btn btn-xs btn-ghost";
+      removeButton.textContent = "Remove";
+      removeButton.setAttribute("data-remove-file-index", String(index));
+
+      row.appendChild(details);
+      row.appendChild(removeButton);
+      list.appendChild(row);
+    });
+
+    selectionElement.appendChild(list);
+  }
+
+  removeSelectedFile = (fieldName: string, fileIndex: number) => {
+    const currentValue = this.getFieldValue(fieldName);
+    const currentFiles = this.getFileValueList(currentValue);
+    if (!currentFiles.length || fileIndex < 0 || fileIndex >= currentFiles.length) {
+      return;
+    }
+
+    const nextFiles = currentFiles.filter((_, index) => index !== fileIndex);
+    const fieldElement = this.getFieldElement(fieldName);
+    if (fieldElement instanceof HTMLInputElement && fieldElement.type === "file") {
+      fieldElement.value = "";
+    }
+
+    if (!this.form) {
+      return;
+    }
+
+    const fieldConfig = this.engine.getField(fieldName);
+    const nextValue = fieldConfig?.multiple ? nextFiles : nextFiles[0];
+    this.form.change(fieldName, nextValue);
+    this.scheduleDraftSave();
+    this.updateConditionalFields();
+    void this.refreshRemoteOptions(fieldName);
   }
 
   initialize = () => {
@@ -300,7 +428,8 @@ export class FormUI extends HTMLElement {
       if (
         errorType === "file-accept" ||
         errorType === "file-size" ||
-        errorType === "file-count"
+        errorType === "file-count" ||
+        errorType === "file-min-count"
       ) {
         this.emitFormEvent("form-ui:file-validation-error", {
           values: this.engine.normalizeValues(values),
@@ -503,6 +632,22 @@ export class FormUI extends HTMLElement {
             void this.refreshRemoteOptions(name);
           });
           input.addEventListener("focus", () => focus());
+          if (selectionElement) {
+            selectionElement.addEventListener("click", (event) => {
+              const target = event.target as HTMLElement | null;
+              const removeButton = target?.closest("[data-remove-file-index]") as HTMLElement | null;
+              if (!removeButton) {
+                return;
+              }
+
+              const fileIndex = Number(removeButton.getAttribute("data-remove-file-index"));
+              if (Number.isNaN(fileIndex)) {
+                return;
+              }
+
+              this.removeSelectedFile(name, fileIndex);
+            });
+          }
           this.registered[name] = true;
           this.engine.setField(name, fieldConfig);
         }
@@ -511,17 +656,7 @@ export class FormUI extends HTMLElement {
         if (input.type === "checkbox") {
           (<HTMLInputElement>input).checked = value;
         } else if (input instanceof HTMLInputElement && input.type === "file") {
-          const selectedFiles = Array.isArray(value)
-            ? value
-            : value
-              ? [value]
-              : [];
-          if (selectionElement) {
-            selectionElement.textContent = selectedFiles
-              .map((file) => file?.name)
-              .filter(Boolean)
-              .join(", ");
-          }
+          this.renderFileSelection(fieldConfig, value, selectionElement);
           if (!value || (Array.isArray(value) && !value.length)) {
             input.value = "";
           }

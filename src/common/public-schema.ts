@@ -65,7 +65,7 @@ const PUBLIC_FORM_SCHEMA = {
                 sourceField: { type: "string", minLength: 1 },
                 transform: {
                   type: "string",
-                  enum: ["copy", "trim", "lowercase", "uppercase"],
+                  enum: ["copy", "trim", "lowercase", "uppercase", "slugify"],
                 },
               },
             },

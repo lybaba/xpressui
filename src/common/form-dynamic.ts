@@ -1,3 +1,4 @@
+import slugify from "slugify";
 import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
 
@@ -27,7 +28,7 @@ export type TFormRuleAppliedDetail = {
     field: string;
     value?: any;
     sourceField?: string;
-    transform?: "copy" | "trim" | "lowercase" | "uppercase";
+    transform?: "copy" | "trim" | "lowercase" | "uppercase" | "slugify";
   }>;
 };
 
@@ -53,7 +54,7 @@ type TFormDynamicRuntimeOptions = {
       field: string;
       value?: any;
       sourceField?: string;
-      transform?: "copy" | "trim" | "lowercase" | "uppercase";
+      transform?: "copy" | "trim" | "lowercase" | "uppercase" | "slugify";
     }>;
   }>;
   getFieldContainer(
@@ -82,7 +83,7 @@ export class FormDynamicRuntime {
 
   transformRuleValue(
     value: any,
-    transform?: "copy" | "trim" | "lowercase" | "uppercase",
+    transform?: "copy" | "trim" | "lowercase" | "uppercase" | "slugify",
   ): any {
     const nextTransform = transform || "copy";
     if (nextTransform === "copy" || value === undefined || value === null) {
@@ -100,6 +101,14 @@ export class FormDynamicRuntime {
 
     if (nextTransform === "uppercase") {
       return normalizedValue.toUpperCase();
+    }
+
+    if (nextTransform === "slugify") {
+      return slugify(normalizedValue, {
+        lower: true,
+        strict: true,
+        trim: true,
+      });
     }
 
     return value;

@@ -199,7 +199,6 @@ Completed:
 - provider-driven workflow routing policies
 
 Remaining:
-- richer step transition operators:
 - workflow snapshots reusable by admin/debug tools
 
 Exit criteria:
@@ -316,13 +315,14 @@ P0:
   - `identity-review`
 
 P1:
-- add richer workflow routing policies
+- signed / shareable resume tokens
 - harden presigned upload retries
 
 P2:
 - add more demos for headless and remote resume flows
 - improve API boundary docs and stable export documentation
 - reduce bundle size by trimming non-essential runtime paths
+- workflow snapshots reusable by admin/debug tools
 
 
 Next Best Task
@@ -330,15 +330,18 @@ Next Best Task
 
 The most immediately profitable next feature is:
 
-- add richer workflow routing policies
+- implement the remaining workflow-aware providers:
+  - `calendar-availability-hold`
+  - `payment-capture`
+  - `identity-review`
 
 Why:
-- it improves deterministic orchestration after provider transitions and rule outcomes
-- it removes ad hoc step-jump logic from host applications
-- it unlocks complex multi-step processes without imperative glue code
+- this is the P0 backlog and directly expands business workflow coverage
+- it validates the provider contract and routing stack on real integrations
+- it delivers immediate product value for orchestration-centric adopters
 
 Suggested first scope:
-- add declarative routing policies with priorities and fallback behavior
-- support compound predicates for transition routing (`AND` / `OR`)
-- emit routing decision diagnostics in `form-ui:provider-transition`
-- document route policy contracts and examples
+- add `calendar-availability-hold` with normalized status + transition behavior
+- add `payment-capture` with explicit capture-success/failure contracts
+- add `identity-review` for manual decision workflows and provider events
+- document response contracts and add conformance tests for all three

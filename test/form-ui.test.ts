@@ -784,6 +784,47 @@ describe('FormUI', () => {
     });
   });
 
+  it('emits output snapshot events in hybrid mode when values change', () => {
+    const element = renderFixture(`
+      <template id="hybrid_output_event">
+        <form
+          id="hybrid_output_event_form"
+          data-type="contactform"
+          data-name="hybrid_output_event"
+          data-label="Hybrid Output Event"
+        >
+          <input
+            id="title"
+            name="title"
+            type="text"
+            value=""
+            data-type="text"
+            data-name="title"
+            data-label="Title"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="hybrid_output_event" mode="hybrid"></form-ui>
+    `);
+
+    const snapshots: Array<Record<string, any>> = [];
+    element.addEventListener('form-ui:output-snapshot', (event) => {
+      snapshots.push((event as CustomEvent<TFormUISubmitDetail>).detail.result);
+    });
+
+    const input = element.querySelector('#title') as HTMLInputElement;
+    input.value = 'Snapshot ready';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(snapshots.length).toBeGreaterThan(0);
+    expect(snapshots[snapshots.length - 1]?.title).toEqual({
+      rendererType: 'text',
+      mediaDisplayPolicy: 'large',
+      value: 'Snapshot ready',
+    });
+  });
+
   it('supports basic multi-step navigation across existing sections', () => {
     const element = renderFixture(`
       <template id="wizard">
@@ -4423,6 +4464,18 @@ describe('FormUI', () => {
     expect(runtime.normalizeValues(values)).toEqual({
       amount: 12.5,
       email: 'headless@example.com',
+    });
+    expect(runtime.getOutputSnapshot()).toEqual({
+      amount: {
+        rendererType: 'text',
+        mediaDisplayPolicy: 'large',
+        value: '12.50',
+      },
+      email: {
+        rendererType: 'text',
+        mediaDisplayPolicy: 'large',
+        value: 'headless@example.com',
+      },
     });
 
     runtime.saveDraft();

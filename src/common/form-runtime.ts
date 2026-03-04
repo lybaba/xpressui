@@ -1,5 +1,20 @@
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
+import {
+  CAMERA_PHOTO_TYPE,
+  DOCUMENT_SCAN_TYPE,
+  HTML_TYPE,
+  IMAGE_TYPE,
+  LINK_TYPE,
+  MEDIA_TYPE,
+  OUTPUT_TYPE,
+  RICH_EDITOR_TYPE,
+  TEXTAREA_TYPE,
+  TEXT_TYPE,
+  UPLOAD_FILE_TYPE,
+  UPLOAD_IMAGE_TYPE,
+  URL_TYPE,
+} from "./field";
 import { FormDynamicRuntime, TFormActiveTemplateWarning } from "./form-dynamic";
 import { FormEngineRuntime, TStoredDocumentData } from "./form-engine";
 import { FormStepRuntime, TFormStepProgress, TFormWorkflowSnapshot } from "./form-steps";
@@ -17,6 +32,14 @@ export type TFormRuntimeSubmitResult = {
   response: Response;
   result: any;
 };
+
+export type TFormOutputRendererType = "text" | "html" | "image" | "file" | "video" | "link";
+export type TFormMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery";
+export type TFormOutputSnapshot = Record<string, {
+  rendererType: TFormOutputRendererType;
+  mediaDisplayPolicy: TFormMediaDisplayPolicy;
+  value: any;
+}>;
 
 export type TFormRuntimeEmitEvent = (
   eventName: string,
@@ -74,6 +97,7 @@ export type TFormRuntimePublicApi = Pick<
   | "setWorkflowState"
   | "goToWorkflowStep"
   | "getWorkflowSnapshot"
+  | "getOutputSnapshot"
   | "goToStep"
   | "nextStep"
   | "previousStep"
@@ -318,6 +342,80 @@ export class FormRuntime {
 
   getWorkflowSnapshot(): TFormWorkflowSnapshot {
     return this.steps.getWorkflowSnapshot(this.options.getValues());
+  }
+
+  getOutputRendererType(fieldConfig: TFieldConfig): TFormOutputRendererType {
+    const subType = String(fieldConfig.subType || fieldConfig.refType || "").toLowerCase();
+    const accept = String(fieldConfig.accept || "").toLowerCase();
+
+    if (fieldConfig.type === OUTPUT_TYPE || fieldConfig.type === MEDIA_TYPE) {
+      if (subType.includes("html")) {
+        return "html";
+      }
+      if (subType.includes("image")) {
+        return "image";
+      }
+      if (subType.includes("video")) {
+        return "video";
+      }
+      if (subType.includes("file") || subType.includes("document")) {
+        return "file";
+      }
+      if (subType.includes("link") || subType.includes("url")) {
+        return "link";
+      }
+    }
+
+    if (fieldConfig.type === HTML_TYPE || fieldConfig.type === RICH_EDITOR_TYPE) {
+      return "html";
+    }
+
+    if (
+      fieldConfig.type === IMAGE_TYPE ||
+      fieldConfig.type === UPLOAD_IMAGE_TYPE ||
+      fieldConfig.type === CAMERA_PHOTO_TYPE
+    ) {
+      return "image";
+    }
+
+    if (fieldConfig.type === UPLOAD_FILE_TYPE || fieldConfig.type === DOCUMENT_SCAN_TYPE) {
+      if (accept.includes("video/")) {
+        return "video";
+      }
+      return "file";
+    }
+
+    if (fieldConfig.type === LINK_TYPE || fieldConfig.type === URL_TYPE) {
+      return "link";
+    }
+
+    if (fieldConfig.type === "video" || accept.includes("video/")) {
+      return "video";
+    }
+
+    if (fieldConfig.type === TEXT_TYPE || fieldConfig.type === TEXTAREA_TYPE) {
+      return "text";
+    }
+
+    return "text";
+  }
+
+  getOutputSnapshot(values?: Record<string, any>): TFormOutputSnapshot {
+    const currentValues = values || this.options.getValues();
+    const fields = this.engine.getFields();
+    return Object.entries(fields).reduce((accumulator, [fieldName, fieldConfig]) => {
+      const rendererType = this.getOutputRendererType(fieldConfig);
+      const mediaDisplayPolicy: TFormMediaDisplayPolicy =
+        rendererType === "file" || rendererType === "link"
+          ? "link"
+          : "large";
+      accumulator[fieldName] = {
+        rendererType,
+        mediaDisplayPolicy,
+        value: currentValues[fieldName],
+      };
+      return accumulator;
+    }, {} as TFormOutputSnapshot);
   }
 
   getStepSummary(): Array<{ field: string; label: string; value: any }> {

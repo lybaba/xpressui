@@ -115,6 +115,9 @@ export type {
   TNormalizedProviderResult,
 } from "./common/provider-registry";
 export type {
+  TFormMediaDisplayPolicy,
+  TFormOutputRendererType,
+  TFormOutputSnapshot,
   TFormRuntimeDynamicAdapters,
   TFormRuntimeEmitEvent,
   TFormRuntimeOptions,
@@ -975,6 +978,19 @@ export class FormUI extends HTMLElement {
     return snapshot;
   }
 
+  emitOutputSnapshot = (values?: Record<string, any>) => {
+    const snapshot = this.getOutputSnapshot(values);
+    this.emitFormEvent("form-ui:output-snapshot", {
+      values:
+        values
+        || this.form?.getState().values
+        || {},
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: snapshot,
+    });
+  }
+
   refreshOutputRendering = () => {
     if (!this.initialized) {
       return;
@@ -988,12 +1004,14 @@ export class FormUI extends HTMLElement {
     const mode = this.getRenderMode();
     if (mode === "view") {
       this.applyViewMode(formElem);
+      this.emitOutputSnapshot(this.getInitialViewValues(formElem));
       return;
     }
 
     if (mode === "hybrid") {
       const values = this.form?.getState().values || this.getInitialViewValues(formElem);
       this.applyHybridMode(formElem, values);
+      this.emitOutputSnapshot(values);
     }
   }
 
@@ -2457,6 +2475,7 @@ export class FormUI extends HTMLElement {
 
       if (renderMode === "view") {
         this.applyViewMode(formElem);
+        this.emitOutputSnapshot(this.getInitialViewValues(formElem));
         return;
       }
 
@@ -2500,6 +2519,7 @@ export class FormUI extends HTMLElement {
 
       if (renderMode === "hybrid") {
         this.applyHybridMode(formElem, hybridInitialValues || undefined);
+        this.emitOutputSnapshot(hybridInitialValues || this.form?.getState().values || {});
       }
 
       this.persistence.connect();
@@ -3987,6 +4007,7 @@ export class FormUI extends HTMLElement {
 
         if (this.getRenderMode() === "hybrid" && inputElement) {
           this.renderViewField(fieldConfig, value, inputElement);
+          this.emitOutputSnapshot(this.form?.getState().values || {});
         }
 
         // show/hide errors

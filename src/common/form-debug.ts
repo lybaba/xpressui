@@ -110,6 +110,7 @@ const DEFAULT_DEBUG_EVENTS = [
   "form-ui:step-jumped",
   "form-ui:workflow-state",
   "form-ui:workflow-step",
+  "form-ui:output-snapshot",
 ];
 
 export function attachFormDebugObserver(

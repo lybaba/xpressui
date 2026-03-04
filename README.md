@@ -508,6 +508,7 @@ mountFormUI(container, {
 
 Extra event:
 - `form-ui:options-loaded`
+- `form-ui:rule-applied`
 
 You can also define basic rules at the form level:
 
@@ -671,6 +672,7 @@ Core events emitted by `<form-ui>`:
 - `form-ui:submit-success`
 - `form-ui:submit-error`
 - `form-ui:options-loaded`
+- `form-ui:rule-applied`
 - `form-ui:draft-saved`
 - `form-ui:draft-restored`
 - `form-ui:draft-cleared`

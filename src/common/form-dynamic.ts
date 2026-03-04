@@ -7,6 +7,27 @@ export type TFormRemoteOptionsDetail = {
   sourceField?: string;
 };
 
+export type TFormRuleAppliedDetail = {
+  logic?: "AND" | "OR";
+  conditions: Array<{
+    field: string;
+    operator?: "equals" | "not_equals" | "contains" | "in" | "gt" | "lt";
+    value?: any;
+  }>;
+  actions: Array<{
+    type:
+      | "show"
+      | "hide"
+      | "enable"
+      | "disable"
+      | "clear-value"
+      | "set-value"
+      | "fetch-options";
+    field: string;
+    value?: any;
+  }>;
+};
+
 type TFormDynamicRuntimeOptions = {
   getFieldConfigs(): TFieldConfig[];
   getRules(): Array<{
@@ -150,6 +171,18 @@ export class FormDynamicRuntime {
         } else if (action.type === "fetch-options") {
           void this.fetchOptionsForField(action.field);
         }
+      });
+
+      const context = this.options.getEventContext();
+      this.options.emitEvent("form-ui:rule-applied", {
+        values: this.options.getFormValues(),
+        formConfig: context.formConfig,
+        submit: context.submit,
+        result: {
+          logic: rule.logic,
+          conditions: rule.conditions,
+          actions: rule.actions,
+        } satisfies TFormRuleAppliedDetail,
       });
     });
 

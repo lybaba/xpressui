@@ -729,6 +729,48 @@ describe('FormUI', () => {
     expect((element.form?.getState().values || {}).notes).toBeUndefined();
   });
 
+  it('emits a debug event when a rule is applied', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'rule-event-form',
+      title: 'Rule Event Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'country', operator: 'equals', value: 'fr' },
+          ],
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'country', label: 'Country', type: 'text' },
+        { name: 'currency', label: 'Currency', type: 'text' },
+      ],
+    }) as FormUI;
+    const country = element.querySelector('#country') as HTMLInputElement;
+    const onRuleApplied = vi.fn();
+
+    element.addEventListener('form-ui:rule-applied', (event) => {
+      onRuleApplied((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    country.value = 'fr';
+    country.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(onRuleApplied).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        }),
+      })
+    );
+  });
+
   it('supports advanced rule operators for string and numeric comparisons', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

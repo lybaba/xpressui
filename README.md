@@ -200,6 +200,7 @@ const observer = form
 
 console.log(observer?.getEvents());
 console.log(observer?.getRuleHistory());
+console.log(observer?.getRecentAppliedRules());
 console.log(observer?.getTemplateDiagnostics());
 console.log(observer?.getActiveTemplateWarnings());
 ```
@@ -207,10 +208,12 @@ console.log(observer?.getActiveTemplateWarnings());
 The observer API:
 - `getEvents()`
 - `getRuleHistory()`
+- `getRecentAppliedRules()`
 - `getTemplateDiagnostics()`
 - `getActiveTemplateWarnings()`
 - `clear()`
 - `clearRuleHistory()`
+- `clearRecentAppliedRules()`
 - `clearTemplateDiagnostics()`
 - `clearActiveTemplateWarnings()`
 - `detach()`
@@ -218,6 +221,9 @@ The observer API:
 `getRuleHistory()` returns only `form-ui:rule-applied` events. Use
 `clearRuleHistory()` to reset that rule-specific buffer without clearing the
 full event log.
+
+`getRecentAppliedRules()` returns the latest rule-state snapshot seen by the
+observer. Use `clearRecentAppliedRules()` to reset only that local cache.
 
 `getTemplateDiagnostics()` returns only `form-ui:rule-template-missing-field`
 and `form-ui:rule-template-warning-cleared` events.

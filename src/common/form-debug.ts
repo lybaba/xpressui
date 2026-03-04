@@ -24,10 +24,12 @@ export type TFormDebugTemplateDiagnosticRecord = TFormDebugEventRecord & {
 export type TFormDebugObserver = {
   getEvents(): TFormDebugEventRecord[];
   getRuleHistory(): TFormDebugRuleRecord[];
+  getRecentAppliedRules(): TFormRuleAppliedDetail[];
   getTemplateDiagnostics(): TFormDebugTemplateDiagnosticRecord[];
   getActiveTemplateWarnings(): TFormActiveTemplateWarning[];
   clear(): void;
   clearRuleHistory(): void;
+  clearRecentAppliedRules(): void;
   clearTemplateDiagnostics(): void;
   clearActiveTemplateWarnings(): void;
   detach(): void;
@@ -78,6 +80,7 @@ export function attachFormDebugObserver(
   const maxEvents = options.maxEvents ?? 100;
   const events: TFormDebugEventRecord[] = [];
   const ruleEvents: TFormDebugRuleRecord[] = [];
+  let recentAppliedRules: TFormRuleAppliedDetail[] = [];
   const templateDiagnostics: TFormDebugTemplateDiagnosticRecord[] = [];
   let activeTemplateWarnings: TFormActiveTemplateWarning[] = [];
   const listeners = DEFAULT_DEBUG_EVENTS.map((eventName) => {
@@ -99,6 +102,12 @@ export function attachFormDebugObserver(
         if (ruleEvents.length > maxEvents) {
           ruleEvents.splice(0, ruleEvents.length - maxEvents);
         }
+      }
+
+      if (record.type === "form-ui:rule-state") {
+        recentAppliedRules = Array.isArray(record.detail?.result?.rules)
+          ? [...record.detail.result.rules]
+          : [];
       }
 
       if (
@@ -134,6 +143,9 @@ export function attachFormDebugObserver(
     getRuleHistory() {
       return [...ruleEvents];
     },
+    getRecentAppliedRules() {
+      return [...recentAppliedRules];
+    },
     getTemplateDiagnostics() {
       return [...templateDiagnostics];
     },
@@ -143,11 +155,15 @@ export function attachFormDebugObserver(
     clear() {
       events.splice(0, events.length);
       ruleEvents.splice(0, ruleEvents.length);
+      recentAppliedRules = [];
       templateDiagnostics.splice(0, templateDiagnostics.length);
       activeTemplateWarnings = [];
     },
     clearRuleHistory() {
       ruleEvents.splice(0, ruleEvents.length);
+    },
+    clearRecentAppliedRules() {
+      recentAppliedRules = [];
     },
     clearTemplateDiagnostics() {
       templateDiagnostics.splice(0, templateDiagnostics.length);

@@ -30,6 +30,9 @@ export function createFormDebugPanel(
   const counts = document.createElement("div");
   counts.className = "xpressui-debug-panel__counts";
 
+  const status = document.createElement("div");
+  status.className = "xpressui-debug-panel__status";
+
   const lastUpdated = document.createElement("div");
   lastUpdated.className = "xpressui-debug-panel__updated";
 
@@ -60,6 +63,7 @@ export function createFormDebugPanel(
 
   element.appendChild(title);
   element.appendChild(counts);
+  element.appendChild(status);
   element.appendChild(lastUpdated);
   actions.appendChild(clearButton);
   actions.appendChild(clearEventsButton);
@@ -76,6 +80,7 @@ export function createFormDebugPanel(
       `ruleHistory: ${observer.getRuleHistory().length}`,
       `templateDiagnostics: ${observer.getTemplateDiagnostics().length}`,
     ].join(" | ");
+    status.textContent = "Status: listening";
     const latestEvent = observer.getEvents().at(-1);
     lastUpdated.textContent = latestEvent
       ? `Last Updated: ${new Date(latestEvent.timestamp).toISOString()}`
@@ -112,6 +117,7 @@ export function createFormDebugPanel(
       render();
     },
     detach() {
+      status.textContent = "Status: detached";
       observer.detach();
       element.remove();
     },

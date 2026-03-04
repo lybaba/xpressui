@@ -229,6 +229,7 @@ describe('FormUI', () => {
     expect(panel.element.textContent).toContain('Active Template Warnings');
     expect(panel.element.textContent).toContain('Clear Snapshot');
     expect(panel.element.textContent).toContain('Clear Events');
+    expect(panel.element.textContent).toContain('Status: listening');
     expect(panel.element.textContent).toContain('Last Updated:');
     expect(panel.element.textContent).toContain('set-currency');
 
@@ -245,6 +246,7 @@ describe('FormUI', () => {
     expect(panel.element.textContent).toContain('Last Updated: never');
 
     panel.detach();
+    expect(panel.element.textContent).toContain('Status: detached');
     expect(document.body.contains(panel.element)).toBe(false);
   });
 

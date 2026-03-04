@@ -86,7 +86,9 @@ export class FormRuntime {
     this.options = {
       emitEvent: options.emitEvent || noopEmitEvent,
       getValues: options.getValues || (() => ({})),
-      submitValues: options.submitValues || submitFormValues,
+      submitValues:
+        options.submitValues ||
+        ((values, submitConfig) => submitFormValues(values, submitConfig, this.engine.getFields())),
     };
     this.persistence = new FormPersistenceRuntime({
       getFormConfig: () => this.formConfig,

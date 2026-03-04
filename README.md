@@ -201,21 +201,27 @@ const observer = form
 console.log(observer?.getEvents());
 console.log(observer?.getRuleHistory());
 console.log(observer?.getRecentAppliedRules());
+console.log(observer?.getLastRuleState());
 console.log(observer?.getTemplateDiagnostics());
 console.log(observer?.getActiveTemplateWarnings());
+console.log(observer?.getLastTemplateWarningState());
 ```
 
 The observer API:
 - `getEvents()`
 - `getRuleHistory()`
 - `getRecentAppliedRules()`
+- `getLastRuleState()`
 - `getTemplateDiagnostics()`
 - `getActiveTemplateWarnings()`
+- `getLastTemplateWarningState()`
 - `clear()`
 - `clearRuleHistory()`
 - `clearRecentAppliedRules()`
+- `clearLastRuleState()`
 - `clearTemplateDiagnostics()`
 - `clearActiveTemplateWarnings()`
+- `clearLastTemplateWarningState()`
 - `detach()`
 
 `getRuleHistory()` returns only `form-ui:rule-applied` events. Use
@@ -224,6 +230,9 @@ full event log.
 
 `getRecentAppliedRules()` returns the latest rule-state snapshot seen by the
 observer. Use `clearRecentAppliedRules()` to reset only that local cache.
+
+`getLastRuleState()` returns the last full `form-ui:rule-state` event record,
+including its timestamp.
 
 `getTemplateDiagnostics()` returns only `form-ui:rule-template-missing-field`
 and `form-ui:rule-template-warning-cleared` events.
@@ -234,6 +243,9 @@ warning state.
 `getActiveTemplateWarnings()` returns the current active template warning state
 without requiring you to keep the latest `form-ui:rule-template-warning-state`
 event yourself.
+
+`getLastTemplateWarningState()` returns the last full
+`form-ui:rule-template-warning-state` event record, including its timestamp.
 
 ## Submission Modes
 

@@ -50,7 +50,9 @@ export type {
   TFormDebugObserver,
   TFormDebugOptions,
   TFormDebugRuleRecord,
+  TFormDebugRuleStateRecord,
   TFormDebugTemplateDiagnosticRecord,
+  TFormDebugTemplateWarningStateRecord,
 } from "./common/form-debug";
 export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 export type { TFormQueueState, TFormStorageSnapshot } from "./common/form-persistence";

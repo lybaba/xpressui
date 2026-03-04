@@ -235,11 +235,35 @@ describe('FormUI', () => {
         ],
       },
     ]);
+    expect(observer.getLastRuleState()).toEqual(
+      expect.objectContaining({
+        type: 'form-ui:rule-state',
+        timestamp: expect.any(Number),
+        detail: expect.objectContaining({
+          result: {
+            rules: [
+              {
+                id: 'set-currency',
+                logic: undefined,
+                conditions: [
+                  { field: 'country', operator: 'equals', value: 'fr' },
+                ],
+                actions: [
+                  { type: 'set-value', field: 'currency', value: 'EUR' },
+                ],
+              },
+            ],
+          },
+        }),
+      })
+    );
 
     observer.clearRuleHistory();
     expect(observer.getRuleHistory()).toEqual([]);
     observer.clearRecentAppliedRules();
     expect(observer.getRecentAppliedRules()).toEqual([]);
+    observer.clearLastRuleState();
+    expect(observer.getLastRuleState()).toBeNull();
     expect(observer.getEvents().some((event) => event.type === 'form-ui:rule-applied')).toBe(true);
 
     observer.detach();
@@ -336,9 +360,29 @@ describe('FormUI', () => {
         missingField: 'missingName',
       },
     ]);
+    expect(observer.getLastTemplateWarningState()).toEqual(
+      expect.objectContaining({
+        type: 'form-ui:rule-template-warning-state',
+        timestamp: expect.any(Number),
+        detail: expect.objectContaining({
+          result: {
+            warnings: [
+              {
+                ruleId: 'compose-full-name',
+                field: 'fullName',
+                template: '{{firstName}} {{missingName}}',
+                missingField: 'missingName',
+              },
+            ],
+          },
+        }),
+      })
+    );
 
     observer.clearActiveTemplateWarnings();
     expect(observer.getActiveTemplateWarnings()).toEqual([]);
+    observer.clearLastTemplateWarningState();
+    expect(observer.getLastTemplateWarningState()).toBeNull();
     observer.detach();
   });
 

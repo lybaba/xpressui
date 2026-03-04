@@ -21,17 +21,41 @@ export type TFormDebugTemplateDiagnosticRecord = TFormDebugEventRecord & {
   type: "form-ui:rule-template-missing-field" | "form-ui:rule-template-warning-cleared";
 };
 
+export type TFormDebugRuleStateRecord = TFormDebugEventRecord & {
+  type: "form-ui:rule-state";
+  detail: {
+    result?: {
+      rules?: TFormRuleAppliedDetail[];
+    };
+    [key: string]: any;
+  };
+};
+
+export type TFormDebugTemplateWarningStateRecord = TFormDebugEventRecord & {
+  type: "form-ui:rule-template-warning-state";
+  detail: {
+    result?: {
+      warnings?: TFormActiveTemplateWarning[];
+    };
+    [key: string]: any;
+  };
+};
+
 export type TFormDebugObserver = {
   getEvents(): TFormDebugEventRecord[];
   getRuleHistory(): TFormDebugRuleRecord[];
   getRecentAppliedRules(): TFormRuleAppliedDetail[];
+  getLastRuleState(): TFormDebugRuleStateRecord | null;
   getTemplateDiagnostics(): TFormDebugTemplateDiagnosticRecord[];
   getActiveTemplateWarnings(): TFormActiveTemplateWarning[];
+  getLastTemplateWarningState(): TFormDebugTemplateWarningStateRecord | null;
   clear(): void;
   clearRuleHistory(): void;
   clearRecentAppliedRules(): void;
+  clearLastRuleState(): void;
   clearTemplateDiagnostics(): void;
   clearActiveTemplateWarnings(): void;
+  clearLastTemplateWarningState(): void;
   detach(): void;
 };
 
@@ -81,8 +105,10 @@ export function attachFormDebugObserver(
   const events: TFormDebugEventRecord[] = [];
   const ruleEvents: TFormDebugRuleRecord[] = [];
   let recentAppliedRules: TFormRuleAppliedDetail[] = [];
+  let lastRuleState: TFormDebugRuleStateRecord | null = null;
   const templateDiagnostics: TFormDebugTemplateDiagnosticRecord[] = [];
   let activeTemplateWarnings: TFormActiveTemplateWarning[] = [];
+  let lastTemplateWarningState: TFormDebugTemplateWarningStateRecord | null = null;
   const listeners = DEFAULT_DEBUG_EVENTS.map((eventName) => {
     const listener = (event: Event) => {
       const customEvent = event as CustomEvent<any>;
@@ -108,6 +134,7 @@ export function attachFormDebugObserver(
         recentAppliedRules = Array.isArray(record.detail?.result?.rules)
           ? [...record.detail.result.rules]
           : [];
+        lastRuleState = record as TFormDebugRuleStateRecord;
       }
 
       if (
@@ -124,6 +151,7 @@ export function attachFormDebugObserver(
         activeTemplateWarnings = Array.isArray(record.detail?.result?.warnings)
           ? [...record.detail.result.warnings]
           : [];
+        lastTemplateWarningState = record as TFormDebugTemplateWarningStateRecord;
       }
 
       options.onEvent?.(record);
@@ -146,18 +174,26 @@ export function attachFormDebugObserver(
     getRecentAppliedRules() {
       return [...recentAppliedRules];
     },
+    getLastRuleState() {
+      return lastRuleState ? { ...lastRuleState } : null;
+    },
     getTemplateDiagnostics() {
       return [...templateDiagnostics];
     },
     getActiveTemplateWarnings() {
       return [...activeTemplateWarnings];
     },
+    getLastTemplateWarningState() {
+      return lastTemplateWarningState ? { ...lastTemplateWarningState } : null;
+    },
     clear() {
       events.splice(0, events.length);
       ruleEvents.splice(0, ruleEvents.length);
       recentAppliedRules = [];
+      lastRuleState = null;
       templateDiagnostics.splice(0, templateDiagnostics.length);
       activeTemplateWarnings = [];
+      lastTemplateWarningState = null;
     },
     clearRuleHistory() {
       ruleEvents.splice(0, ruleEvents.length);
@@ -165,11 +201,17 @@ export function attachFormDebugObserver(
     clearRecentAppliedRules() {
       recentAppliedRules = [];
     },
+    clearLastRuleState() {
+      lastRuleState = null;
+    },
     clearTemplateDiagnostics() {
       templateDiagnostics.splice(0, templateDiagnostics.length);
     },
     clearActiveTemplateWarnings() {
       activeTemplateWarnings = [];
+    },
+    clearLastTemplateWarningState() {
+      lastTemplateWarningState = null;
     },
     detach() {
       listeners.forEach(({ eventName, listener }) => {

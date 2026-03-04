@@ -228,11 +228,19 @@ describe('FormUI', () => {
     expect(panel.element.textContent).toContain('Recent Rules');
     expect(panel.element.textContent).toContain('Active Template Warnings');
     expect(panel.element.textContent).toContain('Clear Snapshot');
+    expect(panel.element.textContent).toContain('Clear Events');
     expect(panel.element.textContent).toContain('set-currency');
 
-    const clearButton = panel.element.querySelector('button') as HTMLButtonElement;
-    clearButton.click();
+    const buttons = Array.from(panel.element.querySelectorAll('button')) as HTMLButtonElement[];
+    const clearSnapshotButton = buttons.find((button) => button.textContent === 'Clear Snapshot')!;
+    const clearEventsButton = buttons.find((button) => button.textContent === 'Clear Events')!;
+
+    clearSnapshotButton.click();
     expect(panel.element.textContent).toContain('[]');
+    expect(panel.element.textContent).toContain('events: 2');
+
+    clearEventsButton.click();
+    expect(panel.element.textContent).toContain('events: 0');
 
     panel.detach();
     expect(document.body.contains(panel.element)).toBe(false);

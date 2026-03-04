@@ -38,6 +38,11 @@ export function createFormDebugPanel(
   clearButton.className = "xpressui-debug-panel__clear";
   clearButton.textContent = "Clear Snapshot";
 
+  const clearEventsButton = document.createElement("button");
+  clearEventsButton.type = "button";
+  clearEventsButton.className = "xpressui-debug-panel__clear-events";
+  clearEventsButton.textContent = "Clear Events";
+
   const rulesTitle = document.createElement("strong");
   rulesTitle.textContent = "Recent Rules";
 
@@ -53,6 +58,7 @@ export function createFormDebugPanel(
   element.appendChild(title);
   element.appendChild(counts);
   actions.appendChild(clearButton);
+  actions.appendChild(clearEventsButton);
   element.appendChild(actions);
   element.appendChild(rulesTitle);
   element.appendChild(rules);
@@ -77,6 +83,11 @@ export function createFormDebugPanel(
 
   clearButton.addEventListener("click", () => {
     observer.clearSnapshot();
+    render();
+  });
+
+  clearEventsButton.addEventListener("click", () => {
+    observer.clear();
     render();
   });
 

@@ -260,7 +260,8 @@ template warning-state event.
 
 Use `createFormDebugPanel(...)` for a minimal in-browser panel backed by the
 same debug observer. It renders counts, recent rules, and active template
-warnings in separate sections, and includes a local `Clear Snapshot` button.
+warnings in separate sections, and includes local `Clear Snapshot` and
+`Clear Events` buttons.
 
 ```ts
 import { createFormDebugPanel, mountFormUI } from '@lybaba/xpressui';

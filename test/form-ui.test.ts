@@ -1970,6 +1970,36 @@ describe('FormUI', () => {
     expect(element.querySelector('#notes')).not.toBeNull();
   });
 
+  it('does not double-initialize mounted forms when the container is already attached', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const element = mountFormUI(container, {
+      name: 'attached-mount-form',
+      title: 'Attached Mount Form',
+      fields: [
+        {
+          name: 'full_name',
+          label: 'Full Name',
+          type: 'text',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+
+    const forms = element.querySelectorAll('form');
+    const inputs = element.querySelectorAll('#full_name');
+    const input = element.querySelector('#full_name') as HTMLInputElement;
+
+    expect(forms).toHaveLength(1);
+    expect(inputs).toHaveLength(1);
+
+    input.value = 'Alice';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(element.form?.getState().values.full_name).toBe('Alice');
+  });
+
   it('supports select-multiple fields in mounted forms', async () => {
     const container = document.createElement('div');
     const onSubmitSuccess = vi.fn();

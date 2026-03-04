@@ -443,7 +443,12 @@ export function mountFormUI(
   container.innerHTML = createTemplateMarkup(config, templateName);
   const element = container.querySelector('form-ui') as HTMLElement | null;
 
-  if (element && 'initialize' in element && typeof (element as any).initialize === 'function') {
+  if (
+    element &&
+    'initialize' in element &&
+    typeof (element as any).initialize === 'function' &&
+    !(element as any).initialized
+  ) {
     (element as any).initialize();
   }
 

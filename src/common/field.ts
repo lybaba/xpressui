@@ -43,6 +43,7 @@ export const ACTION_TARGET_TYPE = 'action-target';
 export const SELECT_MULTIPLE_TYPE = 'select-multiple';
 export const CHECKBOXES_TYPE = 'checkboxes';
 export const PRODUCT_LIST_TYPE = 'product-list';
+export const IMAGE_GALLERY_TYPE = 'image-gallery';
 
 export const SUBMIT_TYPE = 'submit';
 export const BTN_TYPE = 'btn';
@@ -145,6 +146,7 @@ export const REQUEST_FORM_FIELD_TYPES: Array<TFieldType> = [
     UPLOAD_IMAGE_TYPE_FIELD,
     UPLOAD_FILE_TYPE_FIELD,
     { type: PRODUCT_LIST_TYPE, name: 'Product List' },
+    { type: IMAGE_GALLERY_TYPE, name: 'Image Gallery' },
 ];
 
 
@@ -301,6 +303,7 @@ export const getHtmlInputType = (fieldType: string): string => {
             return "date";
 
         case PRODUCT_LIST_TYPE:
+        case IMAGE_GALLERY_TYPE:
             return "text";
 
         case TIME_TYPE:

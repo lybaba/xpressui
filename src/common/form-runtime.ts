@@ -5,6 +5,7 @@ import {
   DOCUMENT_SCAN_TYPE,
   HTML_TYPE,
   IMAGE_TYPE,
+  IMAGE_GALLERY_TYPE,
   LINK_TYPE,
   MEDIA_TYPE,
   OUTPUT_TYPE,
@@ -372,6 +373,7 @@ export class FormRuntime {
 
     if (
       fieldConfig.type === IMAGE_TYPE ||
+      fieldConfig.type === IMAGE_GALLERY_TYPE ||
       fieldConfig.type === UPLOAD_IMAGE_TYPE ||
       fieldConfig.type === CAMERA_PHOTO_TYPE
     ) {

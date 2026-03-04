@@ -98,7 +98,7 @@
       <h1>Hybrid E-commerce Checkout</h1>
       <p>
         Exemple <code>mode="hybrid"</code> avec champ natif <code>product-list</code>
-        (catalogue + cart global sticky à droite, max 20 produits sans pagination, clic produit pour galerie full).
+        + <code>image-gallery</code> (catalogue + cart global sticky à droite, max 20 items sans pagination, clic carte pour galerie full).
       </p>
 
       <div class="layout">
@@ -118,6 +118,12 @@ const productsField = (config.sections.main || []).find((field) => field.name ==
 if (productsField) {
   productsField.choices = products;
 }
+(config.sections.main || []).push({
+  type: "image-gallery",
+  name: "lookbook",
+  label: "Lookbook Gallery",
+  choices: lookbookImages
+});
 
 const form = mountFormUI(app, config);
 
@@ -202,6 +208,42 @@ form.refreshOutputRendering();</code></pre>
         }
       ];
 
+      const lookbookImages = [
+        {
+          value: "look_1",
+          name: "Lookbook 1",
+          label: "Lookbook 1",
+          image_thumbnail: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=300&q=80",
+          image_medium: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
+          photos_full: [
+            "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=80",
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1400&q=80"
+          ]
+        },
+        {
+          value: "look_2",
+          name: "Lookbook 2",
+          label: "Lookbook 2",
+          image_thumbnail: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=300&q=80",
+          image_medium: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80",
+          photos_full: [
+            "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1400&q=80",
+            "https://images.unsplash.com/photo-1464863979621-258859e62245?auto=format&fit=crop&w=1400&q=80"
+          ]
+        },
+        {
+          value: "look_3",
+          name: "Lookbook 3",
+          label: "Lookbook 3",
+          image_thumbnail: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=300&q=80",
+          image_medium: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=800&q=80",
+          photos_full: [
+            "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1400&q=80",
+            "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=1400&q=80"
+          ]
+        }
+      ];
+
       const result = document.getElementById("result");
       const renderResult = (title, data) => {
         result.innerHTML = "";
@@ -221,6 +263,13 @@ form.refreshOutputRendering();</code></pre>
       if (productsField) {
         productsField.choices = products;
       }
+      (config.sections.main || []).push({
+        type: "image-gallery",
+        name: "lookbook",
+        label: "Lookbook Gallery",
+        helpText: "Select visual inspirations and click a card to open full images.",
+        choices: lookbookImages
+      });
       const form = mountFormUI(app, config);
 
       form.setAttribute("mode", "hybrid");

@@ -188,6 +188,35 @@ describe('FormUI', () => {
       ],
       required: true,
     });
+
+    expect(
+      fieldFactory.imageGallery(
+        'lookbook',
+        'Lookbook',
+        [
+          {
+            value: 'img_1',
+            label: 'Image 1',
+            image_thumbnail: 'https://cdn.example.test/thumb_1.jpg',
+            image_medium: 'https://cdn.example.test/medium_1.jpg',
+          } as any,
+        ],
+        { required: true },
+      ),
+    ).toEqual({
+      type: 'image-gallery',
+      name: 'lookbook',
+      label: 'Lookbook',
+      choices: [
+        {
+          value: 'img_1',
+          label: 'Image 1',
+          image_thumbnail: 'https://cdn.example.test/thumb_1.jpg',
+          image_medium: 'https://cdn.example.test/medium_1.jpg',
+        },
+      ],
+      required: true,
+    });
   });
 
   it('provides business form presets that can be converted to mountable markup', () => {
@@ -888,6 +917,58 @@ describe('FormUI', () => {
 
     expect(element.querySelectorAll('[data-product-list-global-cart]').length).toBe(1);
     expect(element.querySelectorAll('[data-product-cart-item]').length).toBe(2);
+  });
+
+  it('supports image-gallery fields with a 20-image max catalog and selection modal interactions', async () => {
+    const images = Array.from({ length: 24 }, (_, index) => ({
+      value: `img_${index + 1}`,
+      name: `Image ${index + 1}`,
+      label: `Image ${index + 1}`,
+      image_thumbnail: `https://cdn.example.test/thumb_${index + 1}.jpg`,
+      image_medium: `https://cdn.example.test/medium_${index + 1}.jpg`,
+      photos_full: [`https://cdn.example.test/full_${index + 1}.jpg`],
+    }));
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'image-gallery-demo',
+      title: 'Image Gallery Demo',
+      fields: [
+        {
+          type: 'image-gallery',
+          name: 'lookbook',
+          label: 'Lookbook',
+          required: true,
+          choices: images as any,
+        },
+      ],
+    }) as FormUI;
+
+    expect(element.querySelectorAll('[data-image-card]').length).toBe(20);
+
+    const selectFirst = element.querySelector('[data-image-gallery-action="toggle"][data-image-id="img_1"]') as HTMLButtonElement;
+    selectFirst.click();
+    await flushAsyncWork();
+
+    const selected = element.getFieldValue('lookbook') as Array<Record<string, any>>;
+    expect(Array.isArray(selected)).toBe(true);
+    expect(selected).toHaveLength(1);
+    expect(selected[0]).toEqual(
+      expect.objectContaining({
+        id: 'img_1',
+        name: 'Image 1',
+      }),
+    );
+
+    const imageCard = element.querySelector('[data-image-open-gallery="img_1"]') as HTMLElement;
+    imageCard.click();
+    await flushAsyncWork();
+    expect(document.body.querySelector('[data-product-gallery-overlay="true"]')).not.toBeNull();
+
+    const remove = element.querySelector('[data-image-gallery-action="remove"][data-image-id="img_1"]') as HTMLButtonElement;
+    remove.click();
+    await flushAsyncWork();
+    expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).length).toBe(0);
   });
 
   it('exposes an output snapshot API with renderer metadata', () => {

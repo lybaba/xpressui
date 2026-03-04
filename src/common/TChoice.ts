@@ -3,6 +3,7 @@ import { TMediaInfo } from "./TMediaFile";
 type TChoice = {
     value: string;
     label: string;
+    id?: string;
     name?: string;
     desc?: string;
     mediaId?: string;

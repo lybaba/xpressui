@@ -19,6 +19,7 @@ import {
   LINK_TYPE,
   MEDIA_TYPE,
   OUTPUT_TYPE,
+  IMAGE_GALLERY_TYPE,
   PRODUCT_LIST_TYPE,
   QR_SCAN_TYPE,
   RICH_EDITOR_TYPE,
@@ -249,6 +250,14 @@ type TProductListItem = {
 
 type TProductCartItem = TProductListItem & {
   quantity: number;
+};
+
+type TImageGalleryItem = {
+  id: string;
+  name: string;
+  image_thumbnail: string;
+  image_medium: string;
+  photos_full: string[];
 };
 
 function hasFileValues(value: any): boolean {
@@ -612,7 +621,18 @@ export class FormUI extends HTMLElement {
 
     const imageRenderer: TFormOutputRenderer = ({ value, fieldConfig, mediaDisplayPolicy }) => {
       const element = document.createElement("div");
-      const sources = this.getMediaSources(value);
+      const sources = fieldConfig.type === IMAGE_GALLERY_TYPE
+        ? (Array.isArray(value) ? value : [])
+          .filter((entry) => entry && typeof entry === "object")
+          .map((entry) =>
+            String(
+              (entry as any).image_medium
+              || (entry as any).image_thumbnail
+              || "",
+            ),
+          )
+          .filter(Boolean)
+        : this.getMediaSources(value);
       if (!sources.length) {
         return element;
       }
@@ -1148,6 +1168,10 @@ export class FormUI extends HTMLElement {
 
     if (fieldConfig.type === PRODUCT_LIST_TYPE) {
       return "text";
+    }
+
+    if (fieldConfig.type === IMAGE_GALLERY_TYPE) {
+      return "image";
     }
 
     if (fieldConfig.type === "video" || accept.includes("video/")) {
@@ -2079,6 +2103,10 @@ export class FormUI extends HTMLElement {
     return fieldConfig.type === PRODUCT_LIST_TYPE;
   }
 
+  isImageGalleryField = (fieldConfig: TFieldConfig) => {
+    return fieldConfig.type === IMAGE_GALLERY_TYPE;
+  }
+
   getProductListCatalog = (fieldConfig: TFieldConfig): TProductListItem[] => {
     const source = Array.isArray(fieldConfig.choices) ? fieldConfig.choices : [];
     return source
@@ -2121,6 +2149,38 @@ export class FormUI extends HTMLElement {
       });
   }
 
+  getImageGalleryCatalog = (fieldConfig: TFieldConfig): TImageGalleryItem[] => {
+    const source = Array.isArray(fieldConfig.choices) ? fieldConfig.choices : [];
+    return source
+      .slice(0, 20)
+      .map((choice, index) => {
+        const id = String((choice as any).value || (choice as any).id || `image_${index + 1}`);
+        const name = String((choice as any).name || (choice as any).label || id);
+        const image_thumbnail = String(
+          (choice as any).image_thumbnail
+          || (choice as any).imageThumbnail
+          || "",
+        );
+        const image_medium = String(
+          (choice as any).image_medium
+          || (choice as any).imageMedium
+          || image_thumbnail,
+        );
+        const photosSource = (choice as any).photos_full ?? (choice as any).photosFull;
+        const photos_full = Array.isArray(photosSource)
+          ? photosSource.map((entry: any) => String(entry)).filter(Boolean)
+          : [];
+
+        return {
+          id,
+          name,
+          image_thumbnail,
+          image_medium,
+          photos_full,
+        };
+      });
+  }
+
   getProductCartItems = (value: any): TProductCartItem[] => {
     if (!Array.isArray(value)) {
       return [];
@@ -2147,6 +2207,25 @@ export class FormUI extends HTMLElement {
           quantity: Number.isFinite(quantityRaw) && quantityRaw > 0 ? Math.round(quantityRaw) : 1,
         };
       })
+      .filter((entry) => Boolean(entry.id));
+  }
+
+  getImageGallerySelectionItems = (value: any): TImageGalleryItem[] => {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .filter((entry) => entry && typeof entry === "object")
+      .map((entry, index) => ({
+        id: String((entry as any).id || (entry as any).value || `image_${index + 1}`),
+        name: String((entry as any).name || (entry as any).label || (entry as any).id || ""),
+        image_thumbnail: String((entry as any).image_thumbnail || ""),
+        image_medium: String((entry as any).image_medium || ""),
+        photos_full: Array.isArray((entry as any).photos_full)
+          ? (entry as any).photos_full.map((photo: any) => String(photo)).filter(Boolean)
+          : [],
+      }))
       .filter((entry) => Boolean(entry.id));
   }
 
@@ -2323,10 +2402,7 @@ export class FormUI extends HTMLElement {
     });
   }
 
-  openProductListGallery = (product: TProductListItem) => {
-    const photos = product.photos_full.length
-      ? product.photos_full
-      : [product.image_medium || product.image_thumbnail].filter(Boolean);
+  openMediaGallery = (name: string, photos: string[]) => {
     if (!photos.length || typeof document === "undefined") {
       return;
     }
@@ -2369,13 +2445,13 @@ export class FormUI extends HTMLElement {
 
     const title = document.createElement("div");
     title.className = "mb-2 text-sm font-semibold";
-    title.textContent = product.name;
+    title.textContent = name;
     modal.appendChild(title);
 
     const mainImage = document.createElement("img");
     mainImage.setAttribute("data-product-gallery-main", "true");
     mainImage.src = photos[0];
-    mainImage.alt = product.name;
+    mainImage.alt = name;
     mainImage.style.width = "100%";
     mainImage.style.maxHeight = "60vh";
     mainImage.style.objectFit = "contain";
@@ -2392,7 +2468,7 @@ export class FormUI extends HTMLElement {
       const thumb = document.createElement("img");
       thumb.setAttribute("data-product-gallery-thumb", photo);
       thumb.src = photo;
-      thumb.alt = `${product.name} preview`;
+      thumb.alt = `${name} preview`;
       thumb.style.width = "72px";
       thumb.style.height = "72px";
       thumb.style.objectFit = "cover";
@@ -2414,6 +2490,20 @@ export class FormUI extends HTMLElement {
     });
     document.body.appendChild(overlay);
     this.productGalleryOverlay = overlay;
+  }
+
+  openProductListGallery = (product: TProductListItem) => {
+    const photos = product.photos_full.length
+      ? product.photos_full
+      : [product.image_medium || product.image_thumbnail].filter(Boolean);
+    this.openMediaGallery(product.name, photos);
+  }
+
+  openImageGalleryItem = (item: TImageGalleryItem) => {
+    const photos = item.photos_full.length
+      ? item.photos_full
+      : [item.image_medium || item.image_thumbnail].filter(Boolean);
+    this.openMediaGallery(item.name, photos);
   }
 
   getNextProductCartItems = (
@@ -2475,6 +2565,33 @@ export class FormUI extends HTMLElement {
     }
 
     return nextItems.filter((entry) => entry.id !== productId);
+  }
+
+  getNextImageGallerySelectionItems = (
+    fieldConfig: TFieldConfig,
+    currentValue: any,
+    action: "toggle" | "remove",
+    imageId: string,
+  ): TImageGalleryItem[] => {
+    const catalog = this.getImageGalleryCatalog(fieldConfig);
+    const image = catalog.find((entry) => entry.id === imageId);
+    const currentItems = this.getImageGallerySelectionItems(currentValue);
+    const existingIndex = currentItems.findIndex((entry) => entry.id === imageId);
+    const nextItems = [...currentItems];
+
+    if (action === "toggle") {
+      if (existingIndex >= 0) {
+        return nextItems.filter((entry) => entry.id !== imageId);
+      }
+
+      if (!image) {
+        return nextItems;
+      }
+
+      return [...nextItems, image];
+    }
+
+    return nextItems.filter((entry) => entry.id !== imageId);
   }
 
   renderProductListSelection = (
@@ -2571,6 +2688,126 @@ export class FormUI extends HTMLElement {
 
     selectionElement.appendChild(productList);
     this.renderProductListGlobalCart();
+  }
+
+  renderImageGallerySelection = (
+    fieldConfig: TFieldConfig,
+    value: any,
+    selectionElement: HTMLElement | null,
+  ) => {
+    if (!selectionElement) {
+      return;
+    }
+
+    selectionElement.innerHTML = "";
+    const images = this.getImageGalleryCatalog(fieldConfig);
+    const selectedItems = this.getImageGallerySelectionItems(value);
+    const selectedMap = selectedItems.reduce((accumulator, item) => {
+      accumulator[item.id] = true;
+      return accumulator;
+    }, {} as Record<string, boolean>);
+
+    const gallery = document.createElement("div");
+    gallery.setAttribute("data-image-gallery-catalog", fieldConfig.name);
+    gallery.style.display = "grid";
+    gallery.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
+    gallery.style.gap = "10px";
+    gallery.style.marginBottom = "14px";
+
+    images.forEach((imageItem) => {
+      const card = document.createElement("div");
+      card.setAttribute("data-image-open-gallery", imageItem.id);
+      card.setAttribute("data-image-card", imageItem.id);
+      card.className = "rounded border border-base-300 p-2";
+      card.style.cursor = "pointer";
+
+      const previewSrc = imageItem.image_medium || imageItem.image_thumbnail;
+      if (previewSrc) {
+        const preview = document.createElement("img");
+        preview.src = previewSrc;
+        preview.alt = imageItem.name;
+        preview.style.width = "100%";
+        preview.style.height = "140px";
+        preview.style.objectFit = "cover";
+        preview.style.borderRadius = "8px";
+        card.appendChild(preview);
+      }
+
+      const title = document.createElement("div");
+      title.className = "mt-2 text-sm font-semibold";
+      title.textContent = imageItem.name;
+      card.appendChild(title);
+
+      const meta = document.createElement("div");
+      meta.className = "text-xs opacity-70";
+      meta.textContent = imageItem.photos_full.length ? `${imageItem.photos_full.length} full photos` : "No full gallery";
+      card.appendChild(meta);
+
+      const buttonRow = document.createElement("div");
+      buttonRow.className = "mt-2 flex items-center justify-between";
+
+      const statusTag = document.createElement("span");
+      statusTag.className = "text-xs opacity-70";
+      statusTag.textContent = selectedMap[imageItem.id] ? "Selected" : "Not selected";
+
+      const toggleButton = document.createElement("button");
+      toggleButton.type = "button";
+      toggleButton.className = selectedMap[imageItem.id] ? "btn btn-xs btn-outline" : "btn btn-xs btn-primary";
+      toggleButton.textContent = selectedMap[imageItem.id] ? "Remove" : "Select";
+      toggleButton.setAttribute("data-image-gallery-action", "toggle");
+      toggleButton.setAttribute("data-image-id", imageItem.id);
+
+      buttonRow.appendChild(statusTag);
+      buttonRow.appendChild(toggleButton);
+      card.appendChild(buttonRow);
+      gallery.appendChild(card);
+    });
+
+    selectionElement.appendChild(gallery);
+
+    const selectedPanel = document.createElement("div");
+    selectedPanel.setAttribute("data-image-gallery-selection", fieldConfig.name);
+    selectedPanel.className = "rounded border border-base-300 p-3";
+
+    const heading = document.createElement("div");
+    heading.className = "mb-2 text-sm font-semibold";
+    heading.textContent = `Selected Images (${selectedItems.length})`;
+    selectedPanel.appendChild(heading);
+
+    if (!selectedItems.length) {
+      const empty = document.createElement("div");
+      empty.className = "text-xs opacity-70";
+      empty.textContent = "No image selected yet.";
+      selectedPanel.appendChild(empty);
+      selectionElement.appendChild(selectedPanel);
+      return;
+    }
+
+    const list = document.createElement("div");
+    list.style.display = "grid";
+    list.style.gap = "8px";
+    selectedItems.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "flex items-center justify-between gap-2 rounded border border-base-300 px-2 py-2";
+      row.setAttribute("data-image-gallery-item", item.id);
+
+      const name = document.createElement("div");
+      name.className = "text-sm";
+      name.textContent = item.name;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "btn btn-xs btn-ghost";
+      remove.textContent = "Remove";
+      remove.setAttribute("data-image-gallery-action", "remove");
+      remove.setAttribute("data-image-id", item.id);
+
+      row.appendChild(name);
+      row.appendChild(remove);
+      list.appendChild(row);
+    });
+    selectedPanel.appendChild(list);
+    selectionElement.appendChild(selectedPanel);
   }
 
   renderDocumentScanSelection = (
@@ -4463,6 +4700,30 @@ export class FormUI extends HTMLElement {
                 return;
               }
 
+              const imageGalleryActionButton = target?.closest("[data-image-gallery-action]") as HTMLElement | null;
+              if (this.isImageGalleryField(fieldConfig) && imageGalleryActionButton) {
+                event.preventDefault();
+                event.stopPropagation();
+                const action = imageGalleryActionButton.getAttribute("data-image-gallery-action");
+                const imageId = imageGalleryActionButton.getAttribute("data-image-id");
+                if (
+                  (action === "toggle" || action === "remove")
+                  && imageId
+                ) {
+                  const nextSelection = this.getNextImageGallerySelectionItems(
+                    fieldConfig,
+                    this.getFieldValue(name),
+                    action,
+                    imageId,
+                  );
+                  change(nextSelection);
+                  this.scheduleDraftSave();
+                  this.updateConditionalFields();
+                  void this.refreshRemoteOptions(name);
+                }
+                return;
+              }
+
               if (this.isProductListField(fieldConfig)) {
                 const productCard = target?.closest("[data-product-open-gallery]") as HTMLElement | null;
                 if (productCard) {
@@ -4473,6 +4734,22 @@ export class FormUI extends HTMLElement {
                       event.preventDefault();
                       event.stopPropagation();
                       this.openProductListGallery(product);
+                    }
+                  }
+                  return;
+                }
+              }
+
+              if (this.isImageGalleryField(fieldConfig)) {
+                const imageCard = target?.closest("[data-image-open-gallery]") as HTMLElement | null;
+                if (imageCard) {
+                  const imageId = imageCard.getAttribute("data-image-open-gallery");
+                  if (imageId) {
+                    const imageItem = this.getImageGalleryCatalog(fieldConfig).find((entry) => entry.id === imageId);
+                    if (imageItem) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      this.openImageGalleryItem(imageItem);
                     }
                   }
                   return;
@@ -4567,6 +4844,9 @@ export class FormUI extends HTMLElement {
         } else if (this.isProductListField(fieldConfig)) {
           this.renderProductListSelection(fieldConfig, value, selectionElement);
           input.value = JSON.stringify(this.getProductCartItems(value));
+        } else if (this.isImageGalleryField(fieldConfig)) {
+          this.renderImageGallerySelection(fieldConfig, value, selectionElement);
+          input.value = JSON.stringify(this.getImageGallerySelectionItems(value));
         } else if (input instanceof HTMLSelectElement && input.multiple) {
           const selectedValues = Array.isArray(value)
             ? value.map((entry) => String(entry))

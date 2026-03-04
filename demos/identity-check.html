@@ -12,7 +12,11 @@
       p { color: #334155; }
       .layout { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 20px; margin-top: 24px; align-items: start; }
       .code, .shell { padding: 20px; background: #fff; border: 1px solid #bfdbfe; border-radius: 16px; }
-      .code h2 { margin: 0 0 12px; font-size: 1rem; }
+      .code-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .code h2 { margin: 0; font-size: 1rem; }
+      .copy-btn { border: 1px solid #93c5fd; background: #fff; color: #1d4ed8; border-radius: 999px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+      .code-body { margin-top: 12px; }
+      .code-tools { display: flex; justify-content: flex-end; margin-bottom: 12px; }
       .code pre { margin: 0; padding: 12px; overflow: auto; border-radius: 12px; background: #172554; color: #dbeafe; font-size: 12px; line-height: 1.45; }
       a { color: #1d4ed8; }
       @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
@@ -25,18 +29,68 @@
       <p>Démo KYC avec `document-scan`, extraction de données document et payload normalisé.</p>
       <div class="layout">
         <aside class="code">
-          <h2>Code</h2>
-          <pre><code>import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
+          <div class="code-head">
+            <h2>Code</h2>
+            <button class="copy-btn" type="button" data-toggle-code>Show code</button>
+          </div>
+          <div class="code-body" hidden>
+            <div class="code-tools">
+              <button class="copy-btn" type="button" data-copy-code>Copy</button>
+            </div>
+            <pre><code>import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
 
 const container = document.getElementById("app");
 
 mountFormUI(container, createFormPreset("identity-check"));</code></pre>
+          </div>
         </aside>
         <div class="shell" id="app"></div>
       </div>
     </main>
     <script type="module">
       import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
+
+      document.querySelectorAll("[data-toggle-code]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const panel = button.closest(".code");
+          const body = panel?.querySelector(".code-body");
+          const isHidden = body?.hasAttribute("hidden");
+          if (!body) return;
+          if (isHidden) {
+            body.removeAttribute("hidden");
+            button.textContent = "Hide code";
+          } else {
+            body.setAttribute("hidden", "true");
+            button.textContent = "Show code";
+          }
+        });
+      });
+
+      document.querySelectorAll("[data-copy-code]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const code = button.closest(".code")?.querySelector("code")?.textContent || "";
+          if (!code) return;
+          const previousLabel = button.textContent;
+          try {
+            if (navigator.clipboard?.writeText) {
+              await navigator.clipboard.writeText(code);
+            } else {
+              const textarea = document.createElement("textarea");
+              textarea.value = code;
+              document.body.appendChild(textarea);
+              textarea.select();
+              document.execCommand("copy");
+              textarea.remove();
+            }
+            button.textContent = "Copied";
+          } catch {
+            button.textContent = "Failed";
+          }
+          window.setTimeout(() => {
+            button.textContent = previousLabel;
+          }, 1200);
+        });
+      });
 
       const container = document.getElementById("app");
       mountFormUI(container, createFormPreset("identity-check"));

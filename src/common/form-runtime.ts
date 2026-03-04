@@ -1,7 +1,7 @@
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
 import { FormDynamicRuntime, TFormActiveTemplateWarning } from "./form-dynamic";
-import { FormEngineRuntime } from "./form-engine";
+import { FormEngineRuntime, TStoredDocumentData } from "./form-engine";
 import { FormUploadRuntime } from "./form-upload";
 import {
   FormPersistenceRuntime,
@@ -71,6 +71,8 @@ export type TFormRuntimePublicApi = Pick<
   | "clearActiveTemplateWarnings"
   | "getRecentAppliedRules"
   | "clearRecentAppliedRules"
+  | "getDocumentData"
+  | "getAllDocumentData"
 >;
 
 export class FormRuntime {
@@ -258,5 +260,13 @@ export class FormRuntime {
 
   clearRecentAppliedRules(): void {
     this.dynamic?.clearRecentAppliedRules();
+  }
+
+  getDocumentData(fieldName: string): TStoredDocumentData | null {
+    return this.engine.getDocumentData(fieldName);
+  }
+
+  getAllDocumentData(): Record<string, TStoredDocumentData> {
+    return this.engine.getAllDocumentData();
   }
 }

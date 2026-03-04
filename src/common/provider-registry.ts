@@ -175,3 +175,22 @@ registerProvider("email", {
   successEventName: "form-ui:email-success",
   errorEventName: "form-ui:email-error",
 });
+
+registerProvider("identity-verification", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "identity-verification",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "identity-verification",
+      identity: values,
+    };
+  },
+  successEventName: "form-ui:identity-verification-success",
+  errorEventName: "form-ui:identity-verification-error",
+});

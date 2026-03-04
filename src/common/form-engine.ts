@@ -3,6 +3,12 @@ import TFormConfig from "./TFormConfig";
 import validate, { getValidators, TValidator } from "./Validator";
 import { isFileFieldType, isFileLikeValue, normalizeFormValues } from "./field";
 
+export type TStoredDocumentData = {
+  text?: string | null;
+  mrz?: Record<string, any> | null;
+  fields?: Record<string, any> | null;
+};
+
 function getFileList(value: any): File[] {
   if (!value) {
     return [];
@@ -50,11 +56,13 @@ export class FormEngineRuntime {
   formConfig: TFormConfig | null;
   validators: TValidator[];
   inputFields: Record<string, TFieldConfig>;
+  documentData: Record<string, TStoredDocumentData>;
 
   constructor() {
     this.formConfig = null;
     this.validators = [];
     this.inputFields = {};
+    this.documentData = {};
   }
 
   setFormConfig(formConfig: TFormConfig | null): void {
@@ -72,6 +80,18 @@ export class FormEngineRuntime {
 
   getFields(): Record<string, TFieldConfig> {
     return this.inputFields;
+  }
+
+  setDocumentData(fieldName: string, data: TStoredDocumentData): void {
+    this.documentData[fieldName] = data;
+  }
+
+  getDocumentData(fieldName: string): TStoredDocumentData | null {
+    return this.documentData[fieldName] || null;
+  }
+
+  getAllDocumentData(): Record<string, TStoredDocumentData> {
+    return { ...this.documentData };
   }
 
   normalizeValues(values: Record<string, any>): Record<string, any> {

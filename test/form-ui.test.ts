@@ -1633,6 +1633,24 @@ describe('FormUI', () => {
     expect((element.form?.getState().values || {}).birth_date).toBe('740812');
     expect((element.form?.getState().values || {}).expiry_date).toBe('120415');
     expect((element.form?.getState().values || {}).sex).toBe('F');
+    expect(element.getDocumentData('passport')).toEqual(
+      expect.objectContaining({
+        text: expect.stringContaining('P<UTOERIKSSON'),
+        mrz: expect.objectContaining({
+          format: 'TD3',
+          documentNumber: 'L898902C3',
+          checksums: expect.objectContaining({
+            documentNumber: true,
+            birthDate: true,
+            expiryDate: true,
+          }),
+        }),
+        fields: expect.objectContaining({
+          firstName: 'ANNA MARIA',
+          lastName: 'ERIKSSON',
+        }),
+      }),
+    );
     expect((element.querySelector('#passport_selection') as HTMLElement).textContent).toContain('OCR:');
     expect((element.querySelector('#passport_selection') as HTMLElement).textContent).toContain('MRZ:');
 
@@ -2152,6 +2170,23 @@ describe('FormUI', () => {
 
     expect(runtime.loadDraftValues()).toEqual(values);
     expect(runtime.getStorageSnapshot().draft).toEqual(values);
+    runtime.engine.setDocumentData('passport', {
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3' },
+      fields: { firstName: 'ANNA MARIA' },
+    });
+    expect(runtime.getDocumentData('passport')).toEqual({
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3' },
+      fields: { firstName: 'ANNA MARIA' },
+    });
+    expect(runtime.getAllDocumentData()).toEqual({
+      passport: {
+        text: 'P<UTOERIKSSON',
+        mrz: { documentNumber: 'L898902C3' },
+        fields: { firstName: 'ANNA MARIA' },
+      },
+    });
 
     values = { amount: '', email: '' };
     expect(Object.keys(runtime.validateValues(values)).length).toBeGreaterThan(0);
@@ -3898,6 +3933,73 @@ describe('FormUI', () => {
       expect.objectContaining({
         result: { delivered: true, messageId: 'msg_123' },
       })
+    );
+  });
+
+  it('supports an identity-verification provider for document workflows', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ verified: true, verificationId: 'idv_123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'identity-form',
+      title: 'Identity Form',
+      provider: {
+        type: 'identity-verification',
+        endpoint: 'https://api.example.test/identity/verify',
+      },
+      fields: [
+        {
+          name: 'document_number',
+          label: 'Document Number',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'last_name',
+          label: 'Last Name',
+          type: 'text',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const documentNumber = element.querySelector('#document_number') as HTMLInputElement;
+    const lastName = element.querySelector('#last_name') as HTMLInputElement;
+    const form = element.querySelector('#identity-form_form') as HTMLFormElement;
+    const onIdentitySuccess = vi.fn();
+
+    element.addEventListener('form-ui:identity-verification-success', (event) => {
+      onIdentitySuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    documentNumber.value = 'L898902C3';
+    documentNumber.dispatchEvent(new Event('input', { bubbles: true }));
+    lastName.value = 'ERIKSSON';
+    lastName.dispatchEvent(new Event('input', { bubbles: true }));
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/identity/verify',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'identity-verification',
+          identity: {
+            document_number: 'L898902C3',
+            last_name: 'ERIKSSON',
+          },
+        }),
+      }),
+    );
+    expect(onIdentitySuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: { verified: true, verificationId: 'idv_123' },
+      }),
     );
   });
 

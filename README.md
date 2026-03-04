@@ -582,6 +582,25 @@ Extra events:
 - `form-ui:email-success`
 - `form-ui:email-error`
 
+Use `identity-verification` when your backend verifies scanned identity data
+and you want a normalized request contract for KYC / onboarding workflows.
+
+Request shape:
+
+```json
+{
+  "action": "identity-verification",
+  "identity": {
+    "document_number": "L898902C3",
+    "last_name": "ERIKSSON"
+  }
+}
+```
+
+Extra events:
+- `form-ui:identity-verification-success`
+- `form-ui:identity-verification-error`
+
 ## Dynamic Forms
 
 The component supports two dynamic patterns out of the box:

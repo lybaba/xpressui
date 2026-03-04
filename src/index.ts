@@ -74,6 +74,7 @@ export type {
   TFormRuntimeSubmitResult,
   TFormRuntimeSubmitValues,
 } from "./common/form-runtime";
+export type { TStoredDocumentData } from "./common/form-engine";
 
 export type TFormUISubmitDetail = {
   values: Record<string, any>;
@@ -105,6 +106,12 @@ type TDocumentMrzResult = {
   sex?: string;
   surnames?: string[];
   givenNames?: string[];
+  checksums?: {
+    documentNumber?: boolean;
+    birthDate?: boolean;
+    expiryDate?: boolean;
+    composite?: boolean;
+  };
 };
 
 type TDocumentPerspectiveCorners = {
@@ -378,6 +385,37 @@ export class FormUI extends HTMLElement {
     }
   }
 
+  getMrzCharValue = (char: string) => {
+    if (char >= "0" && char <= "9") {
+      return Number(char);
+    }
+
+    if (char >= "A" && char <= "Z") {
+      return char.charCodeAt(0) - 55;
+    }
+
+    return 0;
+  }
+
+  computeMrzChecksum = (input: string) => {
+    const weights = [7, 3, 1];
+    return input
+      .split("")
+      .reduce((sum, char, index) => sum + this.getMrzCharValue(char) * weights[index % 3], 0) % 10;
+  }
+
+  validateMrzChecksum = (source: string, checkDigit?: string) => {
+    if (!checkDigit || checkDigit === "<") {
+      return undefined;
+    }
+
+    if (!/^\d$/.test(checkDigit)) {
+      return false;
+    }
+
+    return this.computeMrzChecksum(source) === Number(checkDigit);
+  }
+
   parseMrz = (text: string): TDocumentMrzResult | null => {
     const lines = text
       .split(/\r?\n/)
@@ -387,18 +425,28 @@ export class FormUI extends HTMLElement {
     if (lines.length >= 3) {
       const [line1, line2, line3] = lines.slice(-3);
       const nameBlock = line3.split("<<");
+      const documentNumberSource = line1.slice(5, 14);
+      const birthDateSource = line2.slice(0, 6);
+      const expiryDateSource = line2.slice(8, 14);
+      const compositeSource = `${line1.slice(0, 30)}${line2.slice(0, 7)}${line2.slice(8, 15)}${line2.slice(18, 29)}`;
       return {
         format: "TD1",
         lines: [line1, line2, line3],
         documentCode: line1.slice(0, 2).replace(/</g, ""),
         issuingCountry: line1.slice(2, 5).replace(/</g, ""),
-        documentNumber: line1.slice(5, 14).replace(/</g, ""),
-        birthDate: line2.slice(0, 6).replace(/</g, ""),
+        documentNumber: documentNumberSource.replace(/</g, ""),
+        birthDate: birthDateSource.replace(/</g, ""),
         sex: line2.slice(7, 8).replace(/</g, ""),
-        expiryDate: line2.slice(8, 14).replace(/</g, ""),
+        expiryDate: expiryDateSource.replace(/</g, ""),
         nationality: line2.slice(15, 18).replace(/</g, ""),
         surnames: (nameBlock[0] || "").split("<").filter(Boolean),
         givenNames: (nameBlock.slice(1).join("<<") || "").split("<").filter(Boolean),
+        checksums: {
+          documentNumber: this.validateMrzChecksum(documentNumberSource, line1.slice(14, 15)),
+          birthDate: this.validateMrzChecksum(birthDateSource, line2.slice(6, 7)),
+          expiryDate: this.validateMrzChecksum(expiryDateSource, line2.slice(14, 15)),
+          composite: this.validateMrzChecksum(compositeSource, line2.slice(29, 30)),
+        },
       };
     }
 
@@ -415,18 +463,39 @@ export class FormUI extends HTMLElement {
       .split("<")
       .filter(Boolean);
     const format = line1.length >= 40 || line2.length >= 40 ? "TD3" : "TD2";
+    const isTd3 = format === "TD3";
+    const documentNumberSource = line2.slice(0, 9);
+    const birthDateSource = isTd3 ? line2.slice(13, 19) : line2.slice(0, 6);
+    const expiryDateSource = isTd3 ? line2.slice(21, 27) : line2.slice(8, 14);
     return {
       format,
       lines: [line1, line2],
       documentCode: line1.slice(0, 2).replace(/</g, ""),
       issuingCountry: line1.slice(2, 5).replace(/</g, ""),
-      documentNumber: line2.slice(0, 9).replace(/</g, ""),
-      nationality: line2.slice(10, 13).replace(/</g, ""),
-      birthDate: line2.slice(13, 19).replace(/</g, ""),
-      sex: line2.slice(20, 21).replace(/</g, ""),
-      expiryDate: line2.slice(21, 27).replace(/</g, ""),
+      documentNumber: documentNumberSource.replace(/</g, ""),
+      nationality: (isTd3 ? line2.slice(10, 13) : line2.slice(15, 18)).replace(/</g, ""),
+      birthDate: birthDateSource.replace(/</g, ""),
+      sex: (isTd3 ? line2.slice(20, 21) : line2.slice(7, 8)).replace(/</g, ""),
+      expiryDate: expiryDateSource.replace(/</g, ""),
       surnames,
       givenNames,
+      checksums: {
+        documentNumber: this.validateMrzChecksum(documentNumberSource, line2.slice(9, 10)),
+        birthDate: this.validateMrzChecksum(
+          birthDateSource,
+          isTd3 ? line2.slice(19, 20) : line2.slice(6, 7),
+        ),
+        expiryDate: this.validateMrzChecksum(
+          expiryDateSource,
+          isTd3 ? line2.slice(27, 28) : line2.slice(14, 15),
+        ),
+        composite: this.validateMrzChecksum(
+          isTd3
+            ? `${line2.slice(0, 10)}${line2.slice(13, 20)}${line2.slice(21, 43)}`
+            : `${line2.slice(0, 18)}`,
+          isTd3 ? line2.slice(43, 44) : line2.slice(18, 19),
+        ),
+      },
     };
   }
 
@@ -626,9 +695,10 @@ export class FormUI extends HTMLElement {
       }
 
       const mrz = this.parseMrz(detectedText);
+      let normalizedFields: Record<string, any> | null = null;
       if (mrz) {
         insight.mrzBySlot[slotIndex] = mrz;
-        const normalizedFields = {
+        normalizedFields = {
           firstName: mrz.givenNames?.join(" ") || "",
           lastName: mrz.surnames?.join(" ") || "",
           documentNumber: mrz.documentNumber || "",
@@ -674,6 +744,12 @@ export class FormUI extends HTMLElement {
           },
         });
       }
+
+      this.engine.setDocumentData(fieldConfig.name, {
+        text: detectedText,
+        mrz,
+        fields: normalizedFields,
+      });
 
       this.emitFormEvent("form-ui:document-data", {
         values: this.engine.normalizeValues(this.form?.getState().values || {}),
@@ -1485,6 +1561,14 @@ export class FormUI extends HTMLElement {
 
   clearRecentAppliedRules = () => {
     this.dynamic.clearRecentAppliedRules();
+  }
+
+  getDocumentData = (fieldName: string) => {
+    return this.engine.getDocumentData(fieldName);
+  }
+
+  getAllDocumentData = () => {
+    return this.engine.getAllDocumentData();
   }
 
   emitFileValidationErrorEvent = (

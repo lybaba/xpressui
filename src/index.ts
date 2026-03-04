@@ -50,6 +50,7 @@ export type {
   TFormDebugObserver,
   TFormDebugOptions,
   TFormDebugRuleRecord,
+  TFormDebugSnapshot,
   TFormDebugRuleStateRecord,
   TFormDebugTemplateDiagnosticRecord,
   TFormDebugTemplateWarningStateRecord,

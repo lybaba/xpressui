@@ -205,6 +205,7 @@ console.log(observer?.getLastRuleState());
 console.log(observer?.getTemplateDiagnostics());
 console.log(observer?.getActiveTemplateWarnings());
 console.log(observer?.getLastTemplateWarningState());
+console.log(observer?.getSnapshot());
 ```
 
 The observer API:
@@ -215,6 +216,7 @@ The observer API:
 - `getTemplateDiagnostics()`
 - `getActiveTemplateWarnings()`
 - `getLastTemplateWarningState()`
+- `getSnapshot()`
 - `clear()`
 - `clearRuleHistory()`
 - `clearRecentAppliedRules()`
@@ -246,6 +248,10 @@ event yourself.
 
 `getLastTemplateWarningState()` returns the last full
 `form-ui:rule-template-warning-state` event record, including its timestamp.
+
+`getSnapshot()` returns the observer's current derived state in one read:
+recent rules, last rule-state event, active template warnings, and the last
+template warning-state event.
 
 ## Submission Modes
 

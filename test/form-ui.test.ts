@@ -257,6 +257,28 @@ describe('FormUI', () => {
         }),
       })
     );
+    expect(observer.getSnapshot()).toEqual(
+      expect.objectContaining({
+        recentAppliedRules: [
+          {
+            id: 'set-currency',
+            logic: undefined,
+            conditions: [
+              { field: 'country', operator: 'equals', value: 'fr' },
+            ],
+            actions: [
+              { type: 'set-value', field: 'currency', value: 'EUR' },
+            ],
+          },
+        ],
+        lastRuleState: expect.objectContaining({
+          type: 'form-ui:rule-state',
+          timestamp: expect.any(Number),
+        }),
+        activeTemplateWarnings: [],
+        lastTemplateWarningState: null,
+      })
+    );
 
     observer.clearRuleHistory();
     expect(observer.getRuleHistory()).toEqual([]);
@@ -375,6 +397,43 @@ describe('FormUI', () => {
               },
             ],
           },
+        }),
+      })
+    );
+    expect(observer.getSnapshot()).toEqual(
+      expect.objectContaining({
+        recentAppliedRules: [
+          {
+            id: 'compose-full-name',
+            logic: undefined,
+            conditions: [
+              { field: 'autoFullName', operator: 'equals', value: true },
+            ],
+            actions: [
+              {
+                type: 'set-value',
+                field: 'fullName',
+                template: '{{firstName}} {{missingName}}',
+                transform: 'trim',
+              },
+            ],
+          },
+        ],
+        lastRuleState: expect.objectContaining({
+          type: 'form-ui:rule-state',
+          timestamp: expect.any(Number),
+        }),
+        activeTemplateWarnings: [
+          {
+            ruleId: 'compose-full-name',
+            field: 'fullName',
+            template: '{{firstName}} {{missingName}}',
+            missingField: 'missingName',
+          },
+        ],
+        lastTemplateWarningState: expect.objectContaining({
+          type: 'form-ui:rule-template-warning-state',
+          timestamp: expect.any(Number),
         }),
       })
     );

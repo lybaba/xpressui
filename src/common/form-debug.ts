@@ -41,6 +41,13 @@ export type TFormDebugTemplateWarningStateRecord = TFormDebugEventRecord & {
   };
 };
 
+export type TFormDebugSnapshot = {
+  recentAppliedRules: TFormRuleAppliedDetail[];
+  lastRuleState: TFormDebugRuleStateRecord | null;
+  activeTemplateWarnings: TFormActiveTemplateWarning[];
+  lastTemplateWarningState: TFormDebugTemplateWarningStateRecord | null;
+};
+
 export type TFormDebugObserver = {
   getEvents(): TFormDebugEventRecord[];
   getRuleHistory(): TFormDebugRuleRecord[];
@@ -49,6 +56,7 @@ export type TFormDebugObserver = {
   getTemplateDiagnostics(): TFormDebugTemplateDiagnosticRecord[];
   getActiveTemplateWarnings(): TFormActiveTemplateWarning[];
   getLastTemplateWarningState(): TFormDebugTemplateWarningStateRecord | null;
+  getSnapshot(): TFormDebugSnapshot;
   clear(): void;
   clearRuleHistory(): void;
   clearRecentAppliedRules(): void;
@@ -185,6 +193,14 @@ export function attachFormDebugObserver(
     },
     getLastTemplateWarningState() {
       return lastTemplateWarningState ? { ...lastTemplateWarningState } : null;
+    },
+    getSnapshot() {
+      return {
+        recentAppliedRules: [...recentAppliedRules],
+        lastRuleState: lastRuleState ? { ...lastRuleState } : null,
+        activeTemplateWarnings: [...activeTemplateWarnings],
+        lastTemplateWarningState: lastTemplateWarningState ? { ...lastTemplateWarningState } : null,
+      };
     },
     clear() {
       events.splice(0, events.length);

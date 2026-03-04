@@ -27,6 +27,7 @@ export {
 } from "./common/form-builder";
 export { createLocalFormAdmin } from "./common/form-admin";
 export { attachFormDebugObserver } from "./common/form-debug";
+export { createFormDebugPanel } from "./common/form-debug-panel";
 export { FormEngineRuntime } from "./common/form-engine";
 export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
@@ -55,6 +56,7 @@ export type {
   TFormDebugTemplateDiagnosticRecord,
   TFormDebugTemplateWarningStateRecord,
 } from "./common/form-debug";
+export type { TFormDebugPanel, TFormDebugPanelOptions } from "./common/form-debug-panel";
 export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 export type { TFormQueueState, TFormStorageSnapshot } from "./common/form-persistence";
 export type {

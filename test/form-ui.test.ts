@@ -5,6 +5,7 @@ import {
   createFormConfig,
   createSubmitRequestFromProvider,
   attachFormDebugObserver,
+  createFormDebugPanel,
   FormEngineRuntime,
   FormDynamicRuntime,
   FormPersistenceRuntime,
@@ -191,6 +192,46 @@ describe('FormUI', () => {
     observer.clear();
     expect(observer.getEvents()).toEqual([]);
     observer.detach();
+  });
+
+  it('can render a live debug panel from form events', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'debug-panel-form',
+      title: 'Debug Panel Form',
+      rules: [
+        {
+          id: 'set-currency',
+          conditions: [
+            { field: 'country', operator: 'equals', value: 'fr' },
+          ],
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'country', label: 'Country', type: 'text' },
+        { name: 'currency', label: 'Currency', type: 'text' },
+      ],
+    }) as FormUI;
+    const panel = createFormDebugPanel(element, { title: 'Runtime Debug' });
+    const country = element.querySelector('#country') as HTMLInputElement;
+
+    document.body.appendChild(panel.element);
+
+    country.value = 'fr';
+    country.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(panel.element.textContent).toContain('Runtime Debug');
+    expect(panel.element.textContent).toContain('set-currency');
+
+    panel.clearSnapshot();
+    expect(panel.element.textContent).toContain('"recentAppliedRules": []');
+
+    panel.detach();
+    expect(document.body.contains(panel.element)).toBe(false);
   });
 
   it('can observe applied rules through the debug observer helper', async () => {

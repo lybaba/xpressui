@@ -56,6 +56,8 @@ template issues through `getActiveTemplateWarnings()`.
 
 For lightweight event inspection in the browser, you can also use
 `attachFormDebugObserver(...)`.
+If you want a quick local UI instead of wiring your own console output, use
+`createFormDebugPanel(...)`.
 
 The public form contract is now versioned.
 Current public schema version:
@@ -253,6 +255,30 @@ event yourself.
 `getSnapshot()` returns the observer's current derived state in one read:
 recent rules, last rule-state event, active template warnings, and the last
 template warning-state event.
+
+## Debug Panel
+
+Use `createFormDebugPanel(...)` for a minimal in-browser panel backed by the
+same debug observer.
+
+```ts
+import { createFormDebugPanel, mountFormUI } from '@lybaba/xpressui';
+
+const form = mountFormUI(container, {
+  name: 'debug-panel-form',
+  fields: [
+    { name: 'email', label: 'Email', type: 'email' },
+  ],
+});
+
+const panel = form
+  ? createFormDebugPanel(form, { title: 'Runtime Debug' })
+  : null;
+
+if (panel) {
+  document.body.appendChild(panel.element);
+}
+```
 
 `clearSnapshot()` resets only that derived state bundle. It does not clear the
 raw event history or diagnostic history.

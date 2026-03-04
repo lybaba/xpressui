@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui hybrid output snapshot demo</title>
+    <link rel="stylesheet" href="../index.css" />
+    <style>
+      :root {
+        --bg: #f4f8ff;
+        --ink: #0f172a;
+        --muted: #475569;
+        --line: #cbd5e1;
+        --panel: #ffffff;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background:
+          radial-gradient(circle at 12% 10%, rgba(59, 130, 246, 0.12), transparent 32%),
+          radial-gradient(circle at 88% 8%, rgba(20, 184, 166, 0.12), transparent 28%),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+
+      main { max-width: 1440px; margin: 0 auto; padding: 34px 20px 70px; }
+      h1 { margin: 0 0 8px; font-size: clamp(1.9rem, 4vw, 2.8rem); }
+      p { margin: 0; color: var(--muted); }
+      a { color: #0c4a6e; }
+
+      .layout {
+        margin-top: 24px;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: 360px minmax(0, 1fr) 340px;
+        align-items: start;
+      }
+
+      .code,
+      .shell,
+      .snapshot,
+      .debug {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+      }
+
+      .code-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .code h2,
+      .snapshot h2,
+      .debug h2,
+      .shell h2 { margin: 0; font-size: 1rem; }
+
+      .copy-btn {
+        border: 1px solid #93c5fd;
+        background: #fff;
+        color: #1d4ed8;
+        border-radius: 999px;
+        padding: 6px 11px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .code-body { margin-top: 12px; }
+      .code-tools { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+      .code pre,
+      .snapshot pre {
+        margin: 0;
+        padding: 12px;
+        border-radius: 12px;
+        background: #0f172a;
+        color: #dbeafe;
+        overflow: auto;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .stack { display: grid; gap: 20px; }
+
+      @media (max-width: 1100px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>Hybrid Output Snapshot</h1>
+      <p>Démo live de l’événement <code>form-ui:output-snapshot</code> et du debug panel avec section Output Snapshot.</p>
+
+      <div class="layout">
+        <aside class="code">
+          <div class="code-head">
+            <h2>Code</h2>
+            <button class="copy-btn" type="button" data-toggle-code>Show code</button>
+          </div>
+          <div class="code-body" hidden>
+            <div class="code-tools">
+              <button class="copy-btn" type="button" data-copy-code>Copy</button>
+            </div>
+            <pre><code>import { createFormDebugPanel, mountFormUI } from "../dist/xpressui.mjs";
+
+const form = mountFormUI(app, {
+  version: 1,
+  id: "hybrid_output_snapshot_demo",
+  uid: "hybrid_output_snapshot_demo_uid",
+  type: "contactform",
+  name: "hybrid-output-snapshot-demo",
+  title: "Hybrid Snapshot Demo",
+  sections: {
+    main: [
+      { type: "text", name: "title", label: "Title", required: true },
+      { type: "textarea", name: "description", label: "Description" },
+      {
+        type: "select-multiple",
+        name: "tags",
+        label: "Tags",
+        choices: [
+          { value: "priority", label: "Priority" },
+          { value: "customer", label: "Customer" },
+          { value: "internal", label: "Internal" },
+        ],
+      },
+      { type: "url", name: "resource_url", label: "Resource URL" },
+    ],
+  },
+});
+
+form.setAttribute("mode", "hybrid");
+form.setFieldOutputRenderer("tags", ({ value }) => {
+  const list = document.createElement("ul");
+  (Array.isArray(value) ? value : []).forEach((tag) => {
+    const item = document.createElement("li");
+    item.textContent = `#${tag}`;
+    list.appendChild(item);
+  });
+  return list;
+});
+
+const panel = createFormDebugPanel(form);
+debug.appendChild(panel.element);
+
+form.addEventListener("form-ui:output-snapshot", (event) => {
+  latest.textContent = JSON.stringify(event.detail.result, null, 2);
+});
+
+form.refreshOutputRendering();</code></pre>
+          </div>
+        </aside>
+
+        <section class="shell">
+          <h2>Live Form</h2>
+          <div id="app"></div>
+        </section>
+
+        <section class="stack">
+          <aside class="snapshot">
+            <h2>Latest Output Snapshot Event</h2>
+            <pre id="snapshot-json">{}</pre>
+          </aside>
+          <aside class="debug">
+            <h2>Debug Panel</h2>
+            <div id="debug"></div>
+          </aside>
+        </section>
+      </div>
+    </main>
+
+    <script type="module">
+      import { createFormDebugPanel, mountFormUI } from "../dist/xpressui.mjs";
+
+      document.querySelectorAll("[data-toggle-code]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const panel = button.closest(".code");
+          const body = panel?.querySelector(".code-body");
+          const isHidden = body?.hasAttribute("hidden");
+          if (!body) return;
+          if (isHidden) {
+            body.removeAttribute("hidden");
+            button.textContent = "Hide code";
+          } else {
+            body.setAttribute("hidden", "true");
+            button.textContent = "Show code";
+          }
+        });
+      });
+
+      document.querySelectorAll("[data-copy-code]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const code = button.closest(".code")?.querySelector("code")?.textContent || "";
+          if (!code) return;
+          const previousLabel = button.textContent;
+          try {
+            if (navigator.clipboard?.writeText) {
+              await navigator.clipboard.writeText(code);
+            } else {
+              const textarea = document.createElement("textarea");
+              textarea.value = code;
+              document.body.appendChild(textarea);
+              textarea.select();
+              document.execCommand("copy");
+              textarea.remove();
+            }
+            button.textContent = "Copied";
+          } catch {
+            button.textContent = "Failed";
+          }
+          window.setTimeout(() => {
+            button.textContent = previousLabel;
+          }, 1200);
+        });
+      });
+
+      const app = document.getElementById("app");
+      const debug = document.getElementById("debug");
+      const latestSnapshot = document.getElementById("snapshot-json");
+
+      const form = mountFormUI(app, {
+        version: 1,
+        id: "hybrid_output_snapshot_demo",
+        uid: "hybrid_output_snapshot_demo_uid",
+        type: "contactform",
+        name: "hybrid-output-snapshot-demo",
+        title: "Hybrid Snapshot Demo",
+        sections: {
+          main: [
+            { type: "text", name: "title", label: "Title", required: true },
+            { type: "textarea", name: "description", label: "Description" },
+            {
+              type: "select-multiple",
+              name: "tags",
+              label: "Tags",
+              choices: [
+                { value: "priority", label: "Priority" },
+                { value: "customer", label: "Customer" },
+                { value: "internal", label: "Internal" },
+              ],
+            },
+            { type: "url", name: "resource_url", label: "Resource URL" },
+          ],
+        },
+      });
+
+      form.setAttribute("mode", "hybrid");
+      form.setViewValues({
+        title: "Live snapshot title",
+        description: "Edit any field and watch output snapshot update in real-time.",
+        tags: ["priority", "customer"],
+        resource_url: "https://example.test/resource",
+      });
+
+      form.setFieldOutputRenderer("tags", ({ value }) => {
+        const list = document.createElement("ul");
+        list.style.margin = "0";
+        list.style.paddingLeft = "18px";
+        const tags = Array.isArray(value) ? value : [];
+        if (!tags.length) {
+          const empty = document.createElement("li");
+          empty.textContent = "No tags";
+          list.appendChild(empty);
+          return list;
+        }
+        tags.forEach((tag) => {
+          const item = document.createElement("li");
+          item.textContent = `#${tag}`;
+          list.appendChild(item);
+        });
+        return list;
+      });
+
+      const panel = createFormDebugPanel(form, { title: "Runtime Debug" });
+      debug.appendChild(panel.element);
+
+      form.addEventListener("form-ui:output-snapshot", (event) => {
+        latestSnapshot.textContent = JSON.stringify(event.detail?.result || {}, null, 2);
+      });
+
+      form.refreshOutputRendering();
+    </script>
+  </body>
+</html>

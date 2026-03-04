@@ -439,6 +439,156 @@ Frontend events:
 - `form-ui:calendar-reschedule-success`
 - `form-ui:calendar-reschedule-error`
 
+## Approval Request Provider
+
+Use this provider when your backend creates an approval workflow request that
+can remain pending before a final decision.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'approval-request-form',
+  provider: {
+    type: 'approval-request',
+    endpoint: '/api/approvals',
+  },
+  fields: [
+    { name: 'requester_email', label: 'Requester Email', type: 'email', required: true },
+    { name: 'amount', label: 'Amount', type: 'number', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "approval-request",
+  "approval": {
+    "requester_email": "approver@example.com",
+    "amount": "250"
+  }
+}
+```
+
+Suggested pending response:
+
+```json
+{
+  "status": "pending_approval",
+  "approvalId": "apr_123"
+}
+```
+
+Suggested completed response:
+
+```json
+{
+  "status": "approved",
+  "approvalId": "apr_123"
+}
+```
+
+Frontend events:
+- `form-ui:approval-request-success`
+- `form-ui:approval-request-error`
+- `form-ui:approval-requested`
+- `form-ui:approval-complete`
+
+## Approval Decision Provider
+
+Use this provider when your backend records the final approver decision for an
+existing approval request.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'approval-decision-form',
+  provider: {
+    type: 'approval-decision',
+    endpoint: '/api/approvals/decision',
+  },
+  fields: [
+    { name: 'approval_id', label: 'Approval ID', type: 'text', required: true },
+    { name: 'decision', label: 'Decision', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "approval-decision",
+  "decision": {
+    "approval_id": "apr_123",
+    "decision": "approved"
+  }
+}
+```
+
+Suggested success response:
+
+```json
+{
+  "status": "completed",
+  "approvalId": "apr_123"
+}
+```
+
+Frontend events:
+- `form-ui:approval-decision-success`
+- `form-ui:approval-decision-error`
+- `form-ui:approval-state`
+
+## Approval Comment Provider
+
+Use this provider when your backend stores approver comments or audit trail
+messages linked to an approval request.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'approval-comment-form',
+  provider: {
+    type: 'approval-comment',
+    endpoint: '/api/approvals/comment',
+  },
+  fields: [
+    { name: 'approval_id', label: 'Approval ID', type: 'text', required: true },
+    { name: 'comment', label: 'Comment', type: 'textarea', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "approval-comment",
+  "comment": {
+    "approval_id": "apr_123",
+    "comment": "Approved with note"
+  }
+}
+```
+
+Suggested success response:
+
+```json
+{
+  "saved": true,
+  "commentId": "cmt_123"
+}
+```
+
+Frontend events:
+- `form-ui:approval-comment-success`
+- `form-ui:approval-comment-error`
+
 ## Dynamic Options Endpoint
 
 For select fields using `optionsEndpoint`, the component performs a `GET` and

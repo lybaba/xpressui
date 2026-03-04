@@ -5,6 +5,7 @@ import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { FormEngineRuntime } from "./common/form-engine";
 import {
+  APPROVAL_STATE_TYPE,
   DOCUMENT_SCAN_TYPE,
   isFileLikeValue,
   QR_SCAN_TYPE,
@@ -94,6 +95,22 @@ export type TFormUISubmitDetail = {
   error?: unknown;
 };
 
+export type TFormApprovalState = {
+  status: string;
+  approvalId?: string;
+  result?: any;
+};
+
+export type TFormWorkflowState =
+  | "draft"
+  | "submitting"
+  | "submitted"
+  | "pending_approval"
+  | "approved"
+  | "completed"
+  | "rejected"
+  | "error";
+
 type TBarcodeDetectorResult = {
   rawValue?: string;
 };
@@ -171,6 +188,8 @@ export class FormUI extends HTMLElement {
   qrScannerRunning: Record<string, boolean>;
   activeDocumentScanSlot: Record<string, number>;
   documentScanInsights: Record<string, TDocumentScanInsight>;
+  approvalState: TFormApprovalState | null;
+  workflowState: TFormWorkflowState;
 
   constructor() {
     super();
@@ -189,6 +208,8 @@ export class FormUI extends HTMLElement {
     this.qrScannerRunning = {};
     this.activeDocumentScanSlot = {};
     this.documentScanInsights = {};
+    this.approvalState = null;
+    this.workflowState = "draft";
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
       getRules: () => this.formConfig?.rules || [],
@@ -1622,6 +1643,47 @@ export class FormUI extends HTMLElement {
     return this.engine.getAllDocumentData();
   }
 
+  getApprovalState = (): TFormApprovalState | null => {
+    return this.approvalState;
+  }
+
+  getWorkflowState = (): TFormWorkflowState => {
+    return this.workflowState;
+  }
+
+  syncApprovalStateFields = () => {
+    if (!this.form) {
+      return;
+    }
+
+    Object.values(this.engine.getFields()).forEach((fieldConfig) => {
+      if (fieldConfig.type === APPROVAL_STATE_TYPE) {
+        this.form?.change(fieldConfig.name, this.approvalState?.status || "");
+      }
+    });
+  }
+
+  setWorkflowState = (
+    nextState: TFormWorkflowState,
+    detail: TFormUISubmitDetail,
+    response?: Response,
+    result?: any,
+  ) => {
+    if (this.workflowState === nextState) {
+      return;
+    }
+
+    this.workflowState = nextState;
+    this.emitFormEvent("form-ui:workflow-state", {
+      ...detail,
+      response,
+      result: {
+        state: nextState,
+        approvalState: this.approvalState,
+      },
+    });
+  }
+
   emitFileValidationErrorEvent = (
     fieldName: string,
     values: Record<string, any>,
@@ -1680,6 +1742,61 @@ export class FormUI extends HTMLElement {
     return this.upload.submit(formValues, submitConfig, this.engine.getFields());
   }
 
+  emitApprovalStateEvents = (
+    detail: TFormUISubmitDetail,
+    result: any,
+    response?: Response,
+  ) => {
+    const action = this.formConfig?.submit?.action;
+    if (
+      (action !== "approval-request" && action !== "approval-decision") ||
+      !result ||
+      typeof result !== "object"
+    ) {
+      return;
+    }
+
+    const status = typeof result.status === "string" ? result.status : "";
+    this.approvalState = {
+      status: status || "unknown",
+      approvalId:
+        typeof result.approvalId === "string"
+          ? result.approvalId
+          : this.approvalState?.approvalId,
+      result,
+    };
+    this.emitFormEvent("form-ui:approval-state", {
+      ...detail,
+      response,
+      result: this.approvalState,
+    });
+    this.syncApprovalStateFields();
+
+    if (status === "pending_approval") {
+      this.setWorkflowState("pending_approval", detail, response, result);
+      this.emitFormEvent("form-ui:approval-requested", {
+        ...detail,
+        response,
+        result,
+      });
+      return;
+    }
+
+    if (status === "approved" || status === "completed") {
+      this.setWorkflowState(status as "approved" | "completed", detail, response, result);
+      this.emitFormEvent("form-ui:approval-complete", {
+        ...detail,
+        response,
+        result,
+      });
+      return;
+    }
+
+    if (status === "rejected") {
+      this.setWorkflowState("rejected", detail, response, result);
+    }
+  }
+
   onSubmit = async (values: Record<string, any>) => {
     const formValues = this.engine.buildSubmissionValues(
       values,
@@ -1697,9 +1814,11 @@ export class FormUI extends HTMLElement {
     if (!shouldContinue) {
       return;
     }
+    this.setWorkflowState("submitting", detail);
 
     if (!this.formConfig?.submit?.endpoint) {
       this.clearDraft();
+      this.setWorkflowState("submitted", detail);
       this.emitFormEvent("form-ui:submit-success", detail);
       return;
     }
@@ -1711,7 +1830,11 @@ export class FormUI extends HTMLElement {
         response,
         result,
       });
+      if (this.formConfig?.submit?.action !== "approval-request" && this.formConfig?.submit?.action !== "approval-decision") {
+        this.setWorkflowState("submitted", detail, response, result);
+      }
       this.clearDraft();
+      this.emitApprovalStateEvents(detail, result, response);
       const providerSuccessEvent = getProviderSuccessEventName(this.formConfig?.submit?.action);
       if (providerSuccessEvent) {
         this.emitFormEvent(providerSuccessEvent, {
@@ -1736,6 +1859,7 @@ export class FormUI extends HTMLElement {
           ...detail,
           error: queueError,
         });
+        this.setWorkflowState("error", detail, undefined, queueError);
         return;
       }
 
@@ -1751,6 +1875,7 @@ export class FormUI extends HTMLElement {
         result: error?.result,
         error,
       });
+      this.setWorkflowState("error", detail, error?.response, error?.result);
       const providerErrorEvent = getProviderErrorEventName(this.formConfig?.submit?.action);
       if (providerErrorEvent) {
         this.emitFormEvent(providerErrorEvent, {

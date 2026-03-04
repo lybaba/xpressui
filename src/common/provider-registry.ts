@@ -214,6 +214,63 @@ registerProvider("calendar-reschedule", {
   errorEventName: "form-ui:calendar-reschedule-error",
 });
 
+registerProvider("approval-request", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "approval-request",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "approval-request",
+      approval: values,
+    };
+  },
+  successEventName: "form-ui:approval-request-success",
+  errorEventName: "form-ui:approval-request-error",
+});
+
+registerProvider("approval-decision", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "approval-decision",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "approval-decision",
+      decision: values,
+    };
+  },
+  successEventName: "form-ui:approval-decision-success",
+  errorEventName: "form-ui:approval-decision-error",
+});
+
+registerProvider("approval-comment", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "approval-comment",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "approval-comment",
+      comment: values,
+    };
+  },
+  successEventName: "form-ui:approval-comment-success",
+  errorEventName: "form-ui:approval-comment-error",
+});
+
 registerProvider("email", {
   createSubmitRequest(provider) {
     return {

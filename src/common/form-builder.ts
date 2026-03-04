@@ -11,6 +11,7 @@ import { generateRuntimeId } from './id';
 import { createSubmitRequestFromProvider } from './provider-registry';
 import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-schema';
 import {
+  APPROVAL_STATE_TYPE,
   CAMERA_PHOTO_TYPE,
   CHECKBOX_TYPE,
   DOCUMENT_SCAN_TYPE,
@@ -211,6 +212,15 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     <span class="label-text">${escapeHtml(field.label)}</span>
 </label>
 <span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span>`;
+  }
+
+  if (field.type === APPROVAL_STATE_TYPE) {
+    return `<label class="form-control w-full">
+    <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
+    <input class="input input-bordered w-full opacity-80" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="text" readonly data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}" data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs} />
+    ${helpText}
+    <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
+</label>`;
   }
 
   return `<label class="form-control w-full">

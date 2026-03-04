@@ -703,6 +703,151 @@ Extra events:
 - `form-ui:calendar-reschedule-success`
 - `form-ui:calendar-reschedule-error`
 
+### Approval Request
+
+Use `approval-request` when your backend creates a request that may stay in a
+`pending_approval` state before final approval.
+
+```ts
+mountFormUI(container, {
+  name: 'approval-request-form',
+  title: 'Approval Request',
+  provider: {
+    type: 'approval-request',
+    endpoint: '/api/approvals',
+  },
+  fields: [
+    { name: 'requester_email', label: 'Requester Email', type: 'email', required: true },
+    { name: 'amount', label: 'Amount', type: 'number', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "approval-request",
+  "approval": {
+    "requester_email": "approver@example.com",
+    "amount": "250"
+  }
+}
+```
+
+Typical backend responses:
+
+```json
+{
+  "status": "pending_approval",
+  "approvalId": "apr_123"
+}
+```
+
+```json
+{
+  "status": "approved",
+  "approvalId": "apr_123"
+}
+```
+
+Extra events:
+- `form-ui:approval-request-success`
+- `form-ui:approval-request-error`
+- `form-ui:approval-requested`
+- `form-ui:approval-complete`
+
+### Approval Decision
+
+Use `approval-decision` when your backend records the final approver decision on
+an existing approval request.
+
+```ts
+mountFormUI(container, {
+  name: 'approval-decision-form',
+  title: 'Approval Decision',
+  provider: {
+    type: 'approval-decision',
+    endpoint: '/api/approvals/decision',
+  },
+  fields: [
+    { name: 'approval_id', label: 'Approval ID', type: 'text', required: true },
+    { name: 'decision', label: 'Decision', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "approval-decision",
+  "decision": {
+    "approval_id": "apr_123",
+    "decision": "approved"
+  }
+}
+```
+
+Typical backend response:
+
+```json
+{
+  "status": "completed",
+  "approvalId": "apr_123"
+}
+```
+
+Extra events:
+- `form-ui:approval-decision-success`
+- `form-ui:approval-decision-error`
+- `form-ui:approval-state`
+
+### Approval Comment
+
+Use `approval-comment` when your backend stores notes, approver comments, or
+audit trail messages linked to an approval request.
+
+```ts
+mountFormUI(container, {
+  name: 'approval-comment-form',
+  title: 'Approval Comment',
+  provider: {
+    type: 'approval-comment',
+    endpoint: '/api/approvals/comment',
+  },
+  fields: [
+    { name: 'approval_id', label: 'Approval ID', type: 'text', required: true },
+    { name: 'comment', label: 'Comment', type: 'textarea', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "approval-comment",
+  "comment": {
+    "approval_id": "apr_123",
+    "comment": "Approved with note"
+  }
+}
+```
+
+Typical backend response:
+
+```json
+{
+  "saved": true,
+  "commentId": "cmt_123"
+}
+```
+
+Extra events:
+- `form-ui:approval-comment-success`
+- `form-ui:approval-comment-error`
+
 ### Email
 
 Use `email` when your backend exposes a messaging endpoint and you want a
@@ -1178,6 +1323,7 @@ Useful field capabilities supported by the current builder:
 - `maxFileSizeMb` for file fields
 - `maxTotalFileSizeMb` for file fields
 - `formDataFieldName` for file fields
+- `approval-state` read-only status fields
 
 Common field types used today:
 - `text`
@@ -1193,6 +1339,7 @@ Common field types used today:
 - `camera-photo`
 - `qr-scan`
 - `document-scan`
+- `approval-state`
 - `checkbox`
 
 ## Events
@@ -1236,6 +1383,16 @@ Provider-specific events:
 - `form-ui:calendar-cancel-error`
 - `form-ui:calendar-reschedule-success`
 - `form-ui:calendar-reschedule-error`
+- `form-ui:approval-request-success`
+- `form-ui:approval-request-error`
+- `form-ui:approval-requested`
+- `form-ui:approval-complete`
+- `form-ui:approval-decision-success`
+- `form-ui:approval-decision-error`
+- `form-ui:approval-state`
+- `form-ui:approval-comment-success`
+- `form-ui:approval-comment-error`
+- `form-ui:workflow-state`
 - `form-ui:email-success`
 - `form-ui:email-error`
 - `form-ui:crm-success`
@@ -1248,6 +1405,10 @@ Event detail includes:
 - `response` when an API call happened
 - `result` when the backend returned data
 - `error` on failures
+
+Approval helpers:
+- `form.getApprovalState()`
+- `form.getWorkflowState()`
 
 ## Advanced Usage
 
@@ -1297,7 +1458,7 @@ What is stable in the current codebase:
 - Web Component rendering
 - schema-based validation
 - API submission hooks
-- reservation, payment, Stripe, webhook, booking-availability, calendar booking, calendar cancel, calendar reschedule, and email provider flows
+- reservation, payment, Stripe, webhook, booking-availability, calendar booking, calendar cancel, calendar reschedule, approval-request, approval-decision, approval-comment, and email provider flows
 - conditional fields and remote select loading
 - local draft persistence in the browser
 - local offline submission queue

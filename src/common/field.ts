@@ -50,6 +50,7 @@ export const SLUG_TYPE = 'slug';
 export const TEXTAREA_TYPE = 'textarea';
 export const TEL_TYPE = 'tel';
 export const OUTPUT_TYPE = 'output';
+export const APPROVAL_STATE_TYPE = 'approval-state';
 export const RICH_EDITOR_TYPE = 'rich-editor';
 export const FIELDGROUP_SELECT_TYPE = 'section-select';
 export const URL_TYPE = 'url';
@@ -299,6 +300,9 @@ export const getHtmlInputType = (fieldType: string): string => {
 
         case TIME_TYPE:
             return "time";
+
+        case APPROVAL_STATE_TYPE:
+            return "text";
 
         case TEL_TYPE:
             return "tel";

@@ -9,6 +9,48 @@ export type TStoredDocumentData = {
   fields?: Record<string, any> | null;
 };
 
+function redactDocumentData(
+  data: TStoredDocumentData,
+  mode: "full" | "summary" | "fields-only" | "mrz-only" | "none",
+): Record<string, any> | null {
+  switch (mode) {
+    case "none":
+      return null;
+
+    case "fields-only":
+      return {
+        fields: data.fields || null,
+      };
+
+    case "mrz-only":
+      return {
+        mrz: data.mrz || null,
+      };
+
+    case "summary":
+      return {
+        mrz: data.mrz
+          ? {
+              format: data.mrz.format,
+              documentCode: data.mrz.documentCode,
+              issuingCountry: data.mrz.issuingCountry,
+              documentNumber: data.mrz.documentNumber,
+              nationality: data.mrz.nationality,
+              birthDate: data.mrz.birthDate,
+              expiryDate: data.mrz.expiryDate,
+              sex: data.mrz.sex,
+              valid: data.mrz.valid,
+            }
+          : null,
+        fields: data.fields || null,
+      };
+
+    case "full":
+    default:
+      return { ...data };
+  }
+}
+
 function getFileList(value: any): File[] {
   if (!value) {
     return [];
@@ -101,6 +143,7 @@ export class FormEngineRuntime {
   buildSubmissionValues(
     values: Record<string, any>,
     includeDocumentData: boolean = false,
+    documentDataMode: "full" | "summary" | "fields-only" | "mrz-only" | "none" = "full",
   ): Record<string, any> {
     const normalizedValues = this.normalizeValues(values);
     if (!includeDocumentData) {
@@ -114,19 +157,32 @@ export class FormEngineRuntime {
 
     if (entries.length === 1) {
       const [fieldName, data] = entries[0];
+      const redactedData = redactDocumentData(data, documentDataMode);
+      if (!redactedData) {
+        return normalizedValues;
+      }
       return {
         ...normalizedValues,
         document: {
           field: fieldName,
-          ...data,
+          ...redactedData,
         },
       };
+    }
+
+    const redactedEntries = Object.fromEntries(
+      entries
+        .map(([fieldName, data]) => [fieldName, redactDocumentData(data, documentDataMode)] as const)
+        .filter(([, data]) => data),
+    );
+    if (!Object.keys(redactedEntries).length) {
+      return normalizedValues;
     }
 
     return {
       ...normalizedValues,
       document: {
-        byField: Object.fromEntries(entries),
+        byField: redactedEntries,
       },
     };
   }
@@ -251,6 +307,23 @@ export class FormEngineRuntime {
       const fileError = this.validateFileField(fieldName, formValues[fieldName]);
       if (fileError) {
         validationErrors[fieldName] = fileError;
+        return;
+      }
+
+      if (fieldConfig.requireValidDocumentMrz) {
+        const documentData = this.documentData[fieldName];
+        const mrzValid = documentData?.mrz && typeof documentData.mrz.valid === "boolean"
+          ? documentData.mrz.valid
+          : undefined;
+        if (mrzValid === false) {
+          validationErrors[fieldName] = {
+            errorMessage:
+              fieldConfig.errorMsg || "Document scan failed MRZ validation.",
+            errorData: {
+              type: "document-mrz-invalid",
+            },
+          };
+        }
       }
     });
 

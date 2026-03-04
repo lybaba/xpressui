@@ -189,6 +189,70 @@ Frontend events:
 - `form-ui:payment-stripe-success`
 - `form-ui:payment-stripe-error`
 
+## Identity Verification Webhook Provider
+
+Use this provider when your backend forwards normalized identity data to an
+internal webhook or a third-party KYC system.
+
+Frontend config:
+
+```ts
+mountFormUI(container, {
+  name: 'identity-webhook-form',
+  provider: {
+    type: 'identity-verification-webhook',
+    endpoint: '/api/identity/webhook',
+  },
+  submit: {
+    endpoint: '/api/identity/webhook',
+    includeDocumentData: true,
+    documentDataMode: 'summary',
+  },
+  fields: [
+    { name: 'document_number', label: 'Document Number', type: 'text', required: true },
+    { name: 'last_name', label: 'Last Name', type: 'text', required: true },
+  ],
+});
+```
+
+Request body:
+
+```json
+{
+  "action": "identity-verification-webhook",
+  "identity": {
+    "document_number": "L898902C3",
+    "last_name": "ERIKSSON",
+    "document": {
+      "field": "passport",
+      "mrz": {
+        "documentNumber": "L898902C3",
+        "nationality": "UTO",
+        "valid": true
+      },
+      "fields": {
+        "firstName": "ANNA MARIA",
+        "lastName": "ERIKSSON"
+      }
+    }
+  }
+}
+```
+
+Suggested success response:
+
+```json
+{
+  "accepted": true,
+  "webhookId": "wh_123"
+}
+```
+
+Frontend events:
+- `form-ui:submit-success`
+- `form-ui:identity-verification-webhook-success`
+- `form-ui:identity-verification-webhook-error`
+
 ## Dynamic Options Endpoint
 
 For select fields using `optionsEndpoint`, the component performs a `GET` and

@@ -179,6 +179,7 @@ export class FormRuntime {
     return this.engine.buildSubmissionValues(
       values,
       Boolean(this.formConfig?.submit?.includeDocumentData),
+      this.formConfig?.submit?.documentDataMode || "full",
     );
   }
 

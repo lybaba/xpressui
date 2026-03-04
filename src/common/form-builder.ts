@@ -78,6 +78,9 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     ? ` data-document-scan-mode="${escapeHtml(String(field.documentScanMode))}"`
     : '';
   const documentOcrAttr = field.enableDocumentOcr ? ' data-enable-document-ocr="true"' : '';
+  const requireValidDocumentMrzAttr = field.requireValidDocumentMrz
+    ? ' data-require-valid-document-mrz="true"'
+    : '';
   const documentTextTargetFieldAttr = field.documentTextTargetField
     ? ` data-document-text-target-field="${escapeHtml(String(field.documentTextTargetField))}"`
     : '';
@@ -212,7 +215,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${requireValidDocumentMrzAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
     ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
@@ -276,6 +279,9 @@ export function createTemplateMarkup(
           : '',
         config.submit.includeDocumentData
           ? `data-submit-include-document-data="true"`
+          : '',
+        config.submit.documentDataMode
+          ? `data-submit-document-data-mode="${escapeHtml(config.submit.documentDataMode)}"`
           : '',
         config.submit.formDataArrayMode
           ? `data-submit-form-data-array-mode="${escapeHtml(config.submit.formDataArrayMode)}"`

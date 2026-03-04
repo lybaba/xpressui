@@ -36,6 +36,7 @@ type TFieldConfig = {
     multiple?: boolean;
     documentScanMode?: 'single' | 'double';
     enableDocumentOcr?: boolean;
+    requireValidDocumentMrz?: boolean;
     documentTextTargetField?: string;
     documentMrzTargetField?: string;
     documentFirstNameTargetField?: string;

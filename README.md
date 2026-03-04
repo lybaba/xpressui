@@ -746,12 +746,16 @@ Frontend behavior:
   lightweight MRZ parse for machine-readable identity documents
 - `documentTextTargetField` can mirror detected OCR text into another field
 - `documentMrzTargetField` can mirror parsed MRZ data into another field
+- `requireValidDocumentMrz: true` blocks validation if the parsed MRZ checksum
+  fails
 - `documentFirstNameTargetField`, `documentLastNameTargetField`,
   `documentNumberTargetField`, `documentNationalityTargetField`,
   `documentBirthDateTargetField`, `documentExpiryDateTargetField`,
   `documentSexTargetField` can autopopulate normalized identity fields
 - `submit.includeDocumentData: true` injects the normalized `document` object
   directly into submitted values
+- `submit.documentDataMode` controls redaction: `full`, `summary`,
+  `fields-only`, `mrz-only`, `none`
 
 Extra event:
 - `form-ui:file-validation-error`

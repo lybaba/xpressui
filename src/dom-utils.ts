@@ -25,6 +25,7 @@ export const ATTR_CAPTURE = "capture"
 export const ATTR_MULTIPLE = "multiple"
 export const ATTR_DOCUMENT_SCAN_MODE = "documentScanMode"
 export const ATTR_ENABLE_DOCUMENT_OCR = "enableDocumentOcr"
+export const ATTR_REQUIRE_VALID_DOCUMENT_MRZ = "requireValidDocumentMrz"
 export const ATTR_DOCUMENT_TEXT_TARGET_FIELD = "documentTextTargetField"
 export const ATTR_DOCUMENT_MRZ_TARGET_FIELD = "documentMrzTargetField"
 export const ATTR_DOCUMENT_FIRST_NAME_TARGET_FIELD = "documentFirstNameTargetField"
@@ -75,6 +76,7 @@ export const ATTR_SUBMIT_ENDPOINT = "submitEndpoint"
 export const ATTR_SUBMIT_METHOD = "submitMethod"
 export const ATTR_SUBMIT_MODE = "submitMode"
 export const ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = "submitIncludeDocumentData"
+export const ATTR_SUBMIT_DOCUMENT_DATA_MODE = "submitDocumentDataMode"
 export const ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = "submitFormDataArrayMode"
 export const ATTR_SUBMIT_UPLOAD_STRATEGY = "submitUploadStrategy"
 export const ATTR_SUBMIT_PRESIGN_ENDPOINT = "submitPresignEndpoint"
@@ -116,6 +118,7 @@ export const HTML_ATTR_CAPTURE = `${HTML_ATTR_PREFIX}capture`
 export const HTML_ATTR_MULTIPLE = `${HTML_ATTR_PREFIX}multiple`
 export const HTML_ATTR_DOCUMENT_SCAN_MODE = `${HTML_ATTR_PREFIX}document-scan-mode`
 export const HTML_ATTR_ENABLE_DOCUMENT_OCR = `${HTML_ATTR_PREFIX}enable-document-ocr`
+export const HTML_ATTR_REQUIRE_VALID_DOCUMENT_MRZ = `${HTML_ATTR_PREFIX}require-valid-document-mrz`
 export const HTML_ATTR_DOCUMENT_TEXT_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-text-target-field`
 export const HTML_ATTR_DOCUMENT_MRZ_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-mrz-target-field`
 export const HTML_ATTR_DOCUMENT_FIRST_NAME_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-first-name-target-field`
@@ -166,6 +169,7 @@ export const HTML_ATTR_SUBMIT_ENDPOINT = `${HTML_ATTR_PREFIX}submit-endpoint`
 export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
 export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
 export const HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = `${HTML_ATTR_PREFIX}submit-include-document-data`
+export const HTML_ATTR_SUBMIT_DOCUMENT_DATA_MODE = `${HTML_ATTR_PREFIX}submit-document-data-mode`
 export const HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = `${HTML_ATTR_PREFIX}submit-form-data-array-mode`
 export const HTML_ATTR_SUBMIT_UPLOAD_STRATEGY = `${HTML_ATTR_PREFIX}submit-upload-strategy`
 export const HTML_ATTR_SUBMIT_PRESIGN_ENDPOINT = `${HTML_ATTR_PREFIX}submit-presign-endpoint`
@@ -207,6 +211,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_MULTIPLE]: ATTR_MULTIPLE,
     [HTML_ATTR_DOCUMENT_SCAN_MODE]: ATTR_DOCUMENT_SCAN_MODE,
     [HTML_ATTR_ENABLE_DOCUMENT_OCR]: ATTR_ENABLE_DOCUMENT_OCR,
+    [HTML_ATTR_REQUIRE_VALID_DOCUMENT_MRZ]: ATTR_REQUIRE_VALID_DOCUMENT_MRZ,
     [HTML_ATTR_DOCUMENT_TEXT_TARGET_FIELD]: ATTR_DOCUMENT_TEXT_TARGET_FIELD,
     [HTML_ATTR_DOCUMENT_MRZ_TARGET_FIELD]: ATTR_DOCUMENT_MRZ_TARGET_FIELD,
     [HTML_ATTR_DOCUMENT_FIRST_NAME_TARGET_FIELD]: ATTR_DOCUMENT_FIRST_NAME_TARGET_FIELD,
@@ -257,6 +262,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
     [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
     [HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA]: ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA,
+    [HTML_ATTR_SUBMIT_DOCUMENT_DATA_MODE]: ATTR_SUBMIT_DOCUMENT_DATA_MODE,
     [HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE]: ATTR_SUBMIT_FORM_DATA_ARRAY_MODE,
     [HTML_ATTR_SUBMIT_UPLOAD_STRATEGY]: ATTR_SUBMIT_UPLOAD_STRATEGY,
     [HTML_ATTR_SUBMIT_PRESIGN_ENDPOINT]: ATTR_SUBMIT_PRESIGN_ENDPOINT,
@@ -321,6 +327,10 @@ export function getFieldConfig(node: Element): TFieldConfig {
         fieldConfig.enableDocumentOcr = true;
     }
 
+    if (node.hasAttribute(HTML_ATTR_REQUIRE_VALID_DOCUMENT_MRZ)) {
+        fieldConfig.requireValidDocumentMrz = true;
+    }
+
     const minFiles = node.getAttribute(HTML_ATTR_MIN_FILES);
     if (minFiles) {
         fieldConfig.minFiles = Number(minFiles);
@@ -365,6 +375,7 @@ export default function getFormConfig(node: Element): TFormConfig {
             method: (formConfig as any).submitMethod,
             mode: (formConfig as any).submitMode,
             includeDocumentData: (formConfig as any).submitIncludeDocumentData === 'true',
+            documentDataMode: (formConfig as any).submitDocumentDataMode,
             formDataArrayMode: (formConfig as any).submitFormDataArrayMode,
             uploadStrategy: (formConfig as any).submitUploadStrategy,
             presignEndpoint: (formConfig as any).submitPresignEndpoint,
@@ -378,6 +389,7 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).submitMethod;
         delete (formConfig as any).submitMode;
         delete (formConfig as any).submitIncludeDocumentData;
+        delete (formConfig as any).submitDocumentDataMode;
         delete (formConfig as any).submitFormDataArrayMode;
         delete (formConfig as any).submitUploadStrategy;
         delete (formConfig as any).submitPresignEndpoint;

@@ -2214,6 +2214,7 @@ describe('FormUI', () => {
       submit: {
         endpoint: '/api/submit',
         includeDocumentData: true,
+        documentDataMode: 'summary',
       },
       fields: [
         {
@@ -2238,8 +2239,17 @@ describe('FormUI', () => {
       email: 'doc@example.com',
       document: {
         field: 'passport',
-        text: 'P<UTOERIKSSON',
-        mrz: { documentNumber: 'L898902C3', valid: true },
+        mrz: {
+          format: undefined,
+          documentCode: undefined,
+          issuingCountry: undefined,
+          documentNumber: 'L898902C3',
+          nationality: undefined,
+          birthDate: undefined,
+          expiryDate: undefined,
+          sex: undefined,
+          valid: true,
+        },
         fields: { firstName: 'ANNA MARIA' },
       },
     });
@@ -4117,6 +4127,7 @@ describe('FormUI', () => {
         endpoint: 'https://api.example.test/document-submit',
         method: 'POST',
         includeDocumentData: true,
+        documentDataMode: 'summary',
       },
       fields: [
         {
@@ -4129,7 +4140,7 @@ describe('FormUI', () => {
 
     element.engine.setDocumentData('passport', {
       text: 'P<UTOERIKSSON',
-      mrz: { documentNumber: 'L898902C3', valid: true },
+      mrz: { documentNumber: 'L898902C3', valid: true, nationality: 'UTO' },
       fields: { firstName: 'ANNA MARIA' },
     });
 
@@ -4143,9 +4154,90 @@ describe('FormUI', () => {
           email: 'doc@example.com',
           document: {
             field: 'passport',
-            text: 'P<UTOERIKSSON',
-            mrz: { documentNumber: 'L898902C3', valid: true },
+            mrz: {
+              format: undefined,
+              documentCode: undefined,
+              issuingCountry: undefined,
+              documentNumber: 'L898902C3',
+              nationality: 'UTO',
+              birthDate: undefined,
+              expiryDate: undefined,
+              sex: undefined,
+              valid: true,
+            },
             fields: { firstName: 'ANNA MARIA' },
+          },
+        }),
+      }),
+    );
+  });
+
+  it('blocks validation when a document-scan field requires a valid MRZ and the checksum fails', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'document-validation-form',
+      title: 'Document Validation Form',
+      fields: [
+        {
+          name: 'passport',
+          label: 'Passport',
+          type: 'document-scan',
+          requireValidDocumentMrz: true,
+        },
+      ],
+    }) as FormUI;
+
+    element.engine.setDocumentData('passport', {
+      mrz: { valid: false },
+    });
+
+    expect(element.validateForm({ passport: new File(['x'], 'passport.png', { type: 'image/png' }) })).toEqual({
+      passport: expect.objectContaining({
+        errorMessage: 'Document scan failed MRZ validation.',
+      }),
+    });
+  });
+
+  it('supports an identity-verification-webhook provider contract', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ accepted: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'identity-webhook-form',
+      title: 'Identity Webhook Form',
+      provider: {
+        type: 'identity-verification-webhook',
+        endpoint: 'https://api.example.test/identity/webhook',
+      },
+      fields: [
+        {
+          name: 'document_number',
+          label: 'Document Number',
+          type: 'text',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#document_number') as HTMLInputElement;
+    const form = element.querySelector('#identity-webhook-form_form') as HTMLFormElement;
+
+    input.value = 'L898902C3';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/identity/webhook',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'identity-verification-webhook',
+          identity: {
+            document_number: 'L898902C3',
           },
         }),
       }),

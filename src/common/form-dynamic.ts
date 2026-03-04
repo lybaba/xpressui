@@ -17,8 +17,9 @@ type TFormDynamicRuntimeOptions = {
       value?: any;
     }>;
     actions: Array<{
-      type: "show" | "hide" | "clear-value";
+      type: "show" | "hide" | "clear-value" | "set-value";
       field: string;
+      value?: any;
     }>;
   }>;
   getFieldContainer(
@@ -29,6 +30,7 @@ type TFormDynamicRuntimeOptions = {
   ): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
   getFieldValue(fieldName: string): any;
   clearFieldValue(fieldName: string): void;
+  setFieldValue(fieldName: string, value: any): void;
   getFormValues(): Record<string, any>;
   emitEvent(eventName: string, detail: Record<string, any>): boolean;
   getEventContext(): { formConfig: any; submit?: any };
@@ -130,6 +132,8 @@ export class FormDynamicRuntime {
           visibilityOverrides[action.field] = false;
         } else if (action.type === "clear-value") {
           this.options.clearFieldValue(action.field);
+        } else if (action.type === "set-value") {
+          this.options.setFieldValue(action.field, action.value);
         }
       });
     });

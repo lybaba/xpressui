@@ -48,7 +48,7 @@ const PUBLIC_FORM_SCHEMA = {
               required: ["type", "field"],
               additionalProperties: true,
               properties: {
-                type: { type: "string", enum: ["show", "hide", "clear-value"] },
+                type: { type: "string", enum: ["show", "hide", "clear-value", "set-value"] },
                 field: { type: "string", minLength: 1 },
               },
             },

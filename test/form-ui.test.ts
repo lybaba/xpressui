@@ -625,6 +625,9 @@ describe('FormUI', () => {
       clearFieldValue: (fieldName) => {
         values = { ...values, [fieldName]: undefined };
       },
+      setFieldValue: (fieldName, value) => {
+        values = { ...values, [fieldName]: value };
+      },
       getFormValues: () => values,
       emitEvent: () => true,
       getEventContext: () => ({ formConfig: null, submit: undefined }),
@@ -773,6 +776,37 @@ describe('FormUI', () => {
 
     expect(vipNotesContainer.style.display).toBe('');
     expect(accountManagerContainer.style.display).toBe('');
+  });
+
+  it('supports the set-value rule action', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'set-value-rules-form',
+      title: 'Set Value Rules Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'country', operator: 'equals', value: 'fr' },
+          ],
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'country', label: 'Country', type: 'text' },
+        { name: 'currency', label: 'Currency', type: 'text' },
+      ],
+    }) as FormUI;
+    const country = element.querySelector('#country') as HTMLInputElement;
+    const currency = element.querySelector('#currency') as HTMLInputElement;
+
+    country.value = 'fr';
+    country.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).currency).toBe('EUR');
+    expect(currency.value).toBe('EUR');
   });
 
   it('supports a payment provider with a normalized payload', async () => {

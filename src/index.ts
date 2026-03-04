@@ -84,12 +84,18 @@ export class FormUI extends HTMLElement {
     this.initialized = false;
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
+      getRules: () => this.formConfig?.rules || [],
       getFieldContainer: (fieldName) => this.getFieldContainer(fieldName),
       getFieldElement: (fieldName) => this.getFieldElement(fieldName),
       getFieldValue: (fieldName) => this.getFieldValue(fieldName),
       clearFieldValue: (fieldName) => {
         if (this.form) {
           this.form.change(fieldName, undefined);
+        }
+      },
+      setFieldValue: (fieldName, value) => {
+        if (this.form) {
+          this.form.change(fieldName, value);
         }
       },
       getFormValues: () => this.form?.getState().values || {},

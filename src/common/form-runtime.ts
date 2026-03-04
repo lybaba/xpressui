@@ -98,6 +98,17 @@ export class FormRuntime {
           getFieldElement: (fieldName) => options.dynamic!.getFieldElement(fieldName),
           getFieldValue: (fieldName) => options.dynamic!.getFieldValue(fieldName),
           clearFieldValue: (fieldName) => options.dynamic!.clearFieldValue(fieldName),
+          setFieldValue: (fieldName, value) => {
+            options.dynamic!.clearFieldValue(fieldName);
+            const fieldElement = options.dynamic!.getFieldElement(fieldName);
+            if (fieldElement) {
+              if (fieldElement instanceof HTMLInputElement && fieldElement.type === "checkbox") {
+                fieldElement.checked = Boolean(value);
+              } else {
+                fieldElement.value = value === undefined ? "" : String(value);
+              }
+            }
+          },
           getFormValues: () => this.options.getValues(),
           emitEvent: (eventName, detail) => this.options.emitEvent(eventName, detail),
           getEventContext: () => ({

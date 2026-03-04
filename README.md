@@ -538,7 +538,7 @@ mountFormUI(container, {
 Current rule scope:
 - condition logic: `AND`, `OR`
 - condition operators: `equals`, `not_equals`, `contains`, `in`, `gt`, `lt`
-- actions: `show`, `hide`, `clear-value`
+- actions: `show`, `hide`, `clear-value`, `set-value`
 
 ## Local Draft Storage
 

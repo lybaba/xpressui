@@ -71,8 +71,9 @@ export type TFormRuleCondition = {
 };
 
 export type TFormRuleAction = {
-    type: 'show' | 'hide' | 'clear-value';
+    type: 'show' | 'hide' | 'clear-value' | 'set-value';
     field: string;
+    value?: any;
 };
 
 export type TFormRule = {

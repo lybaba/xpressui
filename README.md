@@ -145,6 +145,25 @@ Available presets:
 - `payment-request`
 - `identity-check`
 
+## Demo Gallery
+
+Static browser demos are available in [`./demos`](/home/lyb/projects/xpressui/demos):
+
+- [`booking-wizard.html`](/home/lyb/projects/xpressui/demos/booking-wizard.html)
+- [`multi-step-review.html`](/home/lyb/projects/xpressui/demos/multi-step-review.html)
+- [`approval-workflow.html`](/home/lyb/projects/xpressui/demos/approval-workflow.html)
+- [`file-uploads.html`](/home/lyb/projects/xpressui/demos/file-uploads.html)
+- [`identity-check.html`](/home/lyb/projects/xpressui/demos/identity-check.html)
+- [`view-photo-gallery.html`](/home/lyb/projects/xpressui/demos/view-photo-gallery.html) (`mode="view"`)
+- [`hybrid-ecommerce.html`](/home/lyb/projects/xpressui/demos/hybrid-ecommerce.html) (`mode="hybrid"`)
+- [`hybrid-output-snapshot.html`](/home/lyb/projects/xpressui/demos/hybrid-output-snapshot.html) (`mode="hybrid"` + `form-ui:output-snapshot`)
+
+For GitHub Pages packaging:
+
+```bash
+npm run pages:prepare
+```
+
 ## Headless Runtime
 
 If you do not want to mount `<form-ui>`, use `FormRuntime` directly. It
@@ -247,6 +266,7 @@ console.log(observer?.getLastRuleState());
 console.log(observer?.getTemplateDiagnostics());
 console.log(observer?.getActiveTemplateWarnings());
 console.log(observer?.getLastTemplateWarningState());
+console.log(observer?.getLastOutputSnapshot());
 console.log(observer?.getSnapshot());
 ```
 
@@ -258,6 +278,7 @@ The observer API:
 - `getTemplateDiagnostics()`
 - `getActiveTemplateWarnings()`
 - `getLastTemplateWarningState()`
+- `getLastOutputSnapshot()`
 - `getSnapshot()`
 - `clear()`
 - `clearSnapshot()`
@@ -267,6 +288,7 @@ The observer API:
 - `clearTemplateDiagnostics()`
 - `clearActiveTemplateWarnings()`
 - `clearLastTemplateWarningState()`
+- `clearLastOutputSnapshot()`
 - `detach()`
 
 `getRuleHistory()` returns only `form-ui:rule-applied` events. Use
@@ -293,16 +315,17 @@ event yourself.
 `form-ui:rule-template-warning-state` event record, including its timestamp.
 
 `getSnapshot()` returns the observer's current derived state in one read:
-recent rules, last rule-state event, active template warnings, and the last
-template warning-state event.
+recent rules, last rule-state event, active template warnings, last template
+warning-state event, and the last output snapshot event.
 
 ## Debug Panel
 
 Use `createFormDebugPanel(...)` for a minimal in-browser panel backed by the
-same debug observer. It renders counts, recent rules, and active template
-warnings in separate sections, shows a `Last Updated` indicator, and includes
-local `Clear Snapshot` and `Clear Events` buttons. It also shows whether the
-panel is currently `listening` or `detached`.
+same debug observer. It renders counts, recent rules, active template warnings,
+workflow state, and output snapshots in separate sections, shows a
+`Last Updated` indicator, and includes local `Clear Snapshot` and
+`Clear Events` buttons. It also shows whether the panel is currently
+`listening` or `detached`.
 
 ```ts
 import { createFormDebugPanel, mountFormUI } from '@lybaba/xpressui';

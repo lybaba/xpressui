@@ -3,6 +3,7 @@ import { TMediaInfo } from "./TMediaFile";
 type TChoice = {
     value: string;
     label: string;
+    name?: string;
     desc?: string;
     mediaId?: string;
     mediaInfo?: TMediaInfo;
@@ -10,6 +11,15 @@ type TChoice = {
     permalink?: string;
     regularPrice?: number;
     salePrice?: number;
+    sale_price?: number;
+    discountPrice?: number;
+    discount_price?: number;
+    imageThumbnail?: string;
+    image_thumbnail?: string;
+    imageMedium?: string;
+    image_medium?: string;
+    photosFull?: string[];
+    photos_full?: string[];
     disabled?: boolean;
 }
 

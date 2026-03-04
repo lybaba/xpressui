@@ -14,10 +14,12 @@ import {
   HTML_TYPE,
   IMAGE_TYPE,
   DOCUMENT_SCAN_TYPE,
+  isFileFieldType,
   isFileLikeValue,
   LINK_TYPE,
   MEDIA_TYPE,
   OUTPUT_TYPE,
+  PRODUCT_LIST_TYPE,
   QR_SCAN_TYPE,
   RICH_EDITOR_TYPE,
   TEXTAREA_TYPE,
@@ -233,6 +235,20 @@ type TDocumentPerspectiveCorners = {
 type TDocumentScanInsight = {
   textBySlot: Array<string | null>;
   mrzBySlot: Array<TDocumentMrzResult | null>;
+};
+
+type TProductListItem = {
+  id: string;
+  name: string;
+  sale_price: number | null;
+  discount_price: number | null;
+  image_thumbnail: string;
+  image_medium: string;
+  photos_full: string[];
+};
+
+type TProductCartItem = TProductListItem & {
+  quantity: number;
 };
 
 function hasFileValues(value: any): boolean {
@@ -1119,6 +1135,10 @@ export class FormUI extends HTMLElement {
 
     if (fieldConfig.type === LINK_TYPE || fieldConfig.type === URL_TYPE) {
       return "link";
+    }
+
+    if (fieldConfig.type === PRODUCT_LIST_TYPE) {
+      return "text";
     }
 
     if (fieldConfig.type === "video" || accept.includes("video/")) {
@@ -2044,6 +2064,333 @@ export class FormUI extends HTMLElement {
   shouldShowImagePreview = (fieldConfig: TFieldConfig, file: File) => {
     const accept = String(fieldConfig.accept || "").toLowerCase();
     return accept.includes("image/*") && String(file.type || "").startsWith("image/");
+  }
+
+  isProductListField = (fieldConfig: TFieldConfig) => {
+    return fieldConfig.type === PRODUCT_LIST_TYPE;
+  }
+
+  getProductListCatalog = (fieldConfig: TFieldConfig): TProductListItem[] => {
+    const source = Array.isArray(fieldConfig.choices) ? fieldConfig.choices : [];
+    return source
+      .slice(0, 20)
+      .map((choice, index) => {
+        const id = String((choice as any).value || (choice as any).id || `product_${index + 1}`);
+        const name = String((choice as any).name || (choice as any).label || id);
+        const salePriceRaw = (choice as any).sale_price ?? (choice as any).salePrice;
+        const discountPriceRaw = (choice as any).discount_price ?? (choice as any).discountPrice;
+        const sale_price = salePriceRaw === undefined || salePriceRaw === null
+          ? null
+          : Number(salePriceRaw);
+        const discount_price = discountPriceRaw === undefined || discountPriceRaw === null
+          ? null
+          : Number(discountPriceRaw);
+        const image_thumbnail = String(
+          (choice as any).image_thumbnail
+          || (choice as any).imageThumbnail
+          || "",
+        );
+        const image_medium = String(
+          (choice as any).image_medium
+          || (choice as any).imageMedium
+          || image_thumbnail,
+        );
+        const photosSource = (choice as any).photos_full ?? (choice as any).photosFull;
+        const photos_full = Array.isArray(photosSource)
+          ? photosSource.map((entry: any) => String(entry)).filter(Boolean)
+          : [];
+
+        return {
+          id,
+          name,
+          sale_price: Number.isFinite(sale_price as number) ? sale_price : null,
+          discount_price: Number.isFinite(discount_price as number) ? discount_price : null,
+          image_thumbnail,
+          image_medium,
+          photos_full,
+        };
+      });
+  }
+
+  getProductCartItems = (value: any): TProductCartItem[] => {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .filter((entry) => entry && typeof entry === "object")
+      .map((entry) => {
+        const quantityRaw = Number((entry as any).quantity || 1);
+        return {
+          id: String((entry as any).id || (entry as any).value || ""),
+          name: String((entry as any).name || (entry as any).label || ""),
+          sale_price: (entry as any).sale_price === undefined || (entry as any).sale_price === null
+            ? null
+            : Number((entry as any).sale_price),
+          discount_price: (entry as any).discount_price === undefined || (entry as any).discount_price === null
+            ? null
+            : Number((entry as any).discount_price),
+          image_thumbnail: String((entry as any).image_thumbnail || ""),
+          image_medium: String((entry as any).image_medium || ""),
+          photos_full: Array.isArray((entry as any).photos_full)
+            ? (entry as any).photos_full.map((photo: any) => String(photo)).filter(Boolean)
+            : [],
+          quantity: Number.isFinite(quantityRaw) && quantityRaw > 0 ? Math.round(quantityRaw) : 1,
+        };
+      })
+      .filter((entry) => Boolean(entry.id));
+  }
+
+  getProductCartTotal = (cartItems: TProductCartItem[]): number => {
+    return cartItems.reduce((sum, item) => {
+      const unitPrice = item.discount_price ?? item.sale_price ?? 0;
+      return sum + (Number.isFinite(unitPrice) ? unitPrice : 0) * item.quantity;
+    }, 0);
+  }
+
+  getNextProductCartItems = (
+    fieldConfig: TFieldConfig,
+    currentValue: any,
+    action: "add" | "inc" | "dec" | "remove",
+    productId: string,
+  ): TProductCartItem[] => {
+    const catalog = this.getProductListCatalog(fieldConfig);
+    const product = catalog.find((entry) => entry.id === productId);
+    const currentItems = this.getProductCartItems(currentValue);
+    const existingIndex = currentItems.findIndex((entry) => entry.id === productId);
+    const nextItems = [...currentItems];
+
+    if (action === "add") {
+      if (!product) {
+        return nextItems;
+      }
+
+      if (existingIndex >= 0) {
+        nextItems[existingIndex] = {
+          ...nextItems[existingIndex],
+          quantity: nextItems[existingIndex].quantity + 1,
+        };
+        return nextItems;
+      }
+
+      return [
+        ...nextItems,
+        {
+          ...product,
+          quantity: 1,
+        },
+      ];
+    }
+
+    if (existingIndex < 0) {
+      return nextItems;
+    }
+
+    if (action === "inc") {
+      nextItems[existingIndex] = {
+        ...nextItems[existingIndex],
+        quantity: nextItems[existingIndex].quantity + 1,
+      };
+      return nextItems;
+    }
+
+    if (action === "dec") {
+      const nextQuantity = nextItems[existingIndex].quantity - 1;
+      if (nextQuantity <= 0) {
+        return nextItems.filter((entry) => entry.id !== productId);
+      }
+      nextItems[existingIndex] = {
+        ...nextItems[existingIndex],
+        quantity: nextQuantity,
+      };
+      return nextItems;
+    }
+
+    return nextItems.filter((entry) => entry.id !== productId);
+  }
+
+  renderProductListSelection = (
+    fieldConfig: TFieldConfig,
+    value: any,
+    selectionElement: HTMLElement | null,
+  ) => {
+    if (!selectionElement) {
+      return;
+    }
+
+    selectionElement.innerHTML = "";
+    const products = this.getProductListCatalog(fieldConfig);
+    const cartItems = this.getProductCartItems(value);
+    const cartMap = cartItems.reduce((accumulator, item) => {
+      accumulator[item.id] = item.quantity;
+      return accumulator;
+    }, {} as Record<string, number>);
+
+    const productList = document.createElement("div");
+    productList.setAttribute("data-product-list-catalog", fieldConfig.name);
+    productList.style.display = "grid";
+    productList.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
+    productList.style.gap = "10px";
+    productList.style.marginBottom = "14px";
+
+    products.forEach((product) => {
+      const card = document.createElement("div");
+      card.setAttribute("data-product-card", product.id);
+      card.className = "rounded border border-base-300 p-2";
+
+      if (product.image_thumbnail) {
+        const thumb = document.createElement("img");
+        thumb.src = product.image_thumbnail;
+        thumb.alt = product.name;
+        thumb.style.width = "100%";
+        thumb.style.height = "96px";
+        thumb.style.objectFit = "cover";
+        thumb.style.borderRadius = "8px";
+        card.appendChild(thumb);
+      }
+
+      if (product.image_medium) {
+        const medium = document.createElement("img");
+        medium.src = product.image_medium;
+        medium.alt = `${product.name} medium`;
+        medium.style.width = "100%";
+        medium.style.height = "64px";
+        medium.style.objectFit = "cover";
+        medium.style.borderRadius = "8px";
+        medium.style.marginTop = "6px";
+        card.appendChild(medium);
+      }
+
+      if (product.photos_full.length) {
+        const fullList = document.createElement("div");
+        fullList.style.display = "flex";
+        fullList.style.gap = "4px";
+        fullList.style.overflowX = "auto";
+        fullList.style.marginTop = "6px";
+        fullList.setAttribute("data-product-full-photos", product.id);
+        product.photos_full.forEach((photoUrl) => {
+          const image = document.createElement("img");
+          image.src = photoUrl;
+          image.alt = `${product.name} full`;
+          image.style.width = "52px";
+          image.style.height = "52px";
+          image.style.objectFit = "cover";
+          image.style.borderRadius = "6px";
+          fullList.appendChild(image);
+        });
+        card.appendChild(fullList);
+      }
+
+      const title = document.createElement("div");
+      title.className = "mt-2 text-sm font-semibold";
+      title.textContent = product.name;
+      card.appendChild(title);
+
+      const pricing = document.createElement("div");
+      pricing.className = "text-xs opacity-80";
+      const saleText = product.sale_price !== null ? `${product.sale_price.toFixed(2)}€` : "n/a";
+      const discountText = product.discount_price !== null ? `${product.discount_price.toFixed(2)}€` : "n/a";
+      pricing.textContent = `Sale: ${saleText} | Discount: ${discountText}`;
+      card.appendChild(pricing);
+
+      const buttonRow = document.createElement("div");
+      buttonRow.className = "mt-2 flex items-center justify-between";
+
+      const quantityTag = document.createElement("span");
+      quantityTag.className = "text-xs opacity-70";
+      quantityTag.textContent = `In cart: ${cartMap[product.id] || 0}`;
+
+      const addButton = document.createElement("button");
+      addButton.type = "button";
+      addButton.className = "btn btn-xs btn-primary";
+      addButton.textContent = "Add";
+      addButton.setAttribute("data-product-action", "add");
+      addButton.setAttribute("data-product-id", product.id);
+
+      buttonRow.appendChild(quantityTag);
+      buttonRow.appendChild(addButton);
+      card.appendChild(buttonRow);
+      productList.appendChild(card);
+    });
+
+    selectionElement.appendChild(productList);
+
+    const cart = document.createElement("div");
+    cart.setAttribute("data-product-list-cart", fieldConfig.name);
+    cart.className = "rounded border border-base-300 p-3";
+
+    const cartHeading = document.createElement("div");
+    cartHeading.className = "mb-2 text-sm font-semibold";
+    cartHeading.textContent = "Mini Cart";
+    cart.appendChild(cartHeading);
+
+    if (!cartItems.length) {
+      const empty = document.createElement("div");
+      empty.className = "text-xs opacity-70";
+      empty.textContent = "No product added yet.";
+      cart.appendChild(empty);
+    } else {
+      const cartList = document.createElement("div");
+      cartList.style.display = "grid";
+      cartList.style.gap = "8px";
+      cartItems.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "flex items-center justify-between gap-3 rounded border border-base-300 px-2 py-2";
+        row.setAttribute("data-product-cart-item", item.id);
+
+        const details = document.createElement("div");
+        details.className = "min-w-0 flex-1";
+        const name = document.createElement("div");
+        name.className = "text-sm";
+        name.textContent = item.name;
+        details.appendChild(name);
+
+        const meta = document.createElement("div");
+        meta.className = "text-xs opacity-70";
+        const unitPrice = item.discount_price ?? item.sale_price ?? 0;
+        meta.textContent = `Qty: ${item.quantity} · Unit: ${unitPrice.toFixed(2)}€`;
+        details.appendChild(meta);
+
+        const controls = document.createElement("div");
+        controls.className = "flex items-center gap-1";
+
+        const dec = document.createElement("button");
+        dec.type = "button";
+        dec.className = "btn btn-xs btn-outline";
+        dec.textContent = "-";
+        dec.setAttribute("data-product-action", "dec");
+        dec.setAttribute("data-product-id", item.id);
+
+        const inc = document.createElement("button");
+        inc.type = "button";
+        inc.className = "btn btn-xs btn-outline";
+        inc.textContent = "+";
+        inc.setAttribute("data-product-action", "inc");
+        inc.setAttribute("data-product-id", item.id);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "btn btn-xs btn-ghost";
+        remove.textContent = "Remove";
+        remove.setAttribute("data-product-action", "remove");
+        remove.setAttribute("data-product-id", item.id);
+
+        controls.appendChild(dec);
+        controls.appendChild(inc);
+        controls.appendChild(remove);
+
+        row.appendChild(details);
+        row.appendChild(controls);
+        cartList.appendChild(row);
+      });
+      cart.appendChild(cartList);
+    }
+
+    const total = document.createElement("div");
+    total.className = "mt-3 text-sm font-semibold";
+    total.textContent = `Total: ${this.getProductCartTotal(cartItems).toFixed(2)}€`;
+    cart.appendChild(total);
+    selectionElement.appendChild(cart);
   }
 
   renderDocumentScanSelection = (
@@ -3911,6 +4258,30 @@ export class FormUI extends HTMLElement {
           if (selectionElement) {
             selectionElement.addEventListener("click", (event) => {
               const target = event.target as HTMLElement | null;
+              const productActionButton = target?.closest("[data-product-action]") as HTMLElement | null;
+              if (this.isProductListField(fieldConfig) && productActionButton) {
+                event.preventDefault();
+                event.stopPropagation();
+                const action = productActionButton.getAttribute("data-product-action");
+                const productId = productActionButton.getAttribute("data-product-id");
+                if (
+                  (action === "add" || action === "inc" || action === "dec" || action === "remove")
+                  && productId
+                ) {
+                  const nextCart = this.getNextProductCartItems(
+                    fieldConfig,
+                    this.getFieldValue(name),
+                    action,
+                    productId,
+                  );
+                  change(nextCart);
+                  this.scheduleDraftSave();
+                  this.updateConditionalFields();
+                  void this.refreshRemoteOptions(name);
+                }
+                return;
+              }
+
               const qrAction = target?.closest("[data-qr-action]") as HTMLElement | null;
               if (qrAction) {
                 event.preventDefault();
@@ -3956,27 +4327,29 @@ export class FormUI extends HTMLElement {
 
               this.removeSelectedFile(name, fileIndex);
             });
-            selectionElement.addEventListener("dragenter", (event) => {
-              event.preventDefault();
-              this.setFileDragState(name, true);
-            });
-            selectionElement.addEventListener("dragover", (event) => {
-              event.preventDefault();
-              this.setFileDragState(name, true);
-            });
-            selectionElement.addEventListener("dragleave", (event) => {
-              const relatedTarget = event.relatedTarget as Node | null;
-              if (relatedTarget && selectionElement.contains(relatedTarget)) {
-                return;
-              }
-              this.setFileDragState(name, false);
-            });
-            selectionElement.addEventListener("drop", (event) => {
-              event.preventDefault();
-              this.setFileDragState(name, false);
-              const droppedFiles = Array.from(event.dataTransfer?.files || []);
-              void this.applyDroppedFiles(name, droppedFiles);
-            });
+            if (isFileFieldType(fieldConfig.type)) {
+              selectionElement.addEventListener("dragenter", (event) => {
+                event.preventDefault();
+                this.setFileDragState(name, true);
+              });
+              selectionElement.addEventListener("dragover", (event) => {
+                event.preventDefault();
+                this.setFileDragState(name, true);
+              });
+              selectionElement.addEventListener("dragleave", (event) => {
+                const relatedTarget = event.relatedTarget as Node | null;
+                if (relatedTarget && selectionElement.contains(relatedTarget)) {
+                  return;
+                }
+                this.setFileDragState(name, false);
+              });
+              selectionElement.addEventListener("drop", (event) => {
+                event.preventDefault();
+                this.setFileDragState(name, false);
+                const droppedFiles = Array.from(event.dataTransfer?.files || []);
+                void this.applyDroppedFiles(name, droppedFiles);
+              });
+            }
           }
           this.registered[name] = true;
           this.engine.setField(name, fieldConfig);
@@ -3994,6 +4367,9 @@ export class FormUI extends HTMLElement {
           ) {
             input.value = "";
           }
+        } else if (this.isProductListField(fieldConfig)) {
+          this.renderProductListSelection(fieldConfig, value, selectionElement);
+          input.value = JSON.stringify(this.getProductCartItems(value));
         } else if (input instanceof HTMLSelectElement && input.multiple) {
           const selectedValues = Array.isArray(value)
             ? value.map((entry) => String(entry))

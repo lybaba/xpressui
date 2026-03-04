@@ -19,6 +19,7 @@ import {
   getHtmlInputType,
   isFileFieldType,
   QR_SCAN_TYPE,
+  PRODUCT_LIST_TYPE,
   SELECT_MULTIPLE_TYPE,
   SELECT_ONE_TYPE,
   TEXTAREA_TYPE,
@@ -207,6 +208,19 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </label>`;
+  }
+
+  if (field.type === PRODUCT_LIST_TYPE) {
+    const choicesAttr = field.choices?.length
+      ? ` data-choices="${escapeHtml(JSON.stringify(field.choices))}"`
+      : '';
+    return `<div class="form-control w-full">
+    <div class="label"><label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label></div>
+    <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${choicesAttr}${conditionalAttrs} />
+    <div class="mt-2 rounded border border-base-300 p-3" id="${escapeHtml(field.name)}_selection" data-product-list-zone="${escapeHtml(field.name)}"></div>
+    ${helpText}
+    <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
+</div>`;
   }
 
   if (field.type === CHECKBOX_TYPE) {

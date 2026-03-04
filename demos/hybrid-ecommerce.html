@@ -12,7 +12,6 @@
         --muted: #52606d;
         --line: #d8dee6;
         --panel: #ffffff;
-        --accent: #0f766e;
       }
 
       * { box-sizing: border-box; }
@@ -40,7 +39,6 @@
         align-items: start;
       }
 
-      .products,
       .shell,
       .result,
       .code {
@@ -51,26 +49,9 @@
         box-shadow: 0 12px 32px rgba(2, 8, 23, 0.06);
       }
 
-      .products h2,
-      .result h2,
       .shell h2,
+      .result h2,
       .code h2 { margin: 0; font-size: 1rem; }
-
-      .catalog {
-        margin-top: 12px;
-        display: grid;
-        gap: 10px;
-      }
-
-      .product {
-        padding: 12px;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        background: #fbfdff;
-      }
-
-      .product strong { display: block; }
-      .product span { color: var(--muted); font-size: 0.92rem; }
 
       .code-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
       .copy-btn {
@@ -115,31 +96,22 @@
     <main>
       <a href="./index.html">Retour aux démos</a>
       <h1>Hybrid E-commerce Checkout</h1>
-      <p>Exemple <code>mode="hybrid"</code> avec catalogue produit, saisie client et prévisualisation live de la commande.</p>
+      <p>
+        Exemple <code>mode="hybrid"</code> avec champ natif <code>product-list</code>
+        (catalogue + mini cart intégré, max 20 produits sans pagination).
+      </p>
 
       <div class="layout">
-        <aside class="products">
-          <h2>Catalogue</h2>
-          <div class="catalog" id="catalog"></div>
-        </aside>
-
-        <section class="shell">
-          <h2>Checkout Form</h2>
-          <div id="app"></div>
-        </section>
-
-        <aside>
-          <div class="result" id="result"></div>
-          <div class="code" style="margin-top: 20px;">
-            <div class="code-head">
-              <h2>Code</h2>
-              <button class="copy-btn" type="button" data-toggle-code>Show code</button>
+        <aside class="code">
+          <div class="code-head">
+            <h2>Code</h2>
+            <button class="copy-btn" type="button" data-toggle-code>Show code</button>
+          </div>
+          <div class="code-body" hidden>
+            <div class="code-tools">
+              <button class="copy-btn" type="button" data-copy-code>Copy</button>
             </div>
-            <div class="code-body" hidden>
-              <div class="code-tools">
-                <button class="copy-btn" type="button" data-copy-code>Copy</button>
-              </div>
-              <pre><code>import { mountFormUI } from "../dist/xpressui.mjs";
+            <pre><code>import { mountFormUI } from "../dist/xpressui.mjs";
 
 const form = mountFormUI(app, {
   version: 1,
@@ -156,18 +128,12 @@ const form = mountFormUI(app, {
       { type: "text", name: "customer_name", label: "Customer Name", required: true },
       { type: "email", name: "customer_email", label: "Email", required: true },
       {
-        type: "select-multiple",
-        name: "product_skus",
+        type: "product-list",
+        name: "products",
         label: "Products",
         required: true,
-        choices: [
-          { value: "sku-camera", label: "Nomad Camera Bag" },
-          { value: "sku-headset", label: "Studio Headset" },
-          { value: "sku-keyboard", label: "Mechanical Keyboard" },
-          { value: "sku-lamp", label: "Desk Lamp" },
-        ],
+        choices: products,
       },
-      { type: "number", name: "quantity", label: "Quantity", required: true, min: 1 },
       { type: "text", name: "coupon", label: "Coupon" },
       { type: "textarea", name: "shipping_notes", label: "Shipping Notes" },
     ],
@@ -175,19 +141,25 @@ const form = mountFormUI(app, {
 });
 
 form.setAttribute("mode", "hybrid");
-form.setFieldOutputRenderer("product_skus", ({ value }) => {
-  const container = document.createElement("ul");
-  (Array.isArray(value) ? value : []).forEach((sku) => {
-    const line = document.createElement("li");
-    line.textContent = productsBySku[sku]?.name || sku;
-    container.appendChild(line);
+form.setFieldOutputRenderer("products", ({ value }) => {
+  const list = document.createElement("ul");
+  (Array.isArray(value) ? value : []).forEach((product) => {
+    const item = document.createElement("li");
+    item.textContent = `${product.name} x${product.quantity}`;
+    list.appendChild(item);
   });
-  return container;
+  return list;
 });
 form.refreshOutputRendering();</code></pre>
-            </div>
           </div>
         </aside>
+
+        <section class="shell">
+          <h2>Checkout Form</h2>
+          <div id="app"></div>
+        </section>
+
+        <aside class="result" id="result"></aside>
       </div>
     </main>
 
@@ -195,23 +167,59 @@ form.refreshOutputRendering();</code></pre>
       import { mountFormUI } from "../dist/xpressui.mjs";
 
       const products = [
-        { sku: "sku-camera", name: "Nomad Camera Bag", price: 129 },
-        { sku: "sku-headset", name: "Studio Headset", price: 189 },
-        { sku: "sku-keyboard", name: "Mechanical Keyboard", price: 149 },
-        { sku: "sku-lamp", name: "Desk Lamp", price: 79 },
+        {
+          value: "sku-camera",
+          name: "Nomad Camera Bag",
+          label: "Nomad Camera Bag",
+          sale_price: 129,
+          discount_price: 99,
+          image_thumbnail: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=300&q=80",
+          image_medium: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80",
+          photos_full: [
+            "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1400&q=80",
+            "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1400&q=80"
+          ]
+        },
+        {
+          value: "sku-headset",
+          name: "Studio Headset",
+          label: "Studio Headset",
+          sale_price: 189,
+          discount_price: 159,
+          image_thumbnail: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&q=80",
+          image_medium: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
+          photos_full: [
+            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1400&q=80",
+            "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1400&q=80"
+          ]
+        },
+        {
+          value: "sku-keyboard",
+          name: "Mechanical Keyboard",
+          label: "Mechanical Keyboard",
+          sale_price: 149,
+          discount_price: 129,
+          image_thumbnail: "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=300&q=80",
+          image_medium: "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=800&q=80",
+          photos_full: [
+            "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=1400&q=80",
+            "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=1400&q=80"
+          ]
+        },
+        {
+          value: "sku-lamp",
+          name: "Desk Lamp",
+          label: "Desk Lamp",
+          sale_price: 79,
+          discount_price: 69,
+          image_thumbnail: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=300&q=80",
+          image_medium: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=800&q=80",
+          photos_full: [
+            "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=1400&q=80",
+            "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1400&q=80"
+          ]
+        }
       ];
-      const productsBySku = products.reduce((acc, product) => {
-        acc[product.sku] = product;
-        return acc;
-      }, {});
-
-      const catalog = document.getElementById("catalog");
-      products.forEach((product) => {
-        const card = document.createElement("article");
-        card.className = "product";
-        card.innerHTML = `<strong>${product.name}</strong><span>${product.sku} · $${product.price}</span>`;
-        catalog.appendChild(card);
-      });
 
       const result = document.getElementById("result");
       const renderResult = (title, data) => {
@@ -242,18 +250,12 @@ form.refreshOutputRendering();</code></pre>
             { type: "text", name: "customer_name", label: "Customer Name", required: true },
             { type: "email", name: "customer_email", label: "Email", required: true },
             {
-              type: "select-multiple",
-              name: "product_skus",
+              type: "product-list",
+              name: "products",
               label: "Products",
               required: true,
-              choices: [
-                { value: "sku-camera", label: "Nomad Camera Bag" },
-                { value: "sku-headset", label: "Studio Headset" },
-                { value: "sku-keyboard", label: "Mechanical Keyboard" },
-                { value: "sku-lamp", label: "Desk Lamp" },
-              ],
+              choices: products,
             },
-            { type: "number", name: "quantity", label: "Quantity", required: true, min: 1 },
             { type: "text", name: "coupon", label: "Coupon" },
             { type: "textarea", name: "shipping_notes", label: "Shipping Notes" },
           ],
@@ -261,20 +263,20 @@ form.refreshOutputRendering();</code></pre>
       });
 
       form.setAttribute("mode", "hybrid");
-      form.setFieldOutputRenderer("product_skus", ({ value }) => {
+      form.setFieldOutputRenderer("products", ({ value }) => {
         const list = document.createElement("ul");
         list.style.margin = "0";
         list.style.paddingLeft = "18px";
-        const values = Array.isArray(value) ? value : [];
-        if (!values.length) {
+        const items = Array.isArray(value) ? value : [];
+        if (!items.length) {
           const empty = document.createElement("li");
-          empty.textContent = "No products selected yet";
+          empty.textContent = "No product in cart";
           list.appendChild(empty);
           return list;
         }
-        values.forEach((sku) => {
+        items.forEach((product) => {
           const item = document.createElement("li");
-          item.textContent = productsBySku[sku]?.name || sku;
+          item.textContent = `${product.name} x${product.quantity}`;
           list.appendChild(item);
         });
         return list;
@@ -284,15 +286,17 @@ form.refreshOutputRendering();</code></pre>
       const originalFetch = window.fetch.bind(window);
       window.fetch = async (input, init) => {
         const body = init?.body && typeof init.body === "string" ? JSON.parse(init.body) : {};
-        const productLines = Array.isArray(body?.order?.product_skus)
-          ? body.order.product_skus.map((sku) => ({ sku, name: productsBySku[sku]?.name || sku }))
-          : [];
+        const cart = Array.isArray(body?.order?.products) ? body.order.products : [];
+        const total = cart.reduce((sum, item) => {
+          const price = item.discount_price ?? item.sale_price ?? 0;
+          return sum + Number(price || 0) * Number(item.quantity || 0);
+        }, 0);
 
         const mock = {
           orderId: `ord_${Date.now()}`,
           status: "pending",
-          totalPreview: productLines.length,
-          lines: productLines,
+          lines: cart,
+          total,
           payload: body,
         };
 
@@ -303,7 +307,7 @@ form.refreshOutputRendering();</code></pre>
       };
 
       form.addEventListener("form-ui:submit-success", (event) => {
-        renderResult("Latest Submit", (event).detail?.result || {});
+        renderResult("Latest Submit", event.detail?.result || {});
       });
 
       window.addEventListener("beforeunload", () => {

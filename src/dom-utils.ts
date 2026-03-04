@@ -470,6 +470,18 @@ export function getFieldConfig(node: Element): TFieldConfig {
         fieldConfig.maxTotalFileSizeMb = Number(maxTotalFileSizeMb);
     }
 
+    const choices = node.getAttribute(HTML_ATTR_CHOICES);
+    if (choices) {
+        try {
+            const parsed = JSON.parse(choices);
+            if (Array.isArray(parsed)) {
+                fieldConfig.choices = parsed.filter((entry) => entry && typeof entry === "object");
+            }
+        } catch {
+            // Keep original attribute mapping when JSON is invalid.
+        }
+    }
+
     return fieldConfig;
 }
 

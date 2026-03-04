@@ -752,6 +752,60 @@ describe('FormUI', () => {
     expect(output.getAttribute('data-media-display-policy')).toBe('thumbnail');
   });
 
+  it('supports product-list fields with a 20-product max catalog and mini cart interactions', async () => {
+    const products = Array.from({ length: 25 }, (_, index) => ({
+      value: `sku_${index + 1}`,
+      name: `Product ${index + 1}`,
+      label: `Product ${index + 1}`,
+      sale_price: 100 + index,
+      discount_price: 90 + index,
+      image_thumbnail: `https://cdn.example.test/thumb_${index + 1}.jpg`,
+      image_medium: `https://cdn.example.test/medium_${index + 1}.jpg`,
+      photos_full: [`https://cdn.example.test/full_${index + 1}.jpg`],
+    }));
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'product-list-demo',
+      title: 'Product List Demo',
+      fields: [
+        {
+          type: 'product-list',
+          name: 'products',
+          label: 'Products',
+          required: true,
+          choices: products as any,
+        },
+      ],
+    }) as FormUI;
+
+    expect(element.querySelectorAll('[data-product-card]').length).toBe(20);
+    expect(element.querySelector('[data-product-list-cart="products"]')).not.toBeNull();
+
+    const addFirst = element.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
+    addFirst.click();
+    await flushAsyncWork();
+
+    const cartItems = element.getFieldValue('products') as Array<Record<string, any>>;
+    expect(Array.isArray(cartItems)).toBe(true);
+    expect(cartItems).toHaveLength(1);
+    expect(cartItems[0]).toEqual(
+      expect.objectContaining({
+        id: 'sku_1',
+        name: 'Product 1',
+        quantity: 1,
+        sale_price: 100,
+        discount_price: 90,
+      }),
+    );
+
+    const addAgain = element.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
+    addAgain.click();
+    await flushAsyncWork();
+    expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(2);
+    expect(element.querySelectorAll('[data-product-cart-item]').length).toBe(1);
+  });
+
   it('exposes an output snapshot API with renderer metadata', () => {
     const element = renderFixture(`
       <template id="view_snapshot">

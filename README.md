@@ -29,6 +29,7 @@ plain object without hand-writing a full HTML template.
 active template issues on the mounted component.
 It also exposes `getRecentAppliedRules()` to inspect the latest effective rule
 applications.
+Use `clearRecentAppliedRules()` to reset that in-memory rule state.
 
 For storage/debug tooling outside the component instance, use
 `createLocalFormAdmin(formConfig)`.
@@ -159,12 +160,14 @@ Main `FormRuntime` methods:
 - `flushSubmissionQueue()`
 - `getActiveTemplateWarnings()`
 - `getRecentAppliedRules()`
+- `clearRecentAppliedRules()`
 
 If you pass DOM adapters through `dynamic`, the same runtime can also handle:
 - `updateConditionalFields()`
 - `refreshRemoteOptions()`
 - `getActiveTemplateWarnings()`
 - `getRecentAppliedRules()`
+- `clearRecentAppliedRules()`
 
 Public types exported for headless integrations:
 - `TFormRuntimeOptions`

@@ -297,6 +297,11 @@ export class FormDynamicRuntime {
     return [...this.recentAppliedRules];
   }
 
+  clearRecentAppliedRules(): void {
+    this.recentAppliedRules.splice(0, this.recentAppliedRules.length);
+    this.emitRuleState();
+  }
+
   emitTemplateWarningState(): void {
     const context = this.options.getEventContext();
     this.options.emitEvent("form-ui:rule-template-warning-state", {

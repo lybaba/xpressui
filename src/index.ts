@@ -262,6 +262,10 @@ export class FormUI extends HTMLElement {
     return this.dynamic.getRecentAppliedRules();
   }
 
+  clearRecentAppliedRules = () => {
+    this.dynamic.clearRecentAppliedRules();
+  }
+
   validateForm = (values: Record<string, any>) => {
     return this.engine.validateValues(values);
   }

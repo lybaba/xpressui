@@ -413,6 +413,9 @@ describe('FormUI', () => {
         ],
       },
     ]);
+
+    element.clearRecentAppliedRules();
+    expect(element.getRecentAppliedRules()).toEqual([]);
   });
 
   it('shows and clears validation errors in the DOM', () => {
@@ -708,6 +711,9 @@ describe('FormUI', () => {
         ],
       },
     ]);
+
+    runtime.clearRecentAppliedRules();
+    expect(runtime.getRecentAppliedRules()).toEqual([]);
   });
 
   it('migrates legacy public configs to version 1', () => {
@@ -1091,6 +1097,9 @@ describe('FormUI', () => {
         ],
       },
     ]);
+
+    runtime.clearRecentAppliedRules();
+    expect(runtime.getRecentAppliedRules()).toEqual([]);
   });
 
   it('supports basic rules with AND/OR logic and show/hide actions', async () => {

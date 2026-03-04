@@ -69,6 +69,7 @@ export type TFormRuntimePublicApi = Pick<
   | "refreshRemoteOptions"
   | "getActiveTemplateWarnings"
   | "getRecentAppliedRules"
+  | "clearRecentAppliedRules"
 >;
 
 export class FormRuntime {
@@ -225,5 +226,9 @@ export class FormRuntime {
 
   getRecentAppliedRules() {
     return this.dynamic?.getRecentAppliedRules() || [];
+  }
+
+  clearRecentAppliedRules(): void {
+    this.dynamic?.clearRecentAppliedRules();
   }
 }

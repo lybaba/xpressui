@@ -63,6 +63,7 @@ export {
   normalizeProviderResult,
   resolveProviderTransition,
   registerProvider,
+  validateProviderRequest,
 } from "./common/provider-registry";
 export type { TLocalFormAdmin, TLocalQueueQuery } from "./common/form-admin";
 export type {
@@ -88,6 +89,7 @@ export type {
 } from "./common/form-persistence";
 export type { TCreateFormPresetOptions, TFormPresetName } from "./common/form-presets";
 export type {
+  TFormProviderConfigSchema,
   TFormProviderTransition,
   TNormalizedProviderResult,
 } from "./common/provider-registry";

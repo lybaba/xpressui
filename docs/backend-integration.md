@@ -15,6 +15,27 @@ responses your frontend can rely on.
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events
 
+## Provider Config Schemas
+
+`provider.config` is now validated against provider-specific schemas when those
+schemas are declared in the registry.
+
+Example:
+
+```json
+{
+  "type": "booking-availability",
+  "endpoint": "/api/availability",
+  "config": {
+    "slotDurationMinutes": 15,
+    "timezone": "Europe/Paris"
+  }
+}
+```
+
+Invalid config values fail fast when building submit requests, before network
+calls are sent.
+
 ## Remote Save And Resume Endpoint
 
 If `storage.resumeEndpoint` is configured, `xpressui` can use one endpoint for

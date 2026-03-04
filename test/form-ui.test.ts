@@ -6952,6 +6952,85 @@ describe('FormUI', () => {
     });
   });
 
+  it('validates provider config schemas when provider.config is provided', () => {
+    expect(() =>
+      createSubmitRequestFromProvider({
+        type: 'booking-availability',
+        endpoint: 'https://api.example.test/availability',
+        config: {
+          slotDurationMinutes: 0,
+        },
+      }),
+    ).toThrow('config.slotDurationMinutes must be >= 1');
+
+    expect(
+      createSubmitRequestFromProvider({
+        type: 'booking-availability',
+        endpoint: 'https://api.example.test/availability',
+        config: {
+          slotDurationMinutes: 15,
+          timezone: 'Europe/Paris',
+        },
+      }),
+    ).toEqual({
+      endpoint: 'https://api.example.test/availability',
+      method: 'POST',
+      headers: undefined,
+      action: 'booking-availability',
+    });
+
+    registerProvider('quote-configured', {
+      providerConfigSchema: {
+        required: ['channel'],
+        properties: {
+          channel: { type: 'string', minLength: 1 },
+          priority: { type: 'number', minimum: 1 },
+        },
+        additionalProperties: false,
+      },
+      buildPayload(values) {
+        return {
+          action: 'quote-configured',
+          quote: values,
+        };
+      },
+    });
+
+    expect(() =>
+      createSubmitRequestFromProvider({
+        type: 'quote-configured',
+        endpoint: 'https://api.example.test/quotes/configured',
+      }),
+    ).toThrow('provider.config is required');
+
+    expect(() =>
+      createSubmitRequestFromProvider({
+        type: 'quote-configured',
+        endpoint: 'https://api.example.test/quotes/configured',
+        config: {
+          channel: 'email',
+          unsupported: true,
+        },
+      }),
+    ).toThrow('unsupported config.unsupported');
+
+    expect(
+      createSubmitRequestFromProvider({
+        type: 'quote-configured',
+        endpoint: 'https://api.example.test/quotes/configured',
+        config: {
+          channel: 'email',
+          priority: 2,
+        },
+      }),
+    ).toEqual({
+      endpoint: 'https://api.example.test/quotes/configured',
+      method: 'POST',
+      headers: undefined,
+      action: 'quote-configured',
+    });
+  });
+
   it('saves and restores drafts with local storage', async () => {
     const key = 'xpressui:test-draft';
     const firstContainer = document.createElement('div');

@@ -66,6 +66,7 @@ export type TFormProviderRequest = {
     endpoint: string;
     method?: 'POST' | 'PUT' | 'PATCH';
     headers?: Record<string, string>;
+    config?: Record<string, any>;
 };
 
 export type TFormStorageConfig = {

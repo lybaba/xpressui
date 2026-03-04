@@ -14,11 +14,17 @@ export type TFormDebugRuleRecord = Omit<TFormDebugEventRecord, "type" | "detail"
   };
 };
 
+export type TFormDebugTemplateDiagnosticRecord = TFormDebugEventRecord & {
+  type: "form-ui:rule-template-missing-field" | "form-ui:rule-template-warning-cleared";
+};
+
 export type TFormDebugObserver = {
   getEvents(): TFormDebugEventRecord[];
   getRuleHistory(): TFormDebugRuleRecord[];
+  getTemplateDiagnostics(): TFormDebugTemplateDiagnosticRecord[];
   clear(): void;
   clearRuleHistory(): void;
+  clearTemplateDiagnostics(): void;
   detach(): void;
 };
 
@@ -65,6 +71,7 @@ export function attachFormDebugObserver(
   const maxEvents = options.maxEvents ?? 100;
   const events: TFormDebugEventRecord[] = [];
   const ruleEvents: TFormDebugRuleRecord[] = [];
+  const templateDiagnostics: TFormDebugTemplateDiagnosticRecord[] = [];
   const listeners = DEFAULT_DEBUG_EVENTS.map((eventName) => {
     const listener = (event: Event) => {
       const customEvent = event as CustomEvent<any>;
@@ -86,6 +93,16 @@ export function attachFormDebugObserver(
         }
       }
 
+      if (
+        record.type === "form-ui:rule-template-missing-field" ||
+        record.type === "form-ui:rule-template-warning-cleared"
+      ) {
+        templateDiagnostics.push(record as TFormDebugTemplateDiagnosticRecord);
+        if (templateDiagnostics.length > maxEvents) {
+          templateDiagnostics.splice(0, templateDiagnostics.length - maxEvents);
+        }
+      }
+
       options.onEvent?.(record);
     };
 
@@ -103,12 +120,19 @@ export function attachFormDebugObserver(
     getRuleHistory() {
       return [...ruleEvents];
     },
+    getTemplateDiagnostics() {
+      return [...templateDiagnostics];
+    },
     clear() {
       events.splice(0, events.length);
       ruleEvents.splice(0, ruleEvents.length);
+      templateDiagnostics.splice(0, templateDiagnostics.length);
     },
     clearRuleHistory() {
       ruleEvents.splice(0, ruleEvents.length);
+    },
+    clearTemplateDiagnostics() {
+      templateDiagnostics.splice(0, templateDiagnostics.length);
     },
     detach() {
       listeners.forEach(({ eventName, listener }) => {

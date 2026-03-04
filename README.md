@@ -182,18 +182,24 @@ const observer = form
 
 console.log(observer?.getEvents());
 console.log(observer?.getRuleHistory());
+console.log(observer?.getTemplateDiagnostics());
 ```
 
 The observer API:
 - `getEvents()`
 - `getRuleHistory()`
+- `getTemplateDiagnostics()`
 - `clear()`
 - `clearRuleHistory()`
+- `clearTemplateDiagnostics()`
 - `detach()`
 
 `getRuleHistory()` returns only `form-ui:rule-applied` events. Use
 `clearRuleHistory()` to reset that rule-specific buffer without clearing the
 full event log.
+
+`getTemplateDiagnostics()` returns only `form-ui:rule-template-missing-field`
+and `form-ui:rule-template-warning-cleared` events.
 
 ## Submission Modes
 

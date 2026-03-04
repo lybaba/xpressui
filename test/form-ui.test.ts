@@ -231,6 +231,52 @@ describe('FormUI', () => {
     observer.detach();
   });
 
+  it('can observe template diagnostics through the debug observer helper', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'debug-template-diagnostics-form',
+      title: 'Debug Template Diagnostics Form',
+      rules: [
+        {
+          id: 'compose-full-name',
+          conditions: [
+            { field: 'autoFullName', operator: 'equals', value: true },
+          ],
+          actions: [
+            {
+              type: 'set-value',
+              field: 'fullName',
+              template: '{{firstName}} {{missingName}}',
+              transform: 'trim',
+            },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'firstName', label: 'First name', type: 'text' },
+        { name: 'fullName', label: 'Full name', type: 'text' },
+        { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
+      ],
+    }) as FormUI;
+    const observer = attachFormDebugObserver(element, { maxEvents: 10 });
+    const firstName = element.querySelector('#firstName') as HTMLInputElement;
+    const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
+
+    firstName.value = 'Ada';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    autoFullName.checked = true;
+    autoFullName.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(observer.getTemplateDiagnostics().map((event) => event.type)).toEqual([
+      'form-ui:rule-template-missing-field',
+    ]);
+
+    observer.clearTemplateDiagnostics();
+    expect(observer.getTemplateDiagnostics()).toEqual([]);
+    observer.detach();
+  });
+
   it('shows and clears validation errors in the DOM', () => {
     const element = renderFixture(`
       <template id="contact">

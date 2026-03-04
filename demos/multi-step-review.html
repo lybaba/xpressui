@@ -112,23 +112,26 @@
         const currentStepName = form.getCurrentStepName();
         const stepFields = config.sections[currentStepName] || [];
         const values = form.form?.getState().values || {};
+        const isReviewStep = currentStepName === "review_step";
         preview.innerHTML = "";
 
         const heading = document.createElement("h2");
-        heading.textContent = "Current Step Preview";
+        heading.textContent = isReviewStep ? "Final Values Preview" : "Current Step Preview";
         preview.appendChild(heading);
 
         const subtitle = document.createElement("small");
         subtitle.textContent = `${form.getCurrentStepIndex() + 1}. ${currentStepName}`;
         preview.appendChild(subtitle);
 
-        const stepSnapshot = {};
-        stepFields.forEach((field) => {
-          if (!field?.name || field.type === "output") {
-            return;
-          }
-          stepSnapshot[field.name] = values[field.name] ?? null;
-        });
+        const stepSnapshot = isReviewStep ? { ...values } : {};
+        if (!isReviewStep) {
+          stepFields.forEach((field) => {
+            if (!field?.name || field.type === "output") {
+              return;
+            }
+            stepSnapshot[field.name] = values[field.name] ?? null;
+          });
+        }
 
         const payload = document.createElement("pre");
         payload.textContent = JSON.stringify(stepSnapshot, null, 2);
@@ -137,8 +140,8 @@
         const tip = document.createElement("div");
         tip.className = "tip";
         tip.textContent =
-          currentStepName === "review_step"
-            ? "The form itself now shows the built-in final summary below. Compare it with the step-specific preview here."
+          isReviewStep
+            ? "On the final step, this panel switches to the full form payload so you can compare it with the built-in summary in the form."
             : "This panel only shows the fields linked to the current step. Move between steps to compare the values.";
         preview.appendChild(tip);
       };

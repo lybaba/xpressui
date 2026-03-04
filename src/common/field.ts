@@ -19,6 +19,9 @@ export const DATETIME_TYPE = 'datetime';
 export const EMAIL_TYPE = 'email';
 export const UPLOAD_FILE_TYPE = 'file';
 export const UPLOAD_IMAGE_TYPE = 'upload-image';
+export const CAMERA_PHOTO_TYPE = 'camera-photo';
+export const QR_SCAN_TYPE = 'qr-scan';
+export const DOCUMENT_SCAN_TYPE = 'document-scan';
 export const IMAGE_TYPE = 'image';
 export const NUMBER_TYPE = 'number';
 export const POSITIVE_INTEGER_TYPE = 'integer';
@@ -47,6 +50,7 @@ export const SLUG_TYPE = 'slug';
 export const TEXTAREA_TYPE = 'textarea';
 export const TEL_TYPE = 'tel';
 export const OUTPUT_TYPE = 'output';
+export const APPROVAL_STATE_TYPE = 'approval-state';
 export const RICH_EDITOR_TYPE = 'rich-editor';
 export const FIELDGROUP_SELECT_TYPE = 'section-select';
 export const URL_TYPE = 'url';
@@ -161,6 +165,36 @@ export const getIsChoiceField = (type: string): boolean => {
         type === SELECT_ONE_TYPE
 }
 
+export const isFileFieldType = (type: string): boolean => {
+    return type === UPLOAD_FILE_TYPE ||
+        type === UPLOAD_IMAGE_TYPE ||
+        type === CAMERA_PHOTO_TYPE ||
+        type === QR_SCAN_TYPE ||
+        type === DOCUMENT_SCAN_TYPE;
+}
+
+export const isFileLikeValue = (value: any): boolean => {
+    if (!value) {
+        return false;
+    }
+
+    if (typeof File !== 'undefined' && value instanceof File) {
+        return true;
+    }
+
+    if (typeof Blob !== 'undefined' && value instanceof Blob) {
+        return true;
+    }
+
+    return Boolean(
+        typeof value === 'object' &&
+        typeof value.name === 'string' &&
+        typeof value.size === 'number' &&
+        typeof value.type === 'string' &&
+        typeof value.arrayBuffer === 'function'
+    );
+}
+
 export const buildSlug = (name: string) => {
     return slugify(lowerCase(name), { replacement: '-' });
 }
@@ -228,7 +262,10 @@ export function normalizeFormValues(fieldMap: Record<string, TFieldConfig>, form
 
     for (const [fieldName, fieldVal] of Object.entries(formValues)) {
         const fieldConfig = fieldMap[fieldName];
-        if (!isEmpty(fieldVal) && fieldConfig) {
+        const hasValue = isFileLikeValue(fieldVal) ||
+            (Array.isArray(fieldVal) && fieldVal.some((entry) => isFileLikeValue(entry))) ||
+            !isEmpty(fieldVal);
+        if (hasValue && fieldConfig) {
             res[fieldName] = doNormalizeFieldValue(fieldConfig, fieldVal);
         }
     }
@@ -264,6 +301,9 @@ export const getHtmlInputType = (fieldType: string): string => {
         case TIME_TYPE:
             return "time";
 
+        case APPROVAL_STATE_TYPE:
+            return "text";
+
         case TEL_TYPE:
             return "tel";
 
@@ -275,6 +315,13 @@ export const getHtmlInputType = (fieldType: string): string => {
 
         case COLOR_TYPE:
             return "color";
+
+        case UPLOAD_FILE_TYPE:
+        case UPLOAD_IMAGE_TYPE:
+        case CAMERA_PHOTO_TYPE:
+        case QR_SCAN_TYPE:
+        case DOCUMENT_SCAN_TYPE:
+            return "file";
 
         default:
             return fieldType

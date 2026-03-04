@@ -1,8 +1,8 @@
-import * as shortUUID from "short-uuid"
 import { TEXT_TYPE, TEXTAREA_TYPE, UNKNOWN_TYPE } from "./common/field"
 import TFieldConfig from "./common/TFieldConfig"
 import TFormConfig, { DEFAULT_FORM_CONFIG } from "./common/TFormConfig"
 import { CUSTOM_SECTION } from "./common/Constants"
+import { generateRuntimeId } from "./common/id"
 
 export const HTML_ATTR_PREFIX = "data-"
 
@@ -20,6 +20,29 @@ export const ATTR_UNIQUE = "unique"
 export const ATTR_MIN_LEN = "minLen"
 export const ATTR_MAX_LEN = "maxLen"
 export const ATTR_PLACEHOLDER = "placeholder"
+export const ATTR_ACCEPT = "accept"
+export const ATTR_CAPTURE = "capture"
+export const ATTR_MULTIPLE = "multiple"
+export const ATTR_DOCUMENT_SCAN_MODE = "documentScanMode"
+export const ATTR_ENABLE_DOCUMENT_OCR = "enableDocumentOcr"
+export const ATTR_REQUIRE_VALID_DOCUMENT_MRZ = "requireValidDocumentMrz"
+export const ATTR_DOCUMENT_TEXT_TARGET_FIELD = "documentTextTargetField"
+export const ATTR_DOCUMENT_MRZ_TARGET_FIELD = "documentMrzTargetField"
+export const ATTR_DOCUMENT_FIRST_NAME_TARGET_FIELD = "documentFirstNameTargetField"
+export const ATTR_DOCUMENT_LAST_NAME_TARGET_FIELD = "documentLastNameTargetField"
+export const ATTR_DOCUMENT_NUMBER_TARGET_FIELD = "documentNumberTargetField"
+export const ATTR_DOCUMENT_NATIONALITY_TARGET_FIELD = "documentNationalityTargetField"
+export const ATTR_DOCUMENT_BIRTH_DATE_TARGET_FIELD = "documentBirthDateTargetField"
+export const ATTR_DOCUMENT_EXPIRY_DATE_TARGET_FIELD = "documentExpiryDateTargetField"
+export const ATTR_DOCUMENT_SEX_TARGET_FIELD = "documentSexTargetField"
+export const ATTR_FILE_DROP_MODE = "fileDropMode"
+export const ATTR_MIN_FILES = "minFiles"
+export const ATTR_MAX_FILES = "maxFiles"
+export const ATTR_MAX_FILE_SIZE_MB = "maxFileSizeMb"
+export const ATTR_MAX_TOTAL_FILE_SIZE_MB = "maxTotalFileSizeMb"
+export const ATTR_FORM_DATA_FIELD_NAME = "formDataFieldName"
+export const ATTR_FILE_TYPE_ERROR_MSG = "fileTypeErrorMsg"
+export const ATTR_FILE_SIZE_ERROR_MSG = "fileSizeErrorMsg"
 export const ATTR_PATTERN = "pattern"
 export const ATTR_MEDIA_ID = "mediaId"
 export const ATTR_BACKGROUND = "background"
@@ -52,6 +75,16 @@ export const ATTR_RENDERING_MODE = "RenderingMode"
 export const ATTR_SUBMIT_ENDPOINT = "submitEndpoint"
 export const ATTR_SUBMIT_METHOD = "submitMethod"
 export const ATTR_SUBMIT_MODE = "submitMode"
+export const ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = "submitIncludeDocumentData"
+export const ATTR_SUBMIT_DOCUMENT_DATA_MODE = "submitDocumentDataMode"
+export const ATTR_SUBMIT_DOCUMENT_FIELD_PATHS = "submitDocumentFieldPaths"
+export const ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = "submitFormDataArrayMode"
+export const ATTR_SUBMIT_UPLOAD_STRATEGY = "submitUploadStrategy"
+export const ATTR_SUBMIT_PRESIGN_ENDPOINT = "submitPresignEndpoint"
+export const ATTR_SUBMIT_PRESIGN_METHOD = "submitPresignMethod"
+export const ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY = "submitPresignUploadUrlKey"
+export const ATTR_SUBMIT_PRESIGN_FILE_URL_KEY = "submitPresignFileUrlKey"
+export const ATTR_SUBMIT_UPLOAD_METHOD = "submitUploadMethod"
 export const ATTR_SUBMIT_ACTION = "submitAction"
 export const ATTR_VISIBLE_WHEN_FIELD = "visibleWhenField"
 export const ATTR_VISIBLE_WHEN_EQUALS = "visibleWhenEquals"
@@ -59,11 +92,30 @@ export const ATTR_OPTIONS_ENDPOINT = "optionsEndpoint"
 export const ATTR_OPTIONS_DEPENDS_ON = "optionsDependsOn"
 export const ATTR_OPTIONS_LABEL_KEY = "optionsLabelKey"
 export const ATTR_OPTIONS_VALUE_KEY = "optionsValueKey"
+export const ATTR_STEP_SKIPPABLE = "stepSkippable"
+export const ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES = "stepValidateWhenWorkflowStates"
+export const ATTR_STEP_SUMMARY = "stepSummary"
+export const ATTR_NEXT_STEP_WHEN_FIELD = "nextStepWhenField"
+export const ATTR_NEXT_STEP_WHEN_EQUALS = "nextStepWhenEquals"
+export const ATTR_NEXT_STEP_WHEN_NOT_EQUALS = "nextStepWhenNotEquals"
+export const ATTR_NEXT_STEP_TARGET = "nextStepTarget"
+export const ATTR_STEP_TRANSITIONS = "stepTransitions"
 export const ATTR_STORAGE_MODE = "storageMode"
 export const ATTR_STORAGE_ADAPTER = "storageAdapter"
 export const ATTR_STORAGE_KEY = "storageKey"
 export const ATTR_STORAGE_AUTOSAVE_MS = "storageAutoSaveMs"
+export const ATTR_STORAGE_RESUME_ENDPOINT = "storageResumeEndpoint"
+export const ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS = "storageResumeTokenTtlDays"
+export const ATTR_STORAGE_ENCRYPTION_KEY = "storageEncryptionKey"
+export const ATTR_STORAGE_RETENTION_DAYS = "storageRetentionDays"
+export const ATTR_STORAGE_RETENTION_DRAFT_DAYS = "storageRetentionDraftDays"
+export const ATTR_STORAGE_RETENTION_QUEUE_DAYS = "storageRetentionQueueDays"
+export const ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS = "storageRetentionDeadLetterDays"
+export const ATTR_STEP_PREVIOUS_LABEL = "stepPreviousLabel"
+export const ATTR_STEP_NEXT_LABEL = "stepNextLabel"
+export const ATTR_WORKFLOW_STEP_TARGETS = "workflowStepTargets"
 export const ATTR_VERSION = "version"
+export const ATTR_RULES = "rules"
 
 
 export const HTML_ATTR_TYPE = `${HTML_ATTR_PREFIX}type`
@@ -80,6 +132,29 @@ export const HTML_ATTR_UNIQUE = `${HTML_ATTR_PREFIX}unique`
 export const HTML_ATTR_MIN_LEN = `${HTML_ATTR_PREFIX}min-len`
 export const HTML_ATTR_MAX_LEN = `${HTML_ATTR_PREFIX}max-len`
 export const HTML_ATTR_PLACEHOLDER = `${HTML_ATTR_PREFIX}placeholder`
+export const HTML_ATTR_ACCEPT = `${HTML_ATTR_PREFIX}accept`
+export const HTML_ATTR_CAPTURE = `${HTML_ATTR_PREFIX}capture`
+export const HTML_ATTR_MULTIPLE = `${HTML_ATTR_PREFIX}multiple`
+export const HTML_ATTR_DOCUMENT_SCAN_MODE = `${HTML_ATTR_PREFIX}document-scan-mode`
+export const HTML_ATTR_ENABLE_DOCUMENT_OCR = `${HTML_ATTR_PREFIX}enable-document-ocr`
+export const HTML_ATTR_REQUIRE_VALID_DOCUMENT_MRZ = `${HTML_ATTR_PREFIX}require-valid-document-mrz`
+export const HTML_ATTR_DOCUMENT_TEXT_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-text-target-field`
+export const HTML_ATTR_DOCUMENT_MRZ_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-mrz-target-field`
+export const HTML_ATTR_DOCUMENT_FIRST_NAME_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-first-name-target-field`
+export const HTML_ATTR_DOCUMENT_LAST_NAME_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-last-name-target-field`
+export const HTML_ATTR_DOCUMENT_NUMBER_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-number-target-field`
+export const HTML_ATTR_DOCUMENT_NATIONALITY_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-nationality-target-field`
+export const HTML_ATTR_DOCUMENT_BIRTH_DATE_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-birth-date-target-field`
+export const HTML_ATTR_DOCUMENT_EXPIRY_DATE_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-expiry-date-target-field`
+export const HTML_ATTR_DOCUMENT_SEX_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-sex-target-field`
+export const HTML_ATTR_FILE_DROP_MODE = `${HTML_ATTR_PREFIX}file-drop-mode`
+export const HTML_ATTR_MIN_FILES = `${HTML_ATTR_PREFIX}min-files`
+export const HTML_ATTR_MAX_FILES = `${HTML_ATTR_PREFIX}max-files`
+export const HTML_ATTR_MAX_FILE_SIZE_MB = `${HTML_ATTR_PREFIX}max-file-size-mb`
+export const HTML_ATTR_MAX_TOTAL_FILE_SIZE_MB = `${HTML_ATTR_PREFIX}max-total-file-size-mb`
+export const HTML_ATTR_FORM_DATA_FIELD_NAME = `${HTML_ATTR_PREFIX}form-data-field-name`
+export const HTML_ATTR_FILE_TYPE_ERROR_MSG = `${HTML_ATTR_PREFIX}file-type-error-msg`
+export const HTML_ATTR_FILE_SIZE_ERROR_MSG = `${HTML_ATTR_PREFIX}file-size-error-msg`
 export const HTML_ATTR_PATTERN = `${HTML_ATTR_PREFIX}pattern`
 export const HTML_ATTR_MEDIA_ID = `${HTML_ATTR_PREFIX}media-id`
 export const HTML_ATTR_BACKGROUND = `${HTML_ATTR_PREFIX}background`
@@ -112,6 +187,16 @@ export const HTML_ATTR_RENDERING_MODE = `${HTML_ATTR_PREFIX}rendering-mode`
 export const HTML_ATTR_SUBMIT_ENDPOINT = `${HTML_ATTR_PREFIX}submit-endpoint`
 export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
 export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
+export const HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = `${HTML_ATTR_PREFIX}submit-include-document-data`
+export const HTML_ATTR_SUBMIT_DOCUMENT_DATA_MODE = `${HTML_ATTR_PREFIX}submit-document-data-mode`
+export const HTML_ATTR_SUBMIT_DOCUMENT_FIELD_PATHS = `${HTML_ATTR_PREFIX}submit-document-field-paths`
+export const HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = `${HTML_ATTR_PREFIX}submit-form-data-array-mode`
+export const HTML_ATTR_SUBMIT_UPLOAD_STRATEGY = `${HTML_ATTR_PREFIX}submit-upload-strategy`
+export const HTML_ATTR_SUBMIT_PRESIGN_ENDPOINT = `${HTML_ATTR_PREFIX}submit-presign-endpoint`
+export const HTML_ATTR_SUBMIT_PRESIGN_METHOD = `${HTML_ATTR_PREFIX}submit-presign-method`
+export const HTML_ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY = `${HTML_ATTR_PREFIX}submit-presign-upload-url-key`
+export const HTML_ATTR_SUBMIT_PRESIGN_FILE_URL_KEY = `${HTML_ATTR_PREFIX}submit-presign-file-url-key`
+export const HTML_ATTR_SUBMIT_UPLOAD_METHOD = `${HTML_ATTR_PREFIX}submit-upload-method`
 export const HTML_ATTR_SUBMIT_ACTION = `${HTML_ATTR_PREFIX}submit-action`
 export const HTML_ATTR_VISIBLE_WHEN_FIELD = `${HTML_ATTR_PREFIX}visible-when-field`
 export const HTML_ATTR_VISIBLE_WHEN_EQUALS = `${HTML_ATTR_PREFIX}visible-when-equals`
@@ -119,11 +204,30 @@ export const HTML_ATTR_OPTIONS_ENDPOINT = `${HTML_ATTR_PREFIX}options-endpoint`
 export const HTML_ATTR_OPTIONS_DEPENDS_ON = `${HTML_ATTR_PREFIX}options-depends-on`
 export const HTML_ATTR_OPTIONS_LABEL_KEY = `${HTML_ATTR_PREFIX}options-label-key`
 export const HTML_ATTR_OPTIONS_VALUE_KEY = `${HTML_ATTR_PREFIX}options-value-key`
+export const HTML_ATTR_STEP_SKIPPABLE = `${HTML_ATTR_PREFIX}step-skippable`
+export const HTML_ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES = `${HTML_ATTR_PREFIX}step-validate-when-workflow-states`
+export const HTML_ATTR_STEP_SUMMARY = `${HTML_ATTR_PREFIX}step-summary`
+export const HTML_ATTR_NEXT_STEP_WHEN_FIELD = `${HTML_ATTR_PREFIX}next-step-when-field`
+export const HTML_ATTR_NEXT_STEP_WHEN_EQUALS = `${HTML_ATTR_PREFIX}next-step-when-equals`
+export const HTML_ATTR_NEXT_STEP_WHEN_NOT_EQUALS = `${HTML_ATTR_PREFIX}next-step-when-not-equals`
+export const HTML_ATTR_NEXT_STEP_TARGET = `${HTML_ATTR_PREFIX}next-step-target`
+export const HTML_ATTR_STEP_TRANSITIONS = `${HTML_ATTR_PREFIX}step-transitions`
 export const HTML_ATTR_STORAGE_MODE = `${HTML_ATTR_PREFIX}storage-mode`
 export const HTML_ATTR_STORAGE_ADAPTER = `${HTML_ATTR_PREFIX}storage-adapter`
 export const HTML_ATTR_STORAGE_KEY = `${HTML_ATTR_PREFIX}storage-key`
 export const HTML_ATTR_STORAGE_AUTOSAVE_MS = `${HTML_ATTR_PREFIX}storage-autosave-ms`
+export const HTML_ATTR_STORAGE_RESUME_ENDPOINT = `${HTML_ATTR_PREFIX}storage-resume-endpoint`
+export const HTML_ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS = `${HTML_ATTR_PREFIX}storage-resume-token-ttl-days`
+export const HTML_ATTR_STORAGE_ENCRYPTION_KEY = `${HTML_ATTR_PREFIX}storage-encryption-key`
+export const HTML_ATTR_STORAGE_RETENTION_DAYS = `${HTML_ATTR_PREFIX}storage-retention-days`
+export const HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS = `${HTML_ATTR_PREFIX}storage-retention-draft-days`
+export const HTML_ATTR_STORAGE_RETENTION_QUEUE_DAYS = `${HTML_ATTR_PREFIX}storage-retention-queue-days`
+export const HTML_ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS = `${HTML_ATTR_PREFIX}storage-retention-dead-letter-days`
+export const HTML_ATTR_STEP_PREVIOUS_LABEL = `${HTML_ATTR_PREFIX}step-previous-label`
+export const HTML_ATTR_STEP_NEXT_LABEL = `${HTML_ATTR_PREFIX}step-next-label`
+export const HTML_ATTR_WORKFLOW_STEP_TARGETS = `${HTML_ATTR_PREFIX}workflow-step-targets`
 export const HTML_ATTR_VERSION = `${HTML_ATTR_PREFIX}version`
+export const HTML_ATTR_RULES = `${HTML_ATTR_PREFIX}rules`
 
 export const ATTR_MAP = {
     [HTML_ATTR_TYPE]: ATTR_TYPE,
@@ -140,6 +244,29 @@ export const ATTR_MAP = {
     [HTML_ATTR_MIN_LEN]: ATTR_MIN_LEN,
     [HTML_ATTR_MAX_LEN]: ATTR_MAX_LEN,
     [HTML_ATTR_PLACEHOLDER]: ATTR_PLACEHOLDER,
+    [HTML_ATTR_ACCEPT]: ATTR_ACCEPT,
+    [HTML_ATTR_CAPTURE]: ATTR_CAPTURE,
+    [HTML_ATTR_MULTIPLE]: ATTR_MULTIPLE,
+    [HTML_ATTR_DOCUMENT_SCAN_MODE]: ATTR_DOCUMENT_SCAN_MODE,
+    [HTML_ATTR_ENABLE_DOCUMENT_OCR]: ATTR_ENABLE_DOCUMENT_OCR,
+    [HTML_ATTR_REQUIRE_VALID_DOCUMENT_MRZ]: ATTR_REQUIRE_VALID_DOCUMENT_MRZ,
+    [HTML_ATTR_DOCUMENT_TEXT_TARGET_FIELD]: ATTR_DOCUMENT_TEXT_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_MRZ_TARGET_FIELD]: ATTR_DOCUMENT_MRZ_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_FIRST_NAME_TARGET_FIELD]: ATTR_DOCUMENT_FIRST_NAME_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_LAST_NAME_TARGET_FIELD]: ATTR_DOCUMENT_LAST_NAME_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_NUMBER_TARGET_FIELD]: ATTR_DOCUMENT_NUMBER_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_NATIONALITY_TARGET_FIELD]: ATTR_DOCUMENT_NATIONALITY_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_BIRTH_DATE_TARGET_FIELD]: ATTR_DOCUMENT_BIRTH_DATE_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_EXPIRY_DATE_TARGET_FIELD]: ATTR_DOCUMENT_EXPIRY_DATE_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_SEX_TARGET_FIELD]: ATTR_DOCUMENT_SEX_TARGET_FIELD,
+    [HTML_ATTR_FILE_DROP_MODE]: ATTR_FILE_DROP_MODE,
+    [HTML_ATTR_MIN_FILES]: ATTR_MIN_FILES,
+    [HTML_ATTR_MAX_FILES]: ATTR_MAX_FILES,
+    [HTML_ATTR_MAX_FILE_SIZE_MB]: ATTR_MAX_FILE_SIZE_MB,
+    [HTML_ATTR_MAX_TOTAL_FILE_SIZE_MB]: ATTR_MAX_TOTAL_FILE_SIZE_MB,
+    [HTML_ATTR_FORM_DATA_FIELD_NAME]: ATTR_FORM_DATA_FIELD_NAME,
+    [HTML_ATTR_FILE_TYPE_ERROR_MSG]: ATTR_FILE_TYPE_ERROR_MSG,
+    [HTML_ATTR_FILE_SIZE_ERROR_MSG]: ATTR_FILE_SIZE_ERROR_MSG,
     [HTML_ATTR_PATTERN]: ATTR_PATTERN,
     [HTML_ATTR_MEDIA_ID]: ATTR_MEDIA_ID,
     [HTML_ATTR_BACKGROUND]: ATTR_MEDIA_ID,
@@ -172,6 +299,16 @@ export const ATTR_MAP = {
     [HTML_ATTR_SUBMIT_ENDPOINT]: ATTR_SUBMIT_ENDPOINT,
     [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
     [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
+    [HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA]: ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA,
+    [HTML_ATTR_SUBMIT_DOCUMENT_DATA_MODE]: ATTR_SUBMIT_DOCUMENT_DATA_MODE,
+    [HTML_ATTR_SUBMIT_DOCUMENT_FIELD_PATHS]: ATTR_SUBMIT_DOCUMENT_FIELD_PATHS,
+    [HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE]: ATTR_SUBMIT_FORM_DATA_ARRAY_MODE,
+    [HTML_ATTR_SUBMIT_UPLOAD_STRATEGY]: ATTR_SUBMIT_UPLOAD_STRATEGY,
+    [HTML_ATTR_SUBMIT_PRESIGN_ENDPOINT]: ATTR_SUBMIT_PRESIGN_ENDPOINT,
+    [HTML_ATTR_SUBMIT_PRESIGN_METHOD]: ATTR_SUBMIT_PRESIGN_METHOD,
+    [HTML_ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY]: ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY,
+    [HTML_ATTR_SUBMIT_PRESIGN_FILE_URL_KEY]: ATTR_SUBMIT_PRESIGN_FILE_URL_KEY,
+    [HTML_ATTR_SUBMIT_UPLOAD_METHOD]: ATTR_SUBMIT_UPLOAD_METHOD,
     [HTML_ATTR_SUBMIT_ACTION]: ATTR_SUBMIT_ACTION,
     [HTML_ATTR_VISIBLE_WHEN_FIELD]: ATTR_VISIBLE_WHEN_FIELD,
     [HTML_ATTR_VISIBLE_WHEN_EQUALS]: ATTR_VISIBLE_WHEN_EQUALS,
@@ -179,11 +316,30 @@ export const ATTR_MAP = {
     [HTML_ATTR_OPTIONS_DEPENDS_ON]: ATTR_OPTIONS_DEPENDS_ON,
     [HTML_ATTR_OPTIONS_LABEL_KEY]: ATTR_OPTIONS_LABEL_KEY,
     [HTML_ATTR_OPTIONS_VALUE_KEY]: ATTR_OPTIONS_VALUE_KEY,
+    [HTML_ATTR_STEP_SKIPPABLE]: ATTR_STEP_SKIPPABLE,
+    [HTML_ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES]: ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES,
+    [HTML_ATTR_STEP_SUMMARY]: ATTR_STEP_SUMMARY,
+    [HTML_ATTR_NEXT_STEP_WHEN_FIELD]: ATTR_NEXT_STEP_WHEN_FIELD,
+    [HTML_ATTR_NEXT_STEP_WHEN_EQUALS]: ATTR_NEXT_STEP_WHEN_EQUALS,
+    [HTML_ATTR_NEXT_STEP_WHEN_NOT_EQUALS]: ATTR_NEXT_STEP_WHEN_NOT_EQUALS,
+    [HTML_ATTR_NEXT_STEP_TARGET]: ATTR_NEXT_STEP_TARGET,
+    [HTML_ATTR_STEP_TRANSITIONS]: ATTR_STEP_TRANSITIONS,
     [HTML_ATTR_STORAGE_MODE]: ATTR_STORAGE_MODE,
     [HTML_ATTR_STORAGE_ADAPTER]: ATTR_STORAGE_ADAPTER,
     [HTML_ATTR_STORAGE_KEY]: ATTR_STORAGE_KEY,
     [HTML_ATTR_STORAGE_AUTOSAVE_MS]: ATTR_STORAGE_AUTOSAVE_MS,
+    [HTML_ATTR_STORAGE_RESUME_ENDPOINT]: ATTR_STORAGE_RESUME_ENDPOINT,
+    [HTML_ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS]: ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS,
+    [HTML_ATTR_STORAGE_ENCRYPTION_KEY]: ATTR_STORAGE_ENCRYPTION_KEY,
+    [HTML_ATTR_STORAGE_RETENTION_DAYS]: ATTR_STORAGE_RETENTION_DAYS,
+    [HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS]: ATTR_STORAGE_RETENTION_DRAFT_DAYS,
+    [HTML_ATTR_STORAGE_RETENTION_QUEUE_DAYS]: ATTR_STORAGE_RETENTION_QUEUE_DAYS,
+    [HTML_ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS]: ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS,
+    [HTML_ATTR_STEP_PREVIOUS_LABEL]: ATTR_STEP_PREVIOUS_LABEL,
+    [HTML_ATTR_STEP_NEXT_LABEL]: ATTR_STEP_NEXT_LABEL,
+    [HTML_ATTR_WORKFLOW_STEP_TARGETS]: ATTR_WORKFLOW_STEP_TARGETS,
     [HTML_ATTR_VERSION]: ATTR_VERSION,
+    [HTML_ATTR_RULES]: ATTR_RULES,
 }
 
 
@@ -201,13 +357,111 @@ function getFieldConfigList(nodes: NodeListOf<Element>): TFieldConfig[] {
 }
 
 export function getFieldConfig(node: Element): TFieldConfig {
-    const randomId = shortUUID.generate();
+    const randomId = generateRuntimeId();
     const fieldConfig: TFieldConfig = { type: UNKNOWN_TYPE, name: randomId, label: randomId }
     for (const [dashKey, camelKey] of Object.entries(ATTR_MAP)) {
         const attrValue = node.getAttribute(dashKey)
         if (attrValue) {
             (fieldConfig as any)[camelKey] = attrValue;
         }
+    }
+
+    const acceptValue = node.getAttribute("accept");
+    if (acceptValue) {
+        fieldConfig.accept = acceptValue;
+    }
+
+    const captureValue = node.getAttribute("capture") || node.getAttribute(HTML_ATTR_CAPTURE);
+    if (captureValue === "user" || captureValue === "environment") {
+        fieldConfig.capture = captureValue;
+    }
+
+    if (node.hasAttribute("multiple")) {
+        fieldConfig.multiple = true;
+    }
+
+    if (node.hasAttribute(HTML_ATTR_ENABLE_DOCUMENT_OCR)) {
+        fieldConfig.enableDocumentOcr = true;
+    }
+
+    if (node.hasAttribute(HTML_ATTR_REQUIRE_VALID_DOCUMENT_MRZ)) {
+        fieldConfig.requireValidDocumentMrz = true;
+    }
+
+    if (node.hasAttribute(HTML_ATTR_STEP_SKIPPABLE)) {
+        fieldConfig.stepSkippable = true;
+    }
+
+    if (node.hasAttribute(HTML_ATTR_STEP_SUMMARY)) {
+        fieldConfig.stepSummary = true;
+    }
+
+    const stepValidateWhenWorkflowStates = node.getAttribute(HTML_ATTR_STEP_VALIDATE_WHEN_WORKFLOW_STATES);
+    if (stepValidateWhenWorkflowStates) {
+        try {
+            const parsed = JSON.parse(stepValidateWhenWorkflowStates);
+            if (Array.isArray(parsed)) {
+                fieldConfig.stepValidateWhenWorkflowStates = parsed.filter((entry) => typeof entry === "string");
+            }
+        } catch {
+            // Ignore invalid JSON.
+        }
+    }
+
+    const nextStepWhenEquals = node.getAttribute(HTML_ATTR_NEXT_STEP_WHEN_EQUALS);
+    if (nextStepWhenEquals) {
+        try {
+            const parsed = JSON.parse(nextStepWhenEquals);
+            if (Array.isArray(parsed)) {
+                fieldConfig.nextStepWhenEquals = parsed.map((entry) => String(entry));
+            }
+        } catch {
+            // Keep attribute string as-is via ATTR_MAP mapping.
+        }
+    }
+
+    const nextStepWhenNotEquals = node.getAttribute(HTML_ATTR_NEXT_STEP_WHEN_NOT_EQUALS);
+    if (nextStepWhenNotEquals) {
+        try {
+            const parsed = JSON.parse(nextStepWhenNotEquals);
+            if (Array.isArray(parsed)) {
+                fieldConfig.nextStepWhenNotEquals = parsed.map((entry) => String(entry));
+            }
+        } catch {
+            // Keep attribute string as-is via ATTR_MAP mapping.
+        }
+    }
+
+    const stepTransitions = node.getAttribute(HTML_ATTR_STEP_TRANSITIONS);
+    if (stepTransitions) {
+        try {
+            const parsed = JSON.parse(stepTransitions);
+            if (Array.isArray(parsed)) {
+                fieldConfig.stepTransitions = parsed.filter((entry) => entry && typeof entry === "object");
+            }
+        } catch {
+            // Ignore invalid JSON.
+        }
+    }
+
+    const minFiles = node.getAttribute(HTML_ATTR_MIN_FILES);
+    if (minFiles) {
+        fieldConfig.minFiles = Number(minFiles);
+    }
+
+    const maxFiles = node.getAttribute(HTML_ATTR_MAX_FILES);
+    if (maxFiles) {
+        fieldConfig.maxFiles = Number(maxFiles);
+    }
+
+    const maxFileSizeMb = node.getAttribute(HTML_ATTR_MAX_FILE_SIZE_MB);
+    if (maxFileSizeMb) {
+        fieldConfig.maxFileSizeMb = Number(maxFileSizeMb);
+    }
+
+    const maxTotalFileSizeMb = node.getAttribute(HTML_ATTR_MAX_TOTAL_FILE_SIZE_MB);
+    if (maxTotalFileSizeMb) {
+        fieldConfig.maxTotalFileSizeMb = Number(maxTotalFileSizeMb);
     }
 
     return fieldConfig;
@@ -233,11 +487,33 @@ export default function getFormConfig(node: Element): TFormConfig {
             endpoint: (formConfig as any).submitEndpoint,
             method: (formConfig as any).submitMethod,
             mode: (formConfig as any).submitMode,
+            includeDocumentData: (formConfig as any).submitIncludeDocumentData === 'true',
+            documentDataMode: (formConfig as any).submitDocumentDataMode,
+            documentFieldPaths: (formConfig as any).submitDocumentFieldPaths
+              ? JSON.parse((formConfig as any).submitDocumentFieldPaths)
+              : undefined,
+            formDataArrayMode: (formConfig as any).submitFormDataArrayMode,
+            uploadStrategy: (formConfig as any).submitUploadStrategy,
+            presignEndpoint: (formConfig as any).submitPresignEndpoint,
+            presignMethod: (formConfig as any).submitPresignMethod,
+            presignUploadUrlKey: (formConfig as any).submitPresignUploadUrlKey,
+            presignFileUrlKey: (formConfig as any).submitPresignFileUrlKey,
+            uploadMethod: (formConfig as any).submitUploadMethod,
             action: (formConfig as any).submitAction,
         };
         delete (formConfig as any).submitEndpoint;
         delete (formConfig as any).submitMethod;
         delete (formConfig as any).submitMode;
+        delete (formConfig as any).submitIncludeDocumentData;
+        delete (formConfig as any).submitDocumentDataMode;
+        delete (formConfig as any).submitDocumentFieldPaths;
+        delete (formConfig as any).submitFormDataArrayMode;
+        delete (formConfig as any).submitUploadStrategy;
+        delete (formConfig as any).submitPresignEndpoint;
+        delete (formConfig as any).submitPresignMethod;
+        delete (formConfig as any).submitPresignUploadUrlKey;
+        delete (formConfig as any).submitPresignFileUrlKey;
+        delete (formConfig as any).submitUploadMethod;
         delete (formConfig as any).submitAction;
     }
 
@@ -249,20 +525,70 @@ export default function getFormConfig(node: Element): TFormConfig {
             autoSaveMs: (formConfig as any).storageAutoSaveMs
                 ? Number((formConfig as any).storageAutoSaveMs)
                 : undefined,
+            resumeEndpoint: (formConfig as any).storageResumeEndpoint,
+            resumeTokenTtlDays: (formConfig as any).storageResumeTokenTtlDays
+                ? Number((formConfig as any).storageResumeTokenTtlDays)
+                : undefined,
+            encryptionKey: (formConfig as any).storageEncryptionKey,
+            retentionDays: (formConfig as any).storageRetentionDays
+                ? Number((formConfig as any).storageRetentionDays)
+                : undefined,
+            retentionDraftDays: (formConfig as any).storageRetentionDraftDays
+                ? Number((formConfig as any).storageRetentionDraftDays)
+                : undefined,
+            retentionQueueDays: (formConfig as any).storageRetentionQueueDays
+                ? Number((formConfig as any).storageRetentionQueueDays)
+                : undefined,
+            retentionDeadLetterDays: (formConfig as any).storageRetentionDeadLetterDays
+                ? Number((formConfig as any).storageRetentionDeadLetterDays)
+                : undefined,
         };
         delete (formConfig as any).storageMode;
         delete (formConfig as any).storageAdapter;
         delete (formConfig as any).storageKey;
         delete (formConfig as any).storageAutoSaveMs;
+        delete (formConfig as any).storageResumeEndpoint;
+        delete (formConfig as any).storageResumeTokenTtlDays;
+        delete (formConfig as any).storageEncryptionKey;
+        delete (formConfig as any).storageRetentionDays;
+        delete (formConfig as any).storageRetentionDraftDays;
+        delete (formConfig as any).storageRetentionQueueDays;
+        delete (formConfig as any).storageRetentionDeadLetterDays;
     }
 
     if ((formConfig as any).version) {
         (formConfig as any).version = Number((formConfig as any).version);
     }
 
+    if ((formConfig as any).stepPreviousLabel || (formConfig as any).stepNextLabel) {
+        (formConfig as any).stepLabels = {
+            previous: (formConfig as any).stepPreviousLabel,
+            next: (formConfig as any).stepNextLabel,
+        };
+        delete (formConfig as any).stepPreviousLabel;
+        delete (formConfig as any).stepNextLabel;
+    }
+
+    if ((formConfig as any).workflowStepTargets) {
+        try {
+            (formConfig as any).workflowStepTargets = JSON.parse((formConfig as any).workflowStepTargets);
+        } catch {
+            delete (formConfig as any).workflowStepTargets;
+        }
+    }
+
+    if ((formConfig as any).rules) {
+        try {
+            (formConfig as any).rules = JSON.parse((formConfig as any).rules);
+        } catch {
+            delete (formConfig as any).rules;
+        }
+    }
+
     const sectionNodes = node.querySelectorAll('[data-type="section"]');
     const sectionList = getFieldConfigList(sectionNodes);
     formConfig.sections[CUSTOM_SECTION] = sectionList;
+    (formConfig as any).stepSections = sectionList;
 
     sectionList.forEach((sectionConfig: TFieldConfig) => {
         const fieldNodes = node.querySelectorAll(`[data-section-name="${sectionConfig.name}"]`);
@@ -281,6 +607,7 @@ export function getErrorClass(input: any): string {
             return 'textarea-error'
 
         case 'select-one':
+        case 'select-multiple':
             return 'select-error'
 
         default:

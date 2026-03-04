@@ -6,6 +6,13 @@ export type ImageSize = {
     height: number;
 };
 
+export type TStepTransition = {
+    whenField: string;
+    operator?: 'equals' | 'not_equals' | 'in' | 'not_in' | 'truthy';
+    value?: any;
+    target: string;
+};
+
 export const HERO_FIELD_NAME = 'hero';
 export const HERO_FIELD_LABEL = 'Hero Image';
 
@@ -31,6 +38,29 @@ type TFieldConfig = {
     minLen?: number;
     maxLen?: number;
     placeholder?: string;
+    accept?: string;
+    capture?: 'user' | 'environment';
+    multiple?: boolean;
+    documentScanMode?: 'single' | 'double';
+    enableDocumentOcr?: boolean;
+    requireValidDocumentMrz?: boolean;
+    documentTextTargetField?: string;
+    documentMrzTargetField?: string;
+    documentFirstNameTargetField?: string;
+    documentLastNameTargetField?: string;
+    documentNumberTargetField?: string;
+    documentNationalityTargetField?: string;
+    documentBirthDateTargetField?: string;
+    documentExpiryDateTargetField?: string;
+    documentSexTargetField?: string;
+    fileDropMode?: 'replace' | 'append';
+    minFiles?: number;
+    maxFiles?: number;
+    maxFileSizeMb?: number;
+    maxTotalFileSizeMb?: number;
+    formDataFieldName?: string;
+    fileTypeErrorMsg?: string;
+    fileSizeErrorMsg?: string;
     pattern?: string;
     mediaId?: string;
     background?: string;
@@ -70,6 +100,14 @@ type TFieldConfig = {
     optionsDependsOn?: string;
     optionsLabelKey?: string;
     optionsValueKey?: string;
+    stepSkippable?: boolean;
+    stepValidateWhenWorkflowStates?: string[];
+    stepSummary?: boolean;
+    nextStepWhenField?: string;
+    nextStepWhenEquals?: string | string[];
+    nextStepWhenNotEquals?: string | string[];
+    nextStepTarget?: string;
+    stepTransitions?: TStepTransition[];
 };
 
 export type TFieldConfigInfo = {

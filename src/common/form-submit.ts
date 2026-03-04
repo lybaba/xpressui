@@ -1,16 +1,95 @@
+import TFieldConfig from "./TFieldConfig";
 import { TFormSubmitRequest } from "./TFormConfig";
+import { isFileLikeValue } from "./field";
 import { buildProviderPayload } from "./provider-registry";
+
+export function resolveFormDataKey(
+  key: string,
+  fieldMap?: Record<string, TFieldConfig>,
+): string {
+  return fieldMap?.[key]?.formDataFieldName || key;
+}
+
+function appendFormDataValue(
+  formData: FormData,
+  key: string,
+  value: any,
+  arrayMode: "brackets" | "repeat",
+  fieldMap?: Record<string, TFieldConfig>,
+): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (isFileLikeValue(value)) {
+    formData.append(key, value as File | Blob);
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((entry) => {
+      appendFormDataValue(
+        formData,
+        arrayMode === "brackets" ? `${key}[]` : key,
+        entry,
+        arrayMode,
+        fieldMap,
+      );
+    });
+    return;
+  }
+
+  if (value && typeof value === "object") {
+    Object.entries(value).forEach(([childKey, childValue]) => {
+      const resolvedChildKey = resolveFormDataKey(childKey, fieldMap);
+      appendFormDataValue(
+        formData,
+        `${key}[${resolvedChildKey}]`,
+        childValue,
+        arrayMode,
+        fieldMap,
+      );
+    });
+    return;
+  }
+
+  formData.append(key, value === null ? "" : String(value));
+}
+
+export function buildSubmitPayload(
+  values: Record<string, any>,
+  submitConfig: TFormSubmitRequest,
+): Record<string, any> {
+  return buildProviderPayload(values, submitConfig);
+}
+
+export function buildFormDataBody(
+  values: Record<string, any>,
+  submitConfig: TFormSubmitRequest,
+  fieldMap?: Record<string, TFieldConfig>,
+): FormData {
+  const formDataArrayMode = submitConfig.formDataArrayMode || "brackets";
+  const payload = buildSubmitPayload(values, submitConfig);
+  const body = new FormData();
+  Object.entries(payload).forEach(([key, value]) => {
+    const resolvedKey = resolveFormDataKey(key, fieldMap);
+    appendFormDataValue(body, resolvedKey, value, formDataArrayMode, fieldMap);
+  });
+  return body;
+}
 
 export async function submitFormValues(
   values: Record<string, any>,
   submitConfig: TFormSubmitRequest,
+  fieldMap?: Record<string, TFieldConfig>,
 ): Promise<{ response: Response; result: any }> {
   const method = submitConfig.method || "POST";
   const mode = submitConfig.mode || "json";
+  const formDataArrayMode = submitConfig.formDataArrayMode || "brackets";
   const headers = { ...(submitConfig.headers || {}) };
   let url = submitConfig.endpoint;
   const init: RequestInit = { method, headers };
-  const payload = buildProviderPayload(values, submitConfig);
+  const payload = buildSubmitPayload(values, submitConfig);
 
   if (method === "GET") {
     const searchParams = new URLSearchParams();
@@ -22,10 +101,7 @@ export async function submitFormValues(
       url += (url.includes("?") ? "&" : "?") + query;
     }
   } else if (mode === "form-data") {
-    const body = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
-      body.append(key, String(value));
-    });
+    const body = buildFormDataBody(values, submitConfig, fieldMap);
     init.body = body;
   } else {
     headers["Content-Type"] = headers["Content-Type"] || "application/json";

@@ -1,7 +1,7 @@
 import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
-import * as shortUUID from "short-uuid";
 import { CUSTOM_SECTION } from "./Constants";
+import { generateRuntimeId } from "./id";
 
 
 export const BODY_SECTION_NAME = 'body';
@@ -47,6 +47,17 @@ export type TFormSubmitRequest = {
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: Record<string, string>;
     mode?: 'json' | 'form-data';
+    includeDocumentData?: boolean;
+    documentDataMode?: 'full' | 'summary' | 'fields-only' | 'mrz-only' | 'none';
+    documentFieldPaths?: string[];
+    formDataArrayMode?: 'brackets' | 'repeat';
+    uploadStrategy?: 'standard' | 'presigned';
+    presignEndpoint?: string;
+    presignMethod?: 'POST' | 'PUT' | 'PATCH';
+    presignHeaders?: Record<string, string>;
+    presignUploadUrlKey?: string;
+    presignFileUrlKey?: string;
+    uploadMethod?: 'POST' | 'PUT';
     action?: string;
 };
 
@@ -59,9 +70,46 @@ export type TFormProviderRequest = {
 
 export type TFormStorageConfig = {
     mode: 'none' | 'draft' | 'queue' | 'draft-and-queue';
-    adapter?: 'local-storage';
+    adapter?: 'local-storage' | 'indexeddb';
     key?: string;
     autoSaveMs?: number;
+    resumeEndpoint?: string;
+    resumeTokenTtlDays?: number;
+    encryptionKey?: string;
+    retentionDays?: number;
+    retentionDraftDays?: number;
+    retentionQueueDays?: number;
+    retentionDeadLetterDays?: number;
+};
+
+export type TFormStepLabels = {
+    previous?: string;
+    next?: string;
+};
+
+export type TFormStepSection = TFieldConfig;
+export type TFormWorkflowStepTargets = Record<string, string>;
+
+export type TFormRuleCondition = {
+    field: string;
+    operator?: 'equals' | 'not_equals' | 'contains' | 'in' | 'gt' | 'lt' | 'exists' | 'empty';
+    value?: any;
+};
+
+export type TFormRuleAction = {
+    type: 'show' | 'hide' | 'enable' | 'disable' | 'clear-value' | 'set-value' | 'fetch-options';
+    field: string;
+    value?: any;
+    sourceField?: string;
+    template?: string;
+    transform?: 'copy' | 'trim' | 'lowercase' | 'uppercase' | 'slugify';
+};
+
+export type TFormRule = {
+    id?: string;
+    logic?: 'AND' | 'OR';
+    conditions: TFormRuleCondition[];
+    actions: TFormRuleAction[];
 };
 
 type TFormConfig = {
@@ -73,6 +121,8 @@ type TFormConfig = {
     title: string;
     timestamp?: number;
     sections: Record<string, TFieldConfig[]>;
+    stepSections?: TFormStepSection[];
+    workflowStepTargets?: TFormWorkflowStepTargets;
     subforms?: TChoice[];
     choices?: TChoice[];
     background?: string;
@@ -88,14 +138,16 @@ type TFormConfig = {
     submit?: TFormSubmitRequest;
     provider?: TFormProviderRequest;
     storage?: TFormStorageConfig;
+    stepLabels?: TFormStepLabels;
+    rules?: TFormRule[];
     successMsg?: string;
     errorMsg?: string;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {
     version: 1,
-    id: shortUUID.generate(),
-    uid: shortUUID.generate(),
+    id: generateRuntimeId(),
+    uid: generateRuntimeId(),
     timestamp: Math.floor(Date.now() / 1000),
     type: CONTACTFORM_TYPE,
     name: 'demo',

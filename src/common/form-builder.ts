@@ -1,19 +1,28 @@
-import * as shortUUID from 'short-uuid';
 import { CUSTOM_SECTION } from './Constants';
 import TFieldConfig from './TFieldConfig';
 import TFormConfig, {
   CONTACTFORM_TYPE,
   TFormProviderRequest,
+  TFormRule,
+  TFormStepLabels,
   TFormStorageConfig,
   TFormSubmitRequest,
 } from './TFormConfig';
+import { generateRuntimeId } from './id';
 import { createSubmitRequestFromProvider } from './provider-registry';
 import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-schema';
 import {
+  APPROVAL_STATE_TYPE,
+  CAMERA_PHOTO_TYPE,
   CHECKBOX_TYPE,
+  DOCUMENT_SCAN_TYPE,
   getHtmlInputType,
+  isFileFieldType,
+  QR_SCAN_TYPE,
+  SELECT_MULTIPLE_TYPE,
   SELECT_ONE_TYPE,
   TEXTAREA_TYPE,
+  UPLOAD_IMAGE_TYPE,
 } from './field';
 
 export type TSimpleFieldInput = Partial<TFieldConfig> & {
@@ -30,6 +39,9 @@ export type TSimpleFormInput = {
   submit?: TFormSubmitRequest;
   provider?: TFormProviderRequest;
   storage?: TFormStorageConfig;
+  workflowStepTargets?: Record<string, string>;
+  stepLabels?: TFormStepLabels;
+  rules?: TFormRule[];
   sectionName?: string;
   sectionLabel?: string;
   successMsg?: string;
@@ -48,6 +60,84 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   const requiredAttr = field.required ? ' data-required="true"' : '';
   const placeholderAttr = field.placeholder
     ? ` placeholder="${escapeHtml(String(field.placeholder))}"`
+    : '';
+  const acceptAttr = field.accept
+    ? ` accept="${escapeHtml(String(field.accept))}"`
+    : field.type === UPLOAD_IMAGE_TYPE
+      ? ' accept="image/*"'
+      : field.type === CAMERA_PHOTO_TYPE ||
+          field.type === QR_SCAN_TYPE ||
+          field.type === DOCUMENT_SCAN_TYPE
+        ? ' accept="image/*"'
+      : '';
+  const captureAttr = field.capture
+    ? ` capture="${escapeHtml(String(field.capture))}"`
+    : field.type === CAMERA_PHOTO_TYPE ||
+        field.type === QR_SCAN_TYPE ||
+        field.type === DOCUMENT_SCAN_TYPE
+      ? ' capture="environment"'
+      : '';
+  const multipleAttr = field.multiple ? ' multiple' : '';
+  const documentScanModeAttr = field.documentScanMode
+    ? ` data-document-scan-mode="${escapeHtml(String(field.documentScanMode))}"`
+    : '';
+  const documentOcrAttr = field.enableDocumentOcr ? ' data-enable-document-ocr="true"' : '';
+  const requireValidDocumentMrzAttr = field.requireValidDocumentMrz
+    ? ' data-require-valid-document-mrz="true"'
+    : '';
+  const documentTextTargetFieldAttr = field.documentTextTargetField
+    ? ` data-document-text-target-field="${escapeHtml(String(field.documentTextTargetField))}"`
+    : '';
+  const documentMrzTargetFieldAttr = field.documentMrzTargetField
+    ? ` data-document-mrz-target-field="${escapeHtml(String(field.documentMrzTargetField))}"`
+    : '';
+  const documentFirstNameTargetFieldAttr = field.documentFirstNameTargetField
+    ? ` data-document-first-name-target-field="${escapeHtml(String(field.documentFirstNameTargetField))}"`
+    : '';
+  const documentLastNameTargetFieldAttr = field.documentLastNameTargetField
+    ? ` data-document-last-name-target-field="${escapeHtml(String(field.documentLastNameTargetField))}"`
+    : '';
+  const documentNumberTargetFieldAttr = field.documentNumberTargetField
+    ? ` data-document-number-target-field="${escapeHtml(String(field.documentNumberTargetField))}"`
+    : '';
+  const documentNationalityTargetFieldAttr = field.documentNationalityTargetField
+    ? ` data-document-nationality-target-field="${escapeHtml(String(field.documentNationalityTargetField))}"`
+    : '';
+  const documentBirthDateTargetFieldAttr = field.documentBirthDateTargetField
+    ? ` data-document-birth-date-target-field="${escapeHtml(String(field.documentBirthDateTargetField))}"`
+    : '';
+  const documentExpiryDateTargetFieldAttr = field.documentExpiryDateTargetField
+    ? ` data-document-expiry-date-target-field="${escapeHtml(String(field.documentExpiryDateTargetField))}"`
+    : '';
+  const documentSexTargetFieldAttr = field.documentSexTargetField
+    ? ` data-document-sex-target-field="${escapeHtml(String(field.documentSexTargetField))}"`
+    : '';
+  const fileDropModeAttr = field.fileDropMode
+    ? ` data-file-drop-mode="${escapeHtml(String(field.fileDropMode))}"`
+    : '';
+  const minFilesAttr = field.minFiles !== undefined
+    ? ` data-min-files="${escapeHtml(String(field.minFiles))}"`
+    : '';
+  const maxFilesAttr = field.maxFiles !== undefined
+    ? ` data-max-files="${escapeHtml(String(field.maxFiles))}"`
+    : '';
+  const maxFileSizeAttr = field.maxFileSizeMb !== undefined
+    ? ` data-max-file-size-mb="${escapeHtml(String(field.maxFileSizeMb))}"`
+    : '';
+  const maxTotalFileSizeAttr = field.maxTotalFileSizeMb !== undefined
+    ? ` data-max-total-file-size-mb="${escapeHtml(String(field.maxTotalFileSizeMb))}"`
+    : '';
+  const formDataFieldNameAttr = field.formDataFieldName
+    ? ` data-form-data-field-name="${escapeHtml(String(field.formDataFieldName))}"`
+    : '';
+  const fileTypeErrorAttr = field.fileTypeErrorMsg
+    ? ` data-file-type-error-msg="${escapeHtml(String(field.fileTypeErrorMsg))}"`
+    : '';
+  const fileSizeErrorAttr = field.fileSizeErrorMsg
+    ? ` data-file-size-error-msg="${escapeHtml(String(field.fileSizeErrorMsg))}"`
+    : '';
+  const fileSelectionMarkup = isFileFieldType(field.type)
+    ? `<div class="mt-2 rounded border border-dashed border-base-300 p-3 transition-colors" id="${escapeHtml(field.name)}_selection" data-file-drop-zone="${escapeHtml(field.name)}"></div>`
     : '';
   const helpText = field.helpText
     ? `<div class="label"><span class="label-text-alt">${escapeHtml(field.helpText)}</span></div>`
@@ -101,6 +191,24 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 </label>`;
   }
 
+  if (field.type === SELECT_MULTIPLE_TYPE) {
+    const options = (field.choices || [])
+      .map(
+        (choice) =>
+          `<option value="${escapeHtml(String(choice.value))}">${escapeHtml(choice.label)}</option>`
+      )
+      .join('');
+
+    return `<label class="form-control w-full">
+    <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
+    <select class="select select-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" multiple type="select-multiple" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs}>
+      ${options}
+    </select>
+    ${helpText}
+    <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
+</label>`;
+  }
+
   if (field.type === CHECKBOX_TYPE) {
     return `<label class="label cursor-pointer justify-start gap-3">
     <input class="checkbox" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="checkbox" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs} />
@@ -109,9 +217,19 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 <span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span>`;
   }
 
+  if (field.type === APPROVAL_STATE_TYPE) {
+    return `<label class="form-control w-full">
+    <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
+    <input class="input input-bordered w-full opacity-80" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="text" readonly data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}" data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs} />
+    ${helpText}
+    <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
+</label>`;
+  }
+
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${placeholderAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${requireValidDocumentMrzAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
+    ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </label>`;
@@ -128,8 +246,8 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
 
   return validatePublicFormConfig({
     version: PUBLIC_FORM_SCHEMA_VERSION,
-    id: shortUUID.generate(),
-    uid: shortUUID.generate(),
+    id: generateRuntimeId(),
+    uid: generateRuntimeId(),
     timestamp: Math.floor(Date.now() / 1000),
     type: input.type || CONTACTFORM_TYPE,
     name: input.name,
@@ -144,9 +262,19 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
       ],
       [sectionName]: fields,
     },
+    stepSections: [
+      {
+        type: 'section',
+        name: sectionName,
+        label: sectionLabel,
+      },
+    ],
+    workflowStepTargets: 'workflowStepTargets' in input ? (input as any).workflowStepTargets : undefined,
     submit,
     provider,
     storage: input.storage,
+    stepLabels: input.stepLabels,
+    rules: input.rules,
     successMsg: input.successMsg,
     errorMsg: input.errorMsg,
   });
@@ -156,11 +284,42 @@ export function createTemplateMarkup(
   config: TFormConfig,
   templateName: string = config.name
 ): string {
-  const section = config.sections[CUSTOM_SECTION]?.[0];
+  const stepSections = config.stepSections?.length ? config.stepSections : config.sections[CUSTOM_SECTION];
+  const section = stepSections?.[0];
   const sectionName = section?.name || 'main';
   const sectionLabel = section?.label || 'Main';
   const fields = config.sections[sectionName] || [];
   const fieldMarkup = fields.map((field) => renderField(field, sectionName)).join('\n');
+  const sectionStepAttrs = [
+    section?.stepSkippable ? ' data-step-skippable="true"' : '',
+    section?.stepSummary ? ' data-step-summary="true"' : '',
+    section?.stepValidateWhenWorkflowStates?.length
+      ? ` data-step-validate-when-workflow-states="${escapeHtml(JSON.stringify(section.stepValidateWhenWorkflowStates))}"`
+      : '',
+    section?.nextStepWhenField
+      ? ` data-next-step-when-field="${escapeHtml(section.nextStepWhenField)}"`
+      : '',
+    section?.nextStepWhenEquals
+      ? ` data-next-step-when-equals="${escapeHtml(
+          Array.isArray(section.nextStepWhenEquals)
+            ? JSON.stringify(section.nextStepWhenEquals)
+            : String(section.nextStepWhenEquals),
+        )}"`
+      : '',
+    section?.nextStepWhenNotEquals
+      ? ` data-next-step-when-not-equals="${escapeHtml(
+          Array.isArray(section.nextStepWhenNotEquals)
+            ? JSON.stringify(section.nextStepWhenNotEquals)
+            : String(section.nextStepWhenNotEquals),
+        )}"`
+      : '',
+    section?.nextStepTarget
+      ? ` data-next-step-target="${escapeHtml(section.nextStepTarget)}"`
+      : '',
+    section?.stepTransitions?.length
+      ? ` data-step-transitions="${escapeHtml(JSON.stringify(section.stepTransitions))}"`
+      : '',
+  ].join('');
 
   const submitAttrs = config.submit
     ? [
@@ -170,6 +329,36 @@ export function createTemplateMarkup(
           : '',
         config.submit.mode
           ? `data-submit-mode="${escapeHtml(config.submit.mode)}"`
+          : '',
+        config.submit.includeDocumentData
+          ? `data-submit-include-document-data="true"`
+          : '',
+        config.submit.documentDataMode
+          ? `data-submit-document-data-mode="${escapeHtml(config.submit.documentDataMode)}"`
+          : '',
+        config.submit.documentFieldPaths?.length
+          ? `data-submit-document-field-paths="${escapeHtml(JSON.stringify(config.submit.documentFieldPaths))}"`
+          : '',
+        config.submit.formDataArrayMode
+          ? `data-submit-form-data-array-mode="${escapeHtml(config.submit.formDataArrayMode)}"`
+          : '',
+        config.submit.uploadStrategy
+          ? `data-submit-upload-strategy="${escapeHtml(config.submit.uploadStrategy)}"`
+          : '',
+        config.submit.presignEndpoint
+          ? `data-submit-presign-endpoint="${escapeHtml(config.submit.presignEndpoint)}"`
+          : '',
+        config.submit.presignMethod
+          ? `data-submit-presign-method="${escapeHtml(config.submit.presignMethod)}"`
+          : '',
+        config.submit.presignUploadUrlKey
+          ? `data-submit-presign-upload-url-key="${escapeHtml(config.submit.presignUploadUrlKey)}"`
+          : '',
+        config.submit.presignFileUrlKey
+          ? `data-submit-presign-file-url-key="${escapeHtml(config.submit.presignFileUrlKey)}"`
+          : '',
+        config.submit.uploadMethod
+          ? `data-submit-upload-method="${escapeHtml(config.submit.uploadMethod)}"`
           : '',
         config.submit.action
           ? `data-submit-action="${escapeHtml(config.submit.action)}"`
@@ -190,14 +379,53 @@ export function createTemplateMarkup(
         config.storage.autoSaveMs !== undefined
           ? `data-storage-autosave-ms="${escapeHtml(String(config.storage.autoSaveMs))}"`
           : '',
+        config.storage.resumeEndpoint
+          ? `data-storage-resume-endpoint="${escapeHtml(config.storage.resumeEndpoint)}"`
+          : '',
+        config.storage.resumeTokenTtlDays !== undefined
+          ? `data-storage-resume-token-ttl-days="${escapeHtml(String(config.storage.resumeTokenTtlDays))}"`
+          : '',
+        config.storage.encryptionKey
+          ? `data-storage-encryption-key="${escapeHtml(config.storage.encryptionKey)}"`
+          : '',
+        config.storage.retentionDays !== undefined
+          ? `data-storage-retention-days="${escapeHtml(String(config.storage.retentionDays))}"`
+          : '',
+        config.storage.retentionDraftDays !== undefined
+          ? `data-storage-retention-draft-days="${escapeHtml(String(config.storage.retentionDraftDays))}"`
+          : '',
+        config.storage.retentionQueueDays !== undefined
+          ? `data-storage-retention-queue-days="${escapeHtml(String(config.storage.retentionQueueDays))}"`
+          : '',
+        config.storage.retentionDeadLetterDays !== undefined
+          ? `data-storage-retention-dead-letter-days="${escapeHtml(String(config.storage.retentionDeadLetterDays))}"`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : '';
+  const rulesAttr = config.rules?.length
+    ? `data-rules="${escapeHtml(JSON.stringify(config.rules))}"`
+    : '';
+  const workflowStepTargetsAttr = config.workflowStepTargets
+    ? `data-workflow-step-targets="${escapeHtml(JSON.stringify(config.workflowStepTargets))}"`
+    : '';
+  const stepLabelAttrs = config.stepLabels
+    ? [
+        config.stepLabels.previous
+          ? `data-step-previous-label="${escapeHtml(config.stepLabels.previous)}"`
+          : '',
+        config.stepLabels.next
+          ? `data-step-next-label="${escapeHtml(config.stepLabels.next)}"`
+          : '',
       ]
         .filter(Boolean)
         .join(' ')
     : '';
 
   return `<template id="${escapeHtml(templateName)}">
-  <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs}>
-    <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}" class="flex flex-col gap-4">
+  <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs} ${rulesAttr} ${stepLabelAttrs} ${workflowStepTargetsAttr}>
+    <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}"${sectionStepAttrs} class="flex flex-col gap-4">
       ${fieldMarkup}
       <button type="submit" class="btn btn-primary">Submit</button>
     </div>

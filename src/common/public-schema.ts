@@ -16,6 +16,64 @@ const PUBLIC_FORM_SCHEMA = {
     name: { type: "string", minLength: 1 },
     title: { type: "string", minLength: 1 },
     timestamp: { type: "integer" },
+    rules: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["conditions", "actions"],
+        additionalProperties: true,
+        properties: {
+          id: { type: "string", minLength: 1 },
+          logic: { type: "string", enum: ["AND", "OR"] },
+          conditions: {
+            type: "array",
+            minItems: 1,
+            items: {
+              type: "object",
+              required: ["field"],
+              additionalProperties: true,
+              properties: {
+                field: { type: "string", minLength: 1 },
+                operator: {
+                  type: "string",
+                  enum: ["equals", "not_equals", "contains", "in", "gt", "lt", "exists", "empty"],
+                },
+              },
+            },
+          },
+          actions: {
+            type: "array",
+            minItems: 1,
+            items: {
+              type: "object",
+              required: ["type", "field"],
+              additionalProperties: true,
+              properties: {
+                type: {
+                  type: "string",
+                  enum: [
+                    "show",
+                    "hide",
+                    "enable",
+                    "disable",
+                    "clear-value",
+                    "set-value",
+                    "fetch-options",
+                  ],
+                },
+                field: { type: "string", minLength: 1 },
+                sourceField: { type: "string", minLength: 1 },
+                template: { type: "string" },
+                transform: {
+                  type: "string",
+                  enum: ["copy", "trim", "lowercase", "uppercase", "slugify"],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     sections: {
       type: "object",
       minProperties: 1,

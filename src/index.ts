@@ -1959,18 +1959,32 @@ export class FormUI extends HTMLElement {
 
     const controlsContainer = document.createElement("div");
     controlsContainer.setAttribute("data-form-step-controls", "true");
+    controlsContainer.className = "mt-4 flex flex-wrap items-center gap-2";
+    controlsContainer.style.marginTop = "16px";
+    controlsContainer.style.display = "flex";
+    controlsContainer.style.flexWrap = "wrap";
+    controlsContainer.style.alignItems = "center";
+    controlsContainer.style.gap = "8px";
     const buttonLabels = this.getStepButtonLabels();
 
     const progressElement = document.createElement("div");
     progressElement.setAttribute("data-form-step-progress", "true");
+    progressElement.className = "text-sm font-medium";
+    progressElement.style.fontSize = "14px";
+    progressElement.style.fontWeight = "600";
 
     const summaryElement = document.createElement("div");
     summaryElement.setAttribute("data-form-step-summary", "true");
+    summaryElement.className = "text-xs opacity-80";
+    summaryElement.style.fontSize = "12px";
+    summaryElement.style.opacity = "0.8";
+    summaryElement.style.flexBasis = "100%";
 
     const backButton = document.createElement("button");
     backButton.type = "button";
     backButton.textContent = buttonLabels.previous;
     backButton.setAttribute("data-step-action", "back");
+    backButton.className = "btn btn-outline btn-sm";
     backButton.addEventListener("click", () => {
       this.previousStep();
     });
@@ -1979,6 +1993,7 @@ export class FormUI extends HTMLElement {
     nextButton.type = "button";
     nextButton.textContent = buttonLabels.next;
     nextButton.setAttribute("data-step-action", "next");
+    nextButton.className = "btn btn-primary btn-sm";
     nextButton.addEventListener("click", () => {
       this.nextStep();
     });
@@ -2060,6 +2075,7 @@ export class FormUI extends HTMLElement {
     );
     submitButtons.forEach((button) => {
       button.disabled = !isLastStep;
+      (button as HTMLElement).style.display = isLastStep ? "" : "none";
     });
   }
 

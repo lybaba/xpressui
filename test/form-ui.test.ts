@@ -388,6 +388,7 @@ describe('FormUI', () => {
     expect(backButton.style.display).toBe('none');
     expect(nextButton.style.display).toBe('');
     expect(submitButton.disabled).toBe(true);
+    expect(submitButton.style.display).toBe('none');
 
     nextButton.click();
     expect(element.getCurrentStepIndex()).toBe(0);
@@ -400,6 +401,7 @@ describe('FormUI', () => {
     expect(backButton.style.display).toBe('');
     expect(nextButton.style.display).toBe('none');
     expect(submitButton.disabled).toBe(false);
+    expect(submitButton.style.display).toBe('');
 
     backButton.click();
     expect(element.getCurrentStepIndex()).toBe(0);

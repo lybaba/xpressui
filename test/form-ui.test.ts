@@ -811,6 +811,48 @@ describe('FormUI', () => {
     );
   });
 
+  it('does not emit a rule-applied event when a matching rule does not change state', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'no-op-rule-event-form',
+      title: 'No Op Rule Event Form',
+      rules: [
+        {
+          id: 'set-currency',
+          conditions: [
+            { field: 'country', operator: 'equals', value: 'fr' },
+          ],
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'country', label: 'Country', type: 'text' },
+        { name: 'currency', label: 'Currency', type: 'text' },
+      ],
+    }) as FormUI;
+    const country = element.querySelector('#country') as HTMLInputElement;
+    const currency = element.querySelector('#currency') as HTMLInputElement;
+    const onRuleApplied = vi.fn();
+
+    element.addEventListener('form-ui:rule-applied', (event) => {
+      onRuleApplied((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    country.value = 'fr';
+    country.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(currency.value).toBe('EUR');
+    expect(onRuleApplied).toHaveBeenCalledTimes(1);
+
+    country.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(onRuleApplied).toHaveBeenCalledTimes(1);
+  });
+
   it('supports advanced rule operators for string and numeric comparisons', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

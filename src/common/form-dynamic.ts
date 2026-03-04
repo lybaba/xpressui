@@ -81,6 +81,8 @@ type TFormDynamicRuntimeOptions = {
   getEventContext(): { formConfig: any; submit?: any };
 };
 
+type TDynamicRule = ReturnType<TFormDynamicRuntimeOptions["getRules"]>[number];
+
 export class FormDynamicRuntime {
   options: TFormDynamicRuntimeOptions;
   loadingOptions: Record<string, boolean>;
@@ -200,9 +202,27 @@ export class FormDynamicRuntime {
     return logic === "OR" ? matches.some(Boolean) : matches.every(Boolean);
   }
 
+  emitRuleApplied(rule: TDynamicRule): void {
+    const context = this.options.getEventContext();
+    this.options.emitEvent("form-ui:rule-applied", {
+      values: this.options.getFormValues(),
+      formConfig: context.formConfig,
+      submit: context.submit,
+      result: {
+        id: rule.id,
+        logic: rule.logic,
+        conditions: rule.conditions,
+        actions: rule.actions,
+      } satisfies TFormRuleAppliedDetail,
+    });
+  }
+
   updateConditionalFields(): void {
     const visibilityOverrides: Record<string, boolean> = {};
     const disabledOverrides: Record<string, boolean> = {};
+    const visibilityRuleByField: Record<string, TDynamicRule> = {};
+    const disabledRuleByField: Record<string, TDynamicRule> = {};
+    const matchedRules: Array<{ rule: TDynamicRule; changed: boolean }> = [];
 
     this.options.getFieldConfigs().forEach((fieldConfig) => {
       if (!fieldConfig.visibleWhenField) {
@@ -228,16 +248,26 @@ export class FormDynamicRuntime {
         return;
       }
 
+      const matchedRule = { rule, changed: false };
+      matchedRules.push(matchedRule);
+
       rule.actions.forEach((action) => {
         if (action.type === "show") {
           visibilityOverrides[action.field] = true;
+          visibilityRuleByField[action.field] = rule;
         } else if (action.type === "hide") {
           visibilityOverrides[action.field] = false;
+          visibilityRuleByField[action.field] = rule;
         } else if (action.type === "enable") {
           disabledOverrides[action.field] = false;
+          disabledRuleByField[action.field] = rule;
         } else if (action.type === "disable") {
           disabledOverrides[action.field] = true;
+          disabledRuleByField[action.field] = rule;
         } else if (action.type === "clear-value") {
+          if (this.options.getFieldValue(action.field) !== undefined) {
+            matchedRule.changed = true;
+          }
           this.options.clearFieldValue(action.field);
         } else if (action.type === "set-value") {
           const nextValue = action.template !== undefined
@@ -245,26 +275,23 @@ export class FormDynamicRuntime {
             : action.sourceField
               ? this.options.getFieldValue(action.sourceField)
               : action.value;
+          const transformedValue = this.transformRuleValue(nextValue, action.transform);
+          if (!Object.is(this.options.getFieldValue(action.field), transformedValue)) {
+            matchedRule.changed = true;
+          }
           this.options.setFieldValue(
             action.field,
-            this.transformRuleValue(nextValue, action.transform),
+            transformedValue,
           );
         } else if (action.type === "fetch-options") {
-          void this.fetchOptionsForField(action.field);
+          const fieldConfig = this.options
+            .getFieldConfigs()
+            .find((candidate) => candidate.name === action.field && Boolean(candidate.optionsEndpoint));
+          if (fieldConfig && !this.loadingOptions[fieldConfig.name]) {
+            matchedRule.changed = true;
+            void this.fetchOptionsForField(action.field);
+          }
         }
-      });
-
-      const context = this.options.getEventContext();
-      this.options.emitEvent("form-ui:rule-applied", {
-        values: this.options.getFormValues(),
-        formConfig: context.formConfig,
-        submit: context.submit,
-        result: {
-          id: rule.id,
-          logic: rule.logic,
-          conditions: rule.conditions,
-          actions: rule.actions,
-        } satisfies TFormRuleAppliedDetail,
       });
     });
 
@@ -277,17 +304,40 @@ export class FormDynamicRuntime {
 
       const isVisible = visibilityOverrides[fieldConfig.name];
       if (isVisible !== undefined) {
+        const wasVisible = container.style.display !== "none";
+        const hadValue = this.options.getFieldValue(fieldConfig.name) !== undefined;
         container.style.display = isVisible ? "" : "none";
         fieldElement.disabled = !isVisible;
         if (!isVisible) {
           this.options.clearFieldValue(fieldConfig.name);
         }
+        if (wasVisible !== isVisible || (!isVisible && hadValue)) {
+          const matchedRule = matchedRules.find(
+            (candidate) => candidate.rule === visibilityRuleByField[fieldConfig.name],
+          );
+          if (matchedRule) {
+            matchedRule.changed = true;
+          }
+        }
       }
 
       if (disabledOverrides[fieldConfig.name] !== undefined) {
-        this.options.setFieldDisabled(fieldConfig.name, disabledOverrides[fieldConfig.name]);
+        const nextDisabled = disabledOverrides[fieldConfig.name];
+        if (!Object.is(fieldElement.disabled, nextDisabled)) {
+          const matchedRule = matchedRules.find(
+            (candidate) => candidate.rule === disabledRuleByField[fieldConfig.name],
+          );
+          if (matchedRule) {
+            matchedRule.changed = true;
+          }
+        }
+        this.options.setFieldDisabled(fieldConfig.name, nextDisabled);
       }
     });
+
+    matchedRules
+      .filter((matchedRule) => matchedRule.changed)
+      .forEach((matchedRule) => this.emitRuleApplied(matchedRule.rule));
   }
 
   normalizeRemoteChoices(payload: any, fieldConfig: TFieldConfig): TChoice[] {

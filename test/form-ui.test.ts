@@ -789,6 +789,58 @@ describe('FormUI', () => {
     expect((document.querySelector('#slot') as HTMLSelectElement).options.length).toBe(3);
   });
 
+  it('exposes active template warnings from the standalone dynamic runtime', () => {
+    let values: Record<string, any> = { autoFullName: false, firstName: '' };
+    const runtime = new FormDynamicRuntime({
+      getFieldConfigs: () => [
+        { name: 'firstName', label: 'First name', type: 'text' },
+        { name: 'fullName', label: 'Full name', type: 'text' },
+        { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
+      ],
+      getRules: () => [
+        {
+          id: 'compose-full-name',
+          conditions: [
+            { field: 'autoFullName', operator: 'equals', value: true },
+          ],
+          actions: [
+            {
+              type: 'set-value',
+              field: 'fullName',
+              template: '{{firstName}} {{missingName}}',
+              transform: 'trim',
+            },
+          ],
+        },
+      ],
+      getFieldContainer: () => null,
+      getFieldElement: () => null,
+      setFieldDisabled: () => {},
+      getFieldValue: (fieldName) => values[fieldName],
+      clearFieldValue: (fieldName) => {
+        values = { ...values, [fieldName]: undefined };
+      },
+      setFieldValue: (fieldName, value) => {
+        values = { ...values, [fieldName]: value };
+      },
+      getFormValues: () => values,
+      emitEvent: () => true,
+      getEventContext: () => ({ formConfig: null, submit: undefined }),
+    });
+
+    values = { ...values, firstName: 'Ada', autoFullName: true };
+    runtime.updateConditionalFields();
+
+    expect(runtime.getActiveTemplateWarnings()).toEqual([
+      {
+        ruleId: 'compose-full-name',
+        field: 'fullName',
+        template: '{{firstName}} {{missingName}}',
+        missingField: 'missingName',
+      },
+    ]);
+  });
+
   it('supports basic rules with AND/OR logic and show/hide actions', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

@@ -44,6 +44,9 @@ Advanced building blocks available but better treated as lower-level/internal:
 - `provider-registry` helpers
 - `form-submit` internals
 
+If you work directly with `FormDynamicRuntime`, you can also inspect current
+template issues through `getActiveTemplateWarnings()`.
+
 For lightweight event inspection in the browser, you can also use
 `attachFormDebugObserver(...)`.
 

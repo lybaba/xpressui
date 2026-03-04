@@ -1430,6 +1430,12 @@ Event:
 - `form-ui:step-jumped`
 - `form-ui:workflow-step`
 - `form-ui:provider-transition`
+- `form-ui:provider-step-routed`
+
+If a provider returns a normalized workflow transition and your form defines
+`workflowStepTargets`, `FormUI` now routes the wizard automatically to the
+matching step and emits `form-ui:provider-step-routed` in addition to the
+generic `form-ui:provider-transition`.
 
 ## Events
 

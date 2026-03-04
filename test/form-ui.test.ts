@@ -5638,6 +5638,104 @@ describe('FormUI', () => {
     );
   });
 
+  it('routes to a mapped workflow step when a provider returns a workflow transition', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        status: 'pending_approval',
+        transition: {
+          type: 'workflow',
+          state: 'pending_approval',
+        },
+        data: {
+          approvalId: 'apr_123',
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const element = renderFixture(`
+      <template id="approval-routing-form">
+        <form
+          id="approval-routing-form_form"
+          data-name="approval-routing-form"
+          data-label="Approval Routing Form"
+          data-type="multistepform"
+          data-version="1"
+          data-submit-endpoint="https://api.example.test/approvals"
+          data-submit-action="approval-request"
+          data-workflow-step-targets='{"pending_approval":"review_step"}'
+        >
+          <div data-type="section" data-name="request_step" data-label="Request"></div>
+          <div data-type="section" data-name="review_step" data-label="Review" data-step-summary="true"></div>
+          <input
+            id="requester_email"
+            name="requester_email"
+            type="email"
+            data-type="email"
+            data-name="requester_email"
+            data-label="Requester Email"
+            data-required="true"
+            data-section-name="request_step"
+          />
+          <span id="requester_email_error"></span>
+          <div
+            data-type="output"
+            data-name="review_output"
+            data-label="Review"
+            data-section-name="review_step"
+          ></div>
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </template>
+      <form-ui name="approval-routing-form"></form-ui>
+    `);
+    const requesterEmail = element.querySelector('#requester_email') as HTMLInputElement;
+    const form = element.querySelector('#approval-routing-form_form') as HTMLFormElement;
+    const onProviderTransition = vi.fn();
+    const onProviderStepRouted = vi.fn();
+
+    element.addEventListener('form-ui:provider-transition', (event) => {
+      onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+    element.addEventListener('form-ui:provider-step-routed', (event) => {
+      onProviderStepRouted((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    requesterEmail.value = 'approver@example.com';
+    requesterEmail.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(element.nextStep()).toBe(true);
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(element.getWorkflowState()).toBe('pending_approval');
+    expect(element.getCurrentStepName()).toBe('review_step');
+    expect(onProviderStepRouted).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          transition: {
+            type: 'workflow',
+            state: 'pending_approval',
+          },
+          stepName: 'review_step',
+        }),
+      }),
+    );
+    expect(onProviderTransition).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          transition: {
+            type: 'workflow',
+            state: 'pending_approval',
+          },
+          routed: true,
+          stepName: 'review_step',
+        }),
+      }),
+    );
+  });
+
   it('supports a calendar cancel provider for cancellation workflows', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ cancelled: true, bookingId: 'bk_123' }), {

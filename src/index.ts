@@ -128,6 +128,12 @@ export type TFormWorkflowState =
   | "rejected"
   | "error";
 
+type TWorkflowRouteResult = {
+  routed: boolean;
+  stepIndex: number;
+  stepName: string | null;
+};
+
 type TBarcodeDetectorResult = {
   rawValue?: string;
 };
@@ -2280,15 +2286,30 @@ export class FormUI extends HTMLElement {
     detail: TFormUISubmitDetail,
     response?: Response,
     result?: any,
-  ) => {
+  ): TWorkflowRouteResult => {
+    const workflowTarget = this.steps.getWorkflowStepTarget(nextState);
     if (this.workflowState === nextState) {
-      this.goToWorkflowStep(nextState);
-      return;
+      const moved = this.goToWorkflowStep(nextState);
+      const routed = moved || (workflowTarget !== null && workflowTarget === this.getCurrentStepName());
+      const routeResult = {
+        routed,
+        stepIndex: this.getCurrentStepIndex(),
+        stepName: this.getCurrentStepName(),
+      };
+      if (routed) {
+        this.emitFormEvent("form-ui:workflow-step", {
+          ...detail,
+          response,
+          result: this.getWorkflowSnapshot(),
+        });
+      }
+      return routeResult;
     }
 
     this.workflowState = nextState;
     this.steps.setWorkflowState(nextState);
-    this.goToWorkflowStep(nextState);
+    const moved = this.goToWorkflowStep(nextState);
+    const routed = moved || (workflowTarget !== null && workflowTarget === this.getCurrentStepName());
     this.emitFormEvent("form-ui:workflow-state", {
       ...detail,
       response,
@@ -2302,6 +2323,11 @@ export class FormUI extends HTMLElement {
       response,
       result: this.getWorkflowSnapshot(),
     });
+    return {
+      routed,
+      stepIndex: this.getCurrentStepIndex(),
+      stepName: this.getCurrentStepName(),
+    };
   }
 
   resolveProviderStepTargetIndex = (target: string | number): number | null => {
@@ -2330,12 +2356,32 @@ export class FormUI extends HTMLElement {
     }
 
     if (transition.type === "workflow") {
-      this.setWorkflowState(transition.state as TFormWorkflowState, detail, response, result);
+      const workflowRoute = this.setWorkflowState(
+        transition.state as TFormWorkflowState,
+        detail,
+        response,
+        result,
+      );
+      if (workflowRoute.routed) {
+        this.emitFormEvent("form-ui:provider-step-routed", {
+          ...detail,
+          response,
+          result: {
+            transition,
+            stepIndex: workflowRoute.stepIndex,
+            stepName: workflowRoute.stepName,
+            workflow: this.getWorkflowSnapshot(),
+          },
+        });
+      }
       this.emitFormEvent("form-ui:provider-transition", {
         ...detail,
         response,
         result: {
           transition,
+          routed: workflowRoute.routed,
+          stepIndex: workflowRoute.stepIndex,
+          stepName: workflowRoute.stepName,
           workflow: this.getWorkflowSnapshot(),
         },
       });

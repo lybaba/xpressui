@@ -322,6 +322,14 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
           return false;
         }
 
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const result = await response.json() as Record<string, any>;
+          if (result && typeof result === "object" && result.invalidated === false) {
+            return false;
+          }
+        }
+
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(`${resumePrefix}${token}`);
         }

@@ -7354,6 +7354,22 @@ describe('FormUI', () => {
         method: 'POST',
       }),
     );
+    const createCall = fetchSpy.mock.calls.find(
+      ([url, init]) => String(url) === 'https://api.example.test/resume' && init?.method === 'POST',
+    );
+    expect(createCall).toBeDefined();
+    const createBody = JSON.parse(String(createCall?.[1]?.body || '{}'));
+    expect(createBody).toEqual(
+      expect.objectContaining({
+        operation: 'create',
+        formName: 'remote-resume-form',
+      }),
+    );
+    expect(createBody.snapshot).toEqual(
+      expect.objectContaining({
+        draft: { email: 'remote-resume@example.com' },
+      }),
+    );
     expect(fetchSpy).toHaveBeenCalledWith(
       'https://api.example.test/resume?token=remote_token_123',
       expect.objectContaining({
@@ -7362,6 +7378,93 @@ describe('FormUI', () => {
     );
     expect(fetchSpy).toHaveBeenCalledWith(
       'https://api.example.test/resume?token=remote_token_123',
+      expect.objectContaining({
+        method: 'DELETE',
+      }),
+    );
+  });
+
+  it('supports the formal remote resume contract for lookup and invalidate responses', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === 'https://api.example.test/resume' && init?.method === 'POST') {
+        return new Response(JSON.stringify({
+          operation: 'create',
+          token: 'remote_token_contract',
+          savedAt: 7890,
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url === 'https://api.example.test/resume?token=missing_token' && init?.method === 'GET') {
+        return new Response(JSON.stringify({
+          operation: 'lookup',
+          token: 'missing_token',
+          found: false,
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url === 'https://api.example.test/resume?token=remote_token_contract' && init?.method === 'DELETE') {
+        return new Response(JSON.stringify({
+          operation: 'invalidate',
+          token: 'remote_token_contract',
+          invalidated: false,
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'remote-resume-contract-form',
+      title: 'Remote Resume Contract Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-remote-resume-contract',
+        resumeEndpoint: 'https://api.example.test/resume',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+
+    const input = element.querySelector('#email') as HTMLInputElement;
+    input.value = 'contract@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    await expect(element.createResumeTokenAsync()).resolves.toBe('remote_token_contract');
+    await expect(element.lookupResumeToken('missing_token')).resolves.toBeNull();
+    await expect(element.invalidateResumeToken('remote_token_contract')).resolves.toBe(false);
+    expect(element.listResumeTokens()).toEqual([
+      expect.objectContaining({
+        token: 'remote_token_contract',
+        remote: true,
+      }),
+    ]);
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/resume?token=missing_token',
+      expect.objectContaining({
+        method: 'GET',
+      }),
+    );
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/resume?token=remote_token_contract',
       expect.objectContaining({
         method: 'DELETE',
       }),

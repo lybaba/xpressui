@@ -83,6 +83,11 @@ export type { TFormStepProgress, TFormWorkflowSnapshot } from "./common/form-ste
 export type {
   TFormQueueState,
   TResumeLookupResult,
+  TRemoteResumeCreateRequest,
+  TRemoteResumeCreateResponse,
+  TRemoteResumeInvalidateResponse,
+  TRemoteResumeLookupResponse,
+  TRemoteResumeOperation,
   TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,

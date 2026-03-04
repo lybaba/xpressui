@@ -38,26 +38,44 @@ calls are sent.
 
 ## Remote Save And Resume Endpoint
 
-If `storage.resumeEndpoint` is configured, `xpressui` can use one endpoint for
-remote save and resume flows:
+If `storage.resumeEndpoint` is configured, `xpressui` uses one endpoint for
+remote save/resume lifecycle operations:
 
 - `POST /resume` creates or updates a resumable snapshot and returns a token
 - `GET /resume?token=...` looks up a token and returns the stored snapshot
 - `DELETE /resume?token=...` invalidates the token
 
-Suggested `POST` response:
+`POST` request body:
 
 ```json
 {
+  "operation": "create",
+  "formName": "checkout-form",
+  "snapshot": {
+    "draft": {
+      "email": "remote-resume@example.com"
+    },
+    "queue": [],
+    "deadLetter": []
+  }
+}
+```
+
+Recommended `POST` response:
+
+```json
+{
+  "operation": "create",
   "token": "remote_token_123",
   "savedAt": 123456
 }
 ```
 
-Suggested `GET` response:
+Recommended `GET` response:
 
 ```json
 {
+  "operation": "lookup",
   "token": "remote_token_123",
   "savedAt": 123456,
   "snapshot": {
@@ -70,9 +88,27 @@ Suggested `GET` response:
 }
 ```
 
-Suggested `DELETE` response:
+`GET` not-found response:
 
-HTTP status: `204`
+```json
+{
+  "operation": "lookup",
+  "token": "missing_token",
+  "found": false
+}
+```
+
+Recommended `DELETE` response:
+
+```json
+{
+  "operation": "invalidate",
+  "token": "remote_token_123",
+  "invalidated": true
+}
+```
+
+`204` still works for backward compatibility.
 
 ## Standard Provider Response Envelope
 

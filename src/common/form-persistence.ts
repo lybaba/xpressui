@@ -43,6 +43,33 @@ export type TResumeLookupResult = TResumeTokenInfo & {
   snapshot: TFormStorageSnapshot | null;
 };
 
+export type TRemoteResumeOperation = "create" | "lookup" | "invalidate";
+
+export type TRemoteResumeCreateRequest = {
+  operation: "create";
+  formName?: string;
+  snapshot: TFormStorageSnapshot;
+};
+
+export type TRemoteResumeCreateResponse = {
+  operation: "create";
+  token: string;
+  savedAt: number;
+};
+
+export type TRemoteResumeLookupResponse = {
+  operation: "lookup";
+  token: string;
+  savedAt: number;
+  snapshot: TFormStorageSnapshot | null;
+};
+
+export type TRemoteResumeInvalidateResponse = {
+  operation: "invalidate";
+  token: string;
+  invalidated: boolean;
+};
+
 type TResumeTokenState = {
   version: 1;
   savedAt: number;
@@ -69,6 +96,7 @@ export class FormPersistenceRuntime {
   draftSaveTimer: number | null;
   syncInFlight: boolean;
   onlineHandler: (() => void) | null;
+  resumeTokenMemory: Map<string, TResumeTokenState>;
 
   constructor(options: TFormPersistenceRuntimeOptions) {
     this.options = options;
@@ -76,6 +104,7 @@ export class FormPersistenceRuntime {
     this.draftSaveTimer = null;
     this.syncInFlight = false;
     this.onlineHandler = null;
+    this.resumeTokenMemory = new Map();
   }
 
   setFormConfig(formConfig: TFormConfig | null): void {
@@ -153,8 +182,166 @@ export class FormPersistenceRuntime {
 
   getResumeCreatePayload(snapshot: TFormStorageSnapshot): Record<string, any> {
     return {
+      operation: "create",
       formName: this.options.getFormConfig()?.name,
       snapshot,
+    } satisfies TRemoteResumeCreateRequest;
+  }
+
+  buildResumeEndpointUrl(token: string): string | null {
+    const resumeEndpoint = this.getResumeEndpoint();
+    if (!resumeEndpoint) {
+      return null;
+    }
+
+    return `${resumeEndpoint}${resumeEndpoint.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`;
+  }
+
+  getLocalStorage(): Storage | null {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const storage = window.localStorage as Storage | Record<string, any> | undefined;
+    if (
+      !storage ||
+      typeof (storage as Storage).getItem !== "function" ||
+      typeof (storage as Storage).setItem !== "function" ||
+      typeof (storage as Storage).removeItem !== "function"
+    ) {
+      return null;
+    }
+
+    return storage as Storage;
+  }
+
+  normalizeResumeSnapshot(input: unknown): TFormStorageSnapshot | null {
+    if (!input || typeof input !== "object") {
+      return null;
+    }
+
+    const snapshot = input as Record<string, any>;
+    return {
+      draft:
+        snapshot.draft && typeof snapshot.draft === "object"
+          ? snapshot.draft as Record<string, any>
+          : null,
+      queue: Array.isArray(snapshot.queue) ? snapshot.queue : [],
+      deadLetter: Array.isArray(snapshot.deadLetter) ? snapshot.deadLetter : [],
+      ...(typeof snapshot.currentStepIndex === "number" && Number.isInteger(snapshot.currentStepIndex)
+        ? { currentStepIndex: snapshot.currentStepIndex }
+        : {}),
+    };
+  }
+
+  parseRemoteCreateResponse(result: unknown): TRemoteResumeCreateResponse | null {
+    const normalizedResult =
+      typeof result === "string"
+        ? (() => {
+            try {
+              return JSON.parse(result) as unknown;
+            } catch {
+              return null;
+            }
+          })()
+        : result;
+
+    if (!normalizedResult || typeof normalizedResult !== "object") {
+      return null;
+    }
+
+    const response = normalizedResult as Record<string, any>;
+    if (typeof response.token !== "string" || !response.token) {
+      return null;
+    }
+
+    return {
+      operation: "create",
+      token: response.token,
+      savedAt: typeof response.savedAt === "number" ? response.savedAt : Date.now(),
+    };
+  }
+
+  parseRemoteLookupResponse(
+    fallbackToken: string,
+    result: unknown,
+  ): TRemoteResumeLookupResponse | null {
+    const normalizedResult =
+      typeof result === "string"
+        ? (() => {
+            try {
+              return JSON.parse(result) as unknown;
+            } catch {
+              return null;
+            }
+          })()
+        : result;
+
+    if (!normalizedResult || typeof normalizedResult !== "object") {
+      return null;
+    }
+
+    const response = normalizedResult as Record<string, any>;
+    const normalizedSnapshot = this.normalizeResumeSnapshot(response.snapshot);
+    const foundFlag = response.found;
+    if (foundFlag === false) {
+      return null;
+    }
+
+    return {
+      operation: "lookup",
+      token: typeof response.token === "string" && response.token ? response.token : fallbackToken,
+      savedAt: typeof response.savedAt === "number" ? response.savedAt : Date.now(),
+      snapshot: normalizedSnapshot,
+    };
+  }
+
+  parseRemoteInvalidateResponse(
+    token: string,
+    response: Response,
+    result: unknown,
+  ): TRemoteResumeInvalidateResponse | null {
+    if (!response.ok) {
+      return null;
+    }
+
+    if (response.status === 204 || !result) {
+      return {
+        operation: "invalidate",
+        token,
+        invalidated: true,
+      };
+    }
+
+    const normalizedResult =
+      typeof result === "string"
+        ? (() => {
+            try {
+              return JSON.parse(result) as unknown;
+            } catch {
+              return null;
+            }
+          })()
+        : result;
+
+    if (!normalizedResult || typeof normalizedResult !== "object") {
+      return {
+        operation: "invalidate",
+        token,
+        invalidated: true,
+      };
+    }
+
+    const parsed = normalizedResult as Record<string, any>;
+    const invalidated = parsed.invalidated;
+    if (invalidated === false) {
+      return null;
+    }
+
+    return {
+      operation: "invalidate",
+      token: typeof parsed.token === "string" && parsed.token ? parsed.token : token,
+      invalidated: true,
     };
   }
 
@@ -181,7 +368,9 @@ export class FormPersistenceRuntime {
   }
 
   persistResumeTokenState(token: string, state: TResumeTokenState): boolean {
-    if (typeof window === "undefined") {
+    this.resumeTokenMemory.set(token, state);
+    const storage = this.getLocalStorage();
+    if (!storage) {
       return false;
     }
 
@@ -191,7 +380,7 @@ export class FormPersistenceRuntime {
     }
 
     try {
-      window.localStorage.setItem(key, JSON.stringify(state));
+      storage.setItem(key, JSON.stringify(state));
       return true;
     } catch {
       return false;
@@ -209,17 +398,18 @@ export class FormPersistenceRuntime {
   }
 
   loadCurrentStepIndex(): number | null {
-    if (typeof window === "undefined") {
-      return null;
-    }
-
     const key = this.getCurrentStepStorageKey();
     if (!key) {
       return null;
     }
 
+    const storage = this.getLocalStorage();
+    if (!storage) {
+      return null;
+    }
+
     try {
-      const raw = window.localStorage.getItem(key);
+      const raw = storage.getItem(key);
       if (raw === null) {
         return null;
       }
@@ -232,18 +422,19 @@ export class FormPersistenceRuntime {
   }
 
   saveCurrentStepIndex(index?: number | null): void {
-    if (typeof window === "undefined") {
-      return;
-    }
-
     const key = this.getCurrentStepStorageKey();
     if (!key) {
       return;
     }
 
+    const storage = this.getLocalStorage();
+    if (!storage) {
+      return;
+    }
+
     if (typeof index !== "number" || !Number.isInteger(index) || index < 0) {
       try {
-        window.localStorage.removeItem(key);
+        storage.removeItem(key);
       } catch {
         // Ignore storage write failures.
       }
@@ -251,7 +442,7 @@ export class FormPersistenceRuntime {
     }
 
     try {
-      window.localStorage.setItem(key, String(index));
+      storage.setItem(key, String(index));
     } catch {
       // Ignore storage write failures.
     }
@@ -280,12 +471,13 @@ export class FormPersistenceRuntime {
   parseResumeToken(token: string, raw: string | null): (TResumeTokenInfo & {
     snapshot: TFormStorageSnapshot | null;
   }) | null {
-    if (!raw) {
-      return null;
-    }
-
     try {
-      const parsed = JSON.parse(raw) as Partial<TResumeTokenState>;
+      const parsed = raw
+        ? JSON.parse(raw) as Partial<TResumeTokenState>
+        : this.resumeTokenMemory.get(token);
+      if (!parsed) {
+        return null;
+      }
       const snapshot =
         parsed?.snapshot && typeof parsed.snapshot === "object"
           ? parsed.snapshot
@@ -544,49 +736,48 @@ export class FormPersistenceRuntime {
         ? await response.json()
         : await response.text();
 
-      if (!response.ok || !result || typeof result !== "object" || typeof result.token !== "string") {
+      if (!response.ok) {
         throw new Error("Invalid remote resume token response");
       }
 
-      const savedAt = typeof result.savedAt === "number" ? result.savedAt : Date.now();
-      this.persistResumeTokenState(result.token, {
+      const parsed = this.parseRemoteCreateResponse(result);
+      if (!parsed) {
+        throw new Error("Invalid remote resume token response");
+      }
+
+      this.persistResumeTokenState(parsed.token, {
         version: 1,
-        savedAt,
+        savedAt: parsed.savedAt,
         snapshot,
         resumeEndpoint,
         remote: true,
       });
 
-      this.options.emitEvent(
-        "form-ui:resume-token-created",
-        this.createEventDetail(currentValues, {
-          token: result.token,
-          savedAt,
-          resumeEndpoint,
-          remote: true,
-        }, response),
-      );
-      return result.token;
+      try {
+        this.options.emitEvent(
+          "form-ui:resume-token-created",
+          this.createEventDetail(currentValues, {
+            operation: parsed.operation,
+            token: parsed.token,
+            savedAt: parsed.savedAt,
+            resumeEndpoint,
+            remote: true,
+          }, response),
+        );
+      } catch {
+        // Ignore event emission failures; token creation already succeeded.
+      }
+      return parsed.token;
     } catch {
       return null;
     }
   }
 
   restoreFromResumeToken(token: string): Record<string, any> | null {
-    if (typeof window === "undefined") {
-      return null;
-    }
-
-    const key = this.getResumeStorageKey(token);
-    if (!key) {
-      return null;
-    }
-
     try {
-      const raw = window.localStorage.getItem(key);
-      if (!raw) {
-        return null;
-      }
+      const key = this.getResumeStorageKey(token);
+      const storage = this.getLocalStorage();
+      const raw = key && storage ? storage.getItem(key) : null;
 
       const parsed = this.parseResumeToken(token, raw);
       if (!parsed?.snapshot) {
@@ -626,11 +817,9 @@ export class FormPersistenceRuntime {
     const resumeEndpoint = this.getResumeEndpoint();
     if (!resumeEndpoint) {
       const key = this.getResumeStorageKey(token);
-      if (!key) {
-        return null;
-      }
-
-      const parsed = this.parseResumeToken(token, window.localStorage.getItem(key));
+      const storage = this.getLocalStorage();
+      const raw = key && storage ? storage.getItem(key) : null;
+      const parsed = this.parseResumeToken(token, raw);
       if (!parsed) {
         return null;
       }
@@ -650,41 +839,41 @@ export class FormPersistenceRuntime {
     }
 
     try {
-      const response = await fetch(
-        `${resumeEndpoint}${resumeEndpoint.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`,
-        { method: "GET" },
-      );
+      const endpointUrl = this.buildResumeEndpointUrl(token);
+      if (!endpointUrl) {
+        return null;
+      }
+      const response = await fetch(endpointUrl, { method: "GET" });
       const contentType = response.headers.get("content-type") || "";
       const result = contentType.includes("application/json")
         ? await response.json()
         : null;
-      if (!response.ok || !result || typeof result !== "object") {
+      if (!response.ok) {
         return null;
       }
 
-      const nextToken = typeof result.token === "string" ? result.token : token;
-      const savedAt = typeof result.savedAt === "number" ? result.savedAt : Date.now();
-      const snapshot =
-        result.snapshot && typeof result.snapshot === "object"
-          ? result.snapshot as TFormStorageSnapshot
-          : null;
-      if (snapshot) {
-        this.persistResumeTokenState(nextToken, {
+      const parsed = this.parseRemoteLookupResponse(token, result);
+      if (!parsed) {
+        return null;
+      }
+
+      if (parsed.snapshot) {
+        this.persistResumeTokenState(parsed.token, {
           version: 1,
-          savedAt,
-          snapshot,
+          savedAt: parsed.savedAt,
+          snapshot: parsed.snapshot,
           resumeEndpoint,
           remote: true,
         });
       }
 
       return {
-        token: nextToken,
-        savedAt,
+        token: parsed.token,
+        savedAt: parsed.savedAt,
         expired: false,
         resumeEndpoint,
         remote: true,
-        snapshot,
+        snapshot: parsed.snapshot,
       };
     } catch {
       return null;
@@ -716,34 +905,55 @@ export class FormPersistenceRuntime {
   }
 
   listResumeTokens(): TResumeTokenInfo[] {
-    if (typeof window === "undefined") {
-      return [];
-    }
-
     const prefix = this.getResumeStoragePrefix();
     if (!prefix) {
       return [];
     }
 
     const tokens: TResumeTokenInfo[] = [];
-    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
-      const key = window.localStorage.key(index);
-      if (!key || !key.startsWith(prefix)) {
+    const seenTokens = new Set<string>();
+    const storage = this.getLocalStorage();
+
+    if (storage) {
+      for (let index = storage.length - 1; index >= 0; index -= 1) {
+        const key = storage.key(index);
+        if (!key || !key.startsWith(prefix)) {
+          continue;
+        }
+
+        const token = key.slice(prefix.length);
+        seenTokens.add(token);
+        const parsed = this.parseResumeToken(token, storage.getItem(key));
+        if (!parsed) {
+          storage.removeItem(key);
+          continue;
+        }
+
+        if (parsed.expired) {
+          storage.removeItem(key);
+          this.resumeTokenMemory.delete(token);
+          continue;
+        }
+
+        tokens.push({
+          token: parsed.token,
+          savedAt: parsed.savedAt,
+          expired: false,
+          resumeEndpoint: parsed.resumeEndpoint,
+          remote: parsed.remote,
+        });
+      }
+    }
+
+    for (const token of Array.from(this.resumeTokenMemory.keys())) {
+      if (seenTokens.has(token)) {
         continue;
       }
-
-      const token = key.slice(prefix.length);
-      const parsed = this.parseResumeToken(token, window.localStorage.getItem(key));
-      if (!parsed) {
-        window.localStorage.removeItem(key);
+      const parsed = this.parseResumeToken(token, null);
+      if (!parsed || parsed.expired) {
+        this.resumeTokenMemory.delete(token);
         continue;
       }
-
-      if (parsed.expired) {
-        window.localStorage.removeItem(key);
-        continue;
-      }
-
       tokens.push({
         token: parsed.token,
         savedAt: parsed.savedAt,
@@ -757,16 +967,20 @@ export class FormPersistenceRuntime {
   }
 
   deleteResumeToken(token: string): boolean {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
     const key = this.getResumeStorageKey(token);
-    if (!key || !window.localStorage.getItem(key)) {
+    const storage = this.getLocalStorage();
+    let deleted = false;
+    if (key && storage && storage.getItem(key)) {
+      storage.removeItem(key);
+      deleted = true;
+    }
+    if (this.resumeTokenMemory.has(token)) {
+      this.resumeTokenMemory.delete(token);
+      deleted = true;
+    }
+    if (!deleted) {
       return false;
     }
-
-    window.localStorage.removeItem(key);
     this.options.emitEvent(
       "form-ui:resume-token-deleted",
       this.createEventDetail(this.options.getValues(), {
@@ -793,22 +1007,55 @@ export class FormPersistenceRuntime {
     }
 
     try {
-      const response = await fetch(
-        `${resumeEndpoint}${resumeEndpoint.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`,
-        { method: "DELETE" },
-      );
-      if (!response.ok) {
+      const endpointUrl = this.buildResumeEndpointUrl(token);
+      if (!endpointUrl) {
+        return false;
+      }
+      const response = await fetch(endpointUrl, { method: "DELETE" });
+      if (response.ok && response.status === 204) {
+        const key = this.getResumeStorageKey(token);
+        const storage = this.getLocalStorage();
+        if (key && storage) {
+          storage.removeItem(key);
+        }
+        this.resumeTokenMemory.delete(token);
+        this.options.emitEvent(
+          "form-ui:resume-token-invalidated",
+          this.createEventDetail(this.options.getValues(), {
+            operation: "invalidate",
+            token,
+            resumeEndpoint,
+            remote: true,
+          }, response),
+        );
+        return true;
+      }
+
+      let result: unknown = null;
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        try {
+          result = await response.json();
+        } catch {
+          result = null;
+        }
+      }
+      const parsed = this.parseRemoteInvalidateResponse(token, response, result);
+      if (!parsed) {
         return false;
       }
 
       const key = this.getResumeStorageKey(token);
-      if (key && typeof window !== "undefined") {
-        window.localStorage.removeItem(key);
+      const storage = this.getLocalStorage();
+      if (key && storage) {
+        storage.removeItem(key);
       }
+      this.resumeTokenMemory.delete(token);
       this.options.emitEvent(
         "form-ui:resume-token-invalidated",
         this.createEventDetail(this.options.getValues(), {
-          token,
+          operation: parsed.operation,
+          token: parsed.token,
           resumeEndpoint,
           remote: true,
         }, response),

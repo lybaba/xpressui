@@ -5399,6 +5399,68 @@ describe('FormUI', () => {
     );
   });
 
+  it('emits standardized provider messages when a provider returns messages', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        status: 'accepted',
+        messages: ['Webhook accepted', 'Processing asynchronously'],
+        data: {
+          webhookId: 'wh_123',
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'webhook-messages-form',
+      title: 'Webhook Messages Form',
+      provider: {
+        type: 'webhook',
+        endpoint: 'https://api.example.test/webhooks/messages',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const email = element.querySelector('#email') as HTMLInputElement;
+    const form = element.querySelector('#webhook-messages-form_form') as HTMLFormElement;
+    const onProviderMessages = vi.fn();
+
+    element.addEventListener('form-ui:provider-messages', (event) => {
+      onProviderMessages((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    email.value = 'user@example.com';
+    email.dispatchEvent(new Event('input', { bubbles: true }));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(onProviderMessages).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerResult: {
+          status: 'accepted',
+          transition: null,
+          messages: ['Webhook accepted', 'Processing asynchronously'],
+          errors: [],
+          data: {
+            webhookId: 'wh_123',
+          },
+        },
+        result: {
+          status: 'accepted',
+          source: 'success',
+          messages: ['Webhook accepted', 'Processing asynchronously'],
+        },
+      }),
+    );
+  });
+
   it('supports a booking availability provider for scheduling workflows', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(

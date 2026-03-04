@@ -1431,11 +1431,16 @@ Event:
 - `form-ui:workflow-step`
 - `form-ui:provider-transition`
 - `form-ui:provider-step-routed`
+- `form-ui:provider-messages`
 
 If a provider returns a normalized workflow transition and your form defines
 `workflowStepTargets`, `FormUI` now routes the wizard automatically to the
 matching step and emits `form-ui:provider-step-routed` in addition to the
 generic `form-ui:provider-transition`.
+
+If a provider returns normalized `messages`, `FormUI` emits
+`form-ui:provider-messages` with a uniform payload so you can drive toasts,
+notices, or banners without reading `providerResult.messages` manually.
 
 ## Events
 

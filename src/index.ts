@@ -2537,6 +2537,27 @@ export class FormUI extends HTMLElement {
     }
   }
 
+  emitProviderMessages = (
+    detail: TFormUISubmitDetail,
+    providerResult?: TNormalizedProviderResult,
+    response?: Response,
+    source: "success" | "error" = "success",
+  ) => {
+    if (!providerResult?.messages?.length) {
+      return;
+    }
+
+    this.emitFormEvent("form-ui:provider-messages", {
+      ...detail,
+      response,
+      result: {
+        status: providerResult.status,
+        source,
+        messages: providerResult.messages,
+      },
+    });
+  }
+
   onSubmit = async (values: Record<string, any>) => {
     const formValues = this.engine.buildSubmissionValues(
       values,
@@ -2588,6 +2609,7 @@ export class FormUI extends HTMLElement {
         providerResult,
       };
       this.emitFormEvent("form-ui:submit-success", successDetail);
+      this.emitProviderMessages(successDetail, providerResult, response, "success");
       this.emitApprovalStateEvents(successDetail, result, providerResult, response);
       const appliedProviderTransition = this.applyProviderTransition(successDetail, response, result, providerResult);
       if (!appliedProviderTransition && this.formConfig?.submit?.action !== "approval-request" && this.formConfig?.submit?.action !== "approval-decision") {
@@ -2636,6 +2658,7 @@ export class FormUI extends HTMLElement {
         error,
       };
       this.emitFormEvent("form-ui:submit-error", errorDetail);
+      this.emitProviderMessages(errorDetail, providerResult, error?.response, "error");
       this.setWorkflowState("error", errorDetail, error?.response, error?.result);
       const providerErrorEvent = getProviderErrorEventName(this.formConfig?.submit?.action);
       if (providerErrorEvent) {

@@ -96,6 +96,12 @@ export class FormRuntime {
           getRules: () => this.formConfig?.rules || [],
           getFieldContainer: (fieldName) => options.dynamic!.getFieldContainer(fieldName),
           getFieldElement: (fieldName) => options.dynamic!.getFieldElement(fieldName),
+          setFieldDisabled: (fieldName, disabled) => {
+            const fieldElement = options.dynamic!.getFieldElement(fieldName);
+            if (fieldElement) {
+              fieldElement.disabled = disabled;
+            }
+          },
           getFieldValue: (fieldName) => options.dynamic!.getFieldValue(fieldName),
           clearFieldValue: (fieldName) => options.dynamic!.clearFieldValue(fieldName),
           setFieldValue: (fieldName, value) => {

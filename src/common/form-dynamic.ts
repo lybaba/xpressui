@@ -17,7 +17,14 @@ type TFormDynamicRuntimeOptions = {
       value?: any;
     }>;
     actions: Array<{
-      type: "show" | "hide" | "clear-value" | "set-value" | "fetch-options";
+      type:
+        | "show"
+        | "hide"
+        | "enable"
+        | "disable"
+        | "clear-value"
+        | "set-value"
+        | "fetch-options";
       field: string;
       value?: any;
     }>;
@@ -28,6 +35,7 @@ type TFormDynamicRuntimeOptions = {
   getFieldElement(
     fieldName: string,
   ): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+  setFieldDisabled(fieldName: string, disabled: boolean): void;
   getFieldValue(fieldName: string): any;
   clearFieldValue(fieldName: string): void;
   setFieldValue(fieldName: string, value: any): void;
@@ -100,6 +108,7 @@ export class FormDynamicRuntime {
 
   updateConditionalFields(): void {
     const visibilityOverrides: Record<string, boolean> = {};
+    const disabledOverrides: Record<string, boolean> = {};
 
     this.options.getFieldConfigs().forEach((fieldConfig) => {
       if (!fieldConfig.visibleWhenField) {
@@ -130,6 +139,10 @@ export class FormDynamicRuntime {
           visibilityOverrides[action.field] = true;
         } else if (action.type === "hide") {
           visibilityOverrides[action.field] = false;
+        } else if (action.type === "enable") {
+          disabledOverrides[action.field] = false;
+        } else if (action.type === "disable") {
+          disabledOverrides[action.field] = true;
         } else if (action.type === "clear-value") {
           this.options.clearFieldValue(action.field);
         } else if (action.type === "set-value") {
@@ -148,14 +161,16 @@ export class FormDynamicRuntime {
       }
 
       const isVisible = visibilityOverrides[fieldConfig.name];
-      if (isVisible === undefined) {
-        return;
+      if (isVisible !== undefined) {
+        container.style.display = isVisible ? "" : "none";
+        fieldElement.disabled = !isVisible;
+        if (!isVisible) {
+          this.options.clearFieldValue(fieldConfig.name);
+        }
       }
 
-      container.style.display = isVisible ? "" : "none";
-      fieldElement.disabled = !isVisible;
-      if (!isVisible) {
-        this.options.clearFieldValue(fieldConfig.name);
+      if (disabledOverrides[fieldConfig.name] !== undefined) {
+        this.options.setFieldDisabled(fieldConfig.name, disabledOverrides[fieldConfig.name]);
       }
     });
   }

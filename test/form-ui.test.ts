@@ -621,6 +621,12 @@ describe('FormUI', () => {
           : null,
       getFieldElement: (fieldName) =>
         document.querySelector(`#${fieldName}`) as HTMLSelectElement | null,
+      setFieldDisabled: (fieldName, disabled) => {
+        const field = document.querySelector(`#${fieldName}`) as HTMLSelectElement | null;
+        if (field) {
+          field.disabled = disabled;
+        }
+      },
       getFieldValue: (fieldName) => values[fieldName],
       clearFieldValue: (fieldName) => {
         values = { ...values, [fieldName]: undefined };
@@ -863,6 +869,50 @@ describe('FormUI', () => {
     );
     expect(slot.options.length).toBe(3);
     expect(slot.options[1].value).toBe('09:00');
+  });
+
+  it('supports enable and disable rule actions', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'enable-disable-rules-form',
+      title: 'Enable Disable Rules Form',
+      rules: [
+        {
+          conditions: [
+            { field: 'mode', operator: 'equals', value: 'readonly' },
+          ],
+          actions: [
+            { type: 'disable', field: 'notes' },
+          ],
+        },
+        {
+          conditions: [
+            { field: 'mode', operator: 'equals', value: 'edit' },
+          ],
+          actions: [
+            { type: 'enable', field: 'notes' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'mode', label: 'Mode', type: 'text' },
+        { name: 'notes', label: 'Notes', type: 'textarea' },
+      ],
+    }) as FormUI;
+    const mode = element.querySelector('#mode') as HTMLInputElement;
+    const notes = element.querySelector('#notes') as HTMLTextAreaElement;
+
+    mode.value = 'readonly';
+    mode.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(notes.disabled).toBe(true);
+
+    mode.value = 'edit';
+    mode.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(notes.disabled).toBe(false);
   });
 
   it('supports a payment provider with a normalized payload', async () => {

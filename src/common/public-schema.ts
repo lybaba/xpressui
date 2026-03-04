@@ -50,7 +50,15 @@ const PUBLIC_FORM_SCHEMA = {
               properties: {
                 type: {
                   type: "string",
-                  enum: ["show", "hide", "clear-value", "set-value", "fetch-options"],
+                  enum: [
+                    "show",
+                    "hide",
+                    "enable",
+                    "disable",
+                    "clear-value",
+                    "set-value",
+                    "fetch-options",
+                  ],
                 },
                 field: { type: "string", minLength: 1 },
               },

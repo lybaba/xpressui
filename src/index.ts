@@ -87,6 +87,12 @@ export class FormUI extends HTMLElement {
       getRules: () => this.formConfig?.rules || [],
       getFieldContainer: (fieldName) => this.getFieldContainer(fieldName),
       getFieldElement: (fieldName) => this.getFieldElement(fieldName),
+      setFieldDisabled: (fieldName, disabled) => {
+        const fieldElement = this.getFieldElement(fieldName);
+        if (fieldElement) {
+          fieldElement.disabled = disabled;
+        }
+      },
       getFieldValue: (fieldName) => this.getFieldValue(fieldName),
       clearFieldValue: (fieldName) => {
         if (this.form) {

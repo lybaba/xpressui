@@ -6,6 +6,7 @@ import TFieldConfig from "./common/TFieldConfig";
 import { FormEngineRuntime } from "./common/form-engine";
 import { UNKNOWN_TYPE } from "./common/field";
 import { FormDynamicRuntime } from "./common/form-dynamic";
+import type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
@@ -251,6 +252,10 @@ export class FormUI extends HTMLElement {
 
   flushSubmissionQueue = async () => {
     await this.persistence.flushSubmissionQueue();
+  }
+
+  getActiveTemplateWarnings = (): TFormActiveTemplateWarning[] => {
+    return this.dynamic.getActiveTemplateWarnings();
   }
 
   validateForm = (values: Record<string, any>) => {

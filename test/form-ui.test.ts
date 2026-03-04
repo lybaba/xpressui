@@ -328,6 +328,52 @@ describe('FormUI', () => {
     observer.detach();
   });
 
+  it('exposes active template warnings directly on FormUI', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'form-ui-active-template-warnings-form',
+      title: 'Form UI Active Template Warnings Form',
+      rules: [
+        {
+          id: 'compose-full-name',
+          conditions: [
+            { field: 'autoFullName', operator: 'equals', value: true },
+          ],
+          actions: [
+            {
+              type: 'set-value',
+              field: 'fullName',
+              template: '{{firstName}} {{missingName}}',
+              transform: 'trim',
+            },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'firstName', label: 'First name', type: 'text' },
+        { name: 'fullName', label: 'Full name', type: 'text' },
+        { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
+      ],
+    }) as FormUI;
+    const firstName = element.querySelector('#firstName') as HTMLInputElement;
+    const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
+
+    firstName.value = 'Ada';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+    autoFullName.checked = true;
+    autoFullName.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(element.getActiveTemplateWarnings()).toEqual([
+      {
+        ruleId: 'compose-full-name',
+        field: 'fullName',
+        template: '{{firstName}} {{missingName}}',
+        missingField: 'missingName',
+      },
+    ]);
+  });
+
   it('shows and clears validation errors in the DOM', () => {
     const element = renderFixture(`
       <template id="contact">

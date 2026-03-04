@@ -25,6 +25,9 @@ The public API is centered on:
 The recommended path is `mountFormUI(...)`, which lets you mount a form from a
 plain object without hand-writing a full HTML template.
 
+`FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
+active template issues on the mounted component.
+
 For storage/debug tooling outside the component instance, use
 `createLocalFormAdmin(formConfig)`.
 

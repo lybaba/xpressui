@@ -17,6 +17,7 @@ import {
   TFormQueueState,
   TFormStorageSnapshot,
 } from "./common/form-persistence";
+import { getRestorableStorageValues } from "./common/form-storage";
 import { FormRuntime } from "./common/form-runtime";
 import { FormUploadRuntime, TFormUploadState } from "./common/form-upload";
 import { validatePublicFormConfig } from "./common/public-schema";
@@ -1510,6 +1511,26 @@ export class FormUI extends HTMLElement {
       void this.dynamic.refreshRemoteOptions();
 
       this.persistence.connect();
+
+      void this.persistence.hydrateStorage().then((result) => {
+        if (!result) {
+          return;
+        }
+
+        const restoredDraft = getRestorableStorageValues(result.snapshot.draft);
+        const initialDraftJson = JSON.stringify(draftValues);
+        const restoredDraftJson = JSON.stringify(restoredDraft);
+        if (
+          this.form &&
+          Object.keys(restoredDraft).length &&
+          restoredDraftJson !== initialDraftJson
+        ) {
+          this.form.initialize(restoredDraft);
+          this.persistence.emitDraftRestored(restoredDraft);
+        }
+
+        this.persistence.emitQueueState();
+      });
 
       if (Object.keys(draftValues).length) {
         this.persistence.emitDraftRestored(draftValues);

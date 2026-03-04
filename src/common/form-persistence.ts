@@ -3,6 +3,7 @@ import { isFileFieldType } from "./field";
 import {
   createStorageAdapter,
   getRestorableStorageValues,
+  TStorageHydrationResult,
   TFormStorageAdapter,
   TQueuedSubmission,
 } from "./form-storage";
@@ -71,6 +72,26 @@ export class FormPersistenceRuntime {
     }
 
     void this.flushSubmissionQueue();
+  }
+
+  async hydrateStorage(): Promise<TStorageHydrationResult | null> {
+    if (!this.storageAdapter?.hydrate) {
+      return null;
+    }
+
+    const hydrationResult = await this.storageAdapter.hydrate();
+
+    if (hydrationResult.migratedFromLocalStorage) {
+      this.options.emitEvent(
+        "form-ui:storage-migrated",
+        this.createEventDetail(this.options.getValues(), {
+          source: hydrationResult.source,
+          migratedFromLocalStorage: true,
+        }),
+      );
+    }
+
+    return hydrationResult;
   }
 
   loadDraftValues(): Record<string, any> {

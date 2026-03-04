@@ -187,6 +187,7 @@ const errors = runtime.validateValues(values);
 
 runtime.saveDraft();
 const draft = runtime.loadDraftValues();
+await runtime.hydrateStorage();
 ```
 
 Main `FormRuntime` methods:
@@ -908,6 +909,16 @@ Current storage support:
 - `mode: 'queue'`
 - `mode: 'draft-and-queue'`
 - `adapter: 'local-storage'`
+- `adapter: 'indexeddb'`
+
+`indexeddb` currently uses a compatibility-first local cache plus IndexedDB
+write-through, so the runtime API stays synchronous while still persisting to a
+browser database when available.
+
+If you need the freshest async-backed snapshot, call:
+- `runtime.hydrateStorage()`
+- `admin.getSnapshotAsync()`
+- `admin.exportSnapshotAsync()`
 
 For `file` fields, local draft storage keeps metadata only (`name`, `size`,
 `mimeType`). The user must re-select files after a page reload. Use
@@ -919,6 +930,7 @@ Draft events:
 - `form-ui:draft-saved`
 - `form-ui:draft-restored`
 - `form-ui:draft-cleared`
+- `form-ui:storage-migrated`
 
 Queue events:
 - `form-ui:queued`

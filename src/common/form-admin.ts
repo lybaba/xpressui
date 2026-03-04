@@ -115,7 +115,9 @@ function applyQuery(entries: TQueuedSubmission[], query?: TLocalQueueQuery): TQu
 
 export type TLocalFormAdmin = {
   getSnapshot(): TLocalFormAdminSnapshot;
+  getSnapshotAsync(): Promise<TLocalFormAdminSnapshot>;
   exportSnapshot(): TLocalFormAdminSnapshot;
+  exportSnapshotAsync(): Promise<TLocalFormAdminSnapshot>;
   importSnapshot(
     snapshot: TLocalFormAdminSnapshot,
     mode?: TLocalFormAdminImportMode,
@@ -146,10 +148,23 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
     deadLetter: storageAdapter?.loadDeadLetterQueue() || [],
   });
 
+  const getSnapshotAsync = async (): Promise<TLocalFormAdminSnapshot> => {
+    if (storageAdapter?.hydrate) {
+      const hydrated = await storageAdapter.hydrate();
+      return hydrated.snapshot;
+    }
+
+    return getSnapshot();
+  };
+
   return {
     getSnapshot,
+    getSnapshotAsync,
     exportSnapshot() {
       return getSnapshot();
+    },
+    async exportSnapshotAsync() {
+      return getSnapshotAsync();
     },
     importSnapshot(snapshot, mode = "replace") {
       if (!storageAdapter) {

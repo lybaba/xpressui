@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as publicApi from '../src/index';
+import { createStorageAdapter } from '../src/common/form-storage';
 import {
   createLocalFormAdmin,
   createFormConfig,
@@ -151,6 +152,173 @@ describe('FormUI', () => {
     expect(element.querySelector('#contact_form')).not.toBeNull();
     expect(element.formConfig?.name).toBe('contact');
     expect(element.validators).toHaveLength(1);
+  });
+
+  it('can create an indexeddb storage adapter with local cache fallback', () => {
+    const records = new Map<string, any>();
+    const open = vi.fn(() => {
+      const request: any = {
+        result: {
+          objectStoreNames: {
+            contains: () => false,
+          },
+          createObjectStore: vi.fn(),
+          transaction: vi.fn(() => ({
+            objectStore: vi.fn(() => ({
+              get: vi.fn((key: string) => {
+                const inner: any = { onsuccess: null, onerror: null, result: null };
+                queueMicrotask(() => {
+                  inner.result = records.has(key) ? records.get(key) : null;
+                  if (typeof inner.onsuccess === 'function') {
+                    inner.onsuccess(new Event('success'));
+                  }
+                });
+                return inner;
+              }),
+              put: vi.fn((value: any, key: string) => {
+                const inner: any = { onsuccess: null, onerror: null };
+                queueMicrotask(() => {
+                  records.set(key, value);
+                  if (typeof inner.onsuccess === 'function') {
+                    inner.onsuccess(new Event('success'));
+                  }
+                });
+                return inner;
+              }),
+              delete: vi.fn((key: string) => {
+                const inner: any = { onsuccess: null, onerror: null };
+                queueMicrotask(() => {
+                  records.delete(key);
+                  if (typeof inner.onsuccess === 'function') {
+                    inner.onsuccess(new Event('success'));
+                  }
+                });
+                return inner;
+              }),
+            })),
+          })),
+        },
+        onsuccess: null,
+        onerror: null,
+        onupgradeneeded: null,
+      };
+
+      queueMicrotask(() => {
+        if (typeof request.onupgradeneeded === 'function') {
+          request.onupgradeneeded(new Event('upgradeneeded'));
+        }
+        if (typeof request.onsuccess === 'function') {
+          request.onsuccess(new Event('success'));
+        }
+      });
+
+      return request;
+    });
+
+    Object.defineProperty(window, 'indexedDB', {
+      value: { open },
+      configurable: true,
+    });
+
+    const adapter = createStorageAdapter(createFormConfig({
+      name: 'idb-storage-form',
+      title: 'IndexedDB Storage Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'indexeddb',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }));
+
+    adapter?.saveDraft({ email: 'idb@example.com' });
+
+    expect(open).toHaveBeenCalled();
+    expect(adapter?.loadDraft()).toEqual({ email: 'idb@example.com' });
+  });
+
+  it('can migrate local storage state into indexeddb during hydration', async () => {
+    const records = new Map<string, any>();
+    const open = vi.fn(() => {
+      const request: any = {
+        result: {
+          objectStoreNames: {
+            contains: () => true,
+          },
+          createObjectStore: vi.fn(),
+          transaction: vi.fn(() => ({
+            objectStore: vi.fn(() => ({
+              get: vi.fn((key: string) => {
+                const inner: any = { onsuccess: null, onerror: null, result: null };
+                queueMicrotask(() => {
+                  inner.result = records.has(key) ? records.get(key) : null;
+                  if (typeof inner.onsuccess === 'function') {
+                    inner.onsuccess(new Event('success'));
+                  }
+                });
+                return inner;
+              }),
+              put: vi.fn((value: any, key: string) => {
+                const inner: any = { onsuccess: null, onerror: null };
+                queueMicrotask(() => {
+                  records.set(key, value);
+                  if (typeof inner.onsuccess === 'function') {
+                    inner.onsuccess(new Event('success'));
+                  }
+                });
+                return inner;
+              }),
+              delete: vi.fn((key: string) => {
+                const inner: any = { onsuccess: null, onerror: null };
+                queueMicrotask(() => {
+                  records.delete(key);
+                  if (typeof inner.onsuccess === 'function') {
+                    inner.onsuccess(new Event('success'));
+                  }
+                });
+                return inner;
+              }),
+            })),
+          })),
+        },
+        onsuccess: null,
+        onerror: null,
+        onupgradeneeded: null,
+      };
+
+      queueMicrotask(() => {
+        if (typeof request.onsuccess === 'function') {
+          request.onsuccess(new Event('success'));
+        }
+      });
+
+      return request;
+    });
+
+    Object.defineProperty(window, 'indexedDB', {
+      value: { open },
+      configurable: true,
+    });
+
+    const formConfig = createFormConfig({
+      name: 'idb-migration-form',
+      title: 'IndexedDB Migration Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'indexeddb',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    });
+    window.localStorage.setItem('xpressui:draft:idb-migration-form', JSON.stringify({ email: 'migrate@example.com' }));
+
+    const adapter = createStorageAdapter(formConfig);
+    const hydration = await adapter?.hydrate?.();
+
+    expect(hydration?.migratedFromLocalStorage).toBe(true);
+    expect(hydration?.snapshot.draft).toEqual({ email: 'migrate@example.com' });
   });
 
   it('emits a submit success event for a valid form', async () => {
@@ -5346,6 +5514,39 @@ describe('FormUI', () => {
       'dead_import_1',
       'dead_import_2',
     ]);
+  });
+
+  it('exposes async snapshot hydration on the local admin API', async () => {
+    const formConfig = createFormConfig({
+      name: 'admin-async-form',
+      title: 'Admin Async Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-async',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    window.localStorage.setItem('xpressui:test-admin-async', JSON.stringify({ email: 'async@example.com' }));
+
+    await expect(admin.getSnapshotAsync()).resolves.toEqual(
+      expect.objectContaining({
+        draft: { email: 'async@example.com' },
+      }),
+    );
+    await expect(admin.exportSnapshotAsync()).resolves.toEqual(
+      expect.objectContaining({
+        draft: { email: 'async@example.com' },
+      }),
+    );
   });
 
   it('can filter and sort queue entries through the local admin API', () => {

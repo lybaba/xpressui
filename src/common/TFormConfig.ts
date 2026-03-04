@@ -70,7 +70,7 @@ export type TFormProviderRequest = {
 
 export type TFormStorageConfig = {
     mode: 'none' | 'draft' | 'queue' | 'draft-and-queue';
-    adapter?: 'local-storage';
+    adapter?: 'local-storage' | 'indexeddb';
     key?: string;
     autoSaveMs?: number;
 };

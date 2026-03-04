@@ -53,6 +53,7 @@ export type TFormRuntimePublicApi = Pick<
   | "buildSubmissionValues"
   | "validateValues"
   | "loadDraftValues"
+  | "hydrateStorage"
   | "saveDraft"
   | "clearDraft"
   | "scheduleDraftSave"
@@ -190,6 +191,11 @@ export class FormRuntime {
 
   loadDraftValues(): Record<string, any> {
     return this.persistence.loadDraftValues();
+  }
+
+  async hydrateStorage(): Promise<TFormStorageSnapshot> {
+    const result = await this.persistence.hydrateStorage();
+    return result?.snapshot || this.persistence.getStorageSnapshot();
   }
 
   saveDraft(values?: Record<string, any>): void {

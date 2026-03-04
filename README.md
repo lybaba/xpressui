@@ -723,6 +723,8 @@ Frontend behavior:
   images are now center-cropped to an ID-card ratio before submit
 - when `TextDetector` is available, `document-scan` can emit OCR text and a
   lightweight MRZ parse for machine-readable identity documents
+- `documentTextTargetField` can mirror detected OCR text into another field
+- `documentMrzTargetField` can mirror parsed MRZ data into another field
 
 Extra event:
 - `form-ui:file-validation-error`
@@ -734,8 +736,10 @@ Extra event:
 - `form-ui:qr-scan-success`
 - `form-ui:qr-scan-error`
 - `form-ui:document-scan-cropped`
+- `form-ui:document-scan-bounds-detected`
 - `form-ui:document-text-detected`
 - `form-ui:document-mrz-detected`
+- `form-ui:document-data`
 
 You can also define basic rules at the form level:
 

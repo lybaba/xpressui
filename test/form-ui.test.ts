@@ -1417,8 +1417,10 @@ describe('FormUI', () => {
     const originalGetContext = HTMLCanvasElement.prototype.getContext;
     const originalToBlob = HTMLCanvasElement.prototype.toBlob;
     const onCrop = vi.fn();
+    const onBounds = vi.fn();
     const onText = vi.fn();
     const onMrz = vi.fn();
+    const onData = vi.fn();
 
     (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
       width: 1600,
@@ -1453,6 +1455,18 @@ describe('FormUI', () => {
           type: 'document-scan',
           documentScanMode: 'single',
           enableDocumentOcr: true,
+          documentTextTargetField: 'passport_text',
+          documentMrzTargetField: 'passport_mrz',
+        },
+        {
+          name: 'passport_text',
+          label: 'Passport Text',
+          type: 'textarea',
+        },
+        {
+          name: 'passport_mrz',
+          label: 'Passport MRZ',
+          type: 'text',
         },
       ],
     }) as FormUI;
@@ -1462,11 +1476,17 @@ describe('FormUI', () => {
     element.addEventListener('form-ui:document-scan-cropped', (event) => {
       onCrop((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
+    element.addEventListener('form-ui:document-scan-bounds-detected', (event) => {
+      onBounds((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
     element.addEventListener('form-ui:document-text-detected', (event) => {
       onText((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
     element.addEventListener('form-ui:document-mrz-detected', (event) => {
       onMrz((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+    element.addEventListener('form-ui:document-data', (event) => {
+      onData((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
     Object.defineProperty(input, 'files', {
@@ -1482,11 +1502,25 @@ describe('FormUI', () => {
     expect(drawImageSpy).toHaveBeenCalled();
     expect(onCrop).toHaveBeenCalledWith(
       expect.objectContaining({
-        result: {
+        result: expect.objectContaining({
           field: 'passport',
           slot: 0,
           fileName: 'passport.png',
-        },
+        }),
+      }),
+    );
+    expect(onBounds).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          field: 'passport',
+          slot: 0,
+          bounds: expect.objectContaining({
+            x: expect.any(Number),
+            y: expect.any(Number),
+            width: expect.any(Number),
+            height: expect.any(Number),
+          }),
+        }),
       }),
     );
     expect(onText).toHaveBeenCalledWith(
@@ -1506,8 +1540,34 @@ describe('FormUI', () => {
           mrz: expect.objectContaining({
             documentCode: 'P',
             issuingCountry: 'UTO',
+            documentNumber: 'L898902C3',
+            nationality: 'UTO',
+            birthDate: '740812',
+            expiryDate: '120415',
+            sex: 'F',
+            surnames: ['ERIKSSON'],
+            givenNames: ['ANNA', 'MARIA'],
           }),
         }),
+      }),
+    );
+    expect(onData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          field: 'passport',
+          slot: 0,
+          text: expect.stringContaining('P<UTOERIKSSON'),
+          mrz: expect.objectContaining({
+            documentNumber: 'L898902C3',
+          }),
+        }),
+      }),
+    );
+    expect((element.form?.getState().values || {}).passport_text).toContain('P<UTOERIKSSON');
+    expect((element.form?.getState().values || {}).passport_mrz).toEqual(
+      expect.objectContaining({
+        documentNumber: 'L898902C3',
+        issuingCountry: 'UTO',
       }),
     );
     expect((element.querySelector('#passport_selection') as HTMLElement).textContent).toContain('OCR:');

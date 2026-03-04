@@ -25,6 +25,8 @@ export const ATTR_CAPTURE = "capture"
 export const ATTR_MULTIPLE = "multiple"
 export const ATTR_DOCUMENT_SCAN_MODE = "documentScanMode"
 export const ATTR_ENABLE_DOCUMENT_OCR = "enableDocumentOcr"
+export const ATTR_DOCUMENT_TEXT_TARGET_FIELD = "documentTextTargetField"
+export const ATTR_DOCUMENT_MRZ_TARGET_FIELD = "documentMrzTargetField"
 export const ATTR_FILE_DROP_MODE = "fileDropMode"
 export const ATTR_MIN_FILES = "minFiles"
 export const ATTR_MAX_FILES = "maxFiles"
@@ -106,6 +108,8 @@ export const HTML_ATTR_CAPTURE = `${HTML_ATTR_PREFIX}capture`
 export const HTML_ATTR_MULTIPLE = `${HTML_ATTR_PREFIX}multiple`
 export const HTML_ATTR_DOCUMENT_SCAN_MODE = `${HTML_ATTR_PREFIX}document-scan-mode`
 export const HTML_ATTR_ENABLE_DOCUMENT_OCR = `${HTML_ATTR_PREFIX}enable-document-ocr`
+export const HTML_ATTR_DOCUMENT_TEXT_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-text-target-field`
+export const HTML_ATTR_DOCUMENT_MRZ_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-mrz-target-field`
 export const HTML_ATTR_FILE_DROP_MODE = `${HTML_ATTR_PREFIX}file-drop-mode`
 export const HTML_ATTR_MIN_FILES = `${HTML_ATTR_PREFIX}min-files`
 export const HTML_ATTR_MAX_FILES = `${HTML_ATTR_PREFIX}max-files`
@@ -187,6 +191,8 @@ export const ATTR_MAP = {
     [HTML_ATTR_MULTIPLE]: ATTR_MULTIPLE,
     [HTML_ATTR_DOCUMENT_SCAN_MODE]: ATTR_DOCUMENT_SCAN_MODE,
     [HTML_ATTR_ENABLE_DOCUMENT_OCR]: ATTR_ENABLE_DOCUMENT_OCR,
+    [HTML_ATTR_DOCUMENT_TEXT_TARGET_FIELD]: ATTR_DOCUMENT_TEXT_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_MRZ_TARGET_FIELD]: ATTR_DOCUMENT_MRZ_TARGET_FIELD,
     [HTML_ATTR_FILE_DROP_MODE]: ATTR_FILE_DROP_MODE,
     [HTML_ATTR_MIN_FILES]: ATTR_MIN_FILES,
     [HTML_ATTR_MAX_FILES]: ATTR_MAX_FILES,

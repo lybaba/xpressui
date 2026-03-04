@@ -36,6 +36,8 @@ type TFieldConfig = {
     multiple?: boolean;
     documentScanMode?: 'single' | 'double';
     enableDocumentOcr?: boolean;
+    documentTextTargetField?: string;
+    documentMrzTargetField?: string;
     fileDropMode?: 'replace' | 'append';
     minFiles?: number;
     maxFiles?: number;

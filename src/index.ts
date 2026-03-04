@@ -97,6 +97,13 @@ type TDocumentMrzResult = {
   lines: string[];
   documentCode: string;
   issuingCountry: string;
+  documentNumber?: string;
+  nationality?: string;
+  birthDate?: string;
+  expiryDate?: string;
+  sex?: string;
+  surnames?: string[];
+  givenNames?: string[];
 };
 
 type TDocumentScanInsight = {
@@ -374,10 +381,49 @@ export class FormUI extends HTMLElement {
     }
 
     const [line1, line2] = lines.slice(-2);
+    const nameBlock = line1.slice(5).split("<<");
+    const surnames = (nameBlock[0] || "")
+      .split("<")
+      .filter(Boolean);
+    const givenNames = (nameBlock.slice(1).join("<<") || "")
+      .split("<")
+      .filter(Boolean);
     return {
       lines: [line1, line2],
       documentCode: line1.slice(0, 2).replace(/</g, ""),
       issuingCountry: line1.slice(2, 5).replace(/</g, ""),
+      documentNumber: line2.slice(0, 9).replace(/</g, ""),
+      nationality: line2.slice(10, 13).replace(/</g, ""),
+      birthDate: line2.slice(13, 19).replace(/</g, ""),
+      sex: line2.slice(20, 21).replace(/</g, ""),
+      expiryDate: line2.slice(21, 27).replace(/</g, ""),
+      surnames,
+      givenNames,
+    };
+  }
+
+  getDocumentCropBounds = (width: number, height: number) => {
+    const targetRatio = 1.586;
+    const insetX = Math.round(width * 0.06);
+    const insetY = Math.round(height * 0.06);
+    const safeWidth = Math.max(1, width - insetX * 2);
+    const safeHeight = Math.max(1, height - insetY * 2);
+    let cropWidth = safeWidth;
+    let cropHeight = Math.round(cropWidth / targetRatio);
+
+    if (cropHeight > safeHeight) {
+      cropHeight = safeHeight;
+      cropWidth = Math.round(cropHeight * targetRatio);
+    }
+
+    const x = insetX + Math.max(0, Math.round((safeWidth - cropWidth) / 2));
+    const y = insetY + Math.max(0, Math.round((safeHeight - cropHeight) / 2));
+
+    return {
+      x,
+      y,
+      width: Math.max(1, cropWidth),
+      height: Math.max(1, cropHeight),
     };
   }
 
@@ -393,23 +439,11 @@ export class FormUI extends HTMLElement {
 
     try {
       imageBitmap = await createImageBitmap(file);
-      const targetRatio = 1.586;
-      let sourceWidth = imageBitmap.width;
-      let sourceHeight = imageBitmap.height;
-      let sourceX = 0;
-      let sourceY = 0;
-
-      if (sourceWidth / sourceHeight > targetRatio) {
-        sourceWidth = Math.round(sourceHeight * targetRatio);
-        sourceX = Math.max(0, Math.round((imageBitmap.width - sourceWidth) / 2));
-      } else {
-        sourceHeight = Math.round(sourceWidth / targetRatio);
-        sourceY = Math.max(0, Math.round((imageBitmap.height - sourceHeight) / 2));
-      }
+      const bounds = this.getDocumentCropBounds(imageBitmap.width, imageBitmap.height);
 
       const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, sourceWidth);
-      canvas.height = Math.max(1, sourceHeight);
+      canvas.width = bounds.width;
+      canvas.height = bounds.height;
       const context = canvas.getContext("2d");
       if (!context) {
         return file;
@@ -417,10 +451,10 @@ export class FormUI extends HTMLElement {
 
       context.drawImage(
         imageBitmap,
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
+        bounds.x,
+        bounds.y,
+        bounds.width,
+        bounds.height,
         0,
         0,
         canvas.width,
@@ -452,6 +486,18 @@ export class FormUI extends HTMLElement {
           field: fieldConfig.name,
           slot: slotIndex,
           fileName: croppedFile.name,
+          bounds,
+        },
+      });
+
+      this.emitFormEvent("form-ui:document-scan-bounds-detected", {
+        values: this.engine.normalizeValues(this.form?.getState().values || {}),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          field: fieldConfig.name,
+          slot: slotIndex,
+          bounds,
         },
       });
 
@@ -512,9 +558,16 @@ export class FormUI extends HTMLElement {
         },
       });
 
+      if (fieldConfig.documentTextTargetField && this.form) {
+        this.form.change(fieldConfig.documentTextTargetField, detectedText);
+      }
+
       const mrz = this.parseMrz(detectedText);
       if (mrz) {
         insight.mrzBySlot[slotIndex] = mrz;
+        if (fieldConfig.documentMrzTargetField && this.form) {
+          this.form.change(fieldConfig.documentMrzTargetField, mrz);
+        }
         this.emitFormEvent("form-ui:document-mrz-detected", {
           values: this.engine.normalizeValues(this.form?.getState().values || {}),
           formConfig: this.formConfig,
@@ -526,6 +579,18 @@ export class FormUI extends HTMLElement {
           },
         });
       }
+
+      this.emitFormEvent("form-ui:document-data", {
+        values: this.engine.normalizeValues(this.form?.getState().values || {}),
+        formConfig: this.formConfig,
+        submit: this.formConfig?.submit,
+        result: {
+          field: fieldConfig.name,
+          slot: slotIndex,
+          text: detectedText,
+          mrz,
+        },
+      });
     } catch {
       return;
     } finally {

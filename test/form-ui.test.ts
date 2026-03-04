@@ -740,6 +740,7 @@ describe('FormUI', () => {
         endpoint: '/api/uploads',
         method: 'POST',
         mode: 'form-data',
+        formDataArrayMode: 'brackets',
       },
       storage: {
         mode: 'draft',
@@ -799,6 +800,38 @@ describe('FormUI', () => {
     const body = request.body as FormData;
     expect(body).toBeInstanceOf(FormData);
     expect(body.getAll('attachments[]')).toEqual([fileOne, fileTwo]);
+  });
+
+  it('supports drag and drop for file fields in the default UI', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'file-drop-form',
+      title: 'File Drop Form',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+        },
+      ],
+    }) as FormUI;
+    const selection = element.querySelector('#attachments_selection') as HTMLElement;
+    const droppedFile = new File(['drop'], 'drop.pdf', { type: 'application/pdf' });
+    const dropEvent = new Event('drop', { bubbles: true }) as DragEvent;
+
+    Object.defineProperty(dropEvent, 'dataTransfer', {
+      configurable: true,
+      value: {
+        files: [droppedFile],
+      },
+    });
+
+    selection.dispatchEvent(dropEvent);
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).attachments).toEqual([droppedFile]);
+    expect(selection.textContent).toContain('drop.pdf');
   });
 
   it('can remove a selected file from the default upload UI', async () => {
@@ -1019,6 +1052,70 @@ describe('FormUI', () => {
         errorMessage: 'Not enough files: minimum 2 required',
       }),
     });
+  });
+
+  it('supports total file size validation for multiple uploads', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'total-size-form',
+      title: 'Total Size Form',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+          maxTotalFileSizeMb: 0.000001,
+        },
+      ],
+    }) as FormUI;
+    const fileOne = new File(['12345'], 'one.pdf', { type: 'application/pdf' });
+    const fileTwo = new File(['67890'], 'two.pdf', { type: 'application/pdf' });
+
+    expect(element.validateForm({ attachments: [fileOne, fileTwo] })).toEqual({
+      attachments: expect.objectContaining({
+        errorMessage: 'Files too large together: total exceeds 0.000001 MB',
+      }),
+    });
+  });
+
+  it('supports repeat form-data array keys for file uploads', async () => {
+    const fetchMock = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ uploaded: true }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'upload-repeat-form',
+      title: 'Upload Repeat Form',
+      submit: {
+        endpoint: '/api/uploads',
+        method: 'POST',
+        mode: 'form-data',
+        formDataArrayMode: 'repeat',
+      },
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+        },
+      ],
+    }) as FormUI;
+    const fileOne = new File(['one'], 'one.pdf', { type: 'application/pdf' });
+    const fileTwo = new File(['two'], 'two.pdf', { type: 'application/pdf' });
+
+    await element.onSubmit({ attachments: [fileOne, fileTwo] });
+
+    const request = fetchMock.mock.calls[0][1] as RequestInit;
+    const body = request.body as FormData;
+    expect(body.getAll('attachments')).toEqual([fileOne, fileTwo]);
+    expect(body.getAll('attachments[]')).toEqual([]);
   });
 
   it('disables offline queue for forms that include file fields', async () => {

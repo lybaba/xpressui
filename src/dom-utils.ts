@@ -25,6 +25,7 @@ export const ATTR_MULTIPLE = "multiple"
 export const ATTR_MIN_FILES = "minFiles"
 export const ATTR_MAX_FILES = "maxFiles"
 export const ATTR_MAX_FILE_SIZE_MB = "maxFileSizeMb"
+export const ATTR_MAX_TOTAL_FILE_SIZE_MB = "maxTotalFileSizeMb"
 export const ATTR_FILE_TYPE_ERROR_MSG = "fileTypeErrorMsg"
 export const ATTR_FILE_SIZE_ERROR_MSG = "fileSizeErrorMsg"
 export const ATTR_PATTERN = "pattern"
@@ -59,6 +60,7 @@ export const ATTR_RENDERING_MODE = "RenderingMode"
 export const ATTR_SUBMIT_ENDPOINT = "submitEndpoint"
 export const ATTR_SUBMIT_METHOD = "submitMethod"
 export const ATTR_SUBMIT_MODE = "submitMode"
+export const ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = "submitFormDataArrayMode"
 export const ATTR_SUBMIT_ACTION = "submitAction"
 export const ATTR_VISIBLE_WHEN_FIELD = "visibleWhenField"
 export const ATTR_VISIBLE_WHEN_EQUALS = "visibleWhenEquals"
@@ -93,6 +95,7 @@ export const HTML_ATTR_MULTIPLE = `${HTML_ATTR_PREFIX}multiple`
 export const HTML_ATTR_MIN_FILES = `${HTML_ATTR_PREFIX}min-files`
 export const HTML_ATTR_MAX_FILES = `${HTML_ATTR_PREFIX}max-files`
 export const HTML_ATTR_MAX_FILE_SIZE_MB = `${HTML_ATTR_PREFIX}max-file-size-mb`
+export const HTML_ATTR_MAX_TOTAL_FILE_SIZE_MB = `${HTML_ATTR_PREFIX}max-total-file-size-mb`
 export const HTML_ATTR_FILE_TYPE_ERROR_MSG = `${HTML_ATTR_PREFIX}file-type-error-msg`
 export const HTML_ATTR_FILE_SIZE_ERROR_MSG = `${HTML_ATTR_PREFIX}file-size-error-msg`
 export const HTML_ATTR_PATTERN = `${HTML_ATTR_PREFIX}pattern`
@@ -127,6 +130,7 @@ export const HTML_ATTR_RENDERING_MODE = `${HTML_ATTR_PREFIX}rendering-mode`
 export const HTML_ATTR_SUBMIT_ENDPOINT = `${HTML_ATTR_PREFIX}submit-endpoint`
 export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
 export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
+export const HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE = `${HTML_ATTR_PREFIX}submit-form-data-array-mode`
 export const HTML_ATTR_SUBMIT_ACTION = `${HTML_ATTR_PREFIX}submit-action`
 export const HTML_ATTR_VISIBLE_WHEN_FIELD = `${HTML_ATTR_PREFIX}visible-when-field`
 export const HTML_ATTR_VISIBLE_WHEN_EQUALS = `${HTML_ATTR_PREFIX}visible-when-equals`
@@ -161,6 +165,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_MIN_FILES]: ATTR_MIN_FILES,
     [HTML_ATTR_MAX_FILES]: ATTR_MAX_FILES,
     [HTML_ATTR_MAX_FILE_SIZE_MB]: ATTR_MAX_FILE_SIZE_MB,
+    [HTML_ATTR_MAX_TOTAL_FILE_SIZE_MB]: ATTR_MAX_TOTAL_FILE_SIZE_MB,
     [HTML_ATTR_FILE_TYPE_ERROR_MSG]: ATTR_FILE_TYPE_ERROR_MSG,
     [HTML_ATTR_FILE_SIZE_ERROR_MSG]: ATTR_FILE_SIZE_ERROR_MSG,
     [HTML_ATTR_PATTERN]: ATTR_PATTERN,
@@ -195,6 +200,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_SUBMIT_ENDPOINT]: ATTR_SUBMIT_ENDPOINT,
     [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
     [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
+    [HTML_ATTR_SUBMIT_FORM_DATA_ARRAY_MODE]: ATTR_SUBMIT_FORM_DATA_ARRAY_MODE,
     [HTML_ATTR_SUBMIT_ACTION]: ATTR_SUBMIT_ACTION,
     [HTML_ATTR_VISIBLE_WHEN_FIELD]: ATTR_VISIBLE_WHEN_FIELD,
     [HTML_ATTR_VISIBLE_WHEN_EQUALS]: ATTR_VISIBLE_WHEN_EQUALS,
@@ -258,6 +264,11 @@ export function getFieldConfig(node: Element): TFieldConfig {
         fieldConfig.maxFileSizeMb = Number(maxFileSizeMb);
     }
 
+    const maxTotalFileSizeMb = node.getAttribute(HTML_ATTR_MAX_TOTAL_FILE_SIZE_MB);
+    if (maxTotalFileSizeMb) {
+        fieldConfig.maxTotalFileSizeMb = Number(maxTotalFileSizeMb);
+    }
+
     return fieldConfig;
 }
 
@@ -281,11 +292,13 @@ export default function getFormConfig(node: Element): TFormConfig {
             endpoint: (formConfig as any).submitEndpoint,
             method: (formConfig as any).submitMethod,
             mode: (formConfig as any).submitMode,
+            formDataArrayMode: (formConfig as any).submitFormDataArrayMode,
             action: (formConfig as any).submitAction,
         };
         delete (formConfig as any).submitEndpoint;
         delete (formConfig as any).submitMethod;
         delete (formConfig as any).submitMode;
+        delete (formConfig as any).submitFormDataArrayMode;
         delete (formConfig as any).submitAction;
     }
 

@@ -47,6 +47,7 @@ export type TFormSubmitRequest = {
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: Record<string, string>;
     mode?: 'json' | 'form-data';
+    formDataArrayMode?: 'brackets' | 'repeat';
     action?: string;
 };
 

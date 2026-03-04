@@ -69,6 +69,9 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   const maxFileSizeAttr = field.maxFileSizeMb !== undefined
     ? ` data-max-file-size-mb="${escapeHtml(String(field.maxFileSizeMb))}"`
     : '';
+  const maxTotalFileSizeAttr = field.maxTotalFileSizeMb !== undefined
+    ? ` data-max-total-file-size-mb="${escapeHtml(String(field.maxTotalFileSizeMb))}"`
+    : '';
   const fileTypeErrorAttr = field.fileTypeErrorMsg
     ? ` data-file-type-error-msg="${escapeHtml(String(field.fileTypeErrorMsg))}"`
     : '';
@@ -76,7 +79,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     ? ` data-file-size-error-msg="${escapeHtml(String(field.fileSizeErrorMsg))}"`
     : '';
   const fileSelectionMarkup = isFileFieldType(field.type)
-    ? `<div class="mt-2 space-y-2" id="${escapeHtml(field.name)}_selection"></div>`
+    ? `<div class="mt-2 rounded border border-dashed border-base-300 p-3 transition-colors" id="${escapeHtml(field.name)}_selection" data-file-drop-zone="${escapeHtml(field.name)}"></div>`
     : '';
   const helpText = field.helpText
     ? `<div class="label"><span class="label-text-alt">${escapeHtml(field.helpText)}</span></div>`
@@ -158,7 +161,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${multipleAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${multipleAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
     ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
@@ -219,6 +222,9 @@ export function createTemplateMarkup(
           : '',
         config.submit.mode
           ? `data-submit-mode="${escapeHtml(config.submit.mode)}"`
+          : '',
+        config.submit.formDataArrayMode
+          ? `data-submit-form-data-array-mode="${escapeHtml(config.submit.formDataArrayMode)}"`
           : '',
         config.submit.action
           ? `data-submit-action="${escapeHtml(config.submit.action)}"`

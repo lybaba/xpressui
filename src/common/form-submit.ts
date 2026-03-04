@@ -2,7 +2,12 @@ import { TFormSubmitRequest } from "./TFormConfig";
 import { isFileLikeValue } from "./field";
 import { buildProviderPayload } from "./provider-registry";
 
-function appendFormDataValue(formData: FormData, key: string, value: any): void {
+function appendFormDataValue(
+  formData: FormData,
+  key: string,
+  value: any,
+  arrayMode: "brackets" | "repeat",
+): void {
   if (value === undefined) {
     return;
   }
@@ -14,14 +19,19 @@ function appendFormDataValue(formData: FormData, key: string, value: any): void 
 
   if (Array.isArray(value)) {
     value.forEach((entry) => {
-      appendFormDataValue(formData, `${key}[]`, entry);
+      appendFormDataValue(
+        formData,
+        arrayMode === "brackets" ? `${key}[]` : key,
+        entry,
+        arrayMode,
+      );
     });
     return;
   }
 
   if (value && typeof value === "object") {
     Object.entries(value).forEach(([childKey, childValue]) => {
-      appendFormDataValue(formData, `${key}[${childKey}]`, childValue);
+      appendFormDataValue(formData, `${key}[${childKey}]`, childValue, arrayMode);
     });
     return;
   }
@@ -35,6 +45,7 @@ export async function submitFormValues(
 ): Promise<{ response: Response; result: any }> {
   const method = submitConfig.method || "POST";
   const mode = submitConfig.mode || "json";
+  const formDataArrayMode = submitConfig.formDataArrayMode || "brackets";
   const headers = { ...(submitConfig.headers || {}) };
   let url = submitConfig.endpoint;
   const init: RequestInit = { method, headers };
@@ -52,7 +63,7 @@ export async function submitFormValues(
   } else if (mode === "form-data") {
     const body = new FormData();
     Object.entries(payload).forEach(([key, value]) => {
-      appendFormDataValue(body, key, value);
+      appendFormDataValue(body, key, value, formDataArrayMode);
     });
     init.body = body;
   } else {

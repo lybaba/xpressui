@@ -103,6 +103,7 @@ export class FormUI extends HTMLElement {
   dynamic: FormDynamicRuntime;
   persistence: FormPersistenceRuntime;
   filePreviewUrls: Record<string, string[]>;
+  fileDragActive: Record<string, boolean>;
 
   constructor() {
     super();
@@ -113,6 +114,7 @@ export class FormUI extends HTMLElement {
     this.form = null;
     this.initialized = false;
     this.filePreviewUrls = {};
+    this.fileDragActive = {};
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
       getRules: () => this.formConfig?.rules || [],
@@ -212,8 +214,16 @@ export class FormUI extends HTMLElement {
     this.clearFilePreviewUrls(fieldConfig.name);
     selectionElement.innerHTML = "";
     const selectedFiles = this.getFileValueList(value);
+    const isDragActive = Boolean(this.fileDragActive[fieldConfig.name]);
+
+    selectionElement.classList.toggle("border-primary", isDragActive);
+    selectionElement.classList.toggle("bg-base-200", isDragActive);
 
     if (!selectedFiles.length) {
+      const placeholder = document.createElement("div");
+      placeholder.className = "text-xs opacity-70";
+      placeholder.textContent = "Drop files here or use the file picker.";
+      selectionElement.appendChild(placeholder);
       return;
     }
 
@@ -269,6 +279,34 @@ export class FormUI extends HTMLElement {
     });
 
     selectionElement.appendChild(list);
+  }
+
+  setFileDragState = (fieldName: string, active: boolean) => {
+    this.fileDragActive[fieldName] = active;
+    const fieldConfig = this.engine.getField(fieldName);
+    if (!fieldConfig) {
+      return;
+    }
+
+    const selectionElement = this.querySelector(`#${fieldName}_selection`) as HTMLElement | null;
+    this.renderFileSelection(fieldConfig, this.getFieldValue(fieldName), selectionElement);
+  }
+
+  applyDroppedFiles = (fieldName: string, files: File[]) => {
+    if (!this.form || !files.length) {
+      return;
+    }
+
+    const fieldConfig = this.engine.getField(fieldName);
+    if (!fieldConfig) {
+      return;
+    }
+
+    const nextValue = fieldConfig.multiple ? files : files[0];
+    this.form.change(fieldName, nextValue);
+    this.scheduleDraftSave();
+    this.updateConditionalFields();
+    void this.refreshRemoteOptions(fieldName);
   }
 
   removeSelectedFile = (fieldName: string, fileIndex: number) => {
@@ -429,7 +467,8 @@ export class FormUI extends HTMLElement {
         errorType === "file-accept" ||
         errorType === "file-size" ||
         errorType === "file-count" ||
-        errorType === "file-min-count"
+        errorType === "file-min-count" ||
+        errorType === "file-total-size"
       ) {
         this.emitFormEvent("form-ui:file-validation-error", {
           values: this.engine.normalizeValues(values),
@@ -646,6 +685,27 @@ export class FormUI extends HTMLElement {
               }
 
               this.removeSelectedFile(name, fileIndex);
+            });
+            selectionElement.addEventListener("dragenter", (event) => {
+              event.preventDefault();
+              this.setFileDragState(name, true);
+            });
+            selectionElement.addEventListener("dragover", (event) => {
+              event.preventDefault();
+              this.setFileDragState(name, true);
+            });
+            selectionElement.addEventListener("dragleave", (event) => {
+              const relatedTarget = event.relatedTarget as Node | null;
+              if (relatedTarget && selectionElement.contains(relatedTarget)) {
+                return;
+              }
+              this.setFileDragState(name, false);
+            });
+            selectionElement.addEventListener("drop", (event) => {
+              event.preventDefault();
+              this.setFileDragState(name, false);
+              const droppedFiles = Array.from(event.dataTransfer?.files || []);
+              this.applyDroppedFiles(name, droppedFiles);
             });
           }
           this.registered[name] = true;

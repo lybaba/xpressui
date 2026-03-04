@@ -274,6 +274,7 @@ mountFormUI(container, {
     endpoint: '/api/uploads',
     method: 'POST',
     mode: 'form-data',
+    formDataArrayMode: 'brackets',
   },
   fields: [
     {
@@ -289,6 +290,21 @@ mountFormUI(container, {
 
 Generated multipart fields:
 - `attachments[]` for each uploaded file
+
+If your backend expects repeated keys without brackets, use:
+
+```ts
+submit: {
+  endpoint: '/api/uploads',
+  method: 'POST',
+  mode: 'form-data',
+  formDataArrayMode: 'repeat',
+}
+```
+
+Then the frontend sends:
+- `attachments`
+- `attachments`
 
 Minimal Express example:
 

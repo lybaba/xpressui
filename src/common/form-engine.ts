@@ -163,6 +163,27 @@ export class FormEngineRuntime {
               maxFileSizeMb: fieldConfig.maxFileSizeMb,
             },
           };
+          return;
+        }
+      }
+
+      if (
+        typeof fieldConfig.maxTotalFileSizeMb === "number" &&
+        fieldConfig.maxTotalFileSizeMb > 0
+      ) {
+        const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+        const maxTotalBytes = fieldConfig.maxTotalFileSizeMb * 1024 * 1024;
+        if (totalBytes > maxTotalBytes) {
+          validationErrors[fieldName] = {
+            errorMessage:
+              fieldConfig.errorMsg ||
+              `Files too large together: total exceeds ${fieldConfig.maxTotalFileSizeMb} MB`,
+            errorData: {
+              type: "file-total-size",
+              maxTotalFileSizeMb: fieldConfig.maxTotalFileSizeMb,
+              totalBytes,
+            },
+          };
         }
       }
     });

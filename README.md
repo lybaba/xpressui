@@ -664,6 +664,7 @@ mountFormUI(container, {
     endpoint: '/api/uploads',
     method: 'POST',
     mode: 'form-data',
+    formDataArrayMode: 'brackets',
   },
   fields: [
     {
@@ -675,6 +676,7 @@ mountFormUI(container, {
       minFiles: 1,
       maxFiles: 3,
       maxFileSizeMb: 10,
+      maxTotalFileSizeMb: 20,
       fileTypeErrorMsg: 'Only PDF, image, or video files are allowed.',
       fileSizeErrorMsg: 'Each file must stay below 10 MB.',
     },
@@ -691,11 +693,15 @@ Frontend behavior:
 - file inputs keep real `File` objects in memory until submit
 - local draft storage only keeps file metadata, not blobs
 - offline queue is disabled for forms that include file fields
+- the default upload area accepts drag-and-drop
 - selected files can be removed one by one in the default UI
 - `accept: 'image/*'` shows a simple image preview before submit
 - `minFiles` sets a minimum file count for multi-upload fields
 - `maxFiles` limits how many files can be selected
+- `maxTotalFileSizeMb` limits the total size across all selected files
 - `fileTypeErrorMsg` and `fileSizeErrorMsg` let you override default validation messages
+- `submit.formDataArrayMode: 'brackets' | 'repeat'` controls whether repeated
+  file fields are sent as `attachments[]` or `attachments`
 
 Extra event:
 - `form-ui:file-validation-error`
@@ -860,6 +866,7 @@ Useful field capabilities supported by the current builder:
 - `minFiles` for file fields
 - `maxFiles` for file fields
 - `maxFileSizeMb` for file fields
+- `maxTotalFileSizeMb` for file fields
 
 Common field types used today:
 - `text`

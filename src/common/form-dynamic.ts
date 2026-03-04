@@ -8,6 +8,7 @@ export type TFormRemoteOptionsDetail = {
 };
 
 export type TFormRuleAppliedDetail = {
+  id?: string;
   logic?: "AND" | "OR";
   conditions: Array<{
     field: string;
@@ -31,6 +32,7 @@ export type TFormRuleAppliedDetail = {
 type TFormDynamicRuntimeOptions = {
   getFieldConfigs(): TFieldConfig[];
   getRules(): Array<{
+    id?: string;
     logic?: "AND" | "OR";
     conditions: Array<{
       field: string;
@@ -179,6 +181,7 @@ export class FormDynamicRuntime {
         formConfig: context.formConfig,
         submit: context.submit,
         result: {
+          id: rule.id,
           logic: rule.logic,
           conditions: rule.conditions,
           actions: rule.actions,

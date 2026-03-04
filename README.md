@@ -518,6 +518,7 @@ mountFormUI(container, {
   title: 'Rules',
   rules: [
     {
+      id: 'show-notes-for-priority-consulting',
       logic: 'AND',
       conditions: [
         { field: 'service', operator: 'equals', value: 'consulting' },
@@ -537,6 +538,7 @@ mountFormUI(container, {
 ```
 
 Current rule scope:
+- optional rule id: `id`
 - condition logic: `AND`, `OR`
 - condition operators: `equals`, `not_equals`, `contains`, `in`, `gt`, `lt`
 - actions: `show`, `hide`, `enable`, `disable`, `clear-value`, `set-value`, `fetch-options`

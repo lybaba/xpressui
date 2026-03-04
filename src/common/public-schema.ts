@@ -23,6 +23,7 @@ const PUBLIC_FORM_SCHEMA = {
         required: ["conditions", "actions"],
         additionalProperties: true,
         properties: {
+          id: { type: "string", minLength: 1 },
           logic: { type: "string", enum: ["AND", "OR"] },
           conditions: {
             type: "array",

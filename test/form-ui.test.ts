@@ -736,6 +736,7 @@ describe('FormUI', () => {
       title: 'Rule Event Form',
       rules: [
         {
+          id: 'set-currency',
           conditions: [
             { field: 'country', operator: 'equals', value: 'fr' },
           ],
@@ -763,6 +764,7 @@ describe('FormUI', () => {
     expect(onRuleApplied).toHaveBeenCalledWith(
       expect.objectContaining({
         result: expect.objectContaining({
+          id: 'set-currency',
           actions: [
             { type: 'set-value', field: 'currency', value: 'EUR' },
           ],

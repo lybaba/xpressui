@@ -77,6 +77,7 @@ export type TFormRuleAction = {
 };
 
 export type TFormRule = {
+    id?: string;
     logic?: 'AND' | 'OR';
     conditions: TFormRuleCondition[];
     actions: TFormRuleAction[];

@@ -348,6 +348,9 @@ export function createTemplateMarkup(
         config.submit.baseUrl
           ? `data-submit-base-url="${escapeHtml(config.submit.baseUrl)}"`
           : '',
+        config.submit.providerRoutingPolicy
+          ? `data-submit-provider-routing-policy="${escapeHtml(config.submit.providerRoutingPolicy)}"`
+          : '',
         config.submit.method
           ? `data-submit-method="${escapeHtml(config.submit.method)}"`
           : '',

@@ -6201,6 +6201,84 @@ describe('FormUI', () => {
     );
   });
 
+  it('applies workflow-only provider routing policy when step and workflow transitions conflict', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        status: 'pending_approval',
+        transition: {
+          type: 'step',
+          target: 'request_step',
+        },
+        data: {
+          approvalId: 'apr_policy_1',
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const element = renderFixture(`
+      <template id="approval-routing-policy-form">
+        <form
+          id="approval-routing-policy-form_form"
+          data-name="approval-routing-policy-form"
+          data-label="Approval Routing Policy Form"
+          data-type="multistepform"
+          data-version="1"
+          data-submit-endpoint="https://api.example.test/approvals/policy"
+          data-submit-action="approval-request"
+          data-submit-provider-routing-policy="workflow-only"
+          data-workflow-step-targets='{"pending_approval":"review_step"}'
+        >
+          <div data-type="section" data-name="request_step" data-label="Request"></div>
+          <div data-type="section" data-name="review_step" data-label="Review" data-step-summary="true"></div>
+          <input
+            id="request_email_policy"
+            name="request_email_policy"
+            type="email"
+            data-type="email"
+            data-name="request_email_policy"
+            data-label="Requester Email"
+            data-required="true"
+            data-section-name="request_step"
+          />
+          <span id="request_email_policy_error"></span>
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </template>
+      <form-ui name="approval-routing-policy-form"></form-ui>
+    `);
+    const input = element.querySelector('#request_email_policy') as HTMLInputElement;
+    const form = element.querySelector('#approval-routing-policy-form_form') as HTMLFormElement;
+    const onProviderTransition = vi.fn();
+
+    element.addEventListener('form-ui:provider-transition', (event) => {
+      onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    input.value = 'policy@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(element.nextStep()).toBe(true);
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(element.getWorkflowState()).toBe('pending_approval');
+    expect(element.getCurrentStepName()).toBe('review_step');
+    expect(onProviderTransition).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          transition: {
+            type: 'workflow',
+            state: 'pending_approval',
+          },
+          policy: 'workflow-only',
+          stepName: 'review_step',
+        }),
+      }),
+    );
+  });
+
   it('derives workflow routing from provider status when transition is omitted', async () => {
     vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({

@@ -45,6 +45,7 @@ export enum RenderingMode {
 export type TFormSubmitRequest = {
     endpoint: string;
     baseUrl?: string;
+    providerRoutingPolicy?: 'auto' | 'workflow-first' | 'step-first' | 'workflow-only' | 'step-only';
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: Record<string, string>;
     mode?: 'json' | 'form-data';

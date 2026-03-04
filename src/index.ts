@@ -36,7 +36,7 @@ import {
   normalizeProviderResult,
   registerProvider,
 } from "./common/provider-registry";
-import type { TNormalizedProviderResult } from "./common/provider-registry";
+import type { TFormProviderTransition, TNormalizedProviderResult } from "./common/provider-registry";
 export {
   createFormConfig,
   createTemplateMarkup,
@@ -147,6 +147,12 @@ export type TFormWorkflowState =
   | "error";
 
 type TWorkflowRouteResult = {
+  routed: boolean;
+  stepIndex: number;
+  stepName: string | null;
+};
+
+type TProviderTransitionRouteResult = {
   routed: boolean;
   stepIndex: number;
   stepName: string | null;
@@ -2362,17 +2368,132 @@ export class FormUI extends HTMLElement {
     return null;
   }
 
-  applyProviderTransition = (
+  getProviderRoutingPolicy = (): NonNullable<TFormSubmitRequest["providerRoutingPolicy"]> => {
+    const policy = this.formConfig?.submit?.providerRoutingPolicy;
+    if (
+      policy === "workflow-first" ||
+      policy === "step-first" ||
+      policy === "workflow-only" ||
+      policy === "step-only"
+    ) {
+      return policy;
+    }
+
+    return "auto";
+  }
+
+  normalizeExplicitProviderTransition = (result: any): TFormProviderTransition | null => {
+    const transition = result?.transition;
+    if (!transition || typeof transition !== "object") {
+      return null;
+    }
+
+    if (transition.type === "workflow" && typeof transition.state === "string" && transition.state) {
+      return {
+        type: "workflow",
+        state: transition.state,
+      };
+    }
+
+    if (
+      transition.type === "step" &&
+      (typeof transition.target === "string" || Number.isFinite(transition.target))
+    ) {
+      return {
+        type: "step",
+        target: transition.target as string | number,
+      };
+    }
+
+    return null;
+  }
+
+  normalizeStatusWorkflowTransition = (
+    providerResult?: TNormalizedProviderResult,
+  ): TFormProviderTransition | null => {
+    const status = providerResult?.status;
+    if (
+      status === "draft" ||
+      status === "submitting" ||
+      status === "submitted" ||
+      status === "pending_approval" ||
+      status === "approved" ||
+      status === "completed" ||
+      status === "rejected" ||
+      status === "error"
+    ) {
+      return {
+        type: "workflow",
+        state: status,
+      };
+    }
+
+    return null;
+  }
+
+  getProviderTransitionKey = (transition: TFormProviderTransition): string => {
+    return transition.type === "workflow"
+      ? `workflow:${transition.state}`
+      : `step:${String(transition.target)}`;
+  }
+
+  buildProviderTransitionCandidates = (
+    policy: NonNullable<TFormSubmitRequest["providerRoutingPolicy"]>,
+    result: any,
+    providerResult?: TNormalizedProviderResult,
+  ): TFormProviderTransition[] => {
+    const explicitTransition = this.normalizeExplicitProviderTransition(result);
+    const normalizedTransition = providerResult?.transition || null;
+    const statusWorkflowTransition = this.normalizeStatusWorkflowTransition(providerResult);
+    const stepTransition =
+      explicitTransition?.type === "step"
+        ? explicitTransition
+        : normalizedTransition?.type === "step"
+          ? normalizedTransition
+          : null;
+    const workflowTransition =
+      explicitTransition?.type === "workflow"
+        ? explicitTransition
+        : normalizedTransition?.type === "workflow"
+          ? normalizedTransition
+          : null;
+
+    let ordered: Array<TFormProviderTransition | null> = [];
+    if (policy === "workflow-only") {
+      ordered = [workflowTransition, statusWorkflowTransition];
+    } else if (policy === "step-only") {
+      ordered = [stepTransition];
+    } else if (policy === "workflow-first") {
+      ordered = [workflowTransition, statusWorkflowTransition, stepTransition];
+    } else if (policy === "step-first") {
+      ordered = [stepTransition, workflowTransition, statusWorkflowTransition];
+    } else {
+      ordered = [explicitTransition, normalizedTransition, statusWorkflowTransition];
+    }
+
+    const unique: TFormProviderTransition[] = [];
+    const seen = new Set<string>();
+    ordered.forEach((candidate) => {
+      if (!candidate) {
+        return;
+      }
+      const key = this.getProviderTransitionKey(candidate);
+      if (seen.has(key)) {
+        return;
+      }
+      seen.add(key);
+      unique.push(candidate);
+    });
+
+    return unique;
+  }
+
+  applySingleProviderTransition = (
+    transition: TFormProviderTransition,
     detail: TFormUISubmitDetail,
     response: Response | undefined,
     result: any,
-    providerResult?: TNormalizedProviderResult,
-  ) => {
-    const transition = providerResult?.transition || null;
-    if (!transition) {
-      return false;
-    }
-
+  ): TProviderTransitionRouteResult | null => {
     if (transition.type === "workflow") {
       const workflowRoute = this.setWorkflowState(
         transition.state as TFormWorkflowState,
@@ -2392,23 +2513,16 @@ export class FormUI extends HTMLElement {
           },
         });
       }
-      this.emitFormEvent("form-ui:provider-transition", {
-        ...detail,
-        response,
-        result: {
-          transition,
-          routed: workflowRoute.routed,
-          stepIndex: workflowRoute.stepIndex,
-          stepName: workflowRoute.stepName,
-          workflow: this.getWorkflowSnapshot(),
-        },
-      });
-      return true;
+      return {
+        routed: workflowRoute.routed,
+        stepIndex: workflowRoute.stepIndex,
+        stepName: workflowRoute.stepName,
+      };
     }
 
     const stepIndex = this.resolveProviderStepTargetIndex(transition.target);
     if (stepIndex === null || !this.goToStep(stepIndex)) {
-      return false;
+      return null;
     }
 
     this.emitFormEvent("form-ui:step-jumped", {
@@ -2425,15 +2539,47 @@ export class FormUI extends HTMLElement {
       response,
       result: this.getWorkflowSnapshot(),
     });
-    this.emitFormEvent("form-ui:provider-transition", {
-      ...detail,
-      response,
-      result: {
-        transition,
-        workflow: this.getWorkflowSnapshot(),
-      },
-    });
-    return true;
+    return {
+      routed: true,
+      stepIndex: this.getCurrentStepIndex(),
+      stepName: this.getCurrentStepName(),
+    };
+  }
+
+  applyProviderTransition = (
+    detail: TFormUISubmitDetail,
+    response: Response | undefined,
+    result: any,
+    providerResult?: TNormalizedProviderResult,
+  ) => {
+    const policy = this.getProviderRoutingPolicy();
+    const transitions = this.buildProviderTransitionCandidates(policy, result, providerResult);
+    if (!transitions.length) {
+      return false;
+    }
+
+    for (const transition of transitions) {
+      const routeResult = this.applySingleProviderTransition(transition, detail, response, result);
+      if (!routeResult) {
+        continue;
+      }
+
+      this.emitFormEvent("form-ui:provider-transition", {
+        ...detail,
+        response,
+        result: {
+          transition,
+          routed: routeResult.routed,
+          stepIndex: routeResult.stepIndex,
+          stepName: routeResult.stepName,
+          policy,
+          workflow: this.getWorkflowSnapshot(),
+        },
+      });
+      return true;
+    }
+
+    return false;
   }
 
   emitFileValidationErrorEvent = (

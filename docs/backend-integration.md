@@ -12,6 +12,12 @@ responses your frontend can rely on.
 - Default method is `POST`
 - Default payload mode is JSON
 - `submit.baseUrl` can prefix relative `endpoint` and `presignEndpoint` values
+- `submit.providerRoutingPolicy` controls how provider transitions are applied:
+  - `auto` (default)
+  - `workflow-first`
+  - `step-first`
+  - `workflow-only`
+  - `step-only`
 - The component emits `form-ui:submit-success` on successful HTTP responses
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events

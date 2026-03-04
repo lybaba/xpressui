@@ -196,10 +196,10 @@ Completed:
 - time/date-based branching
 - step review summaries
 - workflow state integration
+- provider-driven workflow routing policies
 
 Remaining:
 - richer step transition operators:
-- provider-driven workflow routing policies
 - workflow snapshots reusable by admin/debug tools
 
 Exit criteria:

@@ -36,6 +36,12 @@ type TQueueState = {
   items: TQueuedSubmission[];
 };
 
+type TDraftState = {
+  version: 1;
+  savedAt: number;
+  values: Record<string, any>;
+};
+
 function toStoredFileMetadata(value: File | Blob): TStoredFileMetadata {
   return {
     __type: "file-metadata",
@@ -171,11 +177,18 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
   storageKey: string;
   queueKey: string;
   deadLetterKey: string;
+  retentionMs: number | null;
 
-  constructor(storageKey: string, queueKey: string, deadLetterKey: string) {
+  constructor(
+    storageKey: string,
+    queueKey: string,
+    deadLetterKey: string,
+    retentionMs: number | null = null,
+  ) {
     this.storageKey = storageKey;
     this.queueKey = queueKey;
     this.deadLetterKey = deadLetterKey;
+    this.retentionMs = retentionMs;
   }
 
   createQueueEntry(values: Record<string, any>): TQueuedSubmission {
@@ -196,6 +209,22 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
     }
 
     const parsed = JSON.parse(raw);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      (parsed as Partial<TDraftState>).version === 1 &&
+      typeof (parsed as Partial<TDraftState>).savedAt === "number" &&
+      (parsed as Partial<TDraftState>).values &&
+      typeof (parsed as Partial<TDraftState>).values === "object"
+    ) {
+      const draftState = parsed as TDraftState;
+      if (this.isExpiredTimestamp(draftState.savedAt)) {
+        return null;
+      }
+
+      return draftState.values;
+    }
+
     return parsed && typeof parsed === "object" ? parsed : null;
   }
 
@@ -212,7 +241,8 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
     }
 
     const state = parsed as Partial<TQueueState>;
-    return Array.isArray(state?.items) ? state.items : [];
+    const items = Array.isArray(state?.items) ? state.items : [];
+    return items.filter((item) => !this.isExpiredTimestamp(item.updatedAt || item.createdAt));
   }
 
   parseDeadLetterRaw(raw: string | null): TQueuedSubmission[] {
@@ -226,12 +256,26 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
     }
 
     const state = parsed as Partial<TQueueState>;
-    return Array.isArray(state?.items) ? state.items : [];
+    const items = Array.isArray(state?.items) ? state.items : [];
+    return items.filter((item) => !this.isExpiredTimestamp(item.updatedAt || item.createdAt));
+  }
+
+  isExpiredTimestamp(timestamp?: number): boolean {
+    if (!this.retentionMs || typeof timestamp !== "number") {
+      return false;
+    }
+
+    return Date.now() - timestamp > this.retentionMs;
   }
 
   loadDraft(): Record<string, any> | null {
     try {
-      return this.parseDraftRaw(window.localStorage.getItem(this.storageKey));
+      const raw = window.localStorage.getItem(this.storageKey);
+      const parsed = this.parseDraftRaw(raw);
+      if (!parsed && raw) {
+        this.clearDraft();
+      }
+      return parsed;
     } catch {
       return null;
     }
@@ -239,9 +283,14 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
 
   saveDraft(values: Record<string, any>): void {
     try {
+      const state: TDraftState = {
+        version: 1,
+        savedAt: Date.now(),
+        values: getSerializableStorageValues(values),
+      };
       window.localStorage.setItem(
         this.storageKey,
-        JSON.stringify(getSerializableStorageValues(values)),
+        JSON.stringify(state),
       );
     } catch {
       // Ignore storage write failures (quota/private mode).
@@ -258,7 +307,25 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
 
   loadQueue(): TQueuedSubmission[] {
     try {
-      return this.parseQueueRaw(window.localStorage.getItem(this.queueKey));
+      const raw = window.localStorage.getItem(this.queueKey);
+      const parsed = this.parseQueueRaw(raw);
+      if (raw) {
+        const beforeLength = (() => {
+          try {
+            const before = JSON.parse(raw);
+            if (Array.isArray(before)) {
+              return before.length;
+            }
+            return Array.isArray(before?.items) ? before.items.length : 0;
+          } catch {
+            return parsed.length;
+          }
+        })();
+        if (beforeLength !== parsed.length) {
+          this.saveQueue(parsed);
+        }
+      }
+      return parsed;
     } catch {
       return [];
     }
@@ -310,7 +377,25 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
 
   loadDeadLetterQueue(): TQueuedSubmission[] {
     try {
-      return this.parseDeadLetterRaw(window.localStorage.getItem(this.deadLetterKey));
+      const raw = window.localStorage.getItem(this.deadLetterKey);
+      const parsed = this.parseDeadLetterRaw(raw);
+      if (raw) {
+        const beforeLength = (() => {
+          try {
+            const before = JSON.parse(raw);
+            if (Array.isArray(before)) {
+              return before.length;
+            }
+            return Array.isArray(before?.items) ? before.items.length : 0;
+          } catch {
+            return parsed.length;
+          }
+        })();
+        if (beforeLength !== parsed.length) {
+          this.saveDeadLetterQueue(parsed);
+        }
+      }
+      return parsed;
     } catch {
       return [];
     }
@@ -376,9 +461,10 @@ export class IndexedDbStorageAdapter extends LocalStorageAdapter {
     queueKey: string,
     deadLetterKey: string,
     dbName: string,
+    retentionMs: number | null = null,
     storeName: string = "form-state",
   ) {
-    super(storageKey, queueKey, deadLetterKey);
+    super(storageKey, queueKey, deadLetterKey, retentionMs);
     this.dbName = dbName;
     this.storeName = storeName;
     void this.hydrateFromIndexedDb();
@@ -635,11 +721,16 @@ export function createStorageAdapter(
   }
 
   const adapter = storage.adapter || "local-storage";
+  const retentionMs =
+    typeof storage.retentionDays === "number" && storage.retentionDays > 0
+      ? storage.retentionDays * 24 * 60 * 60 * 1000
+      : null;
   if (adapter === "local-storage") {
     return new LocalStorageAdapter(
       getDraftKey(formConfig, storage),
       getQueueKey(formConfig, storage),
       getDeadLetterKey(formConfig, storage),
+      retentionMs,
     );
   }
 
@@ -649,6 +740,7 @@ export function createStorageAdapter(
       getQueueKey(formConfig, storage),
       getDeadLetterKey(formConfig, storage),
       storage.key || `xpressui:idb:${formConfig.name}`,
+      retentionMs,
     );
   }
 

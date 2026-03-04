@@ -73,6 +73,7 @@ export type TFormStorageConfig = {
     adapter?: 'local-storage' | 'indexeddb';
     key?: string;
     autoSaveMs?: number;
+    retentionDays?: number;
 };
 
 export type TFormRuleCondition = {

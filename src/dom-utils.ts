@@ -96,6 +96,7 @@ export const ATTR_STORAGE_MODE = "storageMode"
 export const ATTR_STORAGE_ADAPTER = "storageAdapter"
 export const ATTR_STORAGE_KEY = "storageKey"
 export const ATTR_STORAGE_AUTOSAVE_MS = "storageAutoSaveMs"
+export const ATTR_STORAGE_RETENTION_DAYS = "storageRetentionDays"
 export const ATTR_VERSION = "version"
 export const ATTR_RULES = "rules"
 
@@ -190,6 +191,7 @@ export const HTML_ATTR_STORAGE_MODE = `${HTML_ATTR_PREFIX}storage-mode`
 export const HTML_ATTR_STORAGE_ADAPTER = `${HTML_ATTR_PREFIX}storage-adapter`
 export const HTML_ATTR_STORAGE_KEY = `${HTML_ATTR_PREFIX}storage-key`
 export const HTML_ATTR_STORAGE_AUTOSAVE_MS = `${HTML_ATTR_PREFIX}storage-autosave-ms`
+export const HTML_ATTR_STORAGE_RETENTION_DAYS = `${HTML_ATTR_PREFIX}storage-retention-days`
 export const HTML_ATTR_VERSION = `${HTML_ATTR_PREFIX}version`
 export const HTML_ATTR_RULES = `${HTML_ATTR_PREFIX}rules`
 
@@ -284,6 +286,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_STORAGE_ADAPTER]: ATTR_STORAGE_ADAPTER,
     [HTML_ATTR_STORAGE_KEY]: ATTR_STORAGE_KEY,
     [HTML_ATTR_STORAGE_AUTOSAVE_MS]: ATTR_STORAGE_AUTOSAVE_MS,
+    [HTML_ATTR_STORAGE_RETENTION_DAYS]: ATTR_STORAGE_RETENTION_DAYS,
     [HTML_ATTR_VERSION]: ATTR_VERSION,
     [HTML_ATTR_RULES]: ATTR_RULES,
 }
@@ -415,11 +418,15 @@ export default function getFormConfig(node: Element): TFormConfig {
             autoSaveMs: (formConfig as any).storageAutoSaveMs
                 ? Number((formConfig as any).storageAutoSaveMs)
                 : undefined,
+            retentionDays: (formConfig as any).storageRetentionDays
+                ? Number((formConfig as any).storageRetentionDays)
+                : undefined,
         };
         delete (formConfig as any).storageMode;
         delete (formConfig as any).storageAdapter;
         delete (formConfig as any).storageKey;
         delete (formConfig as any).storageAutoSaveMs;
+        delete (formConfig as any).storageRetentionDays;
     }
 
     if ((formConfig as any).version) {

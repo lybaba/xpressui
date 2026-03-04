@@ -321,6 +321,83 @@ describe('FormUI', () => {
     expect(hydration?.snapshot.draft).toEqual({ email: 'migrate@example.com' });
   });
 
+  it('purges expired drafts when storage retention is configured', () => {
+    const formConfig = createFormConfig({
+      name: 'retention-draft-form',
+      title: 'Retention Draft Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-retention-draft',
+        retentionDays: 1,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    });
+
+    window.localStorage.setItem(
+      'xpressui:test-retention-draft',
+      JSON.stringify({
+        version: 1,
+        savedAt: Date.now() - (2 * 24 * 60 * 60 * 1000),
+        values: { email: 'expired@example.com' },
+      }),
+    );
+
+    const adapter = createStorageAdapter(formConfig);
+
+    expect(adapter?.loadDraft()).toBeNull();
+    expect(window.localStorage.getItem('xpressui:test-retention-draft')).toBeNull();
+  });
+
+  it('purges expired queue entries when storage retention is configured', () => {
+    const formConfig = createFormConfig({
+      name: 'retention-queue-form',
+      title: 'Retention Queue Form',
+      storage: {
+        mode: 'queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-retention-queue',
+        retentionDays: 1,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    });
+
+    window.localStorage.setItem(
+      'xpressui:test-retention-queue:queue',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'expired_queue',
+            values: { email: 'expired@example.com' },
+            attempts: 1,
+            createdAt: Date.now() - (3 * 24 * 60 * 60 * 1000),
+            updatedAt: Date.now() - (3 * 24 * 60 * 60 * 1000),
+            nextAttemptAt: 0,
+          },
+          {
+            id: 'fresh_queue',
+            values: { email: 'fresh@example.com' },
+            attempts: 0,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    const adapter = createStorageAdapter(formConfig);
+    const queue = adapter?.loadQueue() || [];
+
+    expect(queue).toHaveLength(1);
+    expect(queue[0]?.id).toBe('fresh_queue');
+  });
+
   it('emits a submit success event for a valid form', async () => {
     const element = renderFixture(`
       <template id="contact">
@@ -1023,18 +1100,22 @@ describe('FormUI', () => {
       'photo.png',
     );
     expect(JSON.parse(window.localStorage.getItem('xpressui:upload-form') || '{}')).toEqual({
-      attachments: [
-        expect.objectContaining({
-          __type: 'file-metadata',
-          name: 'report.pdf',
-          mimeType: 'application/pdf',
-        }),
-        expect.objectContaining({
-          __type: 'file-metadata',
-          name: 'photo.png',
-          mimeType: 'image/png',
-        }),
-      ],
+      version: 1,
+      savedAt: expect.any(Number),
+      values: {
+        attachments: [
+          expect.objectContaining({
+            __type: 'file-metadata',
+            name: 'report.pdf',
+            mimeType: 'application/pdf',
+          }),
+          expect.objectContaining({
+            __type: 'file-metadata',
+            name: 'photo.png',
+            mimeType: 'image/png',
+          }),
+        ],
+      },
     });
 
     await element.onSubmit((element.form?.getState().values || {}) as Record<string, any>);
@@ -2294,6 +2375,8 @@ describe('FormUI', () => {
     element.addEventListener('form-ui:queue-disabled-for-files', (event) => {
       onQueueDisabled((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
+
+    vi.spyOn(element, 'submitToApi').mockRejectedValue(new Error('offline'));
 
     await element.onSubmit({ attachment: upload });
     expect(onQueueDisabled).toHaveBeenCalledWith(

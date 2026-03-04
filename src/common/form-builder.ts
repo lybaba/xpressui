@@ -326,6 +326,9 @@ export function createTemplateMarkup(
         config.storage.autoSaveMs !== undefined
           ? `data-storage-autosave-ms="${escapeHtml(String(config.storage.autoSaveMs))}"`
           : '',
+        config.storage.retentionDays !== undefined
+          ? `data-storage-retention-days="${escapeHtml(String(config.storage.retentionDays))}"`
+          : '',
       ]
         .filter(Boolean)
         .join(' ')

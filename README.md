@@ -910,6 +910,7 @@ Current storage support:
 - `mode: 'draft-and-queue'`
 - `adapter: 'local-storage'`
 - `adapter: 'indexeddb'`
+- `retentionDays`
 
 `indexeddb` currently uses a compatibility-first local cache plus IndexedDB
 write-through, so the runtime API stays synchronous while still persisting to a
@@ -919,6 +920,9 @@ If you need the freshest async-backed snapshot, call:
 - `runtime.hydrateStorage()`
 - `admin.getSnapshotAsync()`
 - `admin.exportSnapshotAsync()`
+
+If `retentionDays` is set, expired drafts, queue entries, and dead-letter
+entries are pruned automatically when storage is read.
 
 For `file` fields, local draft storage keeps metadata only (`name`, `size`,
 `mimeType`). The user must re-select files after a page reload. Use

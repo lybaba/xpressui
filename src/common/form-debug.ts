@@ -1,4 +1,7 @@
-import type { TFormRuleAppliedDetail } from "./form-dynamic";
+import type {
+  TFormActiveTemplateWarning,
+  TFormRuleAppliedDetail,
+} from "./form-dynamic";
 
 export type TFormDebugEventRecord = {
   type: string;
@@ -22,6 +25,7 @@ export type TFormDebugObserver = {
   getEvents(): TFormDebugEventRecord[];
   getRuleHistory(): TFormDebugRuleRecord[];
   getTemplateDiagnostics(): TFormDebugTemplateDiagnosticRecord[];
+  getActiveTemplateWarnings(): TFormActiveTemplateWarning[];
   clear(): void;
   clearRuleHistory(): void;
   clearTemplateDiagnostics(): void;
@@ -73,6 +77,7 @@ export function attachFormDebugObserver(
   const events: TFormDebugEventRecord[] = [];
   const ruleEvents: TFormDebugRuleRecord[] = [];
   const templateDiagnostics: TFormDebugTemplateDiagnosticRecord[] = [];
+  let activeTemplateWarnings: TFormActiveTemplateWarning[] = [];
   const listeners = DEFAULT_DEBUG_EVENTS.map((eventName) => {
     const listener = (event: Event) => {
       const customEvent = event as CustomEvent<any>;
@@ -104,6 +109,12 @@ export function attachFormDebugObserver(
         }
       }
 
+      if (record.type === "form-ui:rule-template-warning-state") {
+        activeTemplateWarnings = Array.isArray(record.detail?.result?.warnings)
+          ? [...record.detail.result.warnings]
+          : [];
+      }
+
       options.onEvent?.(record);
     };
 
@@ -124,10 +135,14 @@ export function attachFormDebugObserver(
     getTemplateDiagnostics() {
       return [...templateDiagnostics];
     },
+    getActiveTemplateWarnings() {
+      return [...activeTemplateWarnings];
+    },
     clear() {
       events.splice(0, events.length);
       ruleEvents.splice(0, ruleEvents.length);
       templateDiagnostics.splice(0, templateDiagnostics.length);
+      activeTemplateWarnings = [];
     },
     clearRuleHistory() {
       ruleEvents.splice(0, ruleEvents.length);

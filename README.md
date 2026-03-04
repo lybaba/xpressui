@@ -183,12 +183,14 @@ const observer = form
 console.log(observer?.getEvents());
 console.log(observer?.getRuleHistory());
 console.log(observer?.getTemplateDiagnostics());
+console.log(observer?.getActiveTemplateWarnings());
 ```
 
 The observer API:
 - `getEvents()`
 - `getRuleHistory()`
 - `getTemplateDiagnostics()`
+- `getActiveTemplateWarnings()`
 - `clear()`
 - `clearRuleHistory()`
 - `clearTemplateDiagnostics()`
@@ -200,6 +202,10 @@ full event log.
 
 `getTemplateDiagnostics()` returns only `form-ui:rule-template-missing-field`
 and `form-ui:rule-template-warning-cleared` events.
+
+`getActiveTemplateWarnings()` returns the current active template warning state
+without requiring you to keep the latest `form-ui:rule-template-warning-state`
+event yourself.
 
 ## Submission Modes
 

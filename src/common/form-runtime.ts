@@ -1,6 +1,6 @@
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
-import { FormDynamicRuntime } from "./form-dynamic";
+import { FormDynamicRuntime, TFormActiveTemplateWarning } from "./form-dynamic";
 import { FormEngineRuntime } from "./form-engine";
 import {
   FormPersistenceRuntime,
@@ -67,6 +67,7 @@ export type TFormRuntimePublicApi = Pick<
   | "disconnectPersistence"
   | "updateConditionalFields"
   | "refreshRemoteOptions"
+  | "getActiveTemplateWarnings"
 >;
 
 export class FormRuntime {
@@ -215,5 +216,9 @@ export class FormRuntime {
     }
 
     return this.dynamic.refreshRemoteOptions(sourceFieldName);
+  }
+
+  getActiveTemplateWarnings(): TFormActiveTemplateWarning[] {
+    return this.dynamic?.getActiveTemplateWarnings() || [];
   }
 }

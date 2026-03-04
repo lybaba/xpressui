@@ -508,6 +508,65 @@ describe('FormUI', () => {
     expect(Object.keys(runtime.validateValues(values)).length).toBeGreaterThan(0);
   });
 
+  it('exposes active template warnings through the composed headless runtime', () => {
+    let values: Record<string, any> = {
+      firstName: '',
+      autoFullName: false,
+    };
+    const formConfig = createFormConfig({
+      name: 'headless-template-warning-form',
+      title: 'Headless Template Warning Form',
+      rules: [
+        {
+          id: 'compose-full-name',
+          conditions: [
+            { field: 'autoFullName', operator: 'equals', value: true },
+          ],
+          actions: [
+            {
+              type: 'set-value',
+              field: 'fullName',
+              template: '{{firstName}} {{missingName}}',
+              transform: 'trim',
+            },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'firstName', label: 'First name', type: 'text' },
+        { name: 'fullName', label: 'Full name', type: 'text' },
+        { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
+      ],
+    });
+    const runtime = new FormRuntime(formConfig, {
+      getValues: () => values,
+      dynamic: {
+        getFieldContainer: () => null,
+        getFieldElement: () => null,
+        getFieldValue: (fieldName) => values[fieldName],
+        clearFieldValue: (fieldName) => {
+          values = { ...values, [fieldName]: undefined };
+        },
+      },
+    });
+
+    (formConfig.sections.main || []).forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+
+    values = { ...values, firstName: 'Ada', autoFullName: true };
+    runtime.updateConditionalFields();
+
+    expect(runtime.getActiveTemplateWarnings()).toEqual([
+      {
+        ruleId: 'compose-full-name',
+        field: 'fullName',
+        template: '{{firstName}} {{missingName}}',
+        missingField: 'missingName',
+      },
+    ]);
+  });
+
   it('migrates legacy public configs to version 1', () => {
     const legacyConfig = {
       id: 'legacy-id',

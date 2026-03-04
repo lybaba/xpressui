@@ -152,10 +152,12 @@ Main `FormRuntime` methods:
 - `getQueueState()`
 - `getStorageSnapshot()`
 - `flushSubmissionQueue()`
+- `getActiveTemplateWarnings()`
 
 If you pass DOM adapters through `dynamic`, the same runtime can also handle:
 - `updateConditionalFields()`
 - `refreshRemoteOptions()`
+- `getActiveTemplateWarnings()`
 
 Public types exported for headless integrations:
 - `TFormRuntimeOptions`

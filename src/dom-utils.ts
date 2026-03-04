@@ -20,6 +20,12 @@ export const ATTR_UNIQUE = "unique"
 export const ATTR_MIN_LEN = "minLen"
 export const ATTR_MAX_LEN = "maxLen"
 export const ATTR_PLACEHOLDER = "placeholder"
+export const ATTR_ACCEPT = "accept"
+export const ATTR_MULTIPLE = "multiple"
+export const ATTR_MAX_FILES = "maxFiles"
+export const ATTR_MAX_FILE_SIZE_MB = "maxFileSizeMb"
+export const ATTR_FILE_TYPE_ERROR_MSG = "fileTypeErrorMsg"
+export const ATTR_FILE_SIZE_ERROR_MSG = "fileSizeErrorMsg"
 export const ATTR_PATTERN = "pattern"
 export const ATTR_MEDIA_ID = "mediaId"
 export const ATTR_BACKGROUND = "background"
@@ -81,6 +87,12 @@ export const HTML_ATTR_UNIQUE = `${HTML_ATTR_PREFIX}unique`
 export const HTML_ATTR_MIN_LEN = `${HTML_ATTR_PREFIX}min-len`
 export const HTML_ATTR_MAX_LEN = `${HTML_ATTR_PREFIX}max-len`
 export const HTML_ATTR_PLACEHOLDER = `${HTML_ATTR_PREFIX}placeholder`
+export const HTML_ATTR_ACCEPT = `${HTML_ATTR_PREFIX}accept`
+export const HTML_ATTR_MULTIPLE = `${HTML_ATTR_PREFIX}multiple`
+export const HTML_ATTR_MAX_FILES = `${HTML_ATTR_PREFIX}max-files`
+export const HTML_ATTR_MAX_FILE_SIZE_MB = `${HTML_ATTR_PREFIX}max-file-size-mb`
+export const HTML_ATTR_FILE_TYPE_ERROR_MSG = `${HTML_ATTR_PREFIX}file-type-error-msg`
+export const HTML_ATTR_FILE_SIZE_ERROR_MSG = `${HTML_ATTR_PREFIX}file-size-error-msg`
 export const HTML_ATTR_PATTERN = `${HTML_ATTR_PREFIX}pattern`
 export const HTML_ATTR_MEDIA_ID = `${HTML_ATTR_PREFIX}media-id`
 export const HTML_ATTR_BACKGROUND = `${HTML_ATTR_PREFIX}background`
@@ -142,6 +154,12 @@ export const ATTR_MAP = {
     [HTML_ATTR_MIN_LEN]: ATTR_MIN_LEN,
     [HTML_ATTR_MAX_LEN]: ATTR_MAX_LEN,
     [HTML_ATTR_PLACEHOLDER]: ATTR_PLACEHOLDER,
+    [HTML_ATTR_ACCEPT]: ATTR_ACCEPT,
+    [HTML_ATTR_MULTIPLE]: ATTR_MULTIPLE,
+    [HTML_ATTR_MAX_FILES]: ATTR_MAX_FILES,
+    [HTML_ATTR_MAX_FILE_SIZE_MB]: ATTR_MAX_FILE_SIZE_MB,
+    [HTML_ATTR_FILE_TYPE_ERROR_MSG]: ATTR_FILE_TYPE_ERROR_MSG,
+    [HTML_ATTR_FILE_SIZE_ERROR_MSG]: ATTR_FILE_SIZE_ERROR_MSG,
     [HTML_ATTR_PATTERN]: ATTR_PATTERN,
     [HTML_ATTR_MEDIA_ID]: ATTR_MEDIA_ID,
     [HTML_ATTR_BACKGROUND]: ATTR_MEDIA_ID,
@@ -211,6 +229,25 @@ export function getFieldConfig(node: Element): TFieldConfig {
         if (attrValue) {
             (fieldConfig as any)[camelKey] = attrValue;
         }
+    }
+
+    const acceptValue = node.getAttribute("accept");
+    if (acceptValue) {
+        fieldConfig.accept = acceptValue;
+    }
+
+    if (node.hasAttribute("multiple")) {
+        fieldConfig.multiple = true;
+    }
+
+    const maxFiles = node.getAttribute(HTML_ATTR_MAX_FILES);
+    if (maxFiles) {
+        fieldConfig.maxFiles = Number(maxFiles);
+    }
+
+    const maxFileSizeMb = node.getAttribute(HTML_ATTR_MAX_FILE_SIZE_MB);
+    if (maxFileSizeMb) {
+        fieldConfig.maxFileSizeMb = Number(maxFileSizeMb);
     }
 
     return fieldConfig;

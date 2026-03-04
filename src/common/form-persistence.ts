@@ -1,6 +1,8 @@
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
+import { isFileFieldType } from "./field";
 import {
   createStorageAdapter,
+  getRestorableStorageValues,
   TFormStorageAdapter,
   TQueuedSubmission,
 } from "./form-storage";
@@ -10,6 +12,7 @@ export type TFormQueueState = {
   deadLetterLength: number;
   nextAttemptAt?: number;
   attempts?: number;
+  disabledReason?: string;
 };
 
 export type TFormStorageSnapshot = {
@@ -71,7 +74,7 @@ export class FormPersistenceRuntime {
   }
 
   loadDraftValues(): Record<string, any> {
-    return this.storageAdapter?.loadDraft() || {};
+    return getRestorableStorageValues(this.storageAdapter?.loadDraft() || null);
   }
 
   getDraftAutoSaveMs(): number {
@@ -88,8 +91,29 @@ export class FormPersistenceRuntime {
     return 3;
   }
 
+  getQueueDisabledReason(): string | undefined {
+    const formConfig = this.options.getFormConfig();
+    if (!formConfig) {
+      return undefined;
+    }
+
+    const hasFileFields = Object.values(formConfig.sections || {})
+      .flat()
+      .some((field) => isFileFieldType(field.type));
+
+    if (hasFileFields) {
+      return "file-uploads-are-not-queued";
+    }
+
+    return undefined;
+  }
+
   shouldUseQueue(): boolean {
     const mode = this.options.getFormConfig()?.storage?.mode;
+    if (this.getQueueDisabledReason()) {
+      return false;
+    }
+
     return mode === "queue" || mode === "draft-and-queue";
   }
 
@@ -180,11 +204,14 @@ export class FormPersistenceRuntime {
       deadLetterLength: this.storageAdapter?.loadDeadLetterQueue().length || 0,
       nextAttemptAt: nextEntry?.nextAttemptAt,
       attempts: nextEntry?.attempts,
+      disabledReason: this.getQueueDisabledReason(),
     };
   }
 
   emitQueueState(): void {
-    if (!this.shouldUseQueue()) {
+    const mode = this.options.getFormConfig()?.storage?.mode;
+    const storageEnabled = mode === "queue" || mode === "draft-and-queue";
+    if (!storageEnabled) {
       return;
     }
 

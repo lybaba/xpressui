@@ -31,6 +31,12 @@ type TFieldConfig = {
     minLen?: number;
     maxLen?: number;
     placeholder?: string;
+    accept?: string;
+    multiple?: boolean;
+    maxFiles?: number;
+    maxFileSizeMb?: number;
+    fileTypeErrorMsg?: string;
+    fileSizeErrorMsg?: string;
     pattern?: string;
     mediaId?: string;
     background?: string;

@@ -1,4 +1,13 @@
 import TFormConfig, { TFormStorageConfig } from "./TFormConfig";
+import { isFileLikeValue } from "./field";
+
+export type TStoredFileMetadata = {
+  __type: "file-metadata";
+  name: string;
+  size: number;
+  mimeType: string;
+  lastModified?: number;
+};
 
 export type TQueuedSubmission = {
   id: string;
@@ -15,6 +24,69 @@ type TQueueState = {
   items: TQueuedSubmission[];
 };
 
+function toStoredFileMetadata(value: File | Blob): TStoredFileMetadata {
+  return {
+    __type: "file-metadata",
+    name: "name" in value && typeof value.name === "string" ? value.name : "blob",
+    size: value.size,
+    mimeType: value.type || "application/octet-stream",
+    lastModified:
+      "lastModified" in value && typeof value.lastModified === "number"
+        ? value.lastModified
+        : undefined,
+  };
+}
+
+function sanitizeStoredValue(value: any): any {
+  if (isFileLikeValue(value)) {
+    return toStoredFileMetadata(value as File | Blob);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeStoredValue(entry));
+  }
+
+  if (value && typeof value === "object") {
+    const nextValue: Record<string, any> = {};
+    Object.entries(value).forEach(([key, entry]) => {
+      nextValue[key] = sanitizeStoredValue(entry);
+    });
+    return nextValue;
+  }
+
+  return value;
+}
+
+function stripStoredFileMetadata(value: any): any {
+  if (Array.isArray(value)) {
+    const nextValue = value
+      .map((entry) => stripStoredFileMetadata(entry))
+      .filter((entry) => entry !== undefined);
+    return nextValue;
+  }
+
+  if (
+    value &&
+    typeof value === "object" &&
+    (value as TStoredFileMetadata).__type === "file-metadata"
+  ) {
+    return undefined;
+  }
+
+  if (value && typeof value === "object") {
+    const nextValue: Record<string, any> = {};
+    Object.entries(value).forEach(([key, entry]) => {
+      const sanitizedEntry = stripStoredFileMetadata(entry);
+      if (sanitizedEntry !== undefined) {
+        nextValue[key] = sanitizedEntry;
+      }
+    });
+    return nextValue;
+  }
+
+  return value;
+}
+
 export interface TFormStorageAdapter {
   loadDraft(): Record<string, any> | null;
   saveDraft(values: Record<string, any>): void;
@@ -30,6 +102,19 @@ export interface TFormStorageAdapter {
   enqueueDeadLetter(entry: TQueuedSubmission): TQueuedSubmission[];
   removeDeadLetterEntry(entryId: string): TQueuedSubmission | null;
   clearDeadLetterQueue(): void;
+}
+
+export function getSerializableStorageValues(values: Record<string, any>): Record<string, any> {
+  return sanitizeStoredValue(values) as Record<string, any>;
+}
+
+export function getRestorableStorageValues(values: Record<string, any> | null): Record<string, any> {
+  if (!values) {
+    return {};
+  }
+
+  const restored = stripStoredFileMetadata(values);
+  return restored && typeof restored === "object" ? restored as Record<string, any> : {};
 }
 
 function getDraftKey(formConfig: TFormConfig, storage: TFormStorageConfig): string {
@@ -85,7 +170,10 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
 
   saveDraft(values: Record<string, any>): void {
     try {
-      window.localStorage.setItem(this.storageKey, JSON.stringify(values));
+      window.localStorage.setItem(
+        this.storageKey,
+        JSON.stringify(getSerializableStorageValues(values)),
+      );
     } catch {
       // Ignore storage write failures (quota/private mode).
     }
@@ -143,7 +231,7 @@ export class LocalStorageAdapter implements TFormStorageAdapter {
 
   enqueueSubmission(values: Record<string, any>): TQueuedSubmission[] {
     const queue = this.loadQueue();
-    queue.push(this.createQueueEntry(values));
+    queue.push(this.createQueueEntry(getSerializableStorageValues(values)));
     this.saveQueue(queue);
     return queue;
   }

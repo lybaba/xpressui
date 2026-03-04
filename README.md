@@ -614,6 +614,35 @@ mountFormUI(container, {
 });
 ```
 
+`select-multiple` works with remote options as well:
+
+```ts
+mountFormUI(container, {
+  name: 'dynamic-topics',
+  title: 'Dynamic Topics',
+  fields: [
+    {
+      name: 'category',
+      label: 'Category',
+      type: 'select-one',
+      choices: [
+        { value: 'sales', label: 'Sales' },
+        { value: 'support', label: 'Support' },
+      ],
+    },
+    {
+      name: 'topics',
+      label: 'Topics',
+      type: 'select-multiple',
+      optionsEndpoint: '/api/topics',
+      optionsDependsOn: 'category',
+      optionsLabelKey: 'name',
+      optionsValueKey: 'id',
+    },
+  ],
+});
+```
+
 Extra event:
 - `form-ui:options-loaded`
 - `form-ui:rule-applied`
@@ -621,6 +650,51 @@ Extra event:
 - `form-ui:rule-template-missing-field`
 - `form-ui:rule-template-warning-cleared`
 - `form-ui:rule-template-warning-state`
+
+## File Uploads
+
+Use `type: 'file'` with `submit.mode: 'form-data'` when your backend expects
+multipart uploads.
+
+```ts
+mountFormUI(container, {
+  name: 'upload-form',
+  title: 'Upload',
+  submit: {
+    endpoint: '/api/uploads',
+    method: 'POST',
+    mode: 'form-data',
+  },
+  fields: [
+    {
+      name: 'attachments',
+      label: 'Attachments',
+      type: 'file',
+      accept: '.pdf,image/*,video/*',
+      multiple: true,
+      maxFiles: 3,
+      maxFileSizeMb: 10,
+      fileTypeErrorMsg: 'Only PDF, image, or video files are allowed.',
+      fileSizeErrorMsg: 'Each file must stay below 10 MB.',
+    },
+  ],
+});
+```
+
+For common upload cases, prefer `accept` over creating many custom field types:
+- documents: `.pdf,.doc,.docx,.xls,.xlsx`
+- images: `image/*`
+- videos: `video/*`
+
+Frontend behavior:
+- file inputs keep real `File` objects in memory until submit
+- local draft storage only keeps file metadata, not blobs
+- offline queue is disabled for forms that include file fields
+- `maxFiles` limits how many files can be selected
+- `fileTypeErrorMsg` and `fileSizeErrorMsg` let you override default validation messages
+
+Extra event:
+- `form-ui:queue-disabled-for-files`
 
 You can also define basic rules at the form level:
 
@@ -684,6 +758,12 @@ Current storage support:
 - `mode: 'draft-and-queue'`
 - `adapter: 'local-storage'`
 
+For `file` fields, local draft storage keeps metadata only (`name`, `size`,
+`mimeType`). The user must re-select files after a page reload. Use
+`submit.mode: 'form-data'` to send real blobs/files to your backend.
+If the form contains file fields, offline queue mode is disabled and uploads are
+not retried automatically.
+
 Draft events:
 - `form-ui:draft-saved`
 - `form-ui:draft-restored`
@@ -692,6 +772,7 @@ Draft events:
 Queue events:
 - `form-ui:queued`
 - `form-ui:queue-state`
+- `form-ui:queue-disabled-for-files`
 - `form-ui:sync-success`
 - `form-ui:sync-error`
 - `form-ui:dead-lettered`
@@ -769,6 +850,10 @@ Useful field capabilities supported by the current builder:
 - `optionsDependsOn`
 - `optionsLabelKey`
 - `optionsValueKey`
+- `accept` for file fields
+- `multiple` for file fields
+- `maxFiles` for file fields
+- `maxFileSizeMb` for file fields
 
 Common field types used today:
 - `text`
@@ -780,6 +865,7 @@ Common field types used today:
 - `datetime`
 - `select-one`
 - `select-multiple`
+- `file`
 - `checkbox`
 
 ## Events

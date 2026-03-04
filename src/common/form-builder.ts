@@ -13,9 +13,11 @@ import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-s
 import {
   CHECKBOX_TYPE,
   getHtmlInputType,
+  isFileFieldType,
   SELECT_MULTIPLE_TYPE,
   SELECT_ONE_TYPE,
   TEXTAREA_TYPE,
+  UPLOAD_IMAGE_TYPE,
 } from './field';
 
 export type TSimpleFieldInput = Partial<TFieldConfig> & {
@@ -51,6 +53,24 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   const requiredAttr = field.required ? ' data-required="true"' : '';
   const placeholderAttr = field.placeholder
     ? ` placeholder="${escapeHtml(String(field.placeholder))}"`
+    : '';
+  const acceptAttr = field.accept
+    ? ` accept="${escapeHtml(String(field.accept))}"`
+    : field.type === UPLOAD_IMAGE_TYPE
+      ? ' accept="image/*"'
+      : '';
+  const multipleAttr = field.multiple ? ' multiple' : '';
+  const maxFilesAttr = field.maxFiles !== undefined
+    ? ` data-max-files="${escapeHtml(String(field.maxFiles))}"`
+    : '';
+  const maxFileSizeAttr = field.maxFileSizeMb !== undefined
+    ? ` data-max-file-size-mb="${escapeHtml(String(field.maxFileSizeMb))}"`
+    : '';
+  const fileTypeErrorAttr = field.fileTypeErrorMsg
+    ? ` data-file-type-error-msg="${escapeHtml(String(field.fileTypeErrorMsg))}"`
+    : '';
+  const fileSizeErrorAttr = field.fileSizeErrorMsg
+    ? ` data-file-size-error-msg="${escapeHtml(String(field.fileSizeErrorMsg))}"`
     : '';
   const helpText = field.helpText
     ? `<div class="label"><span class="label-text-alt">${escapeHtml(field.helpText)}</span></div>`
@@ -132,7 +152,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${placeholderAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${multipleAttr}${maxFilesAttr}${maxFileSizeAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </label>`;

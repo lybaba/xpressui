@@ -1,5 +1,33 @@
 import { TFormSubmitRequest } from "./TFormConfig";
+import { isFileLikeValue } from "./field";
 import { buildProviderPayload } from "./provider-registry";
+
+function appendFormDataValue(formData: FormData, key: string, value: any): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (isFileLikeValue(value)) {
+    formData.append(key, value as File | Blob);
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((entry) => {
+      appendFormDataValue(formData, `${key}[]`, entry);
+    });
+    return;
+  }
+
+  if (value && typeof value === "object") {
+    Object.entries(value).forEach(([childKey, childValue]) => {
+      appendFormDataValue(formData, `${key}[${childKey}]`, childValue);
+    });
+    return;
+  }
+
+  formData.append(key, value === null ? "" : String(value));
+}
 
 export async function submitFormValues(
   values: Record<string, any>,
@@ -24,7 +52,7 @@ export async function submitFormValues(
   } else if (mode === "form-data") {
     const body = new FormData();
     Object.entries(payload).forEach(([key, value]) => {
-      body.append(key, String(value));
+      appendFormDataValue(body, key, value);
     });
     init.body = body;
   } else {

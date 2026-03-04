@@ -723,6 +723,200 @@ describe('FormUI', () => {
     );
   });
 
+  it('stores file metadata locally and submits file blobs with form-data', async () => {
+    const fetchMock = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ uploaded: true }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'upload-form',
+      title: 'Upload Form',
+      submit: {
+        endpoint: '/api/uploads',
+        method: 'POST',
+        mode: 'form-data',
+      },
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:upload-form',
+        autoSaveMs: 0,
+      },
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          accept: '.pdf,image/*',
+          multiple: true,
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#attachments') as HTMLInputElement;
+    const fileOne = new File(['report'], 'report.pdf', { type: 'application/pdf' });
+    const fileTwo = new File(['photo'], 'photo.png', { type: 'image/png' });
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [fileOne, fileTwo],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).attachments).toEqual([fileOne, fileTwo]);
+    expect(JSON.parse(window.localStorage.getItem('xpressui:upload-form') || '{}')).toEqual({
+      attachments: [
+        expect.objectContaining({
+          __type: 'file-metadata',
+          name: 'report.pdf',
+          mimeType: 'application/pdf',
+        }),
+        expect.objectContaining({
+          __type: 'file-metadata',
+          name: 'photo.png',
+          mimeType: 'image/png',
+        }),
+      ],
+    });
+
+    await element.onSubmit((element.form?.getState().values || {}) as Record<string, any>);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const request = fetchMock.mock.calls[0][1] as RequestInit;
+    const body = request.body as FormData;
+    expect(body).toBeInstanceOf(FormData);
+    expect(body.getAll('attachments[]')).toEqual([fileOne, fileTwo]);
+  });
+
+  it('validates file type and size before submit', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'validated-upload-form',
+      title: 'Validated Upload Form',
+      fields: [
+        {
+          name: 'attachment',
+          label: 'Attachment',
+          type: 'file',
+          accept: '.pdf',
+          maxFileSizeMb: 0.000001,
+        },
+      ],
+    }) as FormUI;
+    const wrongType = new File(['image'], 'image.png', { type: 'image/png' });
+    const tooLarge = new File(['123456789'], 'report.pdf', { type: 'application/pdf' });
+
+    expect(element.validateForm({ attachment: wrongType })).toEqual({
+      attachment: expect.objectContaining({
+        errorMessage: 'File type not allowed: image.png',
+      }),
+    });
+
+    expect(element.validateForm({ attachment: tooLarge })).toEqual({
+      attachment: expect.objectContaining({
+        errorMessage: 'File too large: report.pdf exceeds 0.000001 MB',
+      }),
+    });
+  });
+
+  it('supports maxFiles and custom file validation messages', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'custom-upload-errors-form',
+      title: 'Custom Upload Errors Form',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          accept: '.pdf',
+          multiple: true,
+          maxFiles: 1,
+          maxFileSizeMb: 0.000001,
+          fileTypeErrorMsg: 'Custom type error',
+          fileSizeErrorMsg: 'Custom size error',
+        },
+      ],
+    }) as FormUI;
+    const pdfA = new File(['a'], 'a.pdf', { type: 'application/pdf' });
+    const pdfB = new File(['b'], 'b.pdf', { type: 'application/pdf' });
+    const png = new File(['image'], 'bad.png', { type: 'image/png' });
+    const largePdf = new File(['123456789'], 'large.pdf', { type: 'application/pdf' });
+
+    expect(element.validateForm({ attachments: [pdfA, pdfB] })).toEqual({
+      attachments: expect.objectContaining({
+        errorMessage: 'Too many files: maximum 1 allowed',
+      }),
+    });
+
+    expect(element.validateForm({ attachments: [png] })).toEqual({
+      attachments: expect.objectContaining({
+        errorMessage: 'Custom type error',
+      }),
+    });
+
+    expect(element.validateForm({ attachments: [largePdf] })).toEqual({
+      attachments: expect.objectContaining({
+        errorMessage: 'Custom size error',
+      }),
+    });
+  });
+
+  it('disables offline queue for forms that include file fields', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockRejectedValue(new Error('offline'));
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'queued-upload-form',
+      title: 'Queued Upload Form',
+      submit: {
+        endpoint: '/api/uploads',
+        method: 'POST',
+        mode: 'form-data',
+      },
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:queued-upload-form',
+        autoSaveMs: 0,
+      },
+      fields: [
+        {
+          name: 'attachment',
+          label: 'Attachment',
+          type: 'file',
+        },
+      ],
+    }) as FormUI;
+    const onQueueDisabled = vi.fn();
+    const upload = new File(['content'], 'proof.pdf', { type: 'application/pdf' });
+
+    element.addEventListener('form-ui:queue-disabled-for-files', (event) => {
+      onQueueDisabled((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await element.onSubmit({ attachment: upload });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(onQueueDisabled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: expect.any(Error),
+      }),
+    );
+    expect(element.getQueueState()).toEqual(
+      expect.objectContaining({
+        queueLength: 0,
+        disabledReason: 'file-uploads-are-not-queued',
+      }),
+    );
+  });
+
   it('emits version 1 configs from the public builder', () => {
     const formConfig = createFormConfig({
       name: 'versioned-form',

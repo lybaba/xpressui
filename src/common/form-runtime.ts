@@ -114,6 +114,13 @@ export class FormRuntime {
             if (fieldElement) {
               if (fieldElement instanceof HTMLInputElement && fieldElement.type === "checkbox") {
                 fieldElement.checked = Boolean(value);
+              } else if (
+                fieldElement instanceof HTMLInputElement &&
+                fieldElement.type === "file"
+              ) {
+                if (!value || (Array.isArray(value) && !value.length)) {
+                  fieldElement.value = "";
+                }
               } else if (fieldElement instanceof HTMLSelectElement && fieldElement.multiple) {
                 const selectedValues = Array.isArray(value)
                   ? value.map((entry) => String(entry))

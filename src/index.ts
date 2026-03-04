@@ -4,7 +4,7 @@ import { TValidator } from "./common/Validator";
 import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { FormEngineRuntime } from "./common/form-engine";
-import { UNKNOWN_TYPE } from "./common/field";
+import { isFileLikeValue, UNKNOWN_TYPE } from "./common/field";
 import { FormDynamicRuntime } from "./common/form-dynamic";
 import type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 import {
@@ -76,6 +76,22 @@ export type TFormUISubmitDetail = {
   result?: any;
   error?: unknown;
 };
+
+function hasFileValues(value: any): boolean {
+  if (isFileLikeValue(value)) {
+    return true;
+  }
+
+  if (Array.isArray(value)) {
+    return value.some((entry) => hasFileValues(entry));
+  }
+
+  if (value && typeof value === "object") {
+    return Object.values(value).some((entry) => hasFileValues(entry));
+  }
+
+  return false;
+}
 
 export class FormUI extends HTMLElement {
   form: FormApi<any, any> | null;
@@ -337,6 +353,23 @@ export class FormUI extends HTMLElement {
       }
     } catch (error: any) {
       const isNetworkError = !error?.response;
+      const storageMode = this.formConfig?.storage?.mode;
+      const queueConfigured = storageMode === "queue" || storageMode === "draft-and-queue";
+      if (isNetworkError && hasFileValues(formValues) && queueConfigured) {
+        const queueError = new Error(
+          "Offline queue is disabled for file uploads. Retry while online after re-selecting files.",
+        );
+        this.emitFormEvent("form-ui:queue-disabled-for-files", {
+          ...detail,
+          error: queueError,
+        });
+        this.emitFormEvent("form-ui:submit-error", {
+          ...detail,
+          error: queueError,
+        });
+        return;
+      }
+
       if (isNetworkError && this.shouldUseQueue()) {
         this.enqueueSubmission(formValues);
         this.clearDraft();
@@ -418,7 +451,11 @@ export class FormUI extends HTMLElement {
           input.addEventListener("blur", () => blur());
           input.addEventListener("input", (event: any) => {
             const nextValue =
-              input.type === "checkbox"
+              input instanceof HTMLInputElement && input.type === "file"
+                ? input.multiple
+                  ? Array.from((<HTMLInputElement>event.target)?.files || [])
+                  : (<HTMLInputElement>event.target)?.files?.[0]
+              : input.type === "checkbox"
                 ? (<HTMLInputElement>event.target)?.checked
                 : input instanceof HTMLSelectElement && input.multiple
                   ? Array.from((<HTMLSelectElement>event.target)?.selectedOptions || []).map(
@@ -431,6 +468,12 @@ export class FormUI extends HTMLElement {
             void this.refreshRemoteOptions(name);
           });
           input.addEventListener("change", () => {
+            if (input instanceof HTMLInputElement && input.type === "file") {
+              const nextValue = input.multiple
+                ? Array.from(input.files || [])
+                : input.files?.[0];
+              change(nextValue);
+            }
             this.scheduleDraftSave();
             this.updateConditionalFields();
             void this.refreshRemoteOptions(name);
@@ -443,6 +486,10 @@ export class FormUI extends HTMLElement {
         // update value
         if (input.type === "checkbox") {
           (<HTMLInputElement>input).checked = value;
+        } else if (input instanceof HTMLInputElement && input.type === "file") {
+          if (!value || (Array.isArray(value) && !value.length)) {
+            input.value = "";
+          }
         } else if (input instanceof HTMLSelectElement && input.multiple) {
           const selectedValues = Array.isArray(value)
             ? value.map((entry) => String(entry))

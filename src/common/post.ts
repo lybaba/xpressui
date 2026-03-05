@@ -9,6 +9,8 @@ import {
     NUMBER_TYPE,
     POSITIVE_INTEGER_TYPE,
     PRICE_TYPE,
+    PRODUCT_LIST_TYPE,
+    IMAGE_GALLERY_TYPE,
     SELECT_ONE_TYPE,
     SLUG_TYPE,
     SWITCH_TYPE,
@@ -215,6 +217,15 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
             res.items = {
                 "type": "string"
             }
+            break;
+
+        case PRODUCT_LIST_TYPE:
+        case IMAGE_GALLERY_TYPE:
+            res.type = "array";
+            res.items = {
+                type: "object",
+                additionalProperties: true,
+            };
             break;
 
 

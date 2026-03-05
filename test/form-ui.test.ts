@@ -988,6 +988,52 @@ describe('FormUI', () => {
     expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).length).toBe(0);
   });
 
+  it('validates product-list and image-gallery as array selections instead of text fields', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'ecommerce-array-validation-demo',
+      title: 'Ecommerce Array Validation Demo',
+      fields: [
+        {
+          type: 'product-list',
+          name: 'products',
+          label: 'Products',
+          required: true,
+          choices: [
+            {
+              value: 'sku_1',
+              label: 'Product 1',
+            } as any,
+          ],
+        },
+        {
+          type: 'image-gallery',
+          name: 'lookbook',
+          label: 'Lookbook',
+          required: true,
+          choices: [
+            {
+              value: 'img_1',
+              label: 'Image 1',
+            } as any,
+          ],
+        },
+      ],
+    }) as FormUI;
+
+    expect(element.validateForm({})).toEqual({
+      products: expect.objectContaining({ errorMessage: 'This field is required.' }),
+      lookbook: expect.objectContaining({ errorMessage: 'This field is required.' }),
+    });
+
+    expect(
+      element.validateForm({
+        products: [{ id: 'sku_1', name: 'Product 1', quantity: 1 }],
+        lookbook: [{ id: 'img_1', name: 'Image 1' }],
+      }),
+    ).toEqual({});
+  });
+
   it('exposes an output snapshot API with renderer metadata', () => {
     const element = renderFixture(`
       <template id="view_snapshot">

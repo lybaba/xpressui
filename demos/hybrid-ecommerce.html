@@ -127,7 +127,10 @@ if (productsField) {
   choices: lookbookImages
 });
 
-const stepOneFields = config.sections.main || [];
+const mainFields = config.sections.main || [];
+const stepOneFields = mainFields.filter((field) =>
+  field.name === "products" || field.name === "lookbook"
+);
 config.type = "multistepform";
 config.stepSections = [
   { type: "section", name: "catalog_step", label: "1. Cart & Details" },
@@ -286,9 +289,12 @@ const form = mountFormUI(app, config);</code></pre>
         choices: lookbookImages
       });
       // Convert preset into a 2-step checkout:
-      // Step 1: product selection + customer data
+      // Step 1: product selection only
       // Step 2: read-only review via native step summary + submit
-      const stepOneFields = config.sections.main || [];
+      const mainFields = config.sections.main || [];
+      const stepOneFields = mainFields.filter((field) =>
+        field.name === "products" || field.name === "lookbook"
+      );
       config.type = "multistepform";
       config.stepSections = [
         { type: "section", name: "catalog_step", label: "1. Cart & Details" },

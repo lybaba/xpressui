@@ -2477,10 +2477,25 @@ export class FormUI extends HTMLElement {
     triggerCount.style.fontWeight = "700";
     triggerCount.style.background = "#0f172a";
     triggerCount.style.color = "#ffffff";
+    const triggerTotal = document.createElement("span");
+    triggerTotal.setAttribute("data-product-cart-total-badge", "true");
+    triggerTotal.textContent = `${totalAmount.toFixed(2)}€`;
+    triggerTotal.style.position = "absolute";
+    triggerTotal.style.bottom = "-8px";
+    triggerTotal.style.left = "50%";
+    triggerTotal.style.transform = "translateX(-50%)";
+    triggerTotal.style.padding = "2px 8px";
+    triggerTotal.style.borderRadius = "999px";
+    triggerTotal.style.fontSize = "10px";
+    triggerTotal.style.fontWeight = "700";
+    triggerTotal.style.background = "#ffffff";
+    triggerTotal.style.color = "#0f172a";
+    triggerTotal.style.border = "1px solid rgba(15, 23, 42, 0.2)";
     trigger.style.position = "fixed";
     trigger.appendChild(triggerIcon);
     trigger.appendChild(triggerLabel);
     trigger.appendChild(triggerCount);
+    trigger.appendChild(triggerTotal);
 
     cart.innerHTML = "";
     const header = document.createElement("div");
@@ -2491,7 +2506,7 @@ export class FormUI extends HTMLElement {
     headingIcon.setAttribute("aria-hidden", "true");
     headingIcon.textContent = "🛒";
     const headingText = document.createElement("span");
-    headingText.textContent = `Mini Cart · ${totalAmount.toFixed(2)}€`;
+    headingText.textContent = `${totalAmount.toFixed(2)}€`;
     heading.appendChild(headingIcon);
     heading.appendChild(headingText);
     const closeButton = document.createElement("button");

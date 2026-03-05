@@ -2287,7 +2287,13 @@ export class FormUI extends HTMLElement {
       trigger.style.zIndex = "10001";
       trigger.style.display = "inline-flex";
       trigger.style.alignItems = "center";
-      trigger.style.gap = "8px";
+      trigger.style.justifyContent = "center";
+      trigger.style.width = "50px";
+      trigger.style.height = "50px";
+      trigger.style.borderRadius = "999px";
+      trigger.style.padding = "0";
+      trigger.style.fontSize = "20px";
+      trigger.style.lineHeight = "1";
       this.appendChild(trigger);
     }
 
@@ -2324,11 +2330,11 @@ export class FormUI extends HTMLElement {
     panel.style.height = "100%";
     panel.style.background = "#ffffff";
     panel.style.borderLeft = "1px solid rgba(15, 23, 42, 0.12)";
-    panel.style.padding = "16px";
+    panel.style.padding = "12px";
     panel.style.overflowY = "auto";
-    panel.style.display = "grid";
-    panel.style.gridTemplateRows = "auto 1fr auto";
-    panel.style.gap = "12px";
+    panel.style.display = "flex";
+    panel.style.flexDirection = "column";
+    panel.style.gap = "8px";
     panel.style.transform = "translateX(100%)";
     panel.style.transition = "transform 180ms ease";
 
@@ -2453,17 +2459,41 @@ export class FormUI extends HTMLElement {
     triggerIcon.setAttribute("aria-hidden", "true");
     triggerIcon.textContent = "🛒";
     const triggerLabel = document.createElement("span");
-    triggerLabel.setAttribute("data-product-cart-summary", "true");
-    triggerLabel.textContent = `Cart ${totalItems} · ${totalAmount.toFixed(2)}€`;
+    triggerLabel.className = "sr-only";
+    triggerLabel.textContent = "Open cart";
+    const triggerCount = document.createElement("span");
+    triggerCount.setAttribute("data-product-cart-summary", "true");
+    triggerCount.textContent = String(totalItems);
+    triggerCount.style.position = "absolute";
+    triggerCount.style.top = "-5px";
+    triggerCount.style.right = "-5px";
+    triggerCount.style.minWidth = "20px";
+    triggerCount.style.height = "20px";
+    triggerCount.style.borderRadius = "999px";
+    triggerCount.style.display = "inline-flex";
+    triggerCount.style.alignItems = "center";
+    triggerCount.style.justifyContent = "center";
+    triggerCount.style.fontSize = "11px";
+    triggerCount.style.fontWeight = "700";
+    triggerCount.style.background = "#0f172a";
+    triggerCount.style.color = "#ffffff";
+    trigger.style.position = "fixed";
     trigger.appendChild(triggerIcon);
     trigger.appendChild(triggerLabel);
+    trigger.appendChild(triggerCount);
 
     cart.innerHTML = "";
     const header = document.createElement("div");
     header.className = "flex items-center justify-between";
     const heading = document.createElement("div");
-    heading.className = "text-sm font-semibold";
-    heading.textContent = "Mini Cart";
+    heading.className = "flex items-center gap-2 text-sm font-semibold";
+    const headingIcon = document.createElement("span");
+    headingIcon.setAttribute("aria-hidden", "true");
+    headingIcon.textContent = "🛒";
+    const headingText = document.createElement("span");
+    headingText.textContent = `Mini Cart · ${totalAmount.toFixed(2)}€`;
+    heading.appendChild(headingIcon);
+    heading.appendChild(headingText);
     const closeButton = document.createElement("button");
     closeButton.type = "button";
     closeButton.className = "btn btn-sm btn-ghost";
@@ -2487,7 +2517,9 @@ export class FormUI extends HTMLElement {
 
     const list = document.createElement("div");
     list.style.display = "grid";
-    list.style.gap = "8px";
+    list.style.gap = "6px";
+    list.style.maxHeight = "calc(100vh - 170px)";
+    list.style.overflowY = "auto";
     entries.forEach(({ fieldName, item }) => {
       const row = document.createElement("div");
       row.className = "grid gap-2 rounded border border-base-300 px-2 py-2";

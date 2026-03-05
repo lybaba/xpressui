@@ -865,7 +865,7 @@ describe('FormUI', () => {
     await flushAsyncWork();
     expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(2);
     expect(element.querySelectorAll('[data-product-cart-item]').length).toBe(1);
-    expect((element.querySelector('[data-product-cart-summary="true"]') as HTMLElement).textContent).toContain('Cart 2');
+    expect((element.querySelector('[data-product-cart-summary="true"]') as HTMLElement).textContent).toBe('2');
 
     const cartTrigger = element.querySelector('[data-product-cart-trigger="true"]') as HTMLButtonElement;
     cartTrigger.click();

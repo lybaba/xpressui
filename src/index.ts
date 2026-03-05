@@ -2897,27 +2897,16 @@ export class FormUI extends HTMLElement {
       card.className = "rounded border border-base-300 p-2";
       card.style.cursor = "pointer";
 
-      if (product.image_thumbnail) {
+      const previewSource = product.image_thumbnail || product.image_medium;
+      if (previewSource) {
         const thumb = document.createElement("img");
-        thumb.src = product.image_thumbnail;
+        thumb.src = previewSource;
         thumb.alt = product.name;
         thumb.style.width = "100%";
         thumb.style.height = "96px";
         thumb.style.objectFit = "cover";
         thumb.style.borderRadius = "8px";
         card.appendChild(thumb);
-      }
-
-      if (product.image_medium) {
-        const medium = document.createElement("img");
-        medium.src = product.image_medium;
-        medium.alt = `${product.name} medium`;
-        medium.style.width = "100%";
-        medium.style.height = "64px";
-        medium.style.objectFit = "cover";
-        medium.style.borderRadius = "8px";
-        medium.style.marginTop = "6px";
-        card.appendChild(medium);
       }
 
       const title = document.createElement("div");

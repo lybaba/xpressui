@@ -258,7 +258,12 @@ form.refreshOutputRendering();</code></pre>
       renderResult("Latest Submit", {});
 
       const app = document.getElementById("app");
-      const config = createFormPreset("ecommerce-checkout");
+      const config = createFormPreset("ecommerce-checkout", {
+        submit: {
+          endpoint: "/api/mock-ecommerce-submit",
+          method: "POST"
+        }
+      });
       const productsField = (config.sections.main || []).find((field) => field.name === "products");
       if (productsField) {
         productsField.choices = products;
@@ -317,7 +322,11 @@ form.refreshOutputRendering();</code></pre>
       const originalFetch = window.fetch.bind(window);
       window.fetch = async (input, init) => {
         const body = init?.body && typeof init.body === "string" ? JSON.parse(init.body) : {};
-        const cart = Array.isArray(body?.order?.products) ? body.order.products : [];
+        const cart = Array.isArray(body?.products)
+          ? body.products
+          : Array.isArray(body?.order?.products)
+            ? body.order.products
+            : [];
         const total = cart.reduce((sum, item) => {
           const price = item.discount_price ?? item.sale_price ?? 0;
           return sum + Number(price || 0) * Number(item.quantity || 0);
@@ -338,7 +347,13 @@ form.refreshOutputRendering();</code></pre>
       };
 
       form.addEventListener("form-ui:submit-success", (event) => {
-        renderResult("Latest Submit", event.detail?.result || {});
+        const result = event.detail?.result;
+        renderResult(
+          "Latest Submit",
+          result && Object.keys(result || {}).length
+            ? result
+            : { values: event.detail?.values || {} },
+        );
       });
 
       window.addEventListener("beforeunload", () => {

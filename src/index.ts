@@ -311,6 +311,8 @@ export class FormUI extends HTMLElement {
   productListCartClickBound: boolean;
   productCartOverlay: HTMLElement | null;
   productCartCloseTimer: number | null;
+  pageScrollLockCount: number;
+  pageScrollPreviousOverflow: string | null;
   productGalleryOverlay: HTMLElement | null;
   viewValues: Record<string, any>;
   outputRenderers: Record<string, TFormOutputRenderer>;
@@ -351,6 +353,8 @@ export class FormUI extends HTMLElement {
     this.productListCartClickBound = false;
     this.productCartOverlay = null;
     this.productCartCloseTimer = null;
+    this.pageScrollLockCount = 0;
+    this.pageScrollPreviousOverflow = null;
     this.productGalleryOverlay = null;
     this.viewValues = {};
     this.outputRenderers = this.createDefaultOutputRenderers();
@@ -487,6 +491,14 @@ export class FormUI extends HTMLElement {
     if (this.productCartCloseTimer !== null && typeof window !== "undefined") {
       window.clearTimeout(this.productCartCloseTimer);
       this.productCartCloseTimer = null;
+    }
+    if (typeof document !== "undefined" && this.pageScrollLockCount > 0) {
+      const body = document.body;
+      if (body) {
+        body.style.overflow = this.pageScrollPreviousOverflow || "";
+      }
+      this.pageScrollLockCount = 0;
+      this.pageScrollPreviousOverflow = null;
     }
     this.productListCartClickBound = false;
     this.persistence.disconnect();
@@ -2355,6 +2367,7 @@ export class FormUI extends HTMLElement {
         panel.style.transform = "translateX(0)";
       }
     }
+    this.acquirePageScrollLock();
   }
 
   closeProductCartModal = () => {
@@ -2378,12 +2391,44 @@ export class FormUI extends HTMLElement {
         this.productCartOverlay.style.display = "none";
         this.productCartOverlay.style.visibility = "hidden";
         this.productCartOverlay.setAttribute("data-state", "closed");
+        this.releasePageScrollLock();
         this.productCartCloseTimer = null;
       }, 180);
     } else {
       this.productCartOverlay.style.display = "none";
       this.productCartOverlay.style.visibility = "hidden";
       this.productCartOverlay.setAttribute("data-state", "closed");
+      this.releasePageScrollLock();
+    }
+  }
+
+  acquirePageScrollLock = () => {
+    if (typeof document === "undefined") {
+      return;
+    }
+    const body = document.body;
+    if (!body) {
+      return;
+    }
+    if (this.pageScrollLockCount === 0) {
+      this.pageScrollPreviousOverflow = body.style.overflow || "";
+      body.style.overflow = "hidden";
+    }
+    this.pageScrollLockCount += 1;
+  }
+
+  releasePageScrollLock = () => {
+    if (typeof document === "undefined") {
+      return;
+    }
+    const body = document.body;
+    if (!body || this.pageScrollLockCount <= 0) {
+      return;
+    }
+    this.pageScrollLockCount -= 1;
+    if (this.pageScrollLockCount === 0) {
+      body.style.overflow = this.pageScrollPreviousOverflow || "";
+      this.pageScrollPreviousOverflow = null;
     }
   }
 

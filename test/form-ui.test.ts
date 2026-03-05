@@ -872,6 +872,7 @@ describe('FormUI', () => {
     await flushAsyncWork();
     const cartOverlay = element.querySelector('[data-product-cart-overlay="true"]') as HTMLElement;
     expect(cartOverlay.getAttribute('data-state')).toBe('open');
+    expect(document.body.style.overflow).toBe('hidden');
 
     const cartClose = element.querySelector('[data-product-cart-close="true"]') as HTMLButtonElement;
     cartClose.click();
@@ -879,6 +880,7 @@ describe('FormUI', () => {
     expect(cartOverlay.getAttribute('data-state')).toBe('closing');
     await new Promise((resolve) => setTimeout(resolve, 220));
     expect(cartOverlay.getAttribute('data-state')).toBe('closed');
+    expect(document.body.style.overflow).toBe('');
 
     const card = element.querySelector('[data-product-open-gallery="sku_1"]') as HTMLElement;
     card.click();

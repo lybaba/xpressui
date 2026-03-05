@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>xpressui hybrid ecommerce demo</title>
+    <title>xpressui ecommerce multistep demo</title>
     <link rel="stylesheet" href="../index.css" />
     <style>
       :root {
@@ -95,10 +95,10 @@
   <body>
     <main>
       <a href="./index.html">Retour aux démos</a>
-      <h1>Hybrid E-commerce Checkout</h1>
+      <h1>E-commerce Checkout Multi-step</h1>
       <p>
-        Exemple <code>mode="hybrid"</code> avec champ natif <code>product-list</code>
-        + <code>image-gallery</code> (catalogue max 20 items sans pagination, bouton cart flottant avec total, édition du cart en modal, clic carte pour galerie full).
+        Exemple ecommerce multi-step avec <code>product-list</code> + <code>image-gallery</code>:
+        étape 1 saisie/sélection, étape 2 review en vue read-only + submit.
       </p>
 
       <div class="layout">
@@ -113,7 +113,9 @@
             </div>
             <pre><code>import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
 
-const config = createFormPreset("ecommerce-checkout");
+const config = createFormPreset("ecommerce-checkout", {
+  submit: { endpoint: "/api/mock-ecommerce-submit", method: "POST" }
+});
 const productsField = (config.sections.main || []).find((field) => field.name === "products");
 if (productsField) {
   productsField.choices = products;
@@ -125,19 +127,27 @@ if (productsField) {
   choices: lookbookImages
 });
 
-const form = mountFormUI(app, config);
+const stepOneFields = config.sections.main || [];
+config.type = "multistepform";
+config.stepSections = [
+  { type: "section", name: "catalog_step", label: "1. Cart & Details" },
+  { type: "section", name: "review_step", label: "2. Review & Submit", stepSummary: true },
+];
+config.sections = {
+  ...(config.sections || {}),
+  custom: [
+    { type: "section", name: "catalog_step", label: "1. Cart & Details" },
+    { type: "section", name: "review_step", label: "2. Review & Submit", stepSummary: true },
+  ],
+  catalog_step: stepOneFields,
+  review_step: [],
+};
+config.stepLabels = {
+  next: "Continue to review",
+  previous: "Back to cart",
+};
 
-form.setAttribute("mode", "hybrid");
-form.setFieldOutputRenderer("products", ({ value }) => {
-  const list = document.createElement("ul");
-  (Array.isArray(value) ? value : []).forEach((product) => {
-    const item = document.createElement("li");
-    item.textContent = `${product.name} x${product.quantity}`;
-    list.appendChild(item);
-  });
-  return list;
-});
-form.refreshOutputRendering();</code></pre>
+const form = mountFormUI(app, config);</code></pre>
           </div>
         </aside>
 
@@ -275,49 +285,30 @@ form.refreshOutputRendering();</code></pre>
         helpText: "Select visual inspirations and click a card to open full images.",
         choices: lookbookImages
       });
+      // Convert preset into a 2-step checkout:
+      // Step 1: product selection + customer data
+      // Step 2: read-only review via native step summary + submit
+      const stepOneFields = config.sections.main || [];
+      config.type = "multistepform";
+      config.stepSections = [
+        { type: "section", name: "catalog_step", label: "1. Cart & Details" },
+        { type: "section", name: "review_step", label: "2. Review & Submit", stepSummary: true },
+      ];
+      config.sections = {
+        ...(config.sections || {}),
+        custom: [
+          { type: "section", name: "catalog_step", label: "1. Cart & Details" },
+          { type: "section", name: "review_step", label: "2. Review & Submit", stepSummary: true },
+        ],
+        catalog_step: stepOneFields,
+        review_step: [],
+      };
+      config.stepLabels = {
+        next: "Continue to review",
+        previous: "Back to cart",
+      };
+
       const form = mountFormUI(app, config);
-
-      form.setAttribute("mode", "hybrid");
-      // In this ecommerce demo, keep hybrid runtime but avoid duplicated inline preview
-      // under editable inputs. Product list and lookbook have dedicated visual UIs already.
-      const mainFields = config.sections.main || [];
-      mainFields
-        .map((field) => field.name)
-        .filter((fieldName) => fieldName && fieldName !== "products" && fieldName !== "lookbook")
-        .forEach((fieldName) => {
-          form.setFieldOutputRenderer(fieldName, () => {
-            const hidden = document.createElement("div");
-            hidden.style.display = "none";
-            return hidden;
-          });
-        });
-
-      form.setFieldOutputRenderer("products", ({ value }) => {
-        const list = document.createElement("ul");
-        list.style.margin = "0";
-        list.style.paddingLeft = "18px";
-        const items = Array.isArray(value) ? value : [];
-        if (!items.length) {
-          const empty = document.createElement("li");
-          empty.textContent = "No product in cart";
-          list.appendChild(empty);
-          return list;
-        }
-        items.forEach((product) => {
-          const item = document.createElement("li");
-          item.textContent = `${product.name} x${product.quantity}`;
-          list.appendChild(item);
-        });
-        return list;
-      });
-      form.setFieldOutputRenderer("lookbook", ({ value }) => {
-        const summary = document.createElement("div");
-        summary.className = "text-xs opacity-70";
-        const items = Array.isArray(value) ? value : [];
-        summary.textContent = items.length ? `${items.length} image(s) selected` : "No image selected";
-        return summary;
-      });
-      form.refreshOutputRendering();
 
       const originalFetch = window.fetch.bind(window);
       window.fetch = async (input, init) => {

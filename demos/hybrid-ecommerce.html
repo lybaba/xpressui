@@ -98,7 +98,7 @@
       <h1>E-commerce Checkout Multi-step</h1>
       <p>
         Exemple ecommerce multi-step avec <code>product-list</code> + <code>image-gallery</code>:
-        étape 1 saisie/sélection, étape 2 review en vue read-only + submit.
+        étape 1 sélection produits, étape 2 checkout (résumé commande + total + paiement) + submit.
       </p>
 
       <div class="layout">
@@ -131,22 +131,46 @@ const mainFields = config.sections.main || [];
 const stepOneFields = mainFields.filter((field) =>
   field.name === "products" || field.name === "lookbook"
 );
+const checkoutFields = [
+  { type: "text", name: "billing_full_name", label: "Full Name", required: true },
+  { type: "email", name: "billing_email", label: "Email", required: true },
+  { type: "tel", name: "billing_phone", label: "Phone", required: true },
+  { type: "text", name: "shipping_address_line1", label: "Address", required: true },
+  { type: "text", name: "shipping_city", label: "City", required: true },
+  { type: "text", name: "shipping_zip", label: "ZIP / Postal Code", required: true },
+  {
+    type: "select-one",
+    name: "shipping_country",
+    label: "Country",
+    required: true,
+    choices: [
+      { value: "FR", label: "France" },
+      { value: "BE", label: "Belgium" },
+      { value: "CH", label: "Switzerland" },
+      { value: "US", label: "United States" }
+    ]
+  },
+  { type: "text", name: "payment_card_name", label: "Cardholder Name", required: true },
+  { type: "text", name: "payment_card_number", label: "Card Number", required: true },
+  { type: "text", name: "payment_card_expiry", label: "Expiry (MM/YY)", required: true },
+  { type: "text", name: "payment_card_cvc", label: "CVC", required: true }
+];
 config.type = "multistepform";
 config.stepSections = [
   { type: "section", name: "catalog_step", label: "1. Cart & Details" },
-  { type: "section", name: "review_step", label: "2. Review & Submit", stepSummary: true },
+  { type: "section", name: "checkout_step", label: "2. Checkout & Pay" },
 ];
 config.sections = {
   ...(config.sections || {}),
   custom: [
     { type: "section", name: "catalog_step", label: "1. Cart & Details" },
-    { type: "section", name: "review_step", label: "2. Review & Submit", stepSummary: true },
+    { type: "section", name: "checkout_step", label: "2. Checkout & Pay" },
   ],
   catalog_step: stepOneFields,
-  review_step: [],
+  checkout_step: checkoutFields,
 };
 config.stepLabels = {
-  next: "Continue to review",
+  next: "Continue to checkout",
   previous: "Back to cart",
 };
 
@@ -290,31 +314,99 @@ const form = mountFormUI(app, config);</code></pre>
       });
       // Convert preset into a 2-step checkout:
       // Step 1: product selection only
-      // Step 2: read-only review via native step summary + submit
+      // Step 2: checkout form + order summary + payment fields
       const mainFields = config.sections.main || [];
       const stepOneFields = mainFields.filter((field) =>
         field.name === "products" || field.name === "lookbook"
       );
+      const checkoutFields = [
+        { type: "text", name: "billing_full_name", label: "Full Name", required: true },
+        { type: "email", name: "billing_email", label: "Email", required: true },
+        { type: "tel", name: "billing_phone", label: "Phone", required: true },
+        { type: "text", name: "shipping_address_line1", label: "Address", required: true },
+        { type: "text", name: "shipping_city", label: "City", required: true },
+        { type: "text", name: "shipping_zip", label: "ZIP / Postal Code", required: true },
+        {
+          type: "select-one",
+          name: "shipping_country",
+          label: "Country",
+          required: true,
+          choices: [
+            { value: "FR", label: "France" },
+            { value: "BE", label: "Belgium" },
+            { value: "CH", label: "Switzerland" },
+            { value: "US", label: "United States" }
+          ]
+        },
+        { type: "text", name: "payment_card_name", label: "Cardholder Name", required: true },
+        { type: "text", name: "payment_card_number", label: "Card Number", required: true },
+        { type: "text", name: "payment_card_expiry", label: "Expiry (MM/YY)", required: true },
+        { type: "text", name: "payment_card_cvc", label: "CVC", required: true }
+      ];
       config.type = "multistepform";
       config.stepSections = [
         { type: "section", name: "catalog_step", label: "1. Cart & Details" },
-        { type: "section", name: "review_step", label: "2. Review & Submit", stepSummary: true },
+        { type: "section", name: "checkout_step", label: "2. Checkout & Pay" },
       ];
       config.sections = {
         ...(config.sections || {}),
         custom: [
           { type: "section", name: "catalog_step", label: "1. Cart & Details" },
-          { type: "section", name: "review_step", label: "2. Review & Submit", stepSummary: true },
+          { type: "section", name: "checkout_step", label: "2. Checkout & Pay" },
         ],
         catalog_step: stepOneFields,
-        review_step: [],
+        checkout_step: checkoutFields,
       };
       config.stepLabels = {
-        next: "Continue to review",
+        next: "Continue to checkout",
         previous: "Back to cart",
       };
 
       const form = mountFormUI(app, config);
+      const renderCheckoutSummary = () => {
+        const checkoutStep = form.querySelector('[data-name="checkout_step"]');
+        if (!checkoutStep) return;
+
+        const values = form.getFormValues ? form.getFormValues() : {};
+        const products = Array.isArray(values?.products) ? values.products : [];
+        const total = products.reduce((sum, item) => {
+          const price = item?.discount_price ?? item?.sale_price ?? 0;
+          return sum + Number(price || 0) * Number(item?.quantity || 0);
+        }, 0);
+
+        let panel = checkoutStep.querySelector('[data-checkout-summary]');
+        if (!panel) {
+          panel = document.createElement("div");
+          panel.setAttribute("data-checkout-summary", "true");
+          panel.className = "mb-3 rounded border border-base-300 bg-base-200 p-3";
+          const firstField = checkoutStep.querySelector(
+            "label, .form-control, input, select, textarea, button[type='submit']",
+          );
+          if (firstField) {
+            checkoutStep.insertBefore(panel, firstField);
+          } else {
+            checkoutStep.prepend(panel);
+          }
+        }
+
+        const lines = products.length
+          ? `<ul style="margin:0;padding-left:18px;">${products
+              .map((item) => `<li>${item.name} x${item.quantity}</li>`)
+              .join("")}</ul>`
+          : `<div style="font-size:12px;opacity:.75;">No product selected</div>`;
+
+        panel.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong>Order Summary</strong>
+            <strong>Total: ${total.toFixed(2)}€</strong>
+          </div>
+          <div style="margin-top:8px;">${lines}</div>
+        `;
+      };
+      form.addEventListener("input", () => renderCheckoutSummary());
+      form.addEventListener("change", () => renderCheckoutSummary());
+      form.addEventListener("form-ui:workflow-step", () => renderCheckoutSummary());
+      renderCheckoutSummary();
 
       const originalFetch = window.fetch.bind(window);
       window.fetch = async (input, init) => {

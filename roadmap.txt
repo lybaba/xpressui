@@ -50,6 +50,15 @@ Major capabilities already implemented in the codebase:
   - previews / thumbnails
   - camera and document scan flows
   - OCR / MRZ extraction
+- render modes and read rendering:
+  - `form` / `view` / `hybrid`
+  - output renderer registry (`text`, `html`, `image`, `file`, `video`, `link`)
+  - media display policies (`thumbnail`, `large`, `link`, `gallery`)
+  - output snapshot API + events
+- commerce-oriented field primitives:
+  - `product-list` (catalog max 20, cart interactions, full-image modal)
+  - `image-gallery` (catalog max 20, select/remove, full-image modal)
+  - floating cart trigger with drawer editor
 - product demos published via GitHub Pages
 - CI / release checks
 
@@ -248,6 +257,9 @@ Completed:
 - code snippets beside demos
 - copy-to-clipboard buttons
 - collapsible code panels
+- dedicated demos for:
+  - `view` mode photo gallery
+  - `hybrid` ecommerce checkout with product-list and image-gallery
 
 Remaining:
 - richer demo coverage:
@@ -260,13 +272,13 @@ Remaining:
 
 
 Phase 7: View Runtime and Resource Rendering
-Status: Planned
+Status: In progress (MVP shipped)
 
 Goal:
 Let one runtime support both data capture and data presentation so a `FormUI`
 instance can behave as a `ViewUI`.
 
-Planned scope:
+Completed MVP scope:
 - explicit render mode contract:
   - `form`
   - `view`
@@ -274,13 +286,16 @@ Planned scope:
 - output renderer registry by field type:
   - text / html / image / file / video / link
 - media/resource display policies:
-  - thumbnail / large / source URL variants
-  - gallery vs link rendering
-  - download/open behavior
-- secure rich content templates for view blocks
+  - thumbnail / large / link / gallery
 - shared output snapshot API reusable by:
   - debug/admin tools
   - headless consumers
+
+Remaining:
+- secure rich content templates for view blocks
+- stronger accessibility for modal/drawer interactions (focus trap, aria semantics)
+- renderer extension docs + production recipes
+- richer resource renderers (e.g. embedded docs/audio maps when needed)
 
 Constraints:
 - avoid coupling runtime to WordPress/Ionic/Redux-specific APIs
@@ -289,9 +304,6 @@ Constraints:
 Exit criteria:
 - `FormUI` can render read-only resource views from existing form config/data
 - host apps can override output renderers without patching core runtime
-
-Exit criteria:
-- a new user can understand product value from demos without reading the source
 
 
 Architecture Direction
@@ -358,11 +370,10 @@ P2:
 - workflow snapshots reusable by admin/debug tools
 
 P3:
-- FormUI/ViewUI convergence:
-  - add `form|view|hybrid` render mode
-  - implement output renderer registry
-  - add media/resource display policies
-  - add secure template rendering for view content
+- View runtime hardening:
+  - secure template rendering for view content
+  - accessibility and keyboard/focus improvements for modal/drawer overlays
+  - renderer extension cookbook and advanced output adapters
 
 
 Next Best Task
@@ -387,7 +398,7 @@ Suggested first scope:
 - document response contracts and add conformance tests for all three
 
 Follow-up scope (after current P0):
-- start Phase 7 MVP:
-  - add `view` mode
-  - ship baseline output renderers (`text`, `html`, `image`, `file`, `video`, `link`)
-  - expose reusable output snapshot for debug/headless adapters
+- complete Phase 7 hardening:
+  - secure template rendering for view blocks
+  - accessibility hardening for cart/gallery overlays and keyboard flows
+  - advanced renderer docs with integration examples

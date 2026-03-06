@@ -120,6 +120,29 @@ const PUBLIC_FORM_SCHEMA = {
         },
       },
     },
+    validation: {
+      type: "object",
+      additionalProperties: true,
+      properties: {
+        i18n: {
+          type: "object",
+          additionalProperties: true,
+          properties: {
+            locale: { type: "string", minLength: 1 },
+            fallbackLocale: { type: "string", minLength: 1 },
+            messages: {
+              type: "object",
+              additionalProperties: {
+                type: "object",
+                additionalProperties: {
+                  type: "string",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     sections: {
       type: "object",
       minProperties: 1,

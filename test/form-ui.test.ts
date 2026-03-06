@@ -5915,6 +5915,57 @@ describe('FormUI', () => {
     expect(config.storage?.resumeTokenSignatureVersion).toBe('v1');
   });
 
+  it('rejects invalid validation.i18n locale types in public configs', () => {
+    expect(() =>
+      validatePublicFormConfig({
+        version: 1,
+        id: 'invalid-validation-i18n-locale',
+        uid: 'invalid-validation-i18n-locale',
+        type: 'contactform',
+        name: 'invalid-validation-i18n-locale',
+        title: 'Invalid Validation I18n Locale',
+        validation: {
+          i18n: {
+            locale: 123,
+          },
+        },
+        sections: {
+          custom: [{ type: 'section', name: 'main', label: 'Main' }],
+          main: [{ type: 'email', name: 'email', label: 'Email' }],
+        },
+      } as any)
+    ).toThrow(/Invalid public form config/);
+  });
+
+  it('accepts valid validation.i18n messages in public configs', () => {
+    const config = validatePublicFormConfig({
+      version: 1,
+      id: 'valid-validation-i18n',
+      uid: 'valid-validation-i18n',
+      type: 'contactform',
+      name: 'valid-validation-i18n',
+      title: 'Valid Validation I18n',
+      validation: {
+        i18n: {
+          locale: 'fr',
+          fallbackLocale: 'en',
+          messages: {
+            fr: {
+              required: 'Ce champ est obligatoire.',
+            },
+          },
+        },
+      },
+      sections: {
+        custom: [{ type: 'section', name: 'main', label: 'Main' }],
+        main: [{ type: 'email', name: 'email', label: 'Email' }],
+      },
+    });
+
+    expect(config.validation?.i18n?.locale).toBe('fr');
+    expect((config.validation?.i18n?.messages as any)?.fr?.required).toBe('Ce champ est obligatoire.');
+  });
+
   it('accepts native HTML time values (HH:mm) for time fields', () => {
     const engine = new FormEngineRuntime();
     const formConfig = createFormConfig({

@@ -5643,6 +5643,52 @@ describe('FormUI', () => {
     expect(config.storage?.resumeTokenSignatureVersion).toBe('v1');
   });
 
+  it('accepts native HTML time values (HH:mm) for time fields', () => {
+    const engine = new FormEngineRuntime();
+    const formConfig = createFormConfig({
+      name: 'time-validation-form',
+      title: 'Time Validation Form',
+      fields: [
+        { name: 'booking_time', label: 'Booking Time', type: 'time', required: true },
+      ],
+    });
+    engine.setFormConfig(formConfig);
+    Object.values(formConfig.sections.main || []).forEach((field) => {
+      engine.setField(field.name, field);
+    });
+
+    expect(engine.validateValues({ booking_time: '14:30' }).booking_time).toBeUndefined();
+    expect(engine.validateValues({ booking_time: '14:30:45' }).booking_time).toBeUndefined();
+    expect(engine.validateValues({ booking_time: '25:99' }).booking_time).toEqual(
+      expect.objectContaining({
+        errorMessage: 'Please enter a valid time (HH:mm).',
+      }),
+    );
+  });
+
+  it('accepts datetime-local values for datetime fields', () => {
+    const engine = new FormEngineRuntime();
+    const formConfig = createFormConfig({
+      name: 'datetime-validation-form',
+      title: 'Datetime Validation Form',
+      fields: [
+        { name: 'booking_slot', label: 'Booking Slot', type: 'datetime', required: true },
+      ],
+    });
+    engine.setFormConfig(formConfig);
+    Object.values(formConfig.sections.main || []).forEach((field) => {
+      engine.setField(field.name, field);
+    });
+
+    expect(engine.validateValues({ booking_slot: '2026-03-10T14:30' }).booking_slot).toBeUndefined();
+    expect(engine.validateValues({ booking_slot: '2026-03-10 14:30:00' }).booking_slot).toBeUndefined();
+    expect(engine.validateValues({ booking_slot: 'invalid-value' }).booking_slot).toEqual(
+      expect.objectContaining({
+        errorMessage: 'Please enter a valid date and time.',
+      }),
+    );
+  });
+
   it('can submit to a configured API endpoint', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ bookingId: 'bk_123' }), {

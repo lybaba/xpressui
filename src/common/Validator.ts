@@ -17,7 +17,6 @@ export function getValidators(formConfig: TFormConfig): TValidator[] {
             ajvSchema,
             fieldMap
         } = buildSchema(formConfig);
-        console.log("ajvSchema  ", ajvSchema)
         const validate = ajv.compile(ajvSchema);
         res.push({
             validate,
@@ -45,15 +44,10 @@ export function getValidators(formConfig: TFormConfig): TValidator[] {
 export default function validate(
     validator: TValidator,
     formValues: Record<string, any>) {
-    
-    console.log(999999, " ",formValues)
     validator.validate(formValues);
 
     const errors = parseErrors(validator.validate.errors, validator.fieldMap);
-    
-    console.log(errors);
 
     return errors;
 }
-
 

@@ -155,6 +155,7 @@ Static browser demos are available in [`./demos`](/home/lyb/projects/xpressui/de
 - [`booking-wizard.html`](/home/lyb/projects/xpressui/demos/booking-wizard.html)
 - [`multi-step-review.html`](/home/lyb/projects/xpressui/demos/multi-step-review.html)
 - [`approval-workflow.html`](/home/lyb/projects/xpressui/demos/approval-workflow.html)
+- [`approval-one-page.html`](/home/lyb/projects/xpressui/demos/approval-one-page.html) (simple one-page approval flow)
 - [`file-uploads.html`](/home/lyb/projects/xpressui/demos/file-uploads.html)
 - [`identity-check.html`](/home/lyb/projects/xpressui/demos/identity-check.html)
 - [`view-photo-gallery.html`](/home/lyb/projects/xpressui/demos/view-photo-gallery.html) (`mode="view"`)
@@ -162,6 +163,7 @@ Static browser demos are available in [`./demos`](/home/lyb/projects/xpressui/de
 - [`hybrid-output-snapshot.html`](/home/lyb/projects/xpressui/demos/hybrid-output-snapshot.html) (`mode="hybrid"` + `form-ui:output-snapshot`)
 - [`headless-runtime.html`](/home/lyb/projects/xpressui/demos/headless-runtime.html) (headless `FormRuntime` only)
 - [`remote-resume-flow.html`](/home/lyb/projects/xpressui/demos/remote-resume-flow.html) (remote save/resume token lifecycle)
+- [`provider-transition-flow.html`](/home/lyb/projects/xpressui/demos/provider-transition-flow.html) (provider transition routing demo)
 
 For GitHub Pages packaging:
 

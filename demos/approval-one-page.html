@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui one-page approval demo</title>
+    <link rel="stylesheet" href="../index.css" />
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #f8fafc; color: #0f172a; }
+      main { max-width: 1080px; margin: 0 auto; padding: 30px 20px 56px; }
+      h1 { margin: 0 0 8px; }
+      p { margin: 0; color: #475569; }
+      a { color: #0f766e; }
+      .layout { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+      .panel { background: #fff; border: 1px solid #dbe2ea; border-radius: 14px; padding: 14px; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05); }
+      h2 { margin: 0 0 10px; font-size: 1rem; }
+      pre { margin: 0; background: #0f172a; color: #dbeafe; border-radius: 10px; padding: 12px; overflow: auto; min-height: 200px; font-size: 12px; }
+      @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>Approval One-Page</h1>
+      <p>Flow d'approbation mono-page avec provider mocké, sans wizard multi-step.</p>
+
+      <div class="layout">
+        <section class="panel">
+          <div id="app"></div>
+        </section>
+        <aside class="panel">
+          <h2>Provider Result</h2>
+          <pre id="result">{}</pre>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module">
+      import { mountFormUI } from "../dist/xpressui.mjs";
+
+      const result = document.getElementById("result");
+      const write = (payload) => {
+        result.textContent = JSON.stringify(payload, null, 2);
+      };
+
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = async (input, init = {}) => {
+        const url = typeof input === "string" ? input : input instanceof Request ? input.url : "";
+        if (!url.endsWith("/api/approval-one-page")) {
+          return originalFetch(input, init);
+        }
+
+        const bodyText = typeof init.body === "string" ? init.body : "{}";
+        const parsed = JSON.parse(bodyText || "{}");
+        const amount = Number(parsed?.approval?.amount || 0);
+
+        const payload = {
+          status: amount >= 1000 ? "pending_approval" : "approved",
+          approvalId: "apr_one_page_001",
+          reviewedBy: amount >= 1000 ? null : "auto-policy",
+          received: parsed,
+        };
+
+        return new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      };
+
+      const form = mountFormUI(document.getElementById("app"), {
+        version: 1,
+        id: "approval_one_page_demo",
+        uid: "approval_one_page_demo_uid",
+        type: "contactform",
+        name: "approval-one-page",
+        title: "Approval One-Page",
+        submit: {
+          endpoint: "/api/approval-one-page",
+          action: "approval-request",
+        },
+        fields: [
+          { type: "email", name: "requester_email", label: "Requester Email", required: true },
+          { type: "number", name: "amount", label: "Amount", required: true },
+          { type: "textarea", name: "justification", label: "Justification", required: true },
+        ],
+      });
+
+      form.addEventListener("form-ui:submit", (event) => {
+        write({ event: "submit", values: event.detail?.values || {} });
+      });
+
+      form.addEventListener("form-ui:submit-success", (event) => {
+        write({ event: "submit-success", result: event.detail?.result || {} });
+      });
+
+      form.addEventListener("form-ui:submit-error", (event) => {
+        write({ event: "submit-error", result: event.detail?.result || {} });
+      });
+
+      write({ message: "Ready" });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui provider transition flow demo</title>
+    <link rel="stylesheet" href="../index.css" />
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #f5f7ff; color: #0f172a; }
+      main { max-width: 1220px; margin: 0 auto; padding: 30px 20px 56px; }
+      h1 { margin: 0 0 8px; }
+      p { margin: 0; color: #475569; }
+      a { color: #1d4ed8; }
+      .layout { margin-top: 22px; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) 370px; align-items: start; }
+      .panel { background: #fff; border: 1px solid #dbe2ea; border-radius: 14px; padding: 14px; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05); }
+      h2 { margin: 0 0 10px; font-size: 1rem; }
+      pre { margin: 0; min-height: 230px; background: #0f172a; color: #dbeafe; border-radius: 10px; padding: 12px; overflow: auto; font-size: 12px; }
+      .state { margin: 0 0 10px; padding: 9px 11px; border-radius: 10px; border: 1px dashed #93c5fd; color: #1d4ed8; font-size: 0.92rem; }
+      @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>Provider Transition Flow</h1>
+      <p>Démo des transitions provider -> step/workflow avec routing policy automatique.</p>
+
+      <div class="layout">
+        <section class="panel">
+          <div id="app"></div>
+        </section>
+        <aside class="panel">
+          <h2>Transition Trace</h2>
+          <div class="state" id="state">Current step: request_step</div>
+          <pre id="trace">[]</pre>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module">
+      import { mountFormUI } from "../dist/xpressui.mjs";
+
+      const trace = document.getElementById("trace");
+      const state = document.getElementById("state");
+      const events = [];
+
+      const pushEvent = (type, detail) => {
+        events.unshift({ type, detail, at: new Date().toISOString() });
+        trace.textContent = JSON.stringify(events.slice(0, 8), null, 2);
+      };
+
+      const refreshState = (form) => {
+        state.textContent = `Current step: ${form.getCurrentStepName()} | Workflow: ${form.getWorkflowState()}`;
+      };
+
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = async (input, init = {}) => {
+        const url = typeof input === "string" ? input : input instanceof Request ? input.url : "";
+        if (!url.endsWith("/api/provider-transition")) {
+          return originalFetch(input, init);
+        }
+
+        const bodyText = typeof init.body === "string" ? init.body : "{}";
+        const parsed = JSON.parse(bodyText || "{}");
+        const route = String(parsed?.approval?.route || "step_review");
+
+        let payload;
+        if (route === "workflow_pending") {
+          payload = {
+            status: "pending_approval",
+            transition: { type: "workflow", state: "pending_approval" },
+            data: { reason: "Needs manager review" },
+          };
+        } else if (route === "workflow_completed") {
+          payload = {
+            status: "completed",
+            transition: { type: "workflow", state: "completed" },
+            data: { reason: "Completed by provider" },
+          };
+        } else {
+          payload = {
+            status: "approved",
+            transition: { type: "step", target: "review_step" },
+            data: { reason: "Direct step transition" },
+          };
+        }
+
+        return new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      };
+
+      const form = mountFormUI(document.getElementById("app"), {
+        version: 1,
+        id: "provider_transition_flow_demo",
+        uid: "provider_transition_flow_demo_uid",
+        type: "multistepform",
+        name: "provider-transition-flow",
+        title: "Provider Transition Flow",
+        submit: {
+          endpoint: "/api/provider-transition",
+          action: "approval-request",
+        },
+        providerRoutingPolicy: "auto",
+        workflowStepTargets: {
+          pending_approval: "review_step",
+          completed: "done_step",
+        },
+        stepSections: [
+          { type: "section", name: "request_step", label: "Request" },
+          { type: "section", name: "review_step", label: "Review", stepSummary: true },
+          { type: "section", name: "done_step", label: "Done", stepSummary: true },
+        ],
+        sections: {
+          custom: [
+            { type: "section", name: "request_step", label: "Request" },
+            { type: "section", name: "review_step", label: "Review", stepSummary: true },
+            { type: "section", name: "done_step", label: "Done", stepSummary: true },
+          ],
+          request_step: [
+            { type: "email", name: "requester_email", label: "Requester Email", required: true },
+            {
+              type: "select",
+              name: "route",
+              label: "Provider Route",
+              required: true,
+              choices: [
+                { value: "step_review", label: "Step transition -> review_step" },
+                { value: "workflow_pending", label: "Workflow transition -> pending_approval" },
+                { value: "workflow_completed", label: "Workflow transition -> completed" },
+              ],
+            },
+          ],
+          review_step: [
+            { type: "output", name: "review_output", label: "Review Output", subType: "html", value: "<p>Review step reached.</p>" },
+          ],
+          done_step: [
+            { type: "output", name: "done_output", label: "Done Output", subType: "html", value: "<p>Done step reached.</p>" },
+          ],
+        },
+      });
+
+      [
+        "form-ui:submit",
+        "form-ui:submit-success",
+        "form-ui:provider-transition",
+        "form-ui:workflow-state",
+      ].forEach((eventName) => {
+        form.addEventListener(eventName, (event) => {
+          pushEvent(eventName, event.detail || {});
+          refreshState(form);
+        });
+      });
+
+      refreshState(form);
+      pushEvent("ready", { message: "Fill step 1 and submit to see provider-driven routing." });
+    </script>
+  </body>
+</html>

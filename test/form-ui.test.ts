@@ -5081,6 +5081,115 @@ describe('FormUI', () => {
     (globalThis as any).XMLHttpRequest = originalXhr;
   });
 
+  it('retries presigned upload operations and emits retry diagnostics', async () => {
+    const originalXhr = window.XMLHttpRequest;
+    const emittedRetryDetails: any[] = [];
+
+    class MockXhr {
+      static uploadAttempts = 0;
+      upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      status = 200;
+      responseText = '';
+
+      open() {}
+      setRequestHeader() {}
+      getResponseHeader() {
+        return 'text/plain';
+      }
+      send() {
+        MockXhr.uploadAttempts += 1;
+        if (MockXhr.uploadAttempts === 1) {
+          this.onerror?.();
+          return;
+        }
+
+        this.upload.onprogress?.({
+          lengthComputable: true,
+          loaded: 100,
+          total: 100,
+        } as ProgressEvent);
+        this.onload?.();
+      }
+    }
+
+    (window as any).XMLHttpRequest = MockXhr;
+    (globalThis as any).XMLHttpRequest = MockXhr;
+
+    const fetchMock = vi.spyOn(window, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: 'temporary' }), {
+          status: 500,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({
+          uploadUrl: 'https://upload.example.test/retry-file',
+          fileUrl: 'https://cdn.example.test/retry-file.pdf',
+        }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ saved: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+
+    const runtime = new FormUploadRuntime({
+      emitEvent: (eventName, detail) => {
+        if (eventName === 'form-ui:upload-retry') {
+          emittedRetryDetails.push(detail.result);
+        }
+        return true;
+      },
+    });
+    const file = new File(['content'], 'retry-file.pdf', { type: 'application/pdf' });
+
+    await runtime.submit(
+      { attachment: file },
+      {
+        endpoint: 'https://api.example.test/finalize',
+        method: 'POST',
+        mode: 'form-data',
+        uploadStrategy: 'presigned',
+        presignEndpoint: 'https://api.example.test/presign',
+        uploadRetryMaxAttempts: 3,
+        uploadRetryBaseDelayMs: 0,
+        uploadRetryMaxDelayMs: 0,
+      },
+      {
+        attachment: {
+          name: 'attachment',
+          label: 'Attachment',
+          type: 'file',
+        },
+      },
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(emittedRetryDetails.length).toBeGreaterThanOrEqual(2);
+    expect(emittedRetryDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          stage: 'presign',
+          attempt: 1,
+        }),
+        expect.objectContaining({
+          stage: 'upload',
+          attempt: 1,
+        }),
+      ]),
+    );
+
+    (window as any).XMLHttpRequest = originalXhr;
+    (globalThis as any).XMLHttpRequest = originalXhr;
+  });
+
   it('disables offline queue for forms that include file fields', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

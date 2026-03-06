@@ -115,6 +115,55 @@ function buildPresignPayload(fieldName: string, file: File): Record<string, any>
   };
 }
 
+type TUploadRetryStage = "presign" | "upload";
+
+type TUploadRetryPolicy = {
+  maxAttempts: number;
+  baseDelayMs: number;
+  maxDelayMs: number;
+  jitter: boolean;
+};
+
+function sleep(ms: number): Promise<void> {
+  if (ms <= 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function normalizeRetryPolicy(submitConfig: TFormSubmitRequest): TUploadRetryPolicy {
+  return {
+    maxAttempts: Math.max(1, Number(submitConfig.uploadRetryMaxAttempts ?? 3)),
+    baseDelayMs: Math.max(0, Number(submitConfig.uploadRetryBaseDelayMs ?? 500)),
+    maxDelayMs: Math.max(0, Number(submitConfig.uploadRetryMaxDelayMs ?? 5_000)),
+    jitter: Boolean(submitConfig.uploadRetryJitter),
+  };
+}
+
+function shouldRetryUploadError(error: any): boolean {
+  const status = Number(error?.response?.status);
+  if (Number.isFinite(status) && status > 0) {
+    return status === 408 || status === 425 || status === 429 || status >= 500;
+  }
+
+  return true;
+}
+
+function getRetryDelayMs(policy: TUploadRetryPolicy, attempt: number): number {
+  const expFactor = Math.max(0, attempt - 1);
+  const raw = policy.baseDelayMs * Math.pow(2, expFactor);
+  const clamped = Math.min(raw, policy.maxDelayMs);
+  if (!policy.jitter) {
+    return clamped;
+  }
+
+  const jitter = Math.floor(Math.random() * Math.min(250, clamped + 1));
+  return clamped + jitter;
+}
+
 export class FormUploadRuntime {
   emitEvent: NonNullable<TFormUploadRuntimeOptions["emitEvent"]>;
 
@@ -232,6 +281,7 @@ export class FormUploadRuntime {
 
     let completed = 0;
     const total = Math.max(1, allFiles.length);
+    const retryPolicy = normalizeRetryPolicy(submitConfig);
 
     this.emitUploadEvent(
       "form-ui:upload-start",
@@ -246,33 +296,94 @@ export class FormUploadRuntime {
         submitConfig.presignEndpoint as string,
         submitConfig.baseUrl,
       );
-      const presignResponse = await fetch(presignUrl, {
-        method: submitConfig.presignMethod || "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(submitConfig.presignHeaders || {}),
-        },
-        body: JSON.stringify(buildPresignPayload(fieldName, file)),
+
+      const executeWithRetry = async <T>(
+        stage: TUploadRetryStage,
+        operation: () => Promise<T>,
+      ): Promise<T> => {
+        let lastError: any = null;
+        for (let attempt = 1; attempt <= retryPolicy.maxAttempts; attempt += 1) {
+          try {
+            return await operation();
+          } catch (error: any) {
+            lastError = error;
+            const retryable = shouldRetryUploadError(error);
+            if (!retryable || attempt >= retryPolicy.maxAttempts) {
+              break;
+            }
+            const delayMs = getRetryDelayMs(retryPolicy, attempt);
+            const nextRetryAt = Date.now() + delayMs;
+            this.emitUploadEvent(
+              "form-ui:upload-retry",
+              values,
+              submitConfig,
+              createUploadState(fileFieldNames, "uploading", Math.round((completed / total) * 100)),
+              {
+                strategy: "presigned",
+                stage,
+                fieldName,
+                attempt,
+                maxAttempts: retryPolicy.maxAttempts,
+                nextRetryAt,
+                delayMs,
+                reason:
+                  error?.message
+                  || error?.result?.error
+                  || error?.result?.message
+                  || "upload_retry",
+                status: error?.response?.status,
+              },
+            );
+            await sleep(delayMs);
+          }
+        }
+
+        throw lastError;
+      };
+
+      const presignResult = await executeWithRetry("presign", async () => {
+        const presignResponse = await fetch(presignUrl, {
+          method: submitConfig.presignMethod || "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(submitConfig.presignHeaders || {}),
+          },
+          body: JSON.stringify(buildPresignPayload(fieldName, file)),
+        });
+        const presignContentType = presignResponse.headers.get("content-type") || "";
+        const result = presignContentType.includes("application/json")
+          ? await presignResponse.json()
+          : await presignResponse.text();
+        if (!presignResponse.ok) {
+          throw {
+            response: presignResponse,
+            result,
+          };
+        }
+
+        return result;
       });
-      const presignResult = await presignResponse.json();
       const uploadUrl = presignResult[submitConfig.presignUploadUrlKey || "uploadUrl"];
       const fileUrl = presignResult[submitConfig.presignFileUrlKey || "fileUrl"];
 
-      await uploadWithProgress(
-        uploadUrl,
-        submitConfig.uploadMethod || "PUT",
-        {},
-        file,
-        (progress) => {
-          const aggregateProgress = Math.round(((completed + progress / 100) / total) * 100);
-          this.emitUploadEvent(
-            "form-ui:upload-progress",
-            values,
-            submitConfig,
-            createUploadState(fileFieldNames, "uploading", aggregateProgress),
-            { strategy: "presigned", fieldName },
-          );
-        },
+      await executeWithRetry(
+        "upload",
+        () => uploadWithProgress(
+          uploadUrl,
+          submitConfig.uploadMethod || "PUT",
+          {},
+          file,
+          (progress) => {
+            const aggregateProgress = Math.round(((completed + progress / 100) / total) * 100);
+            this.emitUploadEvent(
+              "form-ui:upload-progress",
+              values,
+              submitConfig,
+              createUploadState(fileFieldNames, "uploading", aggregateProgress),
+              { strategy: "presigned", fieldName },
+            );
+          },
+        ),
       ).catch((error) => {
         this.emitUploadEvent(
           "form-ui:upload-error",

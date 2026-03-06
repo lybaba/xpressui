@@ -1302,6 +1302,11 @@ Frontend behavior:
   file fields are sent as `attachments[]` or `attachments`
 - `submit.uploadStrategy: 'presigned'` uploads files first, then submits the
   resulting URLs to your backend
+- `submit.uploadRetryMaxAttempts` (default `3`) bounds retries for presign and
+  direct binary upload failures
+- `submit.uploadRetryBaseDelayMs` (default `500`) controls base backoff delay
+- `submit.uploadRetryMaxDelayMs` (default `5000`) caps retry delay
+- `submit.uploadRetryJitter` adds small random jitter to retries
 - `qr-scan` can start a live camera session and scan directly from the video
   stream when `getUserMedia` and `BarcodeDetector` are available
 - `document-scan` keeps a lightweight two-slot front/back workflow; its
@@ -1328,6 +1333,7 @@ Extra event:
 - `form-ui:queue-disabled-for-files`
 - `form-ui:upload-start`
 - `form-ui:upload-progress`
+- `form-ui:upload-retry`
 - `form-ui:upload-complete`
 - `form-ui:upload-error`
 - `form-ui:qr-scan-success`

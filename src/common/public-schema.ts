@@ -26,6 +26,10 @@ const PUBLIC_FORM_SCHEMA = {
         method: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
         mode: { type: "string", enum: ["json", "form-data"] },
         action: { type: "string", minLength: 1 },
+        uploadRetryMaxAttempts: { type: "integer", minimum: 1 },
+        uploadRetryBaseDelayMs: { type: "integer", minimum: 0 },
+        uploadRetryMaxDelayMs: { type: "integer", minimum: 0 },
+        uploadRetryJitter: { type: "boolean" },
         settingFieldAllowlist: {
           type: "array",
           items: { type: "string", minLength: 1 },

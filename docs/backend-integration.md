@@ -1267,6 +1267,9 @@ mountFormUI(container, {
     mode: 'form-data',
     uploadStrategy: 'presigned',
     presignEndpoint: '/api/uploads/presign',
+    uploadRetryMaxAttempts: 3,
+    uploadRetryBaseDelayMs: 500,
+    uploadRetryMaxDelayMs: 5000,
   },
   fields: [
     {
@@ -1300,6 +1303,16 @@ Expected presign response:
 
 After the direct upload completes, the final form submission sends `fileUrl`
 instead of the original `File` object.
+
+When presign/direct upload fails with retryable statuses (`429`, `5xx`, network
+errors), retries are attempted within `uploadRetryMaxAttempts`.
+Runtime diagnostics are emitted through `form-ui:upload-retry` with:
+- `result.stage` (`presign` or `upload`)
+- `result.fieldName`
+- `result.attempt`
+- `result.maxAttempts`
+- `result.nextRetryAt`
+- `result.reason`
 
 Minimal Express example:
 

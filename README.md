@@ -508,6 +508,8 @@ Supported submit options:
 - `providerResponseContract` (`compat`, `warn-v2`, `strict-v2`)
 - `lifecycle` (`preSubmit`, `postSuccess`, `postFailure`)
 - `transport(values, context)` (optional custom transport override)
+  - hook exceptions emit `form-ui:submit-hook-error` with `result.stage`,
+    `result.hookIndex`, and `result.hookName`
   - accepted return shapes:
   - `{ result }`
   - `{ response, result? }` where `response` is a native `Response`

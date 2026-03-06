@@ -3047,6 +3047,49 @@ describe('FormUI', () => {
     );
   });
 
+  it('emits submit-hook-error with hook metadata when a lifecycle hook throws', async () => {
+    const postSuccess = vi
+      .fn()
+      .mockImplementation(() => {
+        throw new Error('post-success-hook-failure');
+      });
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-lifecycle-hook-error-form',
+      title: 'Submit Lifecycle Hook Error Form',
+      submit: {
+        endpoint: '/api/submit-lifecycle-hook-error',
+        method: 'POST',
+        transport: async () => ({ result: { ok: true } }),
+        lifecycle: {
+          postSuccess,
+        },
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const onHookError = vi.fn();
+    element.addEventListener('form-ui:submit-hook-error', (event) => {
+      onHookError((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await element.onSubmit({ email: 'hook@example.com' });
+
+    expect(onHookError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          stage: 'postSuccess',
+          hookIndex: 0,
+          hookName: expect.any(String),
+        }),
+        error: expect.objectContaining({
+          message: 'post-success-hook-failure',
+        }),
+      }),
+    );
+  });
+
   it('supports submit.transport to let consumers handle submission themselves', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch');
     const transport = vi.fn().mockResolvedValue({

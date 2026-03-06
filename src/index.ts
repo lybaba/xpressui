@@ -4,6 +4,7 @@ import TFormConfig, {
   TFormValidationI18nConfig,
   TFormValidationHook,
   TFormSubmitLifecycleHook,
+  TFormSubmitLifecycleHookResult,
   TFormSubmitLifecycleStage,
   TFormSubmitRequest,
 } from "./common/TFormConfig";
@@ -5601,11 +5602,19 @@ export class FormUI extends HTMLElement {
     detail: TFormUISubmitDetail,
     hookError: unknown,
   ) => {
+    const hookMeta =
+      hookError && typeof hookError === "object"
+        ? {
+          hookIndex: typeof (hookError as any).hookIndex === "number" ? (hookError as any).hookIndex : undefined,
+          hookName: typeof (hookError as any).hookName === "string" ? (hookError as any).hookName : undefined,
+        }
+        : {};
     this.emitFormEvent("form-ui:submit-hook-error", {
       ...detail,
       error: hookError,
       result: {
         stage,
+        ...hookMeta,
       },
     });
   }
@@ -5620,17 +5629,28 @@ export class FormUI extends HTMLElement {
     }
 
     let nextValues = detail.values;
-    for (const hook of hooks) {
-      const hookResult = await hook({
-        stage,
-        values: nextValues,
-        formConfig: detail.formConfig,
-        submit: detail.submit,
-        response: detail.response,
-        result: detail.result,
-        providerResult: detail.providerResult,
-        error: detail.error,
-      });
+    for (let hookIndex = 0; hookIndex < hooks.length; hookIndex += 1) {
+      const hook = hooks[hookIndex];
+      let hookResult: TFormSubmitLifecycleHookResult;
+      try {
+        hookResult = await hook({
+          stage,
+          values: nextValues,
+          formConfig: detail.formConfig,
+          submit: detail.submit,
+          response: detail.response,
+          result: detail.result,
+          providerResult: detail.providerResult,
+          error: detail.error,
+        });
+      } catch (error) {
+        const lifecycleError =
+          error instanceof Error ? error : new Error(String(error));
+        (lifecycleError as any).stage = stage;
+        (lifecycleError as any).hookIndex = hookIndex;
+        (lifecycleError as any).hookName = hook.name || "anonymous";
+        throw lifecycleError;
+      }
 
       if (stage === "preSubmit") {
         if (hookResult === false) {

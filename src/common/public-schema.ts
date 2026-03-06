@@ -30,6 +30,8 @@ const PUBLIC_FORM_SCHEMA = {
         uploadRetryBaseDelayMs: { type: "integer", minimum: 0 },
         uploadRetryMaxDelayMs: { type: "integer", minimum: 0 },
         uploadRetryJitter: { type: "boolean" },
+        uploadChunkMethod: { type: "string", enum: ["PUT", "PATCH", "POST"] },
+        uploadChunkSizeMb: { type: "number", exclusiveMinimum: 0 },
         settingFieldAllowlist: {
           type: "array",
           items: { type: "string", minLength: 1 },

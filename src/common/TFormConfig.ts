@@ -62,6 +62,8 @@ export type TFormSubmitRequest = {
     presignUploadUrlKey?: string;
     presignFileUrlKey?: string;
     uploadMethod?: 'POST' | 'PUT';
+    uploadChunkMethod?: 'PUT' | 'PATCH' | 'POST';
+    uploadChunkSizeMb?: number;
     uploadRetryMaxAttempts?: number;
     uploadRetryBaseDelayMs?: number;
     uploadRetryMaxDelayMs?: number;

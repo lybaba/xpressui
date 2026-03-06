@@ -73,7 +73,7 @@ function uploadWithProgress(
   url: string,
   method: string,
   headers: Record<string, string>,
-  body: FormData | File,
+  body: FormData | Blob,
   onProgress: (progress: number) => void,
 ): Promise<TXhrUploadResponse> {
   return new Promise((resolve, reject) => {
@@ -188,6 +188,14 @@ function isUploadPolicyAllowed(result: TFormUploadPolicyResult): { allowed: bool
   }
 
   return { allowed: true };
+}
+
+function getChunkSizeBytes(submitConfig: TFormSubmitRequest): number {
+  const chunkSizeMb = Number(submitConfig.uploadChunkSizeMb || 0);
+  if (!Number.isFinite(chunkSizeMb) || chunkSizeMb <= 0) {
+    return 0;
+  }
+  return Math.max(1, Math.floor(chunkSizeMb * 1024 * 1024));
 }
 
 export class FormUploadRuntime {
@@ -473,25 +481,67 @@ export class FormUploadRuntime {
       });
       const uploadUrl = presignResult[submitConfig.presignUploadUrlKey || "uploadUrl"];
       const fileUrl = presignResult[submitConfig.presignFileUrlKey || "fileUrl"];
+      const chunkSizeBytes = getChunkSizeBytes(submitConfig);
+      const uploadMethod = submitConfig.uploadMethod || "PUT";
+
+      const uploadFileInChunks = async (): Promise<void> => {
+        if (chunkSizeBytes <= 0 || file.size <= chunkSizeBytes) {
+          await uploadWithProgress(
+            uploadUrl,
+            uploadMethod,
+            {},
+            file,
+            (progress) => {
+              const aggregateProgress = Math.round(((completed + progress / 100) / total) * 100);
+              this.emitUploadEvent(
+                "form-ui:upload-progress",
+                values,
+                submitConfig,
+                createUploadState(fileFieldNames, "uploading", aggregateProgress),
+                { strategy: "presigned", fieldName },
+              );
+            },
+          );
+          return;
+        }
+
+        const chunkMethod = submitConfig.uploadChunkMethod || uploadMethod;
+        const totalChunks = Math.ceil(file.size / chunkSizeBytes);
+        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+          const start = chunkIndex * chunkSizeBytes;
+          const end = Math.min(file.size, start + chunkSizeBytes);
+          const chunk = file.slice(start, end);
+          await uploadWithProgress(
+            uploadUrl,
+            chunkMethod,
+            {
+              "Content-Type": file.type || "application/octet-stream",
+              "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,
+            },
+            chunk,
+            (progress) => {
+              const chunkProgress = (chunkIndex + progress / 100) / totalChunks;
+              const aggregateProgress = Math.round(((completed + chunkProgress) / total) * 100);
+              this.emitUploadEvent(
+                "form-ui:upload-progress",
+                values,
+                submitConfig,
+                createUploadState(fileFieldNames, "uploading", aggregateProgress),
+                {
+                  strategy: "presigned",
+                  fieldName,
+                  chunkIndex,
+                  chunkCount: totalChunks,
+                },
+              );
+            },
+          );
+        }
+      };
 
       await executeWithRetry(
         "upload",
-        () => uploadWithProgress(
-          uploadUrl,
-          submitConfig.uploadMethod || "PUT",
-          {},
-          file,
-          (progress) => {
-            const aggregateProgress = Math.round(((completed + progress / 100) / total) * 100);
-            this.emitUploadEvent(
-              "form-ui:upload-progress",
-              values,
-              submitConfig,
-              createUploadState(fileFieldNames, "uploading", aggregateProgress),
-              { strategy: "presigned", fieldName },
-            );
-          },
-        ),
+        uploadFileInChunks,
       ).catch((error) => {
         this.emitUploadEvent(
           "form-ui:upload-error",

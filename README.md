@@ -1344,6 +1344,9 @@ Frontend behavior:
 - `submit.uploadRetryBaseDelayMs` (default `500`) controls base backoff delay
 - `submit.uploadRetryMaxDelayMs` (default `5000`) caps retry delay
 - `submit.uploadRetryJitter` adds small random jitter to retries
+- `submit.uploadChunkSizeMb` enables chunked direct upload for large files in
+  presigned mode
+- `submit.uploadChunkMethod` overrides method for each chunk (`PUT`/`PATCH`/`POST`)
 - `submit.fileAcceptancePolicy(context)` can reject files before upload
 - `submit.contentModerationPolicy(context)` can block policy-violating media
 - `submit.virusScanPolicy(context)` can enforce external scan verdicts

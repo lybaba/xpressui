@@ -99,6 +99,16 @@
         word-break: break-all;
       }
 
+      .share-code {
+        margin: 0 0 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px dashed #60a5fa;
+        color: #1e40af;
+        font-size: 0.92rem;
+        word-break: break-all;
+      }
+
       @media (max-width: 980px) {
         .layout { grid-template-columns: 1fr; }
       }
@@ -120,8 +130,12 @@
             <button id="btn-lookup" type="button">Lookup Token</button>
             <button id="btn-restore" type="button">Restore Token</button>
             <button id="btn-invalidate" type="button">Invalidate Token</button>
+            <button id="btn-share" type="button">Create Share Code</button>
+            <button id="btn-claim" type="button">Claim Share Code</button>
+            <button id="btn-restore-code" type="button">Restore From Code</button>
           </div>
           <div class="token" id="token-value">Current token: none</div>
+          <div class="share-code" id="share-code-value">Current share code: none</div>
           <div id="app"></div>
         </section>
 
@@ -138,12 +152,14 @@
       const app = document.getElementById("app");
       const result = document.getElementById("result");
       const tokenValue = document.getElementById("token-value");
+      const shareCodeValue = document.getElementById("share-code-value");
 
       const write = (payload) => {
         result.textContent = JSON.stringify(payload, null, 2);
       };
 
       const fakeRemoteStore = new Map();
+      const fakeShareCodes = new Map();
       const signatureVersion = "v2";
       const signPayload = ({ token, savedAt, issuedAt, expiresAt, snapshot }) =>
         `${token}:${savedAt}:${issuedAt}:${expiresAt}:${snapshot?.draft?.email || ""}`;
@@ -228,6 +244,75 @@
           });
         }
 
+        if (payload.operation === "create-share-code") {
+          const token = String(payload.token || "");
+          const entry = fakeRemoteStore.get(token);
+          if (!entry) {
+            return new Response(JSON.stringify({
+              operation: "create-share-code",
+              code: null,
+            }), {
+              status: 404,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          const code = `SHARE-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+          fakeShareCodes.set(code, { token });
+          return new Response(JSON.stringify({
+            operation: "create-share-code",
+            code,
+            token,
+            expiresAt: entry.expiresAt,
+          }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        if (payload.operation === "claim-share-code") {
+          const code = String(payload.code || "");
+          const mapping = fakeShareCodes.get(code);
+          if (!mapping) {
+            return new Response(JSON.stringify({
+              operation: "claim-share-code",
+              code,
+              found: false,
+            }), {
+              status: 404,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          const token = mapping.token;
+          const entry = fakeRemoteStore.get(token);
+          if (!entry) {
+            return new Response(JSON.stringify({
+              operation: "claim-share-code",
+              code,
+              found: false,
+            }), {
+              status: 404,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          return new Response(JSON.stringify({
+            operation: "claim-share-code",
+            code,
+            token,
+            savedAt: entry.savedAt,
+            issuedAt: entry.issuedAt,
+            expiresAt: entry.expiresAt,
+            signatureVersion,
+            signature: entry.signature,
+            snapshot: entry.snapshot,
+          }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
         const token = `remote_${Math.random().toString(36).slice(2, 10)}`;
         const snapshot = payload.snapshot || {};
         const savedAt = Date.now();
@@ -283,6 +368,7 @@
           key: "xpressui:demo:remote-resume",
           autoSaveMs: 0,
           resumeEndpoint: "/api/resume",
+          shareCodeEndpoint: "/api/resume",
           resumeTokenSignatureVersion: signatureVersion,
           verifyResumeToken: (payload) => signPayload(payload) === payload.signature,
         },
@@ -310,8 +396,12 @@
       });
 
       let activeToken = "";
+      let activeShareCode = "";
       const refreshTokenLabel = () => {
         tokenValue.textContent = `Current token: ${activeToken || "none"}`;
+      };
+      const refreshShareCodeLabel = () => {
+        shareCodeValue.textContent = `Current share code: ${activeShareCode || "none"}`;
       };
 
       document.getElementById("btn-create").addEventListener("click", async () => {
@@ -367,8 +457,49 @@
         }
       });
 
+      document.getElementById("btn-share").addEventListener("click", async () => {
+        if (!activeToken) {
+          write({ action: "createResumeShareCode", error: "No token yet" });
+          return;
+        }
+        try {
+          activeShareCode = await form.createResumeShareCode(activeToken);
+          refreshShareCodeLabel();
+          write({ action: "createResumeShareCode", token: activeToken, code: activeShareCode });
+        } catch (error) {
+          write({ action: "createResumeShareCode", token: activeToken, error: String(error) });
+        }
+      });
+
+      document.getElementById("btn-claim").addEventListener("click", async () => {
+        if (!activeShareCode) {
+          write({ action: "claimResumeShareCode", error: "No share code yet" });
+          return;
+        }
+        try {
+          const claim = await form.claimResumeShareCode(activeShareCode);
+          write({ action: "claimResumeShareCode", code: activeShareCode, claim });
+        } catch (error) {
+          write({ action: "claimResumeShareCode", code: activeShareCode, error: String(error) });
+        }
+      });
+
+      document.getElementById("btn-restore-code").addEventListener("click", async () => {
+        if (!activeShareCode) {
+          write({ action: "restoreFromShareCodeAsync", error: "No share code yet" });
+          return;
+        }
+        try {
+          const restored = await form.restoreFromShareCodeAsync(activeShareCode);
+          write({ action: "restoreFromShareCodeAsync", code: activeShareCode, restored });
+        } catch (error) {
+          write({ action: "restoreFromShareCodeAsync", code: activeShareCode, error: String(error) });
+        }
+      });
+
       write({ message: "Ready", knownTokens: form.listResumeTokens() });
       refreshTokenLabel();
+      refreshShareCodeLabel();
     </script>
   </body>
 </html>

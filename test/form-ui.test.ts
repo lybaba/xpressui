@@ -2553,6 +2553,82 @@ describe('FormUI', () => {
     );
   });
 
+  it('excludes setting fields from submit payloads by default', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-with-settings-form',
+      title: 'Submit With Settings Form',
+      submit: {
+        endpoint: '/api/submit-with-settings',
+        method: 'POST',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+        { name: 'checkout_currency_setting', label: 'Currency', type: 'setting', value: 'EUR' } as any,
+      ],
+    }) as FormUI;
+
+    await element.onSubmit({
+      email: 'shop@example.com',
+      checkout_currency_setting: 'EUR',
+    });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/submit-with-settings',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'shop@example.com' }),
+      }),
+    );
+  });
+
+  it('can include allowlisted setting fields in submit payloads', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-with-allowlisted-setting-form',
+      title: 'Submit With Allowlisted Setting Form',
+      submit: {
+        endpoint: '/api/submit-with-allowlisted-setting',
+        method: 'POST',
+        settingFieldAllowlist: ['checkout_currency_setting'],
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+        { name: 'checkout_currency_setting', label: 'Currency', type: 'setting', value: 'EUR' } as any,
+        { name: 'checkout_tax_rate_setting', label: 'Tax', type: 'setting', value: 0.2 } as any,
+      ],
+    }) as FormUI;
+
+    await element.onSubmit({
+      email: 'shop@example.com',
+      checkout_currency_setting: 'EUR',
+      checkout_tax_rate_setting: 0.2,
+    });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/submit-with-allowlisted-setting',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          email: 'shop@example.com',
+          checkout_currency_setting: 'EUR',
+        }),
+      }),
+    );
+  });
+
   it('runs submit lifecycle hooks for preSubmit and postSuccess', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ status: 'confirmed' }), {

@@ -1,6 +1,6 @@
 import TFieldConfig from "./TFieldConfig";
 import { TFormSubmitRequest } from "./TFormConfig";
-import { isFileLikeValue } from "./field";
+import { SETTING_TYPE, isFileLikeValue } from "./field";
 import { buildProviderPayload } from "./provider-registry";
 
 function isAbsoluteUrl(value: string): boolean {
@@ -84,8 +84,24 @@ function appendFormDataValue(
 export function buildSubmitPayload(
   values: Record<string, any>,
   submitConfig: TFormSubmitRequest,
+  fieldMap?: Record<string, TFieldConfig>,
 ): Record<string, any> {
-  return buildProviderPayload(values, submitConfig);
+  const includeSettings = submitConfig.includeSettingFields === true;
+  const allowlist = new Set(submitConfig.settingFieldAllowlist || []);
+
+  const filteredValues = includeSettings || !fieldMap
+    ? values
+    : Object.fromEntries(
+        Object.entries(values).filter(([fieldName]) => {
+          const fieldConfig = fieldMap[fieldName];
+          if (!fieldConfig || fieldConfig.type !== SETTING_TYPE) {
+            return true;
+          }
+          return allowlist.has(fieldName);
+        }),
+      );
+
+  return buildProviderPayload(filteredValues, submitConfig);
 }
 
 export function buildFormDataBody(
@@ -94,7 +110,7 @@ export function buildFormDataBody(
   fieldMap?: Record<string, TFieldConfig>,
 ): FormData {
   const formDataArrayMode = submitConfig.formDataArrayMode || "brackets";
-  const payload = buildSubmitPayload(values, submitConfig);
+  const payload = buildSubmitPayload(values, submitConfig, fieldMap);
   const body = new FormData();
   Object.entries(payload).forEach(([key, value]) => {
     const resolvedKey = resolveFormDataKey(key, fieldMap);
@@ -114,7 +130,7 @@ export async function submitFormValues(
   const headers = { ...(submitConfig.headers || {}) };
   let url = resolveSubmitRequestUrl(submitConfig.endpoint, submitConfig.baseUrl);
   const init: RequestInit = { method, headers };
-  const payload = buildSubmitPayload(values, submitConfig);
+  const payload = buildSubmitPayload(values, submitConfig, fieldMap);
 
   if (method === "GET") {
     const searchParams = new URLSearchParams();

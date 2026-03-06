@@ -74,6 +74,8 @@ export const ATTR_SUBFORMS = "subforms"
 export const ATTR_RENDERING_MODE = "RenderingMode"
 export const ATTR_SUBMIT_ENDPOINT = "submitEndpoint"
 export const ATTR_SUBMIT_BASE_URL = "submitBaseUrl"
+export const ATTR_SUBMIT_INCLUDE_SETTING_FIELDS = "submitIncludeSettingFields"
+export const ATTR_SUBMIT_SETTING_FIELD_ALLOWLIST = "submitSettingFieldAllowlist"
 export const ATTR_SUBMIT_PROVIDER_ROUTING_POLICY = "submitProviderRoutingPolicy"
 export const ATTR_SUBMIT_METHOD = "submitMethod"
 export const ATTR_SUBMIT_MODE = "submitMode"
@@ -188,6 +190,8 @@ export const HTML_ATTR_SUBFORMS = `${HTML_ATTR_PREFIX}subforms`
 export const HTML_ATTR_RENDERING_MODE = `${HTML_ATTR_PREFIX}rendering-mode`
 export const HTML_ATTR_SUBMIT_ENDPOINT = `${HTML_ATTR_PREFIX}submit-endpoint`
 export const HTML_ATTR_SUBMIT_BASE_URL = `${HTML_ATTR_PREFIX}submit-base-url`
+export const HTML_ATTR_SUBMIT_INCLUDE_SETTING_FIELDS = `${HTML_ATTR_PREFIX}submit-include-setting-fields`
+export const HTML_ATTR_SUBMIT_SETTING_FIELD_ALLOWLIST = `${HTML_ATTR_PREFIX}submit-setting-field-allowlist`
 export const HTML_ATTR_SUBMIT_PROVIDER_ROUTING_POLICY = `${HTML_ATTR_PREFIX}submit-provider-routing-policy`
 export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
 export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
@@ -302,6 +306,8 @@ export const ATTR_MAP = {
     [HTML_ATTR_RENDERING_MODE]: ATTR_RENDERING_MODE,
     [HTML_ATTR_SUBMIT_ENDPOINT]: ATTR_SUBMIT_ENDPOINT,
     [HTML_ATTR_SUBMIT_BASE_URL]: ATTR_SUBMIT_BASE_URL,
+    [HTML_ATTR_SUBMIT_INCLUDE_SETTING_FIELDS]: ATTR_SUBMIT_INCLUDE_SETTING_FIELDS,
+    [HTML_ATTR_SUBMIT_SETTING_FIELD_ALLOWLIST]: ATTR_SUBMIT_SETTING_FIELD_ALLOWLIST,
     [HTML_ATTR_SUBMIT_PROVIDER_ROUTING_POLICY]: ATTR_SUBMIT_PROVIDER_ROUTING_POLICY,
     [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
     [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
@@ -510,6 +516,10 @@ export default function getFormConfig(node: Element): TFormConfig {
         (formConfig as any).submit = {
             endpoint: (formConfig as any).submitEndpoint,
             baseUrl: (formConfig as any).submitBaseUrl,
+            includeSettingFields: (formConfig as any).submitIncludeSettingFields === 'true',
+            settingFieldAllowlist: (formConfig as any).submitSettingFieldAllowlist
+              ? JSON.parse((formConfig as any).submitSettingFieldAllowlist)
+              : undefined,
             providerRoutingPolicy: (formConfig as any).submitProviderRoutingPolicy,
             method: (formConfig as any).submitMethod,
             mode: (formConfig as any).submitMode,
@@ -529,6 +539,8 @@ export default function getFormConfig(node: Element): TFormConfig {
         };
         delete (formConfig as any).submitEndpoint;
         delete (formConfig as any).submitBaseUrl;
+        delete (formConfig as any).submitIncludeSettingFields;
+        delete (formConfig as any).submitSettingFieldAllowlist;
         delete (formConfig as any).submitProviderRoutingPolicy;
         delete (formConfig as any).submitMethod;
         delete (formConfig as any).submitMode;

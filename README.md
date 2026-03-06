@@ -1573,6 +1573,9 @@ Standalone local admin helper:
 - `admin.restoreFromShareCode(code)`
 - `admin.deleteResumeToken(token)`
 - `admin.invalidateResumeToken(token)`
+- `admin.getCurrentStepIndex()`
+- `admin.getWorkflowSnapshot(values?)`
+- `admin.getStepProgress(values?)`
 
 It can inspect and manage local state without a mounted `FormUI` instance:
 - `getSnapshot()`

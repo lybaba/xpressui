@@ -1,6 +1,7 @@
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
 import { TResumeLookupResult, TResumeTokenInfo } from "./form-persistence";
+import { FormStepRuntime, TFormStepProgress, TFormWorkflowSnapshot } from "./form-steps";
 import {
   createStorageAdapter,
   TStorageHealth,
@@ -133,6 +134,9 @@ export type TLocalFormAdmin = {
   invalidateResumeToken(token: string): Promise<boolean>;
   listQueue(query?: TLocalQueueQuery): TQueuedSubmission[];
   listDeadLetter(query?: TLocalQueueQuery): TQueuedSubmission[];
+  getCurrentStepIndex(): number | null;
+  getWorkflowSnapshot(values?: Record<string, any>): TFormWorkflowSnapshot;
+  getStepProgress(values?: Record<string, any>): TFormStepProgress;
   clearDraft(): void;
   clearQueue(): void;
   clearDeadLetter(): void;
@@ -151,6 +155,8 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
   const storageAdapter: TFormStorageAdapter | null = createStorageAdapter(publicConfig);
   const fieldMap = getFieldMap(publicConfig);
   const resumePrefix = `xpressui:resume:${publicConfig.name}:`;
+  const steps = new FormStepRuntime();
+  steps.setFormConfig(publicConfig);
 
   const getResumeTokenTtlMs = (): number | null =>
     typeof publicConfig.storage?.resumeTokenTtlDays === "number" && publicConfig.storage.resumeTokenTtlDays > 0
@@ -225,6 +231,58 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
     queue: storageAdapter?.loadQueue() || [],
     deadLetter: storageAdapter?.loadDeadLetterQueue() || [],
   });
+
+  const getCurrentStepStorageKey = (): string | null => {
+    const baseKey = publicConfig.storage?.key;
+    if (!baseKey) {
+      return null;
+    }
+    return `${baseKey}:step`;
+  };
+
+  const getCurrentStepIndex = (): number | null => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    const key = getCurrentStepStorageKey();
+    if (!key) {
+      return null;
+    }
+    const raw = window.localStorage.getItem(key);
+    if (!raw) {
+      return null;
+    }
+    const parsed = Number(raw);
+    if (!Number.isInteger(parsed) || parsed < 0) {
+      return null;
+    }
+    return parsed;
+  };
+
+  const getWorkflowSnapshot = (values?: Record<string, any>): TFormWorkflowSnapshot => {
+    const nextValues = values || storageAdapter?.loadDraft() || {};
+    const currentStepIndex = getCurrentStepIndex();
+    if (
+      typeof currentStepIndex === "number"
+      && currentStepIndex >= 0
+      && currentStepIndex < steps.getStepNames().length
+    ) {
+      steps.setCurrentStepIndex(currentStepIndex);
+    }
+    return steps.getWorkflowSnapshot(nextValues);
+  };
+
+  const getStepProgress = (): TFormStepProgress => {
+    const currentStepIndex = getCurrentStepIndex();
+    if (
+      typeof currentStepIndex === "number"
+      && currentStepIndex >= 0
+      && currentStepIndex < steps.getStepNames().length
+    ) {
+      steps.setCurrentStepIndex(currentStepIndex);
+    }
+    return steps.getStepProgress();
+  };
 
   const getSnapshotAsync = async (): Promise<TLocalFormAdminSnapshot> => {
     if (storageAdapter?.hydrate) {
@@ -505,6 +563,9 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
     listDeadLetter(query) {
       return applyQuery(storageAdapter?.loadDeadLetterQueue() || [], query);
     },
+    getCurrentStepIndex,
+    getWorkflowSnapshot,
+    getStepProgress,
     clearDraft() {
       storageAdapter?.clearDraft();
     },

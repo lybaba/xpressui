@@ -11253,6 +11253,38 @@ describe('FormUI', () => {
     expect(admin.getSnapshot().draft).toEqual({ email: 'admin-claimed@example.com' });
   });
 
+  it('exposes workflow snapshot helpers in the local admin API', () => {
+    const formConfig = createFormPreset('booking-wizard', {
+      name: 'admin-workflow-form',
+    }) as any;
+    formConfig.storage = {
+      mode: 'draft',
+      adapter: 'local-storage',
+      key: 'xpressui:test-admin-workflow',
+    };
+    const admin = createLocalFormAdmin(formConfig);
+
+    window.localStorage.setItem('xpressui:test-admin-workflow:step', '1');
+    window.localStorage.setItem(
+      'xpressui:test-admin-workflow',
+      JSON.stringify({
+        booking_type: 'consulting',
+      }),
+    );
+
+    expect(admin.getCurrentStepIndex()).toBe(1);
+    expect(admin.getStepProgress()).toEqual(
+      expect.objectContaining({
+        stepIndex: 1,
+      }),
+    );
+    expect(admin.getWorkflowSnapshot()).toEqual(
+      expect.objectContaining({
+        currentStepIndex: 1,
+      }),
+    );
+  });
+
   it('can export and import local admin snapshots', () => {
     const formConfig = createFormConfig({
       name: 'admin-import-export-form',

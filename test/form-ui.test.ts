@@ -2831,6 +2831,41 @@ describe('FormUI', () => {
     );
   });
 
+  it('preserves advanced storage security options through template serialization', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, createFormConfig({
+      name: 'storage-security-options-form',
+      title: 'Storage Security Options Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:storage-security-options',
+        resumeTokenTtlDays: 14,
+        resumeTokenSignatureVersion: 'v2',
+        shareCodeClaimThrottleMs: 1200,
+        shareCodeClaimMaxAttempts: 4,
+        shareCodeClaimWindowMs: 20000,
+        shareCodeClaimBlockMs: 90000,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    })) as FormUI;
+
+    expect((element as any).formConfig?.storage).toEqual(
+      expect.objectContaining({
+        mode: 'draft-and-queue',
+        key: 'xpressui:storage-security-options',
+        resumeTokenTtlDays: 14,
+        resumeTokenSignatureVersion: 'v2',
+        shareCodeClaimThrottleMs: 1200,
+        shareCodeClaimMaxAttempts: 4,
+        shareCodeClaimWindowMs: 20000,
+        shareCodeClaimBlockMs: 90000,
+      }),
+    );
+  });
+
   it('excludes setting fields from submit payloads by default', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ ok: true }), {

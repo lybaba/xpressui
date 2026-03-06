@@ -521,6 +521,9 @@ export function createTemplateMarkup(
         config.storage.resumeTokenTtlDays !== undefined
           ? `data-storage-resume-token-ttl-days="${escapeHtml(String(config.storage.resumeTokenTtlDays))}"`
           : '',
+        config.storage.resumeTokenSignatureVersion
+          ? `data-storage-resume-token-signature-version="${escapeHtml(config.storage.resumeTokenSignatureVersion)}"`
+          : '',
         config.storage.encryptionKey
           ? `data-storage-encryption-key="${escapeHtml(config.storage.encryptionKey)}"`
           : '',
@@ -535,6 +538,18 @@ export function createTemplateMarkup(
           : '',
         config.storage.retentionDeadLetterDays !== undefined
           ? `data-storage-retention-dead-letter-days="${escapeHtml(String(config.storage.retentionDeadLetterDays))}"`
+          : '',
+        config.storage.shareCodeClaimThrottleMs !== undefined
+          ? `data-storage-share-code-claim-throttle-ms="${escapeHtml(String(config.storage.shareCodeClaimThrottleMs))}"`
+          : '',
+        config.storage.shareCodeClaimMaxAttempts !== undefined
+          ? `data-storage-share-code-claim-max-attempts="${escapeHtml(String(config.storage.shareCodeClaimMaxAttempts))}"`
+          : '',
+        config.storage.shareCodeClaimWindowMs !== undefined
+          ? `data-storage-share-code-claim-window-ms="${escapeHtml(String(config.storage.shareCodeClaimWindowMs))}"`
+          : '',
+        config.storage.shareCodeClaimBlockMs !== undefined
+          ? `data-storage-share-code-claim-block-ms="${escapeHtml(String(config.storage.shareCodeClaimBlockMs))}"`
           : '',
       ]
         .filter(Boolean)

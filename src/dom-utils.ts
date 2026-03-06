@@ -123,11 +123,16 @@ export const ATTR_STORAGE_AUTOSAVE_MS = "storageAutoSaveMs"
 export const ATTR_STORAGE_RESUME_ENDPOINT = "storageResumeEndpoint"
 export const ATTR_STORAGE_SHARE_CODE_ENDPOINT = "storageShareCodeEndpoint"
 export const ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS = "storageResumeTokenTtlDays"
+export const ATTR_STORAGE_RESUME_TOKEN_SIGNATURE_VERSION = "storageResumeTokenSignatureVersion"
 export const ATTR_STORAGE_ENCRYPTION_KEY = "storageEncryptionKey"
 export const ATTR_STORAGE_RETENTION_DAYS = "storageRetentionDays"
 export const ATTR_STORAGE_RETENTION_DRAFT_DAYS = "storageRetentionDraftDays"
 export const ATTR_STORAGE_RETENTION_QUEUE_DAYS = "storageRetentionQueueDays"
 export const ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS = "storageRetentionDeadLetterDays"
+export const ATTR_STORAGE_SHARE_CODE_CLAIM_THROTTLE_MS = "storageShareCodeClaimThrottleMs"
+export const ATTR_STORAGE_SHARE_CODE_CLAIM_MAX_ATTEMPTS = "storageShareCodeClaimMaxAttempts"
+export const ATTR_STORAGE_SHARE_CODE_CLAIM_WINDOW_MS = "storageShareCodeClaimWindowMs"
+export const ATTR_STORAGE_SHARE_CODE_CLAIM_BLOCK_MS = "storageShareCodeClaimBlockMs"
 export const ATTR_STEP_PREVIOUS_LABEL = "stepPreviousLabel"
 export const ATTR_STEP_NEXT_LABEL = "stepNextLabel"
 export const ATTR_WORKFLOW_STEP_TARGETS = "workflowStepTargets"
@@ -252,11 +257,16 @@ export const HTML_ATTR_STORAGE_AUTOSAVE_MS = `${HTML_ATTR_PREFIX}storage-autosav
 export const HTML_ATTR_STORAGE_RESUME_ENDPOINT = `${HTML_ATTR_PREFIX}storage-resume-endpoint`
 export const HTML_ATTR_STORAGE_SHARE_CODE_ENDPOINT = `${HTML_ATTR_PREFIX}storage-share-code-endpoint`
 export const HTML_ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS = `${HTML_ATTR_PREFIX}storage-resume-token-ttl-days`
+export const HTML_ATTR_STORAGE_RESUME_TOKEN_SIGNATURE_VERSION = `${HTML_ATTR_PREFIX}storage-resume-token-signature-version`
 export const HTML_ATTR_STORAGE_ENCRYPTION_KEY = `${HTML_ATTR_PREFIX}storage-encryption-key`
 export const HTML_ATTR_STORAGE_RETENTION_DAYS = `${HTML_ATTR_PREFIX}storage-retention-days`
 export const HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS = `${HTML_ATTR_PREFIX}storage-retention-draft-days`
 export const HTML_ATTR_STORAGE_RETENTION_QUEUE_DAYS = `${HTML_ATTR_PREFIX}storage-retention-queue-days`
 export const HTML_ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS = `${HTML_ATTR_PREFIX}storage-retention-dead-letter-days`
+export const HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_THROTTLE_MS = `${HTML_ATTR_PREFIX}storage-share-code-claim-throttle-ms`
+export const HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_MAX_ATTEMPTS = `${HTML_ATTR_PREFIX}storage-share-code-claim-max-attempts`
+export const HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_WINDOW_MS = `${HTML_ATTR_PREFIX}storage-share-code-claim-window-ms`
+export const HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_BLOCK_MS = `${HTML_ATTR_PREFIX}storage-share-code-claim-block-ms`
 export const HTML_ATTR_STEP_PREVIOUS_LABEL = `${HTML_ATTR_PREFIX}step-previous-label`
 export const HTML_ATTR_STEP_NEXT_LABEL = `${HTML_ATTR_PREFIX}step-next-label`
 export const HTML_ATTR_WORKFLOW_STEP_TARGETS = `${HTML_ATTR_PREFIX}workflow-step-targets`
@@ -381,11 +391,16 @@ export const ATTR_MAP = {
     [HTML_ATTR_STORAGE_RESUME_ENDPOINT]: ATTR_STORAGE_RESUME_ENDPOINT,
     [HTML_ATTR_STORAGE_SHARE_CODE_ENDPOINT]: ATTR_STORAGE_SHARE_CODE_ENDPOINT,
     [HTML_ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS]: ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS,
+    [HTML_ATTR_STORAGE_RESUME_TOKEN_SIGNATURE_VERSION]: ATTR_STORAGE_RESUME_TOKEN_SIGNATURE_VERSION,
     [HTML_ATTR_STORAGE_ENCRYPTION_KEY]: ATTR_STORAGE_ENCRYPTION_KEY,
     [HTML_ATTR_STORAGE_RETENTION_DAYS]: ATTR_STORAGE_RETENTION_DAYS,
     [HTML_ATTR_STORAGE_RETENTION_DRAFT_DAYS]: ATTR_STORAGE_RETENTION_DRAFT_DAYS,
     [HTML_ATTR_STORAGE_RETENTION_QUEUE_DAYS]: ATTR_STORAGE_RETENTION_QUEUE_DAYS,
     [HTML_ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS]: ATTR_STORAGE_RETENTION_DEAD_LETTER_DAYS,
+    [HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_THROTTLE_MS]: ATTR_STORAGE_SHARE_CODE_CLAIM_THROTTLE_MS,
+    [HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_MAX_ATTEMPTS]: ATTR_STORAGE_SHARE_CODE_CLAIM_MAX_ATTEMPTS,
+    [HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_WINDOW_MS]: ATTR_STORAGE_SHARE_CODE_CLAIM_WINDOW_MS,
+    [HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_BLOCK_MS]: ATTR_STORAGE_SHARE_CODE_CLAIM_BLOCK_MS,
     [HTML_ATTR_STEP_PREVIOUS_LABEL]: ATTR_STEP_PREVIOUS_LABEL,
     [HTML_ATTR_STEP_NEXT_LABEL]: ATTR_STEP_NEXT_LABEL,
     [HTML_ATTR_WORKFLOW_STEP_TARGETS]: ATTR_WORKFLOW_STEP_TARGETS,
@@ -644,6 +659,7 @@ export default function getFormConfig(node: Element): TFormConfig {
             resumeTokenTtlDays: (formConfig as any).storageResumeTokenTtlDays
                 ? Number((formConfig as any).storageResumeTokenTtlDays)
                 : undefined,
+            resumeTokenSignatureVersion: (formConfig as any).storageResumeTokenSignatureVersion,
             encryptionKey: (formConfig as any).storageEncryptionKey,
             retentionDays: (formConfig as any).storageRetentionDays
                 ? Number((formConfig as any).storageRetentionDays)
@@ -657,6 +673,18 @@ export default function getFormConfig(node: Element): TFormConfig {
             retentionDeadLetterDays: (formConfig as any).storageRetentionDeadLetterDays
                 ? Number((formConfig as any).storageRetentionDeadLetterDays)
                 : undefined,
+            shareCodeClaimThrottleMs: (formConfig as any).storageShareCodeClaimThrottleMs
+                ? Number((formConfig as any).storageShareCodeClaimThrottleMs)
+                : undefined,
+            shareCodeClaimMaxAttempts: (formConfig as any).storageShareCodeClaimMaxAttempts
+                ? Number((formConfig as any).storageShareCodeClaimMaxAttempts)
+                : undefined,
+            shareCodeClaimWindowMs: (formConfig as any).storageShareCodeClaimWindowMs
+                ? Number((formConfig as any).storageShareCodeClaimWindowMs)
+                : undefined,
+            shareCodeClaimBlockMs: (formConfig as any).storageShareCodeClaimBlockMs
+                ? Number((formConfig as any).storageShareCodeClaimBlockMs)
+                : undefined,
         };
         delete (formConfig as any).storageMode;
         delete (formConfig as any).storageAdapter;
@@ -665,11 +693,16 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).storageResumeEndpoint;
         delete (formConfig as any).storageShareCodeEndpoint;
         delete (formConfig as any).storageResumeTokenTtlDays;
+        delete (formConfig as any).storageResumeTokenSignatureVersion;
         delete (formConfig as any).storageEncryptionKey;
         delete (formConfig as any).storageRetentionDays;
         delete (formConfig as any).storageRetentionDraftDays;
         delete (formConfig as any).storageRetentionQueueDays;
         delete (formConfig as any).storageRetentionDeadLetterDays;
+        delete (formConfig as any).storageShareCodeClaimThrottleMs;
+        delete (formConfig as any).storageShareCodeClaimMaxAttempts;
+        delete (formConfig as any).storageShareCodeClaimWindowMs;
+        delete (formConfig as any).storageShareCodeClaimBlockMs;
     }
 
     if ((formConfig as any).version) {

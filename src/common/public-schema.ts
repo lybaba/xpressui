@@ -21,10 +21,32 @@ const PUBLIC_FORM_SCHEMA = {
       additionalProperties: true,
       properties: {
         includeSettingFields: { type: "boolean" },
+        endpoint: { type: "string", minLength: 1 },
+        baseUrl: { type: "string", minLength: 1 },
+        method: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+        mode: { type: "string", enum: ["json", "form-data"] },
+        action: { type: "string", minLength: 1 },
         settingFieldAllowlist: {
           type: "array",
           items: { type: "string", minLength: 1 },
         },
+      },
+    },
+    storage: {
+      type: "object",
+      additionalProperties: true,
+      properties: {
+        mode: { type: "string", enum: ["none", "draft", "queue", "draft-and-queue"] },
+        adapter: { type: "string", enum: ["local-storage", "indexeddb"] },
+        key: { type: "string", minLength: 1 },
+        autoSaveMs: { type: "integer", minimum: 0 },
+        resumeEndpoint: { type: "string", minLength: 1 },
+        resumeTokenTtlDays: { type: "number", minimum: 0 },
+        retentionDays: { type: "number", minimum: 0 },
+        retentionDraftDays: { type: "number", minimum: 0 },
+        retentionQueueDays: { type: "number", minimum: 0 },
+        retentionDeadLetterDays: { type: "number", minimum: 0 },
+        resumeTokenSignatureVersion: { type: "string", minLength: 1 },
       },
     },
     rules: {

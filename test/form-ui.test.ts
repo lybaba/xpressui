@@ -5606,6 +5606,50 @@ describe('FormUI', () => {
     ).toThrow(/Invalid public form config/);
   });
 
+  it('rejects invalid storage resumeTokenTtlDays types in public configs', () => {
+    expect(() =>
+      validatePublicFormConfig({
+        version: 1,
+        id: 'invalid-storage-ttl',
+        uid: 'invalid-storage-ttl',
+        type: 'contactform',
+        name: 'invalid-storage-ttl',
+        title: 'Invalid Storage TTL',
+        storage: {
+          mode: 'draft',
+          adapter: 'local-storage',
+          resumeTokenTtlDays: '7',
+        },
+        sections: {
+          custom: [{ type: 'section', name: 'main', label: 'Main' }],
+          main: [{ type: 'email', name: 'email', label: 'Email' }],
+        },
+      } as any)
+    ).toThrow(/Invalid public form config/);
+  });
+
+  it('accepts valid storage signature version in public configs', () => {
+    const config = validatePublicFormConfig({
+      version: 1,
+      id: 'valid-storage-signature-version',
+      uid: 'valid-storage-signature-version',
+      type: 'contactform',
+      name: 'valid-storage-signature-version',
+      title: 'Valid Storage Signature Version',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        resumeTokenSignatureVersion: 'v1',
+      },
+      sections: {
+        custom: [{ type: 'section', name: 'main', label: 'Main' }],
+        main: [{ type: 'email', name: 'email', label: 'Email' }],
+      },
+    });
+
+    expect(config.storage?.resumeTokenSignatureVersion).toBe('v1');
+  });
+
   it('can submit to a configured API endpoint', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ bookingId: 'bk_123' }), {

@@ -23,6 +23,7 @@ const PUBLIC_FORM_SCHEMA = {
         includeSettingFields: { type: "boolean" },
         endpoint: { type: "string", minLength: 1 },
         baseUrl: { type: "string", minLength: 1 },
+        providerResponseContract: { type: "string", enum: ["compat", "warn-v2", "strict-v2"] },
         method: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
         mode: { type: "string", enum: ["json", "form-data"] },
         action: { type: "string", minLength: 1 },

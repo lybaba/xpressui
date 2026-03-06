@@ -36,6 +36,15 @@ export type TNormalizedProviderResult = {
   data: any;
 };
 
+export type TProviderResponseEnvelopeV2 = {
+  status?: string;
+  transition?: TFormProviderTransition;
+  messages?: string[];
+  errors?: any[];
+  nextActions?: any[];
+  data?: any;
+};
+
 type TProviderConfigFieldSchema = {
   type: "string" | "number" | "boolean" | "array" | "object";
   minLength?: number;
@@ -576,6 +585,41 @@ function normalizeProviderData(result: any): any {
   }
 
   return result;
+}
+
+export function validateProviderResponseEnvelopeV2(result: any): string[] {
+  if (!result || typeof result !== "object") {
+    return ["provider response must be an object"];
+  }
+
+  const errors: string[] = [];
+  if ("status" in result && result.status !== null && typeof result.status !== "string") {
+    errors.push("status must be a string");
+  }
+  if ("messages" in result && !Array.isArray(result.messages)) {
+    errors.push("messages must be an array");
+  }
+  if ("errors" in result && !Array.isArray(result.errors)) {
+    errors.push("errors must be an array");
+  }
+  if ("nextActions" in result && !Array.isArray(result.nextActions)) {
+    errors.push("nextActions must be an array");
+  }
+  if ("transition" in result && result.transition !== null && typeof result.transition !== "object") {
+    errors.push("transition must be an object");
+  }
+  if ("transition" in result && result.transition && !normalizeProviderTransition(result)) {
+    errors.push("transition must match {type:'step'|'workflow'} contract");
+  }
+  if ("data" in result && result.data === undefined) {
+    errors.push("data cannot be undefined");
+  }
+
+  return errors;
+}
+
+export function isProviderResponseEnvelopeV2(result: any): result is TProviderResponseEnvelopeV2 {
+  return validateProviderResponseEnvelopeV2(result).length === 0;
 }
 
 export function resolveProviderTransition(

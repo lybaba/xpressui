@@ -20,12 +20,14 @@ import {
   FormUploadRuntime,
   FormUI,
   getProviderDefinition,
+  isProviderResponseEnvelopeV2,
   getPublicApiManifest,
   normalizeProviderResult,
   resolveProviderTransition,
   mountFormUI,
   PUBLIC_FORM_SCHEMA_VERSION,
   registerProvider,
+  validateProviderResponseEnvelopeV2,
   TFormUISubmitDetail,
   validatePublicFormConfig,
 } from '../src/index';
@@ -127,6 +129,8 @@ describe('FormUI', () => {
     expect(publicApi.getProviderDefinition).toBe(getProviderDefinition);
     expect(publicApi.createSubmitRequestFromProvider).toBe(createSubmitRequestFromProvider);
     expect(publicApi.resolveProviderTransition).toBe(resolveProviderTransition);
+    expect(publicApi.validateProviderResponseEnvelopeV2).toBe(validateProviderResponseEnvelopeV2);
+    expect(publicApi.isProviderResponseEnvelopeV2).toBe(isProviderResponseEnvelopeV2);
   });
 
   it('provides field factory helpers for common field types', () => {
@@ -6435,6 +6439,56 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports strict provider response contract mode and raises warnings/errors on invalid envelopes', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ status: 42, messages: 'invalid' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'provider-contract-strict-form',
+      title: 'Provider Contract Strict Form',
+      submit: {
+        endpoint: 'https://api.example.test/provider-contract',
+        method: 'POST',
+        action: 'reservation',
+        providerResponseContract: 'strict-v2',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const onContractWarning = vi.fn();
+    const onSubmitError = vi.fn();
+    element.addEventListener('form-ui:provider-contract-warning', (event) => {
+      onContractWarning((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+    element.addEventListener('form-ui:submit-error', (event) => {
+      onSubmitError((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await expect(
+      element.onSubmit({ email: 'contract@example.com' }),
+    ).rejects.toThrow(/Provider response contract mismatch/);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(onContractWarning).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          expectedContract: 'provider-envelope-v2',
+          mode: 'strict-v2',
+          errors: expect.arrayContaining([
+            'status must be a string',
+            'messages must be an array',
+          ]),
+        }),
+      }),
+    );
+    expect(onSubmitError).toHaveBeenCalled();
+  });
+
   it('supports standalone persistence without mounting FormUI', async () => {
     const formConfig = createFormConfig({
       name: 'runtime-draft-form',
@@ -10027,6 +10081,29 @@ describe('FormUI', () => {
           code: 'verification_error',
           message: 'Image quality is too low',
         }),
+      ]),
+    );
+  });
+
+  it('validates provider response envelope v2 shape', () => {
+    expect(isProviderResponseEnvelopeV2({
+      status: 'pending_approval',
+      transition: { type: 'workflow', state: 'pending_approval' },
+      messages: [],
+      errors: [],
+      nextActions: [],
+      data: {},
+    })).toBe(true);
+
+    expect(validateProviderResponseEnvelopeV2({
+      status: 42,
+      messages: 'invalid',
+      transition: { type: 'workflow' },
+    })).toEqual(
+      expect.arrayContaining([
+        'status must be a string',
+        'messages must be an array',
+        "transition must match {type:'step'|'workflow'} contract",
       ]),
     );
   });

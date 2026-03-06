@@ -80,6 +80,7 @@ export const ATTR_SUBMIT_BASE_URL = "submitBaseUrl"
 export const ATTR_SUBMIT_INCLUDE_SETTING_FIELDS = "submitIncludeSettingFields"
 export const ATTR_SUBMIT_SETTING_FIELD_ALLOWLIST = "submitSettingFieldAllowlist"
 export const ATTR_SUBMIT_PROVIDER_ROUTING_POLICY = "submitProviderRoutingPolicy"
+export const ATTR_SUBMIT_PROVIDER_RESPONSE_CONTRACT = "submitProviderResponseContract"
 export const ATTR_SUBMIT_METHOD = "submitMethod"
 export const ATTR_SUBMIT_MODE = "submitMode"
 export const ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = "submitIncludeDocumentData"
@@ -200,6 +201,7 @@ export const HTML_ATTR_SUBMIT_BASE_URL = `${HTML_ATTR_PREFIX}submit-base-url`
 export const HTML_ATTR_SUBMIT_INCLUDE_SETTING_FIELDS = `${HTML_ATTR_PREFIX}submit-include-setting-fields`
 export const HTML_ATTR_SUBMIT_SETTING_FIELD_ALLOWLIST = `${HTML_ATTR_PREFIX}submit-setting-field-allowlist`
 export const HTML_ATTR_SUBMIT_PROVIDER_ROUTING_POLICY = `${HTML_ATTR_PREFIX}submit-provider-routing-policy`
+export const HTML_ATTR_SUBMIT_PROVIDER_RESPONSE_CONTRACT = `${HTML_ATTR_PREFIX}submit-provider-response-contract`
 export const HTML_ATTR_SUBMIT_METHOD = `${HTML_ATTR_PREFIX}submit-method`
 export const HTML_ATTR_SUBMIT_MODE = `${HTML_ATTR_PREFIX}submit-mode`
 export const HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA = `${HTML_ATTR_PREFIX}submit-include-document-data`
@@ -320,6 +322,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_SUBMIT_INCLUDE_SETTING_FIELDS]: ATTR_SUBMIT_INCLUDE_SETTING_FIELDS,
     [HTML_ATTR_SUBMIT_SETTING_FIELD_ALLOWLIST]: ATTR_SUBMIT_SETTING_FIELD_ALLOWLIST,
     [HTML_ATTR_SUBMIT_PROVIDER_ROUTING_POLICY]: ATTR_SUBMIT_PROVIDER_ROUTING_POLICY,
+    [HTML_ATTR_SUBMIT_PROVIDER_RESPONSE_CONTRACT]: ATTR_SUBMIT_PROVIDER_RESPONSE_CONTRACT,
     [HTML_ATTR_SUBMIT_METHOD]: ATTR_SUBMIT_METHOD,
     [HTML_ATTR_SUBMIT_MODE]: ATTR_SUBMIT_MODE,
     [HTML_ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA]: ATTR_SUBMIT_INCLUDE_DOCUMENT_DATA,
@@ -542,6 +545,7 @@ export default function getFormConfig(node: Element): TFormConfig {
               ? JSON.parse((formConfig as any).submitSettingFieldAllowlist)
               : undefined,
             providerRoutingPolicy: (formConfig as any).submitProviderRoutingPolicy,
+            providerResponseContract: (formConfig as any).submitProviderResponseContract,
             method: (formConfig as any).submitMethod,
             mode: (formConfig as any).submitMode,
             includeDocumentData: (formConfig as any).submitIncludeDocumentData === 'true',
@@ -563,6 +567,7 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).submitIncludeSettingFields;
         delete (formConfig as any).submitSettingFieldAllowlist;
         delete (formConfig as any).submitProviderRoutingPolicy;
+        delete (formConfig as any).submitProviderResponseContract;
         delete (formConfig as any).submitMethod;
         delete (formConfig as any).submitMode;
         delete (formConfig as any).submitIncludeDocumentData;

@@ -430,6 +430,9 @@ export function createTemplateMarkup(
         config.submit.providerRoutingPolicy
           ? `data-submit-provider-routing-policy="${escapeHtml(config.submit.providerRoutingPolicy)}"`
           : '',
+        config.submit.providerResponseContract
+          ? `data-submit-provider-response-contract="${escapeHtml(config.submit.providerResponseContract)}"`
+          : '',
         config.submit.method
           ? `data-submit-method="${escapeHtml(config.submit.method)}"`
           : '',

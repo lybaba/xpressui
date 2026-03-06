@@ -48,6 +48,7 @@ export type TFormSubmitRequest = {
     includeSettingFields?: boolean;
     settingFieldAllowlist?: string[];
     providerRoutingPolicy?: 'auto' | 'workflow-first' | 'step-first' | 'workflow-only' | 'step-only';
+    providerResponseContract?: 'compat' | 'warn-v2' | 'strict-v2';
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: Record<string, string>;
     mode?: 'json' | 'form-data';

@@ -18,6 +18,10 @@ responses your frontend can rely on.
   - `step-first`
   - `workflow-only`
   - `step-only`
+- `submit.providerResponseContract` controls provider envelope validation:
+  - `compat` (default)
+  - `warn-v2` (emit warnings when response shape drifts)
+  - `strict-v2` (treat response shape drift as submit error)
 - `type: "setting"` fields are excluded from outbound submit payloads by default
   and can be re-included using:
   - `field.includeInSubmit: true` (field-level)

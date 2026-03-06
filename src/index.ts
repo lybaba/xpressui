@@ -51,6 +51,7 @@ import { validatePublicFormConfig } from "./common/public-schema";
 import {
   getProviderErrorEventName,
   getProviderSuccessEventName,
+  validateProviderResponseEnvelopeV2,
   normalizeProviderResult,
   registerProvider,
 } from "./common/provider-registry";
@@ -84,9 +85,11 @@ export {
   getProviderDefinition,
   getProviderErrorEventName,
   getProviderSuccessEventName,
+  isProviderResponseEnvelopeV2,
   normalizeProviderResult,
   resolveProviderTransition,
   registerProvider,
+  validateProviderResponseEnvelopeV2,
   validateProviderRequest,
 } from "./common/provider-registry";
 export type { TLocalFormAdmin, TLocalQueueQuery } from "./common/form-admin";
@@ -122,6 +125,7 @@ export type {
   TFormProviderConfigSchema,
   TFormProviderTransition,
   TNormalizedProviderResult,
+  TProviderResponseEnvelopeV2,
 } from "./common/provider-registry";
 export type {
   TFormMediaDisplayPolicy,
@@ -5441,6 +5445,38 @@ export class FormUI extends HTMLElement {
     });
   }
 
+  enforceProviderResponseContract = (
+    result: any,
+    submitConfig: TFormSubmitRequest,
+  ) => {
+    const mode = submitConfig.providerResponseContract || "compat";
+    if (mode === "compat") {
+      return;
+    }
+
+    const validationErrors = validateProviderResponseEnvelopeV2(result);
+    if (!validationErrors.length) {
+      return;
+    }
+
+    this.emitFormEvent("form-ui:provider-contract-warning", {
+      values: this.engine.normalizeValues(this.form?.getState().values || {}),
+      formConfig: this.formConfig,
+      submit: submitConfig,
+      result: {
+        mode,
+        errors: validationErrors,
+        expectedContract: "provider-envelope-v2",
+      },
+    });
+
+    if (mode === "strict-v2") {
+      throw new Error(
+        `Provider response contract mismatch: ${validationErrors.join("; ")}`,
+      );
+    }
+  }
+
   getSubmitLifecycleHooks = (
     stage: TFormSubmitLifecycleStage,
   ): TFormSubmitLifecycleHook[] => {
@@ -5590,6 +5626,7 @@ export class FormUI extends HTMLElement {
       const result = transportResult && typeof transportResult === "object" && "result" in transportResult
         ? (transportResult as any).result
         : transportResult;
+      this.enforceProviderResponseContract(result, submitConfig);
       const providerResult = normalizeProviderResult(
         submitConfig.action,
         result,

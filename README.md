@@ -505,6 +505,7 @@ Supported submit options:
 - `headers`
 - `mode` (`json` or `form-data`)
 - `action`
+- `providerResponseContract` (`compat`, `warn-v2`, `strict-v2`)
 - `lifecycle` (`preSubmit`, `postSuccess`, `postFailure`)
 - `transport(values, context)` (optional custom transport override)
 
@@ -1730,6 +1731,7 @@ Event:
 - `form-ui:provider-transition`
 - `form-ui:provider-step-routed`
 - `form-ui:provider-messages`
+- `form-ui:provider-contract-warning`
 
 If a provider returns a normalized workflow transition and your form defines
 `workflowStepTargets`, `FormUI` now routes the wizard automatically to the

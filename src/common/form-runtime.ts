@@ -34,8 +34,17 @@ export type TFormRuntimeSubmitResult = {
   result: any;
 };
 
-export type TFormOutputRendererType = "text" | "html" | "image" | "file" | "video" | "audio" | "map" | "link";
-export type TFormMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery";
+export type TFormOutputRendererType =
+  | "text"
+  | "html"
+  | "image"
+  | "file"
+  | "video"
+  | "audio"
+  | "map"
+  | "link"
+  | "document";
+export type TFormMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery" | "embed";
 export type TFormOutputSnapshot = Record<string, {
   rendererType: TFormOutputRendererType;
   mediaDisplayPolicy: TFormMediaDisplayPolicy;
@@ -365,6 +374,14 @@ export class FormRuntime {
       if (subType.includes("map")) {
         return "map";
       }
+      if (
+        subType.includes("document")
+        || subType.includes("pdf")
+        || subType.includes("viewer")
+        || subType.includes("embed")
+      ) {
+        return "document";
+      }
       if (subType.includes("file") || subType.includes("document")) {
         return "file";
       }
@@ -392,6 +409,9 @@ export class FormRuntime {
       }
       if (accept.includes("audio/")) {
         return "audio";
+      }
+      if (accept.includes("application/pdf")) {
+        return "document";
       }
       return "file";
     }
@@ -426,7 +446,9 @@ export class FormRuntime {
       const mediaDisplayPolicy: TFormMediaDisplayPolicy =
         rendererType === "file" || rendererType === "link"
           ? "link"
-          : "large";
+          : rendererType === "document"
+            ? "embed"
+            : "large";
       accumulator[fieldName] = {
         rendererType,
         mediaDisplayPolicy,

@@ -188,9 +188,18 @@ type TFormOutputRendererContext = {
   mediaDisplayPolicy: TMediaDisplayPolicy;
 };
 type TFormOutputRenderer = (context: TFormOutputRendererContext) => HTMLElement;
-type TOutputRendererType = "text" | "html" | "image" | "file" | "video" | "audio" | "map" | "link";
+type TOutputRendererType =
+  | "text"
+  | "html"
+  | "image"
+  | "file"
+  | "video"
+  | "audio"
+  | "map"
+  | "link"
+  | "document";
 type TFieldOutputRendererOverride = string | TFormOutputRenderer;
-type TMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery";
+type TMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery" | "embed";
 type TFormHtmlSanitizer = (
   html: string,
   context: {
@@ -605,6 +614,29 @@ export class FormUI extends HTMLElement {
     return entries.filter((entry): entry is string => typeof entry === "string" && Boolean(entry));
   }
 
+  isEmbeddableDocumentSource = (source: string): boolean => {
+    if (!source) {
+      return false;
+    }
+
+    if (source.startsWith("blob:") || source.startsWith("data:application/pdf")) {
+      return true;
+    }
+
+    const lowerSource = source.toLowerCase();
+    if (lowerSource.includes(".pdf")) {
+      return true;
+    }
+
+    try {
+      const parsed = new URL(source);
+      const pathname = parsed.pathname.toLowerCase();
+      return pathname.endsWith(".pdf");
+    } catch {
+      return false;
+    }
+  }
+
   getMapSources = (value: any): string[] => {
     const fromEntry = (entry: any): string[] => {
       if (entry === undefined || entry === null) {
@@ -681,12 +713,16 @@ export class FormUI extends HTMLElement {
       || attributePolicy === "large"
       || attributePolicy === "link"
       || attributePolicy === "gallery"
+      || attributePolicy === "embed"
     ) {
       return attributePolicy;
     }
 
     if (rendererType === "file" || rendererType === "link") {
       return "link";
+    }
+    if (rendererType === "document") {
+      return "embed";
     }
 
     return "large";
@@ -814,6 +850,70 @@ export class FormUI extends HTMLElement {
         link.style.display = "block";
         element.appendChild(link);
       });
+      return element;
+    };
+
+    const documentRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
+      const element = document.createElement("div");
+      const sources = this.getMediaSources(value);
+      if (!sources.length) {
+        return element;
+      }
+
+      if (mediaDisplayPolicy === "link") {
+        sources.forEach((source) => {
+          const link = document.createElement("a");
+          link.href = source;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.textContent = source;
+          link.style.display = "block";
+          element.appendChild(link);
+        });
+        return element;
+      }
+
+      const renderEmbed = (source: string) => {
+        if (!this.isEmbeddableDocumentSource(source)) {
+          const link = document.createElement("a");
+          link.href = source;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.textContent = source;
+          link.style.display = "block";
+          return link;
+        }
+
+        const frame = document.createElement("iframe");
+        frame.src = source;
+        frame.loading = "lazy";
+        frame.style.width = "100%";
+        frame.style.border = "1px solid rgba(15, 23, 42, 0.12)";
+        frame.style.borderRadius = "10px";
+        frame.style.background = "#ffffff";
+        frame.style.height =
+          mediaDisplayPolicy === "thumbnail"
+            ? "220px"
+            : mediaDisplayPolicy === "large"
+              ? "520px"
+              : "420px";
+        frame.setAttribute("title", "Document preview");
+        return frame;
+      };
+
+      if (mediaDisplayPolicy === "gallery") {
+        const gallery = document.createElement("div");
+        gallery.setAttribute("data-media-gallery", "true");
+        gallery.style.display = "grid";
+        gallery.style.gap = "10px";
+        sources.forEach((source) => {
+          gallery.appendChild(renderEmbed(source));
+        });
+        element.appendChild(gallery);
+        return element;
+      }
+
+      element.appendChild(renderEmbed(sources[0]));
       return element;
     };
 
@@ -960,6 +1060,7 @@ export class FormUI extends HTMLElement {
       audio: audioRenderer,
       map: mapRenderer,
       link: linkRenderer,
+      document: documentRenderer,
     };
   }
 
@@ -1394,6 +1495,14 @@ export class FormUI extends HTMLElement {
       if (subType.includes("map")) {
         return "map";
       }
+      if (
+        subType.includes("document")
+        || subType.includes("pdf")
+        || subType.includes("viewer")
+        || subType.includes("embed")
+      ) {
+        return "document";
+      }
       if (subType.includes("file") || subType.includes("document")) {
         return "file";
       }
@@ -1420,6 +1529,9 @@ export class FormUI extends HTMLElement {
       }
       if (accept.includes("audio/")) {
         return "audio";
+      }
+      if (accept.includes("application/pdf")) {
+        return "document";
       }
       return "file";
     }

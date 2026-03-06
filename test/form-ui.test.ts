@@ -429,6 +429,17 @@ describe('FormUI', () => {
             data-section-name="main"
           />
           <input
+            id="document_value"
+            name="document_value"
+            type="text"
+            value="https://cdn.example.test/docs/manual.pdf"
+            data-type="output"
+            data-sub-type="document"
+            data-name="document_value"
+            data-label="Document"
+            data-section-name="main"
+          />
+          <input
             id="video_value"
             name="video_value"
             type="text"
@@ -501,6 +512,9 @@ describe('FormUI', () => {
     expect(fileOutput.getAttribute('download')).not.toBeNull();
     expect(fileOutput.textContent).toBe('spec.pdf');
 
+    const documentOutput = element.querySelector('#document_value_view iframe') as HTMLIFrameElement;
+    expect(documentOutput.getAttribute('src')).toBe('https://cdn.example.test/docs/manual.pdf');
+
     const videoOutput = element.querySelector('#video_value_view video') as HTMLVideoElement;
     expect(videoOutput.getAttribute('src')).toBe('https://cdn.example.test/media/demo.mp4');
 
@@ -513,6 +527,37 @@ describe('FormUI', () => {
     const linkOutput = element.querySelector('#link_value_view a') as HTMLAnchorElement;
     expect(linkOutput.getAttribute('href')).toBe('https://example.test/resource');
     expect(linkOutput.textContent).toBe('https://example.test/resource');
+  });
+
+  it('falls back to link rendering for non embeddable document sources', () => {
+    const element = renderFixture(`
+      <template id="view_document_link_fallback">
+        <form
+          id="view_document_link_fallback_form"
+          data-type="contactform"
+          data-name="view_document_link_fallback"
+          data-label="View Document Link Fallback"
+        >
+          <input
+            id="doc_ref"
+            name="doc_ref"
+            type="text"
+            value="https://cdn.example.test/docs/readme.txt"
+            data-type="output"
+            data-sub-type="document"
+            data-name="doc_ref"
+            data-label="Doc Ref"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="view_document_link_fallback" mode="view"></form-ui>
+    `);
+
+    const output = element.querySelector('#doc_ref_view') as HTMLElement;
+    expect(output.querySelector('iframe')).toBeNull();
+    const link = output.querySelector('a') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('https://cdn.example.test/docs/readme.txt');
   });
 
   it('uses view-values attribute in view mode to override DOM field values', () => {

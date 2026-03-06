@@ -60,6 +60,17 @@ function escapeHtml(value: string): string {
 
 function renderField(field: TFieldConfig, sectionName: string): string {
   const requiredAttr = field.required ? ' data-required="true"' : '';
+  const viewModeAttr = field.viewMode === 'view' ? ' data-field-render-mode="view"' : '';
+  const rawFieldValue = (field as any).value ?? field.defaultValue;
+  const checkboxChecked = rawFieldValue === true || rawFieldValue === 'true' || rawFieldValue === 1 || rawFieldValue === '1';
+  const serializedFieldValue = rawFieldValue === undefined || rawFieldValue === null
+    ? ''
+    : typeof rawFieldValue === 'string'
+      ? rawFieldValue
+      : JSON.stringify(rawFieldValue);
+  const valueAttr = serializedFieldValue !== ''
+    ? ` value="${escapeHtml(String(serializedFieldValue))}"`
+    : '';
   const placeholderAttr = field.placeholder
     ? ` placeholder="${escapeHtml(String(field.placeholder))}"`
     : '';
@@ -166,26 +177,33 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   ].join('');
 
   if (field.type === TEXTAREA_TYPE) {
+    const textareaValue = rawFieldValue === undefined || rawFieldValue === null
+      ? ''
+      : String(rawFieldValue);
     return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <textarea class="textarea textarea-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${placeholderAttr}${conditionalAttrs}></textarea>
+    <textarea class="textarea textarea-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${placeholderAttr}${viewModeAttr}${conditionalAttrs}>${escapeHtml(textareaValue)}</textarea>
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </label>`;
   }
 
   if (field.type === SELECT_ONE_TYPE) {
+    const selectedValue = rawFieldValue === undefined || rawFieldValue === null ? '' : String(rawFieldValue);
     const options = (field.choices || [])
       .map(
-        (choice) =>
-          `<option value="${escapeHtml(String(choice.value))}">${escapeHtml(choice.label)}</option>`
+        (choice) => {
+          const optionValue = String(choice.value);
+          const selectedAttr = selectedValue === optionValue ? ' selected' : '';
+          return `<option value="${escapeHtml(optionValue)}"${selectedAttr}>${escapeHtml(choice.label)}</option>`;
+        }
       )
       .join('');
 
     return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <select class="select select-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="select-one" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs}>
-      <option value=""></option>
+    <select class="select select-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="select-one" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${viewModeAttr}${conditionalAttrs}>
+      <option value=""${selectedValue === '' ? ' selected' : ''}></option>
       ${options}
     </select>
     ${helpText}
@@ -194,16 +212,22 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   }
 
   if (field.type === SELECT_MULTIPLE_TYPE) {
+    const selectedValues = Array.isArray(rawFieldValue)
+      ? rawFieldValue.map((entry) => String(entry))
+      : [];
     const options = (field.choices || [])
       .map(
-        (choice) =>
-          `<option value="${escapeHtml(String(choice.value))}">${escapeHtml(choice.label)}</option>`
+        (choice) => {
+          const optionValue = String(choice.value);
+          const selectedAttr = selectedValues.includes(optionValue) ? ' selected' : '';
+          return `<option value="${escapeHtml(optionValue)}"${selectedAttr}>${escapeHtml(choice.label)}</option>`;
+        },
       )
       .join('');
 
     return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <select class="select select-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" multiple type="select-multiple" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs}>
+    <select class="select select-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" multiple type="select-multiple" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${viewModeAttr}${conditionalAttrs}>
       ${options}
     </select>
     ${helpText}
@@ -217,7 +241,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
       : '';
     return `<div class="form-control w-full">
     <div class="label"><label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label></div>
-    <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${choicesAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${viewModeAttr}${choicesAttr}${conditionalAttrs} />
     <div class="mt-2 rounded border border-base-300 p-3" id="${escapeHtml(field.name)}_selection" data-product-list-zone="${escapeHtml(field.name)}"></div>
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
@@ -230,7 +254,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
       : '';
     return `<div class="form-control w-full">
     <div class="label"><label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label></div>
-    <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${choicesAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${viewModeAttr}${choicesAttr}${conditionalAttrs} />
     <div class="mt-2 rounded border border-base-300 p-3" id="${escapeHtml(field.name)}_selection" data-image-gallery-zone="${escapeHtml(field.name)}"></div>
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
@@ -239,7 +263,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   if (field.type === CHECKBOX_TYPE) {
     return `<label class="label cursor-pointer justify-start gap-3">
-    <input class="checkbox" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="checkbox" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs} />
+    <input class="checkbox" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="checkbox" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${checkboxChecked ? ' checked' : ''}${viewModeAttr}${conditionalAttrs} />
     <span class="label-text">${escapeHtml(field.label)}</span>
 </label>
 <span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span>`;
@@ -248,7 +272,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   if (field.type === APPROVAL_STATE_TYPE) {
     return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full opacity-80" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="text" readonly data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}" data-section-name="${escapeHtml(sectionName)}"${conditionalAttrs} />
+    <input class="input input-bordered w-full opacity-80" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="text" readonly data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}" data-section-name="${escapeHtml(sectionName)}"${valueAttr}${viewModeAttr}${conditionalAttrs} />
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </label>`;
@@ -257,7 +281,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   if (isFileFieldType(field.type)) {
     return `<div class="form-control w-full">
     <div class="label"><label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${requireValidDocumentMrzAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${requireValidDocumentMrzAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}${viewModeAttr}${conditionalAttrs} />
     ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
@@ -266,7 +290,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 
   return `<label class="form-control w-full">
     <div class="label"><span class="label-text">${escapeHtml(field.label)}</span></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${requireValidDocumentMrzAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${isFileFieldType(field.type) ? `${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${requireValidDocumentMrzAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}` : placeholderAttr}${viewModeAttr}${conditionalAttrs} />
     ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>

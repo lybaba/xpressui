@@ -680,6 +680,55 @@ describe('FormUI', () => {
     expect((element.querySelector('#title_view span') as HTMLSpanElement).textContent).toBe('New title');
   });
 
+  it('supports field-level view mode in a normal form while keeping other fields editable', async () => {
+    const element = renderFixture(`
+      <template id="mixed_field_view_mode">
+        <form
+          id="mixed_field_view_mode_form"
+          data-type="contactform"
+          data-name="mixed_field_view_mode"
+          data-label="Mixed Field View Mode"
+        >
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            value=""
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-section-name="main"
+          />
+          <input
+            id="hero_image"
+            name="hero_image"
+            type="text"
+            value="https://cdn.example.test/hero.png"
+            data-type="image"
+            data-name="hero_image"
+            data-label="Hero Image"
+            data-field-render-mode="view"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="mixed_field_view_mode"></form-ui>
+    `);
+
+    const editableInput = element.querySelector('#first_name') as HTMLInputElement;
+    const viewOnlyInput = element.querySelector('#hero_image') as HTMLInputElement;
+    expect(editableInput.style.display).not.toBe('none');
+    expect(viewOnlyInput.style.display).toBe('none');
+    const renderedImage = element.querySelector('#hero_image_view img') as HTMLImageElement;
+    expect(renderedImage).not.toBeNull();
+    expect(renderedImage.getAttribute('src')).toBe('https://cdn.example.test/hero.png');
+
+    editableInput.value = 'Alice';
+    editableInput.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+    expect((element.getFieldValue('first_name') as string)).toBe('Alice');
+  });
+
   it('supports custom output renderer registration in view mode', () => {
     const element = renderFixture(`
       <template id="view_custom_renderer">

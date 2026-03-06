@@ -88,6 +88,8 @@ type TFieldConfig = {
     errorMsg?: string;
     successMsg?: string;
     nextBtnLabel?: string;
+    value?: any;
+    viewMode?: 'view' | 'edit';
     choices?: Array<TChoice>;
     mediaInfo?: TMediaInfo;
     mediaInfoList?: TMediaInfo[];

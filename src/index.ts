@@ -1209,10 +1209,138 @@ export class FormUI extends HTMLElement {
     return "text";
   }
 
+  isFieldViewMode = (fieldConfig: TFieldConfig, inputElement: HTMLElement | null): boolean => {
+    const configMode = String((fieldConfig as any).viewMode || "").toLowerCase();
+    const attrMode = String(
+      inputElement?.getAttribute("data-field-render-mode")
+      || inputElement?.getAttribute("data-view-mode")
+      || "",
+    ).toLowerCase();
+    return configMode === "view" || attrMode === "view";
+  }
+
+  readInputElementValue = (
+    fieldConfig: TFieldConfig,
+    inputElement: HTMLElement | null,
+  ): any => {
+    if (!inputElement) {
+      return undefined;
+    }
+
+    if (inputElement instanceof HTMLInputElement) {
+      if (inputElement.type === "checkbox") {
+        return inputElement.checked;
+      }
+
+      if (
+        inputElement.type === "hidden"
+        && (this.isProductListField(fieldConfig) || this.isImageGalleryField(fieldConfig))
+      ) {
+        if (!inputElement.value) {
+          return [];
+        }
+        try {
+          const parsed = JSON.parse(inputElement.value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+
+      return inputElement.value;
+    }
+
+    if (inputElement instanceof HTMLSelectElement) {
+      return inputElement.multiple
+        ? Array.from(inputElement.selectedOptions).map((option) => option.value)
+        : inputElement.value;
+    }
+
+    if (inputElement instanceof HTMLTextAreaElement) {
+      return inputElement.value;
+    }
+
+    return undefined;
+  }
+
+  resolveFieldViewValue = (
+    fieldConfig: TFieldConfig,
+    inputElement: HTMLElement | null,
+    stateValue: any,
+  ): any => {
+    if (stateValue !== undefined) {
+      return stateValue;
+    }
+
+    const overrideValues = {
+      ...this.readViewValuesAttribute(),
+      ...this.viewValues,
+    };
+    if (Object.prototype.hasOwnProperty.call(overrideValues, fieldConfig.name)) {
+      return overrideValues[fieldConfig.name];
+    }
+
+    const attrViewValue = inputElement?.getAttribute("data-view-value");
+    if (attrViewValue) {
+      try {
+        return JSON.parse(attrViewValue);
+      } catch {
+        return attrViewValue;
+      }
+    }
+
+    const inputValue = this.readInputElementValue(fieldConfig, inputElement);
+    if (inputValue !== undefined && inputValue !== "") {
+      return inputValue;
+    }
+
+    if ((fieldConfig as any).value !== undefined) {
+      return (fieldConfig as any).value;
+    }
+
+    if (fieldConfig.defaultValue !== undefined) {
+      return fieldConfig.defaultValue;
+    }
+
+    return "";
+  }
+
+  applyFieldViewPresentation = (
+    fieldConfig: TFieldConfig,
+    inputElement: HTMLElement | null,
+    selectionElement: HTMLElement | null,
+    errorElement: HTMLElement | null,
+    stateValue: any,
+  ) => {
+    if (!inputElement) {
+      return;
+    }
+
+    const viewValue = this.resolveFieldViewValue(fieldConfig, inputElement, stateValue);
+    this.renderViewField(fieldConfig, viewValue, inputElement, "view");
+    inputElement.style.display = "none";
+    inputElement.setAttribute("aria-hidden", "true");
+    if (
+      inputElement instanceof HTMLInputElement
+      || inputElement instanceof HTMLSelectElement
+      || inputElement instanceof HTMLTextAreaElement
+    ) {
+      inputElement.disabled = true;
+    }
+    if (selectionElement) {
+      selectionElement.style.display = "none";
+      selectionElement.setAttribute("aria-hidden", "true");
+    }
+    if (errorElement) {
+      errorElement.style.display = "none";
+    }
+  }
+
   renderViewField = (
     fieldConfig: TFieldConfig,
     value: any,
     inputElement: HTMLElement,
+    modeOverride?: TFormRenderMode,
   ) => {
     const viewFieldId = `${fieldConfig.name}_view`;
     let viewElement = this.querySelector(`#${viewFieldId}`) as HTMLElement | null;
@@ -1232,7 +1360,7 @@ export class FormUI extends HTMLElement {
     const rendered = renderer({
       fieldConfig,
       value,
-      mode: this.getRenderMode(),
+      mode: modeOverride || this.getRenderMode(),
       unsafeHtml,
       mediaDisplayPolicy,
     });
@@ -4901,40 +5029,43 @@ export class FormUI extends HTMLElement {
         const errorElement = this.querySelector(`#${name}_error`) as HTMLElement | null;
         const selectionElement = this.querySelector(`#${name}_selection`) as HTMLElement | null;
         const inputElement = this.querySelector(`#${name}`) as HTMLElement | null;
+        const fieldViewOnly = this.isFieldViewMode(fieldConfig, inputElement);
 
 
         if (!this.registered[name]) {
           // first time, register event listeners
-          input.addEventListener("blur", () => blur());
-          input.addEventListener("input", (event: any) => {
-            if (input instanceof HTMLInputElement && input.type === "file") {
-              return;
-            }
+          if (!fieldViewOnly) {
+            input.addEventListener("blur", () => blur());
+            input.addEventListener("input", (event: any) => {
+              if (input instanceof HTMLInputElement && input.type === "file") {
+                return;
+              }
 
-            const nextValue =
-              input.type === "checkbox"
-                ? (<HTMLInputElement>event.target)?.checked
-                : input instanceof HTMLSelectElement && input.multiple
-                  ? Array.from((<HTMLSelectElement>event.target)?.selectedOptions || []).map(
-                      (option) => option.value,
-                    )
-                : (<HTMLInputElement>event.target)?.value;
-            change(nextValue);
-            this.scheduleDraftSave();
-            this.updateConditionalFields();
-            void this.refreshRemoteOptions(name);
-          });
-          input.addEventListener("change", async () => {
-            if (input instanceof HTMLInputElement && input.type === "file") {
-              const nextValue = await this.resolveFileInputValue(fieldConfig, input);
+              const nextValue =
+                input.type === "checkbox"
+                  ? (<HTMLInputElement>event.target)?.checked
+                  : input instanceof HTMLSelectElement && input.multiple
+                    ? Array.from((<HTMLSelectElement>event.target)?.selectedOptions || []).map(
+                        (option) => option.value,
+                      )
+                  : (<HTMLInputElement>event.target)?.value;
               change(nextValue);
-            }
-            this.scheduleDraftSave();
-            this.updateConditionalFields();
-            void this.refreshRemoteOptions(name);
-          });
-          input.addEventListener("focus", () => focus());
-          if (selectionElement) {
+              this.scheduleDraftSave();
+              this.updateConditionalFields();
+              void this.refreshRemoteOptions(name);
+            });
+            input.addEventListener("change", async () => {
+              if (input instanceof HTMLInputElement && input.type === "file") {
+                const nextValue = await this.resolveFileInputValue(fieldConfig, input);
+                change(nextValue);
+              }
+              this.scheduleDraftSave();
+              this.updateConditionalFields();
+              void this.refreshRemoteOptions(name);
+            });
+            input.addEventListener("focus", () => focus());
+          }
+          if (selectionElement && !fieldViewOnly) {
             selectionElement.addEventListener("click", (event) => {
               const target = event.target as HTMLElement | null;
               const productActionButton = target?.closest("[data-product-action]") as HTMLElement | null;
@@ -5086,12 +5217,20 @@ export class FormUI extends HTMLElement {
               });
             }
           }
+          if (fieldViewOnly) {
+            const configuredViewValue = this.resolveFieldViewValue(fieldConfig, inputElement, value);
+            if (configuredViewValue !== undefined && JSON.stringify(configuredViewValue) !== JSON.stringify(value)) {
+              change(configuredViewValue);
+            }
+          }
           this.registered[name] = true;
           this.engine.setField(name, fieldConfig);
         }
 
         // update value
-        if (input.type === "checkbox") {
+        if (fieldViewOnly) {
+          this.applyFieldViewPresentation(fieldConfig, inputElement, selectionElement, errorElement, value);
+        } else if (input.type === "checkbox") {
           (<HTMLInputElement>input).checked = value;
         } else if (input instanceof HTMLInputElement && input.type === "file") {
           this.renderFileSelection(fieldConfig, value, selectionElement);

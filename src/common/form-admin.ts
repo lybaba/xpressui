@@ -137,6 +137,11 @@ export type TLocalFormAdmin = {
   getCurrentStepIndex(): number | null;
   getWorkflowSnapshot(values?: Record<string, any>): TFormWorkflowSnapshot;
   getStepProgress(values?: Record<string, any>): TFormStepProgress;
+  getWorkflowContext(values?: Record<string, any>): {
+    currentStepIndex: number | null;
+    stepProgress: TFormStepProgress;
+    workflowSnapshot: TFormWorkflowSnapshot;
+  };
   clearDraft(): void;
   clearQueue(): void;
   clearDeadLetter(): void;
@@ -282,6 +287,14 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       steps.setCurrentStepIndex(currentStepIndex);
     }
     return steps.getStepProgress();
+  };
+
+  const getWorkflowContext = (values?: Record<string, any>) => {
+    return {
+      currentStepIndex: getCurrentStepIndex(),
+      stepProgress: getStepProgress(),
+      workflowSnapshot: getWorkflowSnapshot(values),
+    };
   };
 
   const getSnapshotAsync = async (): Promise<TLocalFormAdminSnapshot> => {
@@ -566,6 +579,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
     getCurrentStepIndex,
     getWorkflowSnapshot,
     getStepProgress,
+    getWorkflowContext,
     clearDraft() {
       storageAdapter?.clearDraft();
     },

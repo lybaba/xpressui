@@ -12088,6 +12088,17 @@ describe('FormUI', () => {
         currentStepIndex: 1,
       }),
     );
+    expect(admin.getWorkflowContext()).toEqual(
+      expect.objectContaining({
+        currentStepIndex: 1,
+        stepProgress: expect.objectContaining({
+          stepIndex: 1,
+        }),
+        workflowSnapshot: expect.objectContaining({
+          currentStepIndex: 1,
+        }),
+      }),
+    );
   });
 
   it('can export and import local admin snapshots', () => {

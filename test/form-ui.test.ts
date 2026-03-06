@@ -264,7 +264,11 @@ describe('FormUI', () => {
     expect(manifest.stable).toContain('createMountSnippet');
     expect(manifest.stable).toContain('FormUI');
     expect(manifest.advanced).toContain('FormEngineRuntime');
-    expect(manifest.advanced).toContain('provider-registry helpers');
+    expect(manifest.advanced).toContain('registerProvider');
+    const exportedKeys = new Set(Object.keys(publicApi));
+    for (const exportName of [...manifest.stable, ...manifest.advanced]) {
+      expect(exportedKeys.has(exportName)).toBe(true);
+    }
   });
 
   it('provides business form presets that can be converted to mountable markup', () => {

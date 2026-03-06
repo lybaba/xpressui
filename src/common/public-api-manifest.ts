@@ -27,7 +27,16 @@ const ADVANCED_PUBLIC_API = [
   "FormStepRuntime",
   "createFormDebugPanel",
   "attachFormDebugObserver",
-  "provider-registry helpers",
+  "registerProvider",
+  "getProviderDefinition",
+  "createSubmitRequestFromProvider",
+  "resolveProviderTransition",
+  "normalizeProviderResult",
+  "validateProviderResponseEnvelopeV2",
+  "isProviderResponseEnvelopeV2",
+  "validateProviderRequest",
+  "getProviderSuccessEventName",
+  "getProviderErrorEventName",
 ];
 
 export function getPublicApiManifest(): TPublicApiManifest {
@@ -37,4 +46,3 @@ export function getPublicApiManifest(): TPublicApiManifest {
     advanced: [...ADVANCED_PUBLIC_API],
   };
 }
-

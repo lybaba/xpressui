@@ -21,6 +21,7 @@ import {
   QR_SCAN_TYPE,
   PRODUCT_LIST_TYPE,
   IMAGE_GALLERY_TYPE,
+  SETTING_TYPE,
   SELECT_MULTIPLE_TYPE,
   SELECT_ONE_TYPE,
   TEXTAREA_TYPE,
@@ -259,6 +260,13 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </div>`;
+  }
+
+  if (field.type === SETTING_TYPE) {
+    const settingValueAttr = serializedFieldValue !== ''
+      ? ` data-setting-value="${escapeHtml(String(serializedFieldValue))}"`
+      : '';
+    return `<input class="hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}" data-section-name="${escapeHtml(sectionName)}"${valueAttr}${settingValueAttr}${viewModeAttr}${conditionalAttrs} />`;
   }
 
   if (field.type === CHECKBOX_TYPE) {

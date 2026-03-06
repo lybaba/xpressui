@@ -11,6 +11,7 @@ import {
     PRICE_TYPE,
     PRODUCT_LIST_TYPE,
     IMAGE_GALLERY_TYPE,
+    SETTING_TYPE,
     SELECT_ONE_TYPE,
     SLUG_TYPE,
     SWITCH_TYPE,
@@ -226,6 +227,16 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
                 type: "object",
                 additionalProperties: true,
             };
+            break;
+
+        case SETTING_TYPE:
+            res.anyOf = [
+                { type: "string" },
+                { type: "number" },
+                { type: "boolean" },
+                { type: "object" },
+                { type: "array" },
+            ];
             break;
 
 

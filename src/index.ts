@@ -23,6 +23,7 @@ import {
   PRODUCT_LIST_TYPE,
   QR_SCAN_TYPE,
   RICH_EDITOR_TYPE,
+  SETTING_TYPE,
   TEXTAREA_TYPE,
   TEXT_TYPE,
   UPLOAD_FILE_TYPE,
@@ -1198,6 +1199,10 @@ export class FormUI extends HTMLElement {
       return "image";
     }
 
+    if (fieldConfig.type === SETTING_TYPE) {
+      return "text";
+    }
+
     if (fieldConfig.type === "video" || accept.includes("video/")) {
       return "video";
     }
@@ -2257,6 +2262,27 @@ export class FormUI extends HTMLElement {
 
   isImageGalleryField = (fieldConfig: TFieldConfig) => {
     return fieldConfig.type === IMAGE_GALLERY_TYPE;
+  }
+
+  isSettingField = (fieldConfig: TFieldConfig) => {
+    return fieldConfig.type === SETTING_TYPE;
+  }
+
+  getSettingInitialValue = (inputElement: HTMLElement | null): any => {
+    if (!inputElement) {
+      return "";
+    }
+    const rawValue =
+      inputElement.getAttribute("data-setting-value")
+      || (inputElement instanceof HTMLInputElement ? inputElement.value : "");
+    if (!rawValue) {
+      return "";
+    }
+    try {
+      return JSON.parse(rawValue);
+    } catch {
+      return rawValue;
+    }
   }
 
   getProductListCatalog = (fieldConfig: TFieldConfig): TProductListItem[] => {
@@ -5030,11 +5056,12 @@ export class FormUI extends HTMLElement {
         const selectionElement = this.querySelector(`#${name}_selection`) as HTMLElement | null;
         const inputElement = this.querySelector(`#${name}`) as HTMLElement | null;
         const fieldViewOnly = this.isFieldViewMode(fieldConfig, inputElement);
+        const settingField = this.isSettingField(fieldConfig);
 
 
         if (!this.registered[name]) {
           // first time, register event listeners
-          if (!fieldViewOnly) {
+          if (!fieldViewOnly && !settingField) {
             input.addEventListener("blur", () => blur());
             input.addEventListener("input", (event: any) => {
               if (input instanceof HTMLInputElement && input.type === "file") {
@@ -5065,7 +5092,7 @@ export class FormUI extends HTMLElement {
             });
             input.addEventListener("focus", () => focus());
           }
-          if (selectionElement && !fieldViewOnly) {
+          if (selectionElement && !fieldViewOnly && !settingField) {
             selectionElement.addEventListener("click", (event) => {
               const target = event.target as HTMLElement | null;
               const productActionButton = target?.closest("[data-product-action]") as HTMLElement | null;
@@ -5223,12 +5250,30 @@ export class FormUI extends HTMLElement {
               change(configuredViewValue);
             }
           }
+          if (settingField) {
+            const settingValue = this.getSettingInitialValue(inputElement);
+            if (JSON.stringify(settingValue) !== JSON.stringify(value)) {
+              change(settingValue);
+            }
+            if (inputElement) {
+              inputElement.style.display = "none";
+              inputElement.setAttribute("aria-hidden", "true");
+            }
+          }
           this.registered[name] = true;
           this.engine.setField(name, fieldConfig);
         }
 
         // update value
-        if (fieldViewOnly) {
+        if (settingField) {
+          if (inputElement instanceof HTMLInputElement) {
+            inputElement.value = value === undefined || value === null
+              ? ""
+              : typeof value === "string"
+                ? value
+                : JSON.stringify(value);
+          }
+        } else if (fieldViewOnly) {
           this.applyFieldViewPresentation(fieldConfig, inputElement, selectionElement, errorElement, value);
         } else if (input.type === "checkbox") {
           (<HTMLInputElement>input).checked = value;

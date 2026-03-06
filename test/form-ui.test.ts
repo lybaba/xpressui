@@ -5819,6 +5819,37 @@ describe('FormUI', () => {
     expect(shippingEmail.value).toBe('billing@example.com');
   });
 
+  it('supports hidden setting fields as rule inputs without rendering them in the UI', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'setting-rule-form',
+      title: 'Setting Rule Form',
+      rules: [
+        {
+          id: 'apply-default-currency',
+          conditions: [
+            { field: 'default_currency', operator: 'equals', value: 'EUR' },
+          ],
+          actions: [
+            { type: 'set-value', field: 'currency', value: 'EUR' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'default_currency', label: 'Default Currency', type: 'setting', value: 'EUR' } as any,
+        { name: 'currency', label: 'Currency', type: 'text' },
+      ],
+    }) as FormUI;
+
+    await flushAsyncWork();
+
+    const settingField = element.querySelector('#default_currency') as HTMLInputElement;
+    expect(settingField).not.toBeNull();
+    expect(settingField.style.display).toBe('none');
+    expect(element.getFieldValue('default_currency')).toBe('EUR');
+    expect((element.querySelector('#currency') as HTMLInputElement).value).toBe('EUR');
+  });
+
   it('supports set-value transforms for copied field values', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

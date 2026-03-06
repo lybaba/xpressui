@@ -4,6 +4,7 @@ import TFormConfig, {
   CONTACTFORM_TYPE,
   TFormProviderRequest,
   TFormRule,
+  TFormValidationConfig,
   TFormStepLabels,
   TFormStorageConfig,
   TFormSubmitRequest,
@@ -45,6 +46,7 @@ export type TSimpleFormInput = {
   workflowStepTargets?: Record<string, string>;
   stepLabels?: TFormStepLabels;
   rules?: TFormRule[];
+  validation?: TFormValidationConfig;
   sectionName?: string;
   sectionLabel?: string;
   successMsg?: string;
@@ -348,6 +350,7 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
     submit,
     provider,
     storage: input.storage,
+    validation: input.validation,
     stepLabels: input.stepLabels,
     rules: input.rules,
     successMsg: input.successMsg,
@@ -548,17 +551,25 @@ export function mountFormUI(
   }
 
   const lifecycle = config.submit?.lifecycle;
+  const submitTransport = config.submit?.transport;
+  const validationConfig = (config as any).validation;
   if (
-    lifecycle &&
+    (lifecycle || submitTransport || validationConfig) &&
     element &&
     'formConfig' in element &&
     (element as any).formConfig &&
-    (element as any).formConfig.submit
+    (element as any).formConfig
   ) {
-    (element as any).formConfig.submit = {
-      ...(element as any).formConfig.submit,
-      lifecycle,
-    };
+    if ((element as any).formConfig.submit) {
+      (element as any).formConfig.submit = {
+        ...(element as any).formConfig.submit,
+        ...(lifecycle ? { lifecycle } : {}),
+        ...(submitTransport ? { transport: submitTransport } : {}),
+      };
+    }
+    if (validationConfig) {
+      (element as any).formConfig.validation = validationConfig;
+    }
   }
 
   return element;

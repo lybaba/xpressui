@@ -64,6 +64,7 @@ export type TFormSubmitRequest = {
     uploadMethod?: 'POST' | 'PUT';
     action?: string;
     lifecycle?: TFormSubmitLifecycle;
+    transport?: TFormSubmitTransport;
 };
 
 export type TFormSubmitLifecycleStage = 'preSubmit' | 'postSuccess' | 'postFailure';
@@ -89,6 +90,45 @@ export type TFormSubmitLifecycle = {
     preSubmit?: TFormSubmitLifecycleHook | TFormSubmitLifecycleHook[];
     postSuccess?: TFormSubmitLifecycleHook | TFormSubmitLifecycleHook[];
     postFailure?: TFormSubmitLifecycleHook | TFormSubmitLifecycleHook[];
+};
+
+export type TFormSubmitTransportContext = {
+    formConfig: TFormConfig | null;
+    submit?: TFormSubmitRequest;
+    fields: Record<string, TFieldConfig>;
+};
+
+export type TFormSubmitTransportResult =
+  | {
+      response?: Response;
+      result?: any;
+    }
+  | any;
+
+export type TFormSubmitTransport = (
+    values: Record<string, any>,
+    context: TFormSubmitTransportContext,
+) => TFormSubmitTransportResult | Promise<TFormSubmitTransportResult>;
+
+export type TFormValidationContext = {
+    formConfig: TFormConfig | null;
+};
+
+export type TFormValidationHook = (
+    values: Record<string, any>,
+    context: TFormValidationContext,
+) => Record<string, any> | void;
+
+export type TFormValidationErrorsHook = (
+    values: Record<string, any>,
+    errors: Record<string, any>,
+    context: TFormValidationContext,
+) => Record<string, any> | void;
+
+export type TFormValidationConfig = {
+    preValidate?: TFormValidationHook | TFormValidationHook[];
+    customValidate?: TFormValidationHook | TFormValidationHook[];
+    postValidate?: TFormValidationErrorsHook | TFormValidationErrorsHook[];
 };
 
 export type TFormProviderRequest = {
@@ -172,6 +212,7 @@ type TFormConfig = {
     storage?: TFormStorageConfig;
     stepLabels?: TFormStepLabels;
     rules?: TFormRule[];
+    validation?: TFormValidationConfig;
     successMsg?: string;
     errorMsg?: string;
 }

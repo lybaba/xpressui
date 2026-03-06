@@ -26,6 +26,10 @@ responses your frontend can rely on.
 - The component emits `form-ui:submit-success` on successful HTTP responses
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events
+- `submit.transport(values, context)` lets the host app fully control the
+  submission transport without using built-in `fetch` logic
+- `validation.preValidate/customValidate/postValidate` allows host-defined
+  validation hooks in the runtime validation chain
 
 ## Workflow-Aware Provider Additions
 

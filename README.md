@@ -417,6 +417,28 @@ Supported submit options:
 - `mode` (`json` or `form-data`)
 - `action`
 - `lifecycle` (`preSubmit`, `postSuccess`, `postFailure`)
+- `transport(values, context)` (optional custom transport override)
+
+Custom transport example:
+
+```ts
+mountFormUI(container, {
+  name: 'custom-submit-form',
+  submit: {
+    endpoint: '/api/unused-when-transport-is-set',
+    transport: async (values) => {
+      const result = await myApiClient.send(values);
+      return { result };
+    },
+  },
+  fields: [{ name: 'email', label: 'Email', type: 'email' }],
+});
+```
+
+Validation hooks:
+- `validation.preValidate(values)`
+- `validation.customValidate(values)` -> return extra error map
+- `validation.postValidate(values, errors)` -> return final error map
 
 Example lifecycle hooks:
 

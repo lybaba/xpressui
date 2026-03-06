@@ -1,5 +1,7 @@
 import { createForm, FormApi } from "final-form";
 import TFormConfig, {
+  TFormValidationErrorsHook,
+  TFormValidationHook,
   TFormSubmitLifecycleHook,
   TFormSubmitLifecycleStage,
   TFormSubmitRequest,
@@ -5052,8 +5054,71 @@ export class FormUI extends HTMLElement {
     });
   }
 
+  getValidationHooks = (stage: "preValidate" | "customValidate"): TFormValidationHook[] => {
+    const candidate = this.formConfig?.validation?.[stage];
+    if (!candidate) {
+      return [];
+    }
+    return Array.isArray(candidate) ? candidate : [candidate];
+  }
+
+  getValidationErrorHooks = (): TFormValidationErrorsHook[] => {
+    const candidate = this.formConfig?.validation?.postValidate;
+    if (!candidate) {
+      return [];
+    }
+    return Array.isArray(candidate) ? candidate : [candidate];
+  }
+
+  mergeValidationErrors = (
+    baseErrors: Record<string, any>,
+    incomingErrors: Record<string, any>,
+  ): Record<string, any> => {
+    return {
+      ...(baseErrors || {}),
+      ...(incomingErrors || {}),
+    };
+  }
+
   validateForm = (values: Record<string, any>) => {
-    const errors = this.engine.validateValues(values);
+    let nextValues = values;
+    const validationContext = {
+      formConfig: this.formConfig,
+    };
+    this.getValidationHooks("preValidate").forEach((hook) => {
+      const hookResult = hook(nextValues, validationContext);
+      if (
+        hookResult &&
+        typeof hookResult === "object" &&
+        !Array.isArray(hookResult)
+      ) {
+        nextValues = hookResult;
+      }
+    });
+
+    let errors = this.engine.validateValues(nextValues);
+
+    this.getValidationHooks("customValidate").forEach((hook) => {
+      const hookResult = hook(nextValues, validationContext);
+      if (
+        hookResult &&
+        typeof hookResult === "object" &&
+        !Array.isArray(hookResult)
+      ) {
+        errors = this.mergeValidationErrors(errors, hookResult);
+      }
+    });
+
+    this.getValidationErrorHooks().forEach((hook) => {
+      const hookResult = hook(nextValues, errors, validationContext);
+      if (
+        hookResult &&
+        typeof hookResult === "object" &&
+        !Array.isArray(hookResult)
+      ) {
+        errors = hookResult;
+      }
+    });
 
     Object.entries(errors).forEach(([fieldName, errorValue]) => {
       const validationError = errorValue as TValidationError;
@@ -5297,7 +5362,10 @@ export class FormUI extends HTMLElement {
     }
     this.setWorkflowState("submitting", detail);
 
-    if (!this.formConfig?.submit?.endpoint) {
+    const customTransport = this.formConfig?.submit?.transport;
+    const hasEndpoint = Boolean(this.formConfig?.submit?.endpoint);
+
+    if (!hasEndpoint && !customTransport) {
       this.clearDraft();
       this.setWorkflowState("submitted", detail);
       this.emitFormEvent("form-ui:submit-success", detail);
@@ -5310,11 +5378,24 @@ export class FormUI extends HTMLElement {
     }
 
     try {
-      const { response, result } = await this.submitToApi(formValues, this.formConfig.submit);
+      const submitConfig = this.formConfig?.submit as TFormSubmitRequest;
+      const transportResult = customTransport
+        ? await customTransport(formValues, {
+          formConfig: this.formConfig,
+          submit: submitConfig,
+          fields: this.engine.getFields(),
+        })
+        : await this.submitToApi(formValues, submitConfig);
+      const response = transportResult && typeof transportResult === "object" && "response" in transportResult
+        ? (transportResult as any).response
+        : undefined;
+      const result = transportResult && typeof transportResult === "object" && "result" in transportResult
+        ? (transportResult as any).result
+        : transportResult;
       const providerResult = normalizeProviderResult(
-        this.formConfig.submit.action,
+        submitConfig.action,
         result,
-        this.formConfig.submit,
+        submitConfig,
       );
       const successDetail = {
         ...detail,

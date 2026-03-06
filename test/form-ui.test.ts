@@ -2874,6 +2874,102 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports submit.transport to let consumers handle submission themselves', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch');
+    const transport = vi.fn().mockResolvedValue({
+      result: {
+        submittedBy: 'custom-transport',
+      },
+    });
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-transport-form',
+      title: 'Submit Transport Form',
+      submit: {
+        endpoint: '/api/ignored-by-transport',
+        method: 'POST',
+        transport,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const onSubmitSuccess = vi.fn();
+    element.addEventListener('form-ui:submit-success', (event) => {
+      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await element.onSubmit({ email: 'transport@example.com' });
+
+    expect(transport).toHaveBeenCalledWith(
+      { email: 'transport@example.com' },
+      expect.objectContaining({
+        formConfig: expect.any(Object),
+        submit: expect.objectContaining({ endpoint: '/api/ignored-by-transport' }),
+        fields: expect.any(Object),
+      }),
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(onSubmitSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          submittedBy: 'custom-transport',
+        },
+      }),
+    );
+  });
+
+  it('supports validation hooks in the validation pipeline', () => {
+    const container = document.createElement('div');
+    const preValidate = vi.fn().mockImplementation((values) => ({
+      ...values,
+      email: String(values.email || '').trim().toLowerCase(),
+    }));
+    const customValidate = vi.fn().mockImplementation((values) => {
+      if (!String(values.email || '').endsWith('@example.com')) {
+        return {
+          email: 'Only @example.com emails are allowed.',
+        };
+      }
+      return {};
+    });
+    const postValidate = vi.fn().mockImplementation((_values, errors) => {
+      if (errors.email) {
+        return {
+          ...errors,
+          email: `Validation: ${errors.email}`,
+        };
+      }
+      return errors;
+    });
+    const element = mountFormUI(container, {
+      name: 'validation-hooks-form',
+      title: 'Validation Hooks Form',
+      validation: {
+        preValidate,
+        customValidate,
+        postValidate,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    const errors = element.validateForm({ email: '  BAD@OTHER.COM  ' });
+
+    expect(preValidate).toHaveBeenCalled();
+    expect(customValidate).toHaveBeenCalledWith(
+      { email: 'bad@other.com' },
+      expect.objectContaining({
+        formConfig: expect.any(Object),
+      }),
+    );
+    expect(postValidate).toHaveBeenCalled();
+    expect(errors).toEqual({
+      email: 'Validation: Only @example.com emails are allowed.',
+    });
+  });
+
   it('cancels submission when a preSubmit lifecycle hook returns false', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ ok: true }), {

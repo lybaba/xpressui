@@ -36,6 +36,7 @@ responses your frontend can rely on.
   `response` is a native `Response`.
 - `validation.preValidate/customValidate/postValidate` allows host-defined
   validation hooks in the runtime validation chain
+- `form.setValidationI18n(...)` can switch validation locale/catalog at runtime
 
 ## Workflow-Aware Provider Additions
 

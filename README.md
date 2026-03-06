@@ -1551,6 +1551,7 @@ Runtime inspection helpers:
 - `form.restoreFromResumeToken(token)`
 - `form.restoreFromResumeTokenAsync(token)`
 - `form.restoreFromShareCodeAsync(code)`
+- `form.setValidationI18n({ locale, fallbackLocale?, messages?, resolveMessage? })`
 - `form.clearDeadLetterQueue()`
 - `form.requeueDeadLetterEntry(entryId)`
 - `form.replayDeadLetterEntry(entryId)`
@@ -1736,6 +1737,7 @@ Event:
 - `form-ui:provider-step-routed`
 - `form-ui:provider-messages`
 - `form-ui:provider-contract-warning`
+- `form-ui:validation-i18n-updated`
 
 If a provider returns a normalized workflow transition and your form defines
 `workflowStepTargets`, `FormUI` now routes the wizard automatically to the

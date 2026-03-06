@@ -6442,6 +6442,33 @@ describe('FormUI', () => {
     );
   });
 
+  it('can switch validation.i18n locale at runtime', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, createFormConfig({
+      name: 'runtime-validation-i18n-form',
+      title: 'Runtime Validation I18n Form',
+      fields: [
+        { name: 'email', label: 'Email', type: 'email', required: true },
+      ],
+    })) as FormUI;
+
+    expect(element.validateForm({ email: '' }).email).toEqual(
+      expect.objectContaining({
+        errorMessage: 'This field is required.',
+      }),
+    );
+
+    element.setValidationI18n({
+      locale: 'fr',
+    });
+
+    expect(element.validateForm({ email: '' }).email).toEqual(
+      expect.objectContaining({
+        errorMessage: 'Ce champ est obligatoire.',
+      }),
+    );
+  });
+
   it('can submit to a configured API endpoint', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ bookingId: 'bk_123' }), {

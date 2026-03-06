@@ -1,6 +1,7 @@
 import { createForm, FormApi } from "final-form";
 import TFormConfig, {
   TFormValidationErrorsHook,
+  TFormValidationI18nConfig,
   TFormValidationHook,
   TFormSubmitLifecycleHook,
   TFormSubmitLifecycleStage,
@@ -4384,6 +4385,33 @@ export class FormUI extends HTMLElement {
 
   getStorageHealth = (): TFormStorageHealth => {
     return this.persistence.getStorageHealth();
+  }
+
+  setValidationI18n = (i18n?: TFormValidationI18nConfig | null): void => {
+    if (!this.formConfig) {
+      return;
+    }
+    const nextValidation = {
+      ...(this.formConfig.validation || {}),
+      ...(i18n ? { i18n } : {}),
+    };
+    if (!i18n) {
+      delete (nextValidation as any).i18n;
+    }
+    this.formConfig = {
+      ...this.formConfig,
+      validation: Object.keys(nextValidation).length ? nextValidation : undefined,
+    };
+    this.engine.setFormConfig(this.formConfig);
+    this.persistence.setFormConfig(this.formConfig);
+    this.emitFormEvent("form-ui:validation-i18n-updated", {
+      values: this.engine.normalizeValues(this.form?.getState().values || {}),
+      formConfig: this.formConfig,
+      submit: this.formConfig?.submit,
+      result: {
+        locale: this.formConfig.validation?.i18n?.locale || null,
+      },
+    });
   }
 
   createResumeToken = (): string | null => {

@@ -133,6 +133,11 @@ export type {
 } from "./common/form-runtime";
 export type { TStoredDocumentData } from "./common/form-engine";
 export type {
+  TFormValidationI18nCatalog,
+  TFormValidationI18nConfig,
+  TFormValidationI18nMessages,
+  TFormValidationMessageResolver,
+  TFormValidationMessageResolverContext,
   TFormSubmitLifecycle,
   TFormSubmitLifecycleContext,
   TFormSubmitLifecycleHook,

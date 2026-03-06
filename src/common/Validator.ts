@@ -1,5 +1,5 @@
 import { buildSchema, getCustomSectionList } from "./post";
-import TFormConfig, { MULTI_STEP_FORM_TYPE } from "./TFormConfig";
+import TFormConfig, { MULTI_STEP_FORM_TYPE, TFormValidationI18nConfig } from "./TFormConfig";
 import { ajv } from './frontend';
 import { ValidateFunction } from "ajv";
 import parseErrors from "./parse-errors";
@@ -43,11 +43,12 @@ export function getValidators(formConfig: TFormConfig): TValidator[] {
 
 export default function validate(
     validator: TValidator,
-    formValues: Record<string, any>) {
+    formValues: Record<string, any>,
+    i18n?: TFormValidationI18nConfig,
+) {
     validator.validate(formValues);
 
-    const errors = parseErrors(validator.validate.errors, validator.fieldMap);
+    const errors = parseErrors(validator.validate.errors, validator.fieldMap, i18n);
 
     return errors;
 }
-

@@ -125,10 +125,36 @@ export type TFormValidationErrorsHook = (
     context: TFormValidationContext,
 ) => Record<string, any> | void;
 
+export type TFormValidationI18nCatalog = Record<string, string>;
+
+export type TFormValidationI18nMessages = Record<string, TFormValidationI18nCatalog>;
+
+export type TFormValidationMessageResolverContext = {
+    key: string;
+    locale: string;
+    fallbackLocale: string;
+    defaultMessage: string;
+    values: Record<string, any>;
+    fieldName?: string | null;
+    error?: any;
+};
+
+export type TFormValidationMessageResolver = (
+    context: TFormValidationMessageResolverContext,
+) => string | null | undefined;
+
+export type TFormValidationI18nConfig = {
+    locale?: string;
+    fallbackLocale?: string;
+    messages?: TFormValidationI18nMessages;
+    resolveMessage?: TFormValidationMessageResolver;
+};
+
 export type TFormValidationConfig = {
     preValidate?: TFormValidationHook | TFormValidationHook[];
     customValidate?: TFormValidationHook | TFormValidationHook[];
     postValidate?: TFormValidationErrorsHook | TFormValidationErrorsHook[];
+    i18n?: TFormValidationI18nConfig;
 };
 
 export type TFormProviderRequest = {

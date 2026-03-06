@@ -383,7 +383,7 @@ export class FormEngineRuntime {
   validateValues(values: Record<string, any>): Record<string, any> {
     const formValues = this.normalizeValues(values);
     const validationErrors = this.validators.length
-      ? validate(this.validators[0], formValues)
+      ? validate(this.validators[0], formValues, this.formConfig?.validation?.i18n)
       : {};
 
     Object.values(this.inputFields).forEach((fieldConfig) => {

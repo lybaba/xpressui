@@ -5689,6 +5689,102 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports built-in french validation messages with validation.i18n.locale', () => {
+    const engine = new FormEngineRuntime();
+    const formConfig = createFormConfig({
+      name: 'i18n-fr-validation-form',
+      title: 'I18n FR Validation Form',
+      validation: {
+        i18n: {
+          locale: 'fr',
+        },
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email', required: true },
+      ],
+    });
+    engine.setFormConfig(formConfig);
+    Object.values(formConfig.sections.main || []).forEach((field) => {
+      engine.setField(field.name, field);
+    });
+
+    expect(engine.validateValues({ email: '' }).email).toEqual(
+      expect.objectContaining({
+        errorMessage: 'Ce champ est obligatoire.',
+      }),
+    );
+  });
+
+  it('supports validation.i18n.messages overrides for custom localized messages', () => {
+    const engine = new FormEngineRuntime();
+    const formConfig = createFormConfig({
+      name: 'i18n-custom-catalog-validation-form',
+      title: 'I18n Custom Catalog Validation Form',
+      validation: {
+        i18n: {
+          locale: 'fr',
+          messages: {
+            fr: {
+              required: 'Champ requis personnalise.',
+            },
+          },
+        },
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email', required: true },
+      ],
+    });
+    engine.setFormConfig(formConfig);
+    Object.values(formConfig.sections.main || []).forEach((field) => {
+      engine.setField(field.name, field);
+    });
+
+    expect(engine.validateValues({ email: '' }).email).toEqual(
+      expect.objectContaining({
+        errorMessage: 'Champ requis personnalise.',
+      }),
+    );
+  });
+
+  it('supports validation.i18n.resolveMessage custom resolver', () => {
+    const engine = new FormEngineRuntime();
+    const resolveMessage = vi.fn().mockImplementation(({ key, defaultMessage }) => {
+      if (key === 'required') {
+        return 'Custom resolver required message.';
+      }
+      return defaultMessage;
+    });
+    const formConfig = createFormConfig({
+      name: 'i18n-resolver-validation-form',
+      title: 'I18n Resolver Validation Form',
+      validation: {
+        i18n: {
+          locale: 'fr',
+          resolveMessage,
+        },
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email', required: true },
+      ],
+    });
+    engine.setFormConfig(formConfig);
+    Object.values(formConfig.sections.main || []).forEach((field) => {
+      engine.setField(field.name, field);
+    });
+
+    expect(engine.validateValues({ email: '' }).email).toEqual(
+      expect.objectContaining({
+        errorMessage: 'Custom resolver required message.',
+      }),
+    );
+    expect(resolveMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        key: 'required',
+        locale: 'fr',
+      }),
+    );
+  });
+
   it('can submit to a configured API endpoint', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ bookingId: 'bk_123' }), {

@@ -491,6 +491,37 @@ Validation hooks:
 - `validation.preValidate(values)`
 - `validation.customValidate(values)` -> return extra error map
 - `validation.postValidate(values, errors)` -> return final error map
+- `validation.i18n` -> localize AJV messages (`locale`, `messages`, `resolveMessage`)
+
+Validation i18n example:
+
+```ts
+mountFormUI(container, {
+  name: 'checkout-form',
+  title: 'Checkout',
+  validation: {
+    i18n: {
+      locale: 'fr',
+      fallbackLocale: 'en',
+      messages: {
+        fr: {
+          required: 'Ce champ est obligatoire.',
+          'format.email': 'Veuillez saisir une adresse e-mail valide.',
+        },
+      },
+      resolveMessage: ({ key, defaultMessage, values }) => {
+        if (key === 'minLength') {
+          return `Minimum ${values.limit} caracteres requis.`;
+        }
+        return defaultMessage;
+      },
+    },
+  },
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+```
 
 Example lifecycle hooks:
 

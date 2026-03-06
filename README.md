@@ -165,6 +165,29 @@ For GitHub Pages packaging:
 npm run pages:prepare
 ```
 
+## Secure View Templates
+
+For `mode="view"` and `mode="hybrid"`, `html` fields can render template blocks
+through `data-view-template` (or `viewTemplate` in config).
+
+Template tokens use `{{field_name}}` (supports dotted paths like
+`{{document.mrz.documentNumber}}`).
+
+Security behavior:
+- placeholder values are escaped by default before HTML rendering
+- resulting HTML still passes through the sanitizer unless unsafe HTML is enabled
+- use `data-view-template-unsafe="true"` (or `viewTemplateUnsafe: true`) only for trusted HTML placeholders
+
+Example:
+
+```html
+<textarea
+  data-type="html"
+  data-name="summary_block"
+  data-view-template="<section><h3>{{title}}</h3><p>{{notes}}</p></section>"
+></textarea>
+```
+
 ## Headless Runtime
 
 If you do not want to mount `<form-ui>`, use `FormRuntime` directly. It

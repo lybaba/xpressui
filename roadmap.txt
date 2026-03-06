@@ -288,10 +288,17 @@ Completed MVP scope:
 - shared output snapshot API reusable by:
   - debug/admin tools
   - headless consumers
+- accessibility baseline for overlays:
+  - focus trap for cart/gallery overlays
+  - escape-to-close handling in dialog context
+  - dialog ARIA semantics (`role="dialog"`, `aria-modal`)
+  - focus restoration on close
+- secure rich content templates for view blocks:
+  - `viewTemplate` / `data-view-template` support for `html` fields
+  - escaped placeholder interpolation by default
+  - explicit trusted override via `viewTemplateUnsafe`
 
 Remaining:
-- secure rich content templates for view blocks
-- stronger accessibility for modal/drawer interactions (focus trap, aria semantics)
 - renderer extension docs + production recipes
 - richer resource renderers (e.g. embedded docs/audio maps when needed)
 

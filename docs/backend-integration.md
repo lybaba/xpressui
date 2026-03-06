@@ -172,6 +172,20 @@ Controls:
 
 Use unsafe mode only for trusted backend-generated HTML.
 
+### Secure View Templates
+
+`html` view blocks can use field-driven templates with `data-view-template` /
+`viewTemplate` and token placeholders like `{{field_name}}` or
+`{{document.mrz.documentNumber}}`.
+
+Default behavior is safe:
+- placeholder values are HTML-escaped before interpolation
+- final HTML output is still sanitized unless unsafe HTML mode is enabled
+
+Trusted override:
+- `data-view-template-unsafe="true"` / `viewTemplateUnsafe: true` allows raw
+  placeholder HTML injection; only use with trusted values.
+
 ### Media / Resource Display Policies
 
 Media renderers (`image` / `video` / `file`) support:

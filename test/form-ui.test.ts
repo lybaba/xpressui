@@ -575,6 +575,81 @@ describe('FormUI', () => {
     expect(output.innerHTML).toContain('<p>Unsafe allowed</p>');
   });
 
+  it('renders view templates for html fields with escaped placeholder values by default', () => {
+    const element = renderFixture(`
+      <template id="view_html_template_safe">
+        <form
+          id="view_html_template_safe_form"
+          data-type="contactform"
+          data-name="view_html_template_safe"
+          data-label="View Html Template Safe"
+        >
+          <input
+            id="title"
+            name="title"
+            type="text"
+            value="Profile"
+            data-type="text"
+            data-name="title"
+            data-label="Title"
+            data-section-name="main"
+          />
+          <textarea
+            id="profile_block"
+            name="profile_block"
+            data-type="html"
+            data-name="profile_block"
+            data-label="Profile Block"
+            data-view-template="<article><h3>{{title}}</h3><p>{{bio}}</p></article>"
+            data-section-name="main"
+          ></textarea>
+        </form>
+      </template>
+      <form-ui
+        name="view_html_template_safe"
+        mode="view"
+        view-values='{"bio":"<img src=x onerror=alert(1)>"}'
+      ></form-ui>
+    `);
+
+    const output = element.querySelector('#profile_block_view div') as HTMLDivElement;
+    expect(output.innerHTML).toContain('<h3>Profile</h3>');
+    expect(output.innerHTML).toContain('&lt;img src=x onerror=alert(1)&gt;');
+    expect(output.innerHTML).not.toContain('<img src=x onerror=alert(1)>');
+  });
+
+  it('supports trusted html placeholders in view templates when data-view-template-unsafe is enabled', () => {
+    const element = renderFixture(`
+      <template id="view_html_template_unsafe_values">
+        <form
+          id="view_html_template_unsafe_values_form"
+          data-type="contactform"
+          data-name="view_html_template_unsafe_values"
+          data-label="View Html Template Unsafe Values"
+        >
+          <textarea
+            id="promo_block"
+            name="promo_block"
+            data-type="html"
+            data-name="promo_block"
+            data-label="Promo Block"
+            data-view-template="<section>{{promo_html}}</section>"
+            data-view-template-unsafe="true"
+            data-section-name="main"
+          ></textarea>
+        </form>
+      </template>
+      <form-ui
+        name="view_html_template_unsafe_values"
+        mode="view"
+        view-values='{"promo_html":"<strong>VIP</strong>"}'
+      ></form-ui>
+    `);
+
+    const output = element.querySelector('#promo_block_view div') as HTMLDivElement;
+    expect(output.innerHTML).toContain('<strong>VIP</strong>');
+  });
+
   it('renders image values as a gallery when media display policy is gallery', () => {
     const element = renderFixture(`
       <template id="view_media_gallery">
@@ -963,10 +1038,16 @@ describe('FormUI', () => {
     expect((element.querySelector('[data-product-cart-total-badge="true"]') as HTMLElement).textContent).toContain('180.00€');
 
     const cartTrigger = element.querySelector('[data-product-cart-trigger="true"]') as HTMLButtonElement;
+    expect(cartTrigger.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(cartTrigger.getAttribute('aria-expanded')).toBe('false');
     cartTrigger.click();
     await flushAsyncWork();
     const cartOverlay = element.querySelector('[data-product-cart-overlay="true"]') as HTMLElement;
     expect(cartOverlay.getAttribute('data-state')).toBe('open');
+    const cartPanel = element.querySelector('[data-product-cart-panel="true"]') as HTMLElement;
+    expect(cartPanel.getAttribute('role')).toBe('dialog');
+    expect(cartPanel.getAttribute('aria-modal')).toBe('true');
+    expect(cartTrigger.getAttribute('aria-expanded')).toBe('true');
     expect(document.body.style.overflow).toBe('hidden');
 
     const cartClose = element.querySelector('[data-product-cart-close="true"]') as HTMLButtonElement;
@@ -975,13 +1056,24 @@ describe('FormUI', () => {
     expect(cartOverlay.getAttribute('data-state')).toBe('closing');
     await new Promise((resolve) => setTimeout(resolve, 220));
     expect(cartOverlay.getAttribute('data-state')).toBe('closed');
+    expect(cartOverlay.getAttribute('aria-hidden')).toBe('true');
+    expect(cartTrigger.getAttribute('aria-expanded')).toBe('false');
+    expect([cartTrigger, document.body]).toContain(document.activeElement);
     expect(document.body.style.overflow).toBe('');
 
     const card = element.querySelector('[data-product-open-gallery="sku_1"]') as HTMLElement;
     card.click();
     await flushAsyncWork();
-    expect(document.body.querySelector('[data-product-gallery-overlay="true"]')).not.toBeNull();
+    const galleryOverlay = document.body.querySelector('[data-product-gallery-overlay="true"]') as HTMLElement;
+    expect(galleryOverlay).not.toBeNull();
+    expect(galleryOverlay.getAttribute('aria-hidden')).toBe('false');
     expect(document.body.querySelector('[data-product-gallery-main="true"]')).not.toBeNull();
+    expect(document.body.style.overflow).toBe('hidden');
+    const galleryClose = document.body.querySelector('[data-product-gallery-close="true"]') as HTMLButtonElement;
+    galleryClose.click();
+    await flushAsyncWork();
+    expect(document.body.querySelector('[data-product-gallery-overlay="true"]')).toBeNull();
+    expect(document.body.style.overflow).toBe('');
   });
 
   it('renders a single global cart even with multiple product-list fields in the same form', async () => {

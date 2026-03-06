@@ -59,6 +59,8 @@ export const ATTR_HELP_TEXT = "helpText"
 export const ATTR_ERROR_MSG = "errorMsg"
 export const ATTR_SUCCESS_MSG = "successMsg"
 export const ATTR_NEXT_BTN_LABEL = "nextBtnLabel"
+export const ATTR_VIEW_TEMPLATE = "viewTemplate"
+export const ATTR_VIEW_TEMPLATE_UNSAFE = "viewTemplateUnsafe"
 export const ATTR_CHOICE_GROUP_ID = "choiceGroupId"
 export const ATTR_CHOICES = "choices"
 export const ATTR_MEDIA_INFO = "mediaInfo"
@@ -176,6 +178,8 @@ export const HTML_ATTR_HELP_TEXT = `${HTML_ATTR_PREFIX}help-text`
 export const HTML_ATTR_ERROR_MSG = `${HTML_ATTR_PREFIX}error-msg`
 export const HTML_ATTR_SUCCESS_MSG = `${HTML_ATTR_PREFIX}success-msg`
 export const HTML_ATTR_NEXT_BTN_LABEL = `${HTML_ATTR_PREFIX}next-btn-label`
+export const HTML_ATTR_VIEW_TEMPLATE = `${HTML_ATTR_PREFIX}view-template`
+export const HTML_ATTR_VIEW_TEMPLATE_UNSAFE = `${HTML_ATTR_PREFIX}view-template-unsafe`
 export const HTML_ATTR_CHOICE_GROUP_ID = `${HTML_ATTR_PREFIX}choice-group-id`
 export const HTML_ATTR_CHOICES = `${HTML_ATTR_PREFIX}choices`
 export const HTML_ATTR_MEDIA_INFO = `${HTML_ATTR_PREFIX}media-info`
@@ -293,6 +297,8 @@ export const ATTR_MAP = {
     [HTML_ATTR_ERROR_MSG]: ATTR_ERROR_MSG,
     [HTML_ATTR_SUCCESS_MSG]: ATTR_SUCCESS_MSG,
     [HTML_ATTR_NEXT_BTN_LABEL]: ATTR_NEXT_BTN_LABEL,
+    [HTML_ATTR_VIEW_TEMPLATE]: ATTR_VIEW_TEMPLATE,
+    [HTML_ATTR_VIEW_TEMPLATE_UNSAFE]: ATTR_VIEW_TEMPLATE_UNSAFE,
     [HTML_ATTR_CHOICE_GROUP_ID]: ATTR_CHOICE_GROUP_ID,
     [HTML_ATTR_CHOICES]: ATTR_CHOICES,
     [HTML_ATTR_MEDIA_INFO]: ATTR_MEDIA_INFO,
@@ -401,6 +407,10 @@ export function getFieldConfig(node: Element): TFieldConfig {
 
     if (node.hasAttribute(HTML_ATTR_REQUIRE_VALID_DOCUMENT_MRZ)) {
         fieldConfig.requireValidDocumentMrz = true;
+    }
+
+    if (node.hasAttribute(HTML_ATTR_VIEW_TEMPLATE_UNSAFE)) {
+        fieldConfig.viewTemplateUnsafe = node.getAttribute(HTML_ATTR_VIEW_TEMPLATE_UNSAFE) === "true";
     }
 
     const includeInSubmitAttr = node.getAttribute(HTML_ATTR_INCLUDE_IN_SUBMIT);

@@ -91,6 +91,8 @@ type TFieldConfig = {
     nextBtnLabel?: string;
     value?: any;
     viewMode?: 'view' | 'edit';
+    viewTemplate?: string;
+    viewTemplateUnsafe?: boolean;
     choices?: Array<TChoice>;
     mediaInfo?: TMediaInfo;
     mediaInfoList?: TMediaInfo[];

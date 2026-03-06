@@ -315,6 +315,9 @@ export class FormUI extends HTMLElement {
   pageScrollLockCount: number;
   pageScrollPreviousOverflow: string | null;
   productGalleryOverlay: HTMLElement | null;
+  overlayCleanup: (() => void) | null;
+  overlayReturnFocusElement: HTMLElement | null;
+  hostAriaHiddenBeforeOverlay: string | null;
   viewValues: Record<string, any>;
   outputRenderers: Record<string, TFormOutputRenderer>;
   fieldOutputRenderers: Record<string, TFieldOutputRendererOverride>;
@@ -357,6 +360,9 @@ export class FormUI extends HTMLElement {
     this.pageScrollLockCount = 0;
     this.pageScrollPreviousOverflow = null;
     this.productGalleryOverlay = null;
+    this.overlayCleanup = null;
+    this.overlayReturnFocusElement = null;
+    this.hostAriaHiddenBeforeOverlay = null;
     this.viewValues = {};
     this.outputRenderers = this.createDefaultOutputRenderers();
     this.fieldOutputRenderers = {};
@@ -501,6 +507,7 @@ export class FormUI extends HTMLElement {
       this.pageScrollLockCount = 0;
       this.pageScrollPreviousOverflow = null;
     }
+    this.teardownOverlayAccessibility(false);
     this.productListCartClickBound = false;
     this.persistence.disconnect();
   }
@@ -882,6 +889,76 @@ export class FormUI extends HTMLElement {
     });
 
     return template.innerHTML;
+  }
+
+  escapeHtml = (value: string): string => {
+    return value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  readTemplateTokenValue = (values: Record<string, any>, tokenPath: string): any => {
+    const path = String(tokenPath || "").trim();
+    if (!path) {
+      return "";
+    }
+
+    if (Object.prototype.hasOwnProperty.call(values, path)) {
+      return values[path];
+    }
+
+    const segments = path.split(".");
+    let cursor: any = values;
+    for (const segment of segments) {
+      if (!cursor || typeof cursor !== "object" || !(segment in cursor)) {
+        return "";
+      }
+      cursor = cursor[segment];
+    }
+
+    return cursor;
+  }
+
+  renderViewTemplate = (
+    template: string,
+    values: Record<string, any>,
+    escapeValues: boolean,
+  ): string => {
+    return String(template).replace(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g, (_, token: string) => {
+      const value = this.readTemplateTokenValue(values, token);
+      const textValue = this.getDisplayText(value);
+      return escapeValues ? this.escapeHtml(textValue) : textValue;
+    });
+  }
+
+  resolveViewTemplateValue = (
+    fieldConfig: TFieldConfig,
+    inputElement: HTMLElement,
+    rendererType: string,
+    value: any,
+    valuesContext?: Record<string, any>,
+  ): any => {
+    if (rendererType !== "html") {
+      return value;
+    }
+
+    const template = inputElement.getAttribute("data-view-template") || fieldConfig.viewTemplate;
+    if (!template) {
+      return value;
+    }
+
+    const rawUnsafe =
+      inputElement.getAttribute("data-view-template-unsafe")
+      ?? (fieldConfig.viewTemplateUnsafe ? "true" : "false");
+    const templateUnsafe = rawUnsafe === "true";
+    const tokenValues = {
+      ...(valuesContext || {}),
+      value,
+    };
+    return this.renderViewTemplate(template, tokenValues, !templateUnsafe);
   }
 
   setHtmlSanitizer = (sanitizer: TFormHtmlSanitizer) => {
@@ -1322,7 +1399,13 @@ export class FormUI extends HTMLElement {
     }
 
     const viewValue = this.resolveFieldViewValue(fieldConfig, inputElement, stateValue);
-    this.renderViewField(fieldConfig, viewValue, inputElement, "view");
+    this.renderViewField(
+      fieldConfig,
+      viewValue,
+      inputElement,
+      "view",
+      this.form?.getState().values || {},
+    );
     inputElement.style.display = "none";
     inputElement.setAttribute("aria-hidden", "true");
     if (
@@ -1346,6 +1429,7 @@ export class FormUI extends HTMLElement {
     value: any,
     inputElement: HTMLElement,
     modeOverride?: TFormRenderMode,
+    valuesContext?: Record<string, any>,
   ) => {
     const viewFieldId = `${fieldConfig.name}_view`;
     let viewElement = this.querySelector(`#${viewFieldId}`) as HTMLElement | null;
@@ -1362,9 +1446,16 @@ export class FormUI extends HTMLElement {
     const mediaDisplayPolicy = this.resolveMediaDisplayPolicy(fieldConfig, inputElement, rendererType);
     viewElement.setAttribute("data-media-display-policy", mediaDisplayPolicy);
     const unsafeHtml = this.shouldRenderUnsafeHtml(inputElement);
+    const resolvedValue = this.resolveViewTemplateValue(
+      fieldConfig,
+      inputElement,
+      rendererType,
+      value,
+      valuesContext,
+    );
     const rendered = renderer({
       fieldConfig,
-      value,
+      value: resolvedValue,
       mode: modeOverride || this.getRenderMode(),
       unsafeHtml,
       mediaDisplayPolicy,
@@ -1385,7 +1476,7 @@ export class FormUI extends HTMLElement {
         return;
       }
 
-      this.renderViewField(fieldConfig, values[fieldConfig.name], inputElement);
+      this.renderViewField(fieldConfig, values[fieldConfig.name], inputElement, undefined, values);
       inputElement.style.display = "none";
       inputElement.setAttribute("aria-hidden", "true");
       if (
@@ -1425,7 +1516,7 @@ export class FormUI extends HTMLElement {
         return;
       }
 
-      this.renderViewField(fieldConfig, modeValues[fieldConfig.name], inputElement);
+      this.renderViewField(fieldConfig, modeValues[fieldConfig.name], inputElement, undefined, modeValues);
     });
   }
 
@@ -2448,6 +2539,9 @@ export class FormUI extends HTMLElement {
       trigger.style.padding = "0";
       trigger.style.fontSize = "20px";
       trigger.style.lineHeight = "1";
+      trigger.setAttribute("aria-label", "Open cart");
+      trigger.setAttribute("aria-haspopup", "dialog");
+      trigger.setAttribute("aria-expanded", "false");
       this.appendChild(trigger);
     }
 
@@ -2467,6 +2561,7 @@ export class FormUI extends HTMLElement {
     const overlay = document.createElement("div");
     overlay.setAttribute("data-product-cart-overlay", "true");
     overlay.setAttribute("data-state", "closed");
+    overlay.setAttribute("aria-hidden", "true");
     overlay.style.position = "fixed";
     overlay.style.inset = "0";
     overlay.style.background = "rgba(15, 23, 42, 0.45)";
@@ -2480,6 +2575,8 @@ export class FormUI extends HTMLElement {
     const panel = document.createElement("aside");
     panel.setAttribute("data-product-list-global-cart", "true");
     panel.setAttribute("data-product-cart-panel", "true");
+    panel.id = `${this.getAttribute("name") || "form"}_product_cart_panel`;
+    panel.setAttribute("aria-label", "Mini cart");
     panel.style.width = "min(420px, 92vw)";
     panel.style.height = "100%";
     panel.style.background = "#ffffff";
@@ -2514,6 +2611,19 @@ export class FormUI extends HTMLElement {
     this.productCartOverlay.style.display = "flex";
     this.productCartOverlay.style.visibility = "visible";
     const panel = this.productCartOverlay.querySelector("[data-product-cart-panel]") as HTMLElement | null;
+    const closeButton = this.productCartOverlay.querySelector("[data-product-cart-close]") as HTMLElement | null;
+    if (panel) {
+      this.setupOverlayAccessibility(
+        this.productCartOverlay,
+        panel,
+        () => this.closeProductCartModal(),
+        closeButton,
+      );
+    }
+    const trigger = this.querySelector("[data-product-cart-trigger]") as HTMLElement | null;
+    if (trigger) {
+      trigger.setAttribute("aria-expanded", "true");
+    }
     if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
       window.requestAnimationFrame(() => {
         this.productCartOverlay!.style.opacity = "1";
@@ -2551,6 +2661,12 @@ export class FormUI extends HTMLElement {
         this.productCartOverlay.style.display = "none";
         this.productCartOverlay.style.visibility = "hidden";
         this.productCartOverlay.setAttribute("data-state", "closed");
+        this.productCartOverlay.setAttribute("aria-hidden", "true");
+        this.teardownOverlayAccessibility(true);
+        const trigger = this.querySelector("[data-product-cart-trigger]") as HTMLElement | null;
+        if (trigger) {
+          trigger.setAttribute("aria-expanded", "false");
+        }
         this.releasePageScrollLock();
         this.productCartCloseTimer = null;
       }, 180);
@@ -2558,6 +2674,12 @@ export class FormUI extends HTMLElement {
       this.productCartOverlay.style.display = "none";
       this.productCartOverlay.style.visibility = "hidden";
       this.productCartOverlay.setAttribute("data-state", "closed");
+      this.productCartOverlay.setAttribute("aria-hidden", "true");
+      this.teardownOverlayAccessibility(true);
+      const trigger = this.querySelector("[data-product-cart-trigger]") as HTMLElement | null;
+      if (trigger) {
+        trigger.setAttribute("aria-expanded", "false");
+      }
       this.releasePageScrollLock();
     }
   }
@@ -2592,6 +2714,139 @@ export class FormUI extends HTMLElement {
     }
   }
 
+  getFocusableElements = (container: HTMLElement): HTMLElement[] => {
+    const selectors = [
+      "button:not([disabled])",
+      "a[href]",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])",
+    ];
+    const candidates = Array.from(container.querySelectorAll(selectors.join(", "))) as HTMLElement[];
+    return candidates.filter((element) => {
+      if (element.getAttribute("aria-hidden") === "true") {
+        return false;
+      }
+      const computed = typeof window !== "undefined" ? window.getComputedStyle(element) : null;
+      if (computed && (computed.display === "none" || computed.visibility === "hidden")) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  applyHostAriaHiddenForOverlay = () => {
+    const formElement = this.querySelector("form");
+    if (!formElement) {
+      return;
+    }
+    this.hostAriaHiddenBeforeOverlay = formElement.getAttribute("aria-hidden");
+    formElement.setAttribute("aria-hidden", "true");
+  }
+
+  restoreHostAriaHiddenAfterOverlay = () => {
+    const formElement = this.querySelector("form");
+    if (!formElement) {
+      return;
+    }
+    if (this.hostAriaHiddenBeforeOverlay === null) {
+      formElement.removeAttribute("aria-hidden");
+    } else {
+      formElement.setAttribute("aria-hidden", this.hostAriaHiddenBeforeOverlay);
+    }
+    this.hostAriaHiddenBeforeOverlay = null;
+  }
+
+  setupOverlayAccessibility = (
+    overlay: HTMLElement,
+    dialog: HTMLElement,
+    onEscape: () => void,
+    preferredFocusElement?: HTMLElement | null,
+  ) => {
+    this.teardownOverlayAccessibility(false);
+    this.overlayReturnFocusElement = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    this.applyHostAriaHiddenForOverlay();
+
+    overlay.setAttribute("aria-hidden", "false");
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+    if (!dialog.hasAttribute("tabindex")) {
+      dialog.setAttribute("tabindex", "-1");
+    }
+
+    const focusTarget = preferredFocusElement || this.getFocusableElements(dialog)[0] || dialog;
+    if (typeof focusTarget.focus === "function") {
+      focusTarget.focus();
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        onEscape();
+        return;
+      }
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusable = this.getFocusableElements(dialog);
+      if (!focusable.length) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (event.shiftKey) {
+        if (active === first || !active || !dialog.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (active === last || !active || !dialog.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    const handleFocusIn = (event: FocusEvent) => {
+      const target = event.target as Node | null;
+      if (!target || dialog.contains(target)) {
+        return;
+      }
+      const fallback = this.getFocusableElements(dialog)[0] || dialog;
+      fallback.focus();
+    };
+
+    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("focusin", handleFocusIn, true);
+
+    this.overlayCleanup = () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.removeEventListener("focusin", handleFocusIn, true);
+    };
+  }
+
+  teardownOverlayAccessibility = (restoreFocus: boolean = true) => {
+    if (this.overlayCleanup) {
+      this.overlayCleanup();
+      this.overlayCleanup = null;
+    }
+    this.restoreHostAriaHiddenAfterOverlay();
+    if (restoreFocus && this.overlayReturnFocusElement && typeof this.overlayReturnFocusElement.focus === "function") {
+      this.overlayReturnFocusElement.focus();
+    }
+    this.overlayReturnFocusElement = null;
+  }
+
   renderProductListGlobalCart = () => {
     const hasProductListField = Object.values(this.engine.getFields()).some((fieldConfig) =>
       this.isProductListField(fieldConfig),
@@ -2609,6 +2864,9 @@ export class FormUI extends HTMLElement {
       return sum + unit * entry.item.quantity;
     }, 0);
     trigger.innerHTML = "";
+    if (cart.id) {
+      trigger.setAttribute("aria-controls", cart.id);
+    }
     const triggerIcon = document.createElement("span");
     triggerIcon.setAttribute("aria-hidden", "true");
     triggerIcon.textContent = "🛒";
@@ -2835,10 +3093,14 @@ export class FormUI extends HTMLElement {
 
     if (this.productGalleryOverlay) {
       this.productGalleryOverlay.remove();
+      this.productGalleryOverlay = null;
+      this.teardownOverlayAccessibility(false);
+      this.releasePageScrollLock();
     }
 
     const overlay = document.createElement("div");
     overlay.setAttribute("data-product-gallery-overlay", "true");
+    overlay.setAttribute("aria-hidden", "true");
     overlay.style.position = "fixed";
     overlay.style.inset = "0";
     overlay.style.background = "rgba(15, 23, 42, 0.8)";
@@ -2850,6 +3112,7 @@ export class FormUI extends HTMLElement {
 
     const modal = document.createElement("div");
     modal.setAttribute("data-product-gallery-modal", "true");
+    modal.setAttribute("aria-label", `${name} gallery`);
     modal.style.width = "min(960px, 100%)";
     modal.style.maxHeight = "90vh";
     modal.style.overflow = "auto";
@@ -2863,10 +3126,13 @@ export class FormUI extends HTMLElement {
     closeButton.textContent = "Close";
     closeButton.setAttribute("data-product-gallery-close", "true");
     closeButton.style.float = "right";
-    closeButton.addEventListener("click", () => {
+    const closeGallery = () => {
       overlay.remove();
       this.productGalleryOverlay = null;
-    });
+      this.teardownOverlayAccessibility(true);
+      this.releasePageScrollLock();
+    };
+    closeButton.addEventListener("click", closeGallery);
     modal.appendChild(closeButton);
 
     const title = document.createElement("div");
@@ -2910,12 +3176,18 @@ export class FormUI extends HTMLElement {
     overlay.appendChild(modal);
     overlay.addEventListener("click", (event) => {
       if (event.target === overlay) {
-        overlay.remove();
-        this.productGalleryOverlay = null;
+        closeGallery();
       }
     });
     document.body.appendChild(overlay);
     this.productGalleryOverlay = overlay;
+    this.setupOverlayAccessibility(
+      overlay,
+      modal,
+      closeGallery,
+      closeButton,
+    );
+    this.acquirePageScrollLock();
   }
 
   openProductListGallery = (product: TProductListItem) => {
@@ -5304,7 +5576,13 @@ export class FormUI extends HTMLElement {
         }
 
         if (this.getRenderMode() === "hybrid" && inputElement) {
-          this.renderViewField(fieldConfig, value, inputElement);
+          this.renderViewField(
+            fieldConfig,
+            value,
+            inputElement,
+            undefined,
+            this.form?.getState().values || {},
+          );
           this.emitOutputSnapshot(this.form?.getState().values || {});
         }
 

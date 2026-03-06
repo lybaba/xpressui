@@ -256,12 +256,6 @@ function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput | TFormCo
           stepFactory.section('details_step', 'Details'),
           stepFactory.section('review_step', 'Review', {
             stepSummary: true,
-            stepTransitions: [
-              stepFactory.transition('service', 'confirmation_step', {
-                operator: 'in',
-                value: ['follow_up'],
-              }),
-            ],
           }),
           stepFactory.section('scheduling_step', 'Scheduling'),
           stepFactory.section('confirmation_step', 'Confirmation', { stepSummary: true }),
@@ -271,12 +265,6 @@ function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput | TFormCo
             stepFactory.section('details_step', 'Details'),
             stepFactory.section('review_step', 'Review', {
               stepSummary: true,
-              stepTransitions: [
-                stepFactory.transition('service', 'confirmation_step', {
-                  operator: 'in',
-                  value: ['follow_up'],
-                }),
-              ],
             }),
             stepFactory.section('scheduling_step', 'Scheduling'),
             stepFactory.section('confirmation_step', 'Confirmation', { stepSummary: true }),

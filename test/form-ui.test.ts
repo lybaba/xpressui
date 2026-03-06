@@ -282,14 +282,7 @@ describe('FormUI', () => {
       pending_approval: 'confirmation_step',
       approved: 'confirmation_step',
     });
-    expect(bookingWizard.stepSections?.[1]?.stepTransitions).toEqual([
-      {
-        whenField: 'service',
-        operator: 'in',
-        value: ['follow_up'],
-        target: 'confirmation_step',
-      },
-    ]);
+    expect(bookingWizard.stepSections?.[1]?.stepTransitions).toBeUndefined();
     expect(identityWizard.stepSections?.map((section) => section.name)).toEqual([
       'identity_step',
       'document_step',

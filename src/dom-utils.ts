@@ -52,6 +52,7 @@ export const ATTR_MIN_VALUE = "min"
 export const ATTR_MAX_VALUE = "max"
 export const ATTR_STEP_VALUE = "step"
 export const ATTR_DEFAULT_VALUE = "defaultValue"
+export const ATTR_INCLUDE_IN_SUBMIT = "includeInSubmit"
 export const ATTR_MIN_NUM_OF_CHOICES = "minNumOfChoices"
 export const ATTR_MAX_NUM_OF_CHOICES = "maxNumOfChoices"
 export const ATTR_HELP_TEXT = "helpText"
@@ -168,6 +169,7 @@ export const HTML_ATTR_MIN_VALUE = `${HTML_ATTR_PREFIX}min`
 export const HTML_ATTR_MAX_VALUE = `${HTML_ATTR_PREFIX}max`
 export const HTML_ATTR_STEP_VALUE = `${HTML_ATTR_PREFIX}step`
 export const HTML_ATTR_DEFAULT_VALUE = `${HTML_ATTR_PREFIX}default-value`
+export const HTML_ATTR_INCLUDE_IN_SUBMIT = `${HTML_ATTR_PREFIX}include-in-submit`
 export const HTML_ATTR_MIN_NUM_OF_CHOICES = `${HTML_ATTR_PREFIX}min-num-of-choices`
 export const HTML_ATTR_MAX_NUM_OF_CHOICES = `${HTML_ATTR_PREFIX}max-num-of-choices`
 export const HTML_ATTR_HELP_TEXT = `${HTML_ATTR_PREFIX}help-text`
@@ -284,6 +286,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_MAX_VALUE]: ATTR_MAX_VALUE,
     [HTML_ATTR_STEP_VALUE]: ATTR_STEP_VALUE,
     [HTML_ATTR_DEFAULT_VALUE]: ATTR_DEFAULT_VALUE,
+    [HTML_ATTR_INCLUDE_IN_SUBMIT]: ATTR_INCLUDE_IN_SUBMIT,
     [HTML_ATTR_MIN_NUM_OF_CHOICES]: ATTR_MIN_NUM_OF_CHOICES,
     [HTML_ATTR_MAX_NUM_OF_CHOICES]: ATTR_MAX_NUM_OF_CHOICES,
     [HTML_ATTR_HELP_TEXT]: ATTR_HELP_TEXT,

@@ -97,6 +97,9 @@ export function buildSubmitPayload(
           if (!fieldConfig || fieldConfig.type !== SETTING_TYPE) {
             return true;
           }
+          if (fieldConfig.includeInSubmit) {
+            return true;
+          }
           return allowlist.has(fieldName);
         }),
       );

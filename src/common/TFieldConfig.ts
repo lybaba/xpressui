@@ -82,6 +82,7 @@ type TFieldConfig = {
     max?: any;
     step?: any;
     defaultValue?: any;
+    includeInSubmit?: boolean;
     minNumOfChoices?: number;
     maxNumOfChoices?: number;
     helpText?: string;

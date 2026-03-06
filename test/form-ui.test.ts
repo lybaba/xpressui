@@ -2629,6 +2629,46 @@ describe('FormUI', () => {
     );
   });
 
+  it('can include setting fields in submit payloads when field includeInSubmit is true', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-with-field-opt-in-setting-form',
+      title: 'Submit With Field Opt In Setting Form',
+      submit: {
+        endpoint: '/api/submit-with-field-opt-in-setting',
+        method: 'POST',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+        { name: 'checkout_currency_setting', label: 'Currency', type: 'setting', value: 'EUR', includeInSubmit: true } as any,
+        { name: 'checkout_tax_rate_setting', label: 'Tax', type: 'setting', value: 0.2 } as any,
+      ],
+    }) as FormUI;
+
+    await element.onSubmit({
+      email: 'shop@example.com',
+      checkout_currency_setting: 'EUR',
+      checkout_tax_rate_setting: 0.2,
+    });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/submit-with-field-opt-in-setting',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          email: 'shop@example.com',
+          checkout_currency_setting: 'EUR',
+        }),
+      }),
+    );
+  });
+
   it('runs submit lifecycle hooks for preSubmit and postSuccess', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ status: 'confirmed' }), {

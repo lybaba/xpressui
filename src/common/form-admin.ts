@@ -1,6 +1,6 @@
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
-import { TResumeTokenInfo } from "./form-persistence";
+import { TResumeLookupResult, TResumeTokenInfo } from "./form-persistence";
 import {
   createStorageAdapter,
   TStorageHealth,
@@ -126,6 +126,9 @@ export type TLocalFormAdmin = {
   ): TLocalFormAdminSnapshot;
   getStorageHealth(): TStorageHealth;
   listResumeTokens(): TResumeTokenInfo[];
+  createResumeShareCode(token: string): Promise<string | null>;
+  claimResumeShareCode(code: string): Promise<TResumeLookupResult | null>;
+  restoreFromShareCode(code: string): Promise<Record<string, any> | null>;
   deleteResumeToken(token: string): boolean;
   invalidateResumeToken(token: string): Promise<boolean>;
   listQueue(query?: TLocalQueueQuery): TQueuedSubmission[];
@@ -153,6 +156,24 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
     typeof publicConfig.storage?.resumeTokenTtlDays === "number" && publicConfig.storage.resumeTokenTtlDays > 0
       ? publicConfig.storage.resumeTokenTtlDays * 24 * 60 * 60 * 1000
       : null;
+
+  const getShareCodeEndpoint = (): string | undefined =>
+    publicConfig.storage?.shareCodeEndpoint || publicConfig.storage?.resumeEndpoint;
+
+  const verifyTokenSignature = (payload: Record<string, any>): boolean => {
+    const verifier = publicConfig.storage?.verifyResumeToken;
+    if (!verifier) {
+      return true;
+    }
+    if (!payload.signature) {
+      return false;
+    }
+    try {
+      return Boolean(verifier(payload as any));
+    } catch {
+      return false;
+    }
+  };
 
   const listResumeTokens = (): TResumeTokenInfo[] => {
     if (typeof window === "undefined") {
@@ -294,6 +315,146 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       );
     },
     listResumeTokens,
+    async createResumeShareCode(token) {
+      const endpoint = getShareCodeEndpoint();
+      if (!endpoint || !token) {
+        return null;
+      }
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            operation: "create-share-code",
+            token,
+          }),
+        });
+        const contentType = response.headers.get("content-type") || "";
+        const result = contentType.includes("application/json")
+          ? await response.json()
+          : null;
+        if (!response.ok || !result || typeof result !== "object") {
+          return null;
+        }
+        const code = (result as Record<string, any>).code;
+        return typeof code === "string" && code ? code : null;
+      } catch {
+        return null;
+      }
+    },
+    async claimResumeShareCode(code) {
+      const endpoint = getShareCodeEndpoint();
+      if (!endpoint || !code) {
+        return null;
+      }
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            operation: "claim-share-code",
+            code,
+          }),
+        });
+        const contentType = response.headers.get("content-type") || "";
+        const result = contentType.includes("application/json")
+          ? await response.json()
+          : null;
+        if (!response.ok || !result || typeof result !== "object") {
+          return null;
+        }
+
+        const parsed = result as Record<string, any>;
+        const token = typeof parsed.token === "string" ? parsed.token : "";
+        if (!token) {
+          return null;
+        }
+
+        const savedAt = typeof parsed.savedAt === "number" ? parsed.savedAt : Date.now();
+        const issuedAt = typeof parsed.issuedAt === "number" ? parsed.issuedAt : savedAt;
+        const expiresAt = typeof parsed.expiresAt === "number" ? parsed.expiresAt : undefined;
+        const signature = typeof parsed.signature === "string" ? parsed.signature : undefined;
+        const signatureVersion =
+          typeof parsed.signatureVersion === "string"
+            ? parsed.signatureVersion
+            : publicConfig.storage?.resumeTokenSignatureVersion;
+        const snapshot =
+          parsed.snapshot && typeof parsed.snapshot === "object"
+            ? parsed.snapshot as TLocalFormAdminSnapshot
+            : null;
+
+        if (
+          !verifyTokenSignature({
+            token,
+            formName: publicConfig.name,
+            savedAt,
+            issuedAt,
+            expiresAt,
+            snapshot,
+            resumeEndpoint: publicConfig.storage?.resumeEndpoint,
+            remote: true,
+            signature,
+            signatureVersion,
+          })
+        ) {
+          return null;
+        }
+
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            `${resumePrefix}${token}`,
+            JSON.stringify({
+              version: 1,
+              savedAt,
+              issuedAt,
+              expiresAt,
+              snapshot,
+              resumeEndpoint: publicConfig.storage?.resumeEndpoint,
+              remote: true,
+              signature,
+              signatureVersion,
+            }),
+          );
+        }
+
+        return {
+          token,
+          savedAt,
+          issuedAt,
+          expiresAt,
+          expired: false,
+          resumeEndpoint: publicConfig.storage?.resumeEndpoint,
+          remote: true,
+          signatureVersion,
+          signatureValid: true,
+          snapshot,
+        };
+      } catch {
+        return null;
+      }
+    },
+    async restoreFromShareCode(code) {
+      const lookup = await this.claimResumeShareCode(code);
+      if (!lookup?.snapshot) {
+        return null;
+      }
+
+      if (lookup.snapshot.draft) {
+        storageAdapter?.saveDraft(lookup.snapshot.draft);
+      } else {
+        storageAdapter?.clearDraft();
+      }
+      storageAdapter?.saveQueue(Array.isArray(lookup.snapshot.queue) ? lookup.snapshot.queue : []);
+      storageAdapter?.saveDeadLetterQueue(Array.isArray(lookup.snapshot.deadLetter) ? lookup.snapshot.deadLetter : []);
+
+      return (lookup.snapshot?.draft || {}) as Record<string, any>;
+    },
     deleteResumeToken(token) {
       if (typeof window === "undefined") {
         return false;

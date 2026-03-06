@@ -10754,6 +10754,87 @@ describe('FormUI', () => {
     });
   });
 
+  it('supports share-code exchange through the local admin API', async () => {
+    const sign = (payload: Record<string, any>) =>
+      `${payload.token}:${payload.savedAt}:${payload.issuedAt}:${payload.expiresAt}:${payload.snapshot?.draft?.email || ''}`;
+    vi.spyOn(window, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === 'https://api.example.test/resume' && init?.method === 'POST') {
+        const body = JSON.parse(String(init?.body || '{}')) as Record<string, any>;
+        if (body.operation === 'create-share-code') {
+          return new Response(JSON.stringify({
+            operation: 'create-share-code',
+            code: 'ADMIN-42',
+            token: body.token,
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        if (body.operation === 'claim-share-code') {
+          const snapshot = {
+            draft: { email: 'admin-claimed@example.com' },
+            queue: [],
+            deadLetter: [],
+          };
+          const token = 'admin_claimed_token';
+          const savedAt = 1000;
+          const issuedAt = 1000;
+          const expiresAt = 2000;
+          return new Response(JSON.stringify({
+            operation: 'claim-share-code',
+            code: body.code,
+            token,
+            savedAt,
+            issuedAt,
+            expiresAt,
+            signatureVersion: 'v2',
+            signature: sign({ token, savedAt, issuedAt, expiresAt, snapshot }),
+            snapshot,
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const formConfig = createFormConfig({
+      name: 'admin-share-code-form',
+      title: 'Admin Share Code Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-share-code',
+        resumeEndpoint: 'https://api.example.test/resume',
+        shareCodeEndpoint: 'https://api.example.test/resume',
+        resumeTokenSignatureVersion: 'v2',
+        verifyResumeToken: (payload) => sign(payload) === payload.signature,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    await expect(admin.createResumeShareCode('existing_token')).resolves.toBe('ADMIN-42');
+    const claim = await admin.claimResumeShareCode('ADMIN-42');
+    expect(claim).toEqual(expect.objectContaining({
+      token: 'admin_claimed_token',
+      signatureVersion: 'v2',
+      signatureValid: true,
+    }));
+
+    const restored = await admin.restoreFromShareCode('ADMIN-42');
+    expect(restored).toEqual({ email: 'admin-claimed@example.com' });
+    expect(admin.getSnapshot().draft).toEqual({ email: 'admin-claimed@example.com' });
+  });
+
   it('can export and import local admin snapshots', () => {
     const formConfig = createFormConfig({
       name: 'admin-import-export-form',

@@ -1482,6 +1482,9 @@ Standalone local admin helper:
 - `createLocalFormAdmin(formConfig)`
 - `admin.getStorageHealth()`
 - `admin.listResumeTokens()`
+- `admin.createResumeShareCode(token)`
+- `admin.claimResumeShareCode(code)`
+- `admin.restoreFromShareCode(code)`
 - `admin.deleteResumeToken(token)`
 - `admin.invalidateResumeToken(token)`
 

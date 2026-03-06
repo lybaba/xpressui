@@ -385,6 +385,8 @@ mountFormUI(container, {
 Supported submit options:
 - `endpoint`
 - `baseUrl` (prefix used for relative `endpoint` and `presignEndpoint` values)
+- `includeSettingFields` (includes all `type: 'setting'` fields in submit payloads)
+- `settingFieldAllowlist` (includes only selected `setting` fields by name)
 - `method`
 - `headers`
 - `mode` (`json` or `form-data`)
@@ -419,6 +421,22 @@ mountFormUI(container, {
   ],
 });
 ```
+
+### Setting Fields In Submit Payloads
+
+`setting` fields are hidden runtime/config fields. They are available for rules
+and calculations, and are excluded from submit payloads by default.
+
+You can opt-in at three levels:
+
+- global: `submit.includeSettingFields: true`
+- submit whitelist: `submit.settingFieldAllowlist: ['currency_setting']`
+- field-level: `includeInSubmit: true` on a `type: 'setting'` field
+
+Helper shortcuts:
+
+- `fieldFactory.settingPublic(...)` sets `includeInSubmit: true`
+- `fieldFactory.settingSensitive(...)` sets `includeInSubmit: false`
 
 ## Built-in Providers
 

@@ -18,6 +18,11 @@ responses your frontend can rely on.
   - `step-first`
   - `workflow-only`
   - `step-only`
+- `type: "setting"` fields are excluded from outbound submit payloads by default
+  and can be re-included using:
+  - `field.includeInSubmit: true` (field-level)
+  - `submit.settingFieldAllowlist: string[]` (submit-level whitelist)
+  - `submit.includeSettingFields: true` (global include)
 - The component emits `form-ui:submit-success` on successful HTTP responses
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events

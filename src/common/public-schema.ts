@@ -16,6 +16,17 @@ const PUBLIC_FORM_SCHEMA = {
     name: { type: "string", minLength: 1 },
     title: { type: "string", minLength: 1 },
     timestamp: { type: "integer" },
+    submit: {
+      type: "object",
+      additionalProperties: true,
+      properties: {
+        includeSettingFields: { type: "boolean" },
+        settingFieldAllowlist: {
+          type: "array",
+          items: { type: "string", minLength: 1 },
+        },
+      },
+    },
     rules: {
       type: "array",
       items: {
@@ -91,6 +102,7 @@ const PUBLIC_FORM_SCHEMA = {
             type: { type: "string", minLength: 1 },
             name: { type: "string", minLength: 1 },
             label: { type: "string", minLength: 1 },
+            includeInSubmit: { type: "boolean" },
           },
         },
       },

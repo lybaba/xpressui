@@ -5294,6 +5294,57 @@ describe('FormUI', () => {
     ).toThrow(/Invalid public form config/);
   });
 
+  it('rejects invalid includeInSubmit types in public field configs', () => {
+    expect(() =>
+      validatePublicFormConfig({
+        version: 1,
+        id: 'invalid-include-in-submit',
+        uid: 'invalid-include-in-submit',
+        type: 'contactform',
+        name: 'invalid-include-in-submit',
+        title: 'Invalid Include In Submit',
+        sections: {
+          custom: [{ type: 'section', name: 'main', label: 'Main' }],
+          main: [
+            {
+              type: 'setting',
+              name: 'checkout_currency_setting',
+              label: 'Currency',
+              includeInSubmit: 'true',
+            },
+          ],
+        },
+      } as any)
+    ).toThrow(/Invalid public form config/);
+  });
+
+  it('rejects invalid submit setting allowlist types in public configs', () => {
+    expect(() =>
+      validatePublicFormConfig({
+        version: 1,
+        id: 'invalid-submit-setting-allowlist',
+        uid: 'invalid-submit-setting-allowlist',
+        type: 'contactform',
+        name: 'invalid-submit-setting-allowlist',
+        title: 'Invalid Submit Setting Allowlist',
+        submit: {
+          endpoint: '/api/submit',
+          settingFieldAllowlist: 'checkout_currency_setting',
+        },
+        sections: {
+          custom: [{ type: 'section', name: 'main', label: 'Main' }],
+          main: [
+            {
+              type: 'setting',
+              name: 'checkout_currency_setting',
+              label: 'Currency',
+            },
+          ],
+        },
+      } as any)
+    ).toThrow(/Invalid public form config/);
+  });
+
   it('can submit to a configured API endpoint', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ bookingId: 'bk_123' }), {

@@ -403,6 +403,11 @@ export function getFieldConfig(node: Element): TFieldConfig {
         fieldConfig.requireValidDocumentMrz = true;
     }
 
+    const includeInSubmitAttr = node.getAttribute(HTML_ATTR_INCLUDE_IN_SUBMIT);
+    if (includeInSubmitAttr !== null) {
+        fieldConfig.includeInSubmit = includeInSubmitAttr === "true";
+    }
+
     if (node.hasAttribute(HTML_ATTR_STEP_SKIPPABLE)) {
         fieldConfig.stepSkippable = true;
     }

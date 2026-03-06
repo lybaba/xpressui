@@ -217,6 +217,15 @@ describe('FormUI', () => {
       ],
       required: true,
     });
+
+    expect(
+      fieldFactory.setting('tax_rate', 'Tax Rate', 0.2),
+    ).toEqual({
+      type: 'setting',
+      name: 'tax_rate',
+      label: 'Tax Rate',
+      value: 0.2,
+    });
   });
 
   it('provides business form presets that can be converted to mountable markup', () => {
@@ -5848,6 +5857,33 @@ describe('FormUI', () => {
     expect(settingField.style.display).toBe('none');
     expect(element.getFieldValue('default_currency')).toBe('EUR');
     expect((element.querySelector('#currency') as HTMLInputElement).value).toBe('EUR');
+  });
+
+  it('supports numeric setting values in rule conditions', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'setting-numeric-rule-form',
+      title: 'Setting Numeric Rule Form',
+      rules: [
+        {
+          id: 'apply-fast-shipping',
+          conditions: [
+            { field: 'free_shipping_threshold', operator: 'gt', value: 100 },
+          ],
+          actions: [
+            { type: 'set-value', field: 'shipping_mode', value: 'express' },
+          ],
+        },
+      ],
+      fields: [
+        { name: 'free_shipping_threshold', label: 'Free Shipping Threshold', type: 'setting', value: 120 } as any,
+        { name: 'shipping_mode', label: 'Shipping Mode', type: 'text' },
+      ],
+    }) as FormUI;
+
+    await flushAsyncWork();
+    expect(element.getFieldValue('free_shipping_threshold')).toBe(120);
+    expect((element.querySelector('#shipping_mode') as HTMLInputElement).value).toBe('express');
   });
 
   it('supports set-value transforms for copied field values', async () => {

@@ -1,6 +1,6 @@
 import TFieldConfig, { TStepTransition } from "./TFieldConfig";
 import TFormConfig, { TFormProviderRequest, TFormRule, TFormStorageConfig, TFormSubmitRequest } from "./TFormConfig";
-import { CAMERA_PHOTO_TYPE, DOCUMENT_SCAN_TYPE, EMAIL_TYPE, IMAGE_GALLERY_TYPE, PRODUCT_LIST_TYPE, QR_SCAN_TYPE, SELECT_MULTIPLE_TYPE, SELECT_ONE_TYPE, TEL_TYPE, TEXTAREA_TYPE, TEXT_TYPE, normalizeFieldName } from "./field";
+import { CAMERA_PHOTO_TYPE, DOCUMENT_SCAN_TYPE, EMAIL_TYPE, IMAGE_GALLERY_TYPE, PRODUCT_LIST_TYPE, QR_SCAN_TYPE, SELECT_MULTIPLE_TYPE, SELECT_ONE_TYPE, SETTING_TYPE, TEL_TYPE, TEXTAREA_TYPE, TEXT_TYPE, normalizeFieldName } from "./field";
 import { createFormConfig, TSimpleFieldInput, TSimpleFormInput } from "./form-builder";
 import { validatePublicFormConfig } from "./public-schema";
 
@@ -120,6 +120,18 @@ export const fieldFactory = {
   ): TSimpleFieldInput {
     return buildField(IMAGE_GALLERY_TYPE, name, label, {
       choices,
+      ...(overrides || {}),
+    });
+  },
+
+  setting(
+    name: string,
+    label: string,
+    value: any,
+    overrides?: TFieldOverrides,
+  ): TSimpleFieldInput {
+    return buildField(SETTING_TYPE, name, label, {
+      value,
       ...(overrides || {}),
     });
   },

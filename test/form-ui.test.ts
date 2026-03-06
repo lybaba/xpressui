@@ -1830,6 +1830,14 @@ describe('FormUI', () => {
     );
 
     expect(runtime.getWorkflowState()).toBe('draft');
+    expect(runtime.getWorkflowContext()).toEqual(
+      expect.objectContaining({
+        workflowState: 'draft',
+        snapshot: expect.objectContaining({
+          workflowState: 'draft',
+        }),
+      }),
+    );
     expect(runtime.goToStep(1)).toBe(true);
     expect(runtime.validateCurrentStep()).toBe(true);
 
@@ -1838,6 +1846,14 @@ describe('FormUI', () => {
 
     values.review_notes = 'Checked';
     expect(runtime.validateCurrentStep()).toBe(true);
+    expect(runtime.getWorkflowContext()).toEqual(
+      expect.objectContaining({
+        workflowState: 'pending_approval',
+        snapshot: expect.objectContaining({
+          workflowState: 'pending_approval',
+        }),
+      }),
+    );
   });
 
   it('renders a review summary on summary steps and can jump conditionally to another step', () => {
@@ -9511,6 +9527,18 @@ describe('FormUI', () => {
     await flushAsyncWork();
 
     expect(element.getWorkflowState()).toBe('pending_approval');
+    expect(element.getWorkflowContext()).toEqual(
+      expect.objectContaining({
+        workflowState: 'pending_approval',
+        snapshot: expect.objectContaining({
+          workflowState: 'pending_approval',
+        }),
+        approvalState: expect.objectContaining({
+          status: 'pending_approval',
+          approvalId: 'apr_123',
+        }),
+      }),
+    );
     expect(onWorkflowState).toHaveBeenCalledWith(
       expect.objectContaining({
         result: expect.objectContaining({

@@ -4566,6 +4566,14 @@ export class FormUI extends HTMLElement {
     return this.steps.getWorkflowSnapshot(values);
   }
 
+  getWorkflowContext = () => {
+    return {
+      workflowState: this.getWorkflowState(),
+      approvalState: this.approvalState,
+      snapshot: this.getWorkflowSnapshot(),
+    };
+  }
+
   emitWorkflowSnapshotEvent = (
     detail: Omit<TFormUISubmitDetail, "result">,
     response?: Response,

@@ -107,6 +107,7 @@ export type TFormRuntimePublicApi = Pick<
   | "setWorkflowState"
   | "goToWorkflowStep"
   | "getWorkflowSnapshot"
+  | "getWorkflowContext"
   | "getOutputSnapshot"
   | "goToStep"
   | "nextStep"
@@ -355,6 +356,16 @@ export class FormRuntime {
 
   getWorkflowSnapshot(): TFormWorkflowSnapshot {
     return this.steps.getWorkflowSnapshot(this.options.getValues());
+  }
+
+  getWorkflowContext(): {
+    workflowState: string;
+    snapshot: TFormWorkflowSnapshot;
+  } {
+    return {
+      workflowState: this.getWorkflowState(),
+      snapshot: this.getWorkflowSnapshot(),
+    };
   }
 
   getOutputRendererType(fieldConfig: TFieldConfig): TFormOutputRendererType {

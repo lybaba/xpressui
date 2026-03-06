@@ -1721,6 +1721,8 @@ Headless runtime:
 - `runtime.getCurrentStepName()`
 - `runtime.getStepProgress()`
 - `runtime.getWorkflowState()`
+- `runtime.getWorkflowSnapshot()`
+- `runtime.getWorkflowContext()`
 - `runtime.setWorkflowState(state)`
 - `runtime.validateCurrentStep()`
 - `runtime.goToStep(index)`
@@ -1817,6 +1819,7 @@ Event detail includes:
 Approval helpers:
 - `form.getApprovalState()`
 - `form.getWorkflowState()`
+- `form.getWorkflowContext()`
 
 ## Advanced Usage
 

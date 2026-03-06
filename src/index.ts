@@ -4292,6 +4292,24 @@ export class FormUI extends HTMLElement {
           this.nextStep();
           return;
         }
+        const submitValues = this.form?.getState().values || {};
+        const submitErrors = this.validateForm(submitValues);
+        const blockingFields = Object.keys(submitErrors || {});
+        if (blockingFields.length) {
+          blockingFields.forEach((fieldName) => {
+            this.form?.blur(fieldName);
+          });
+          this.emitFormEvent("form-ui:validation-blocked-submit", {
+            values: this.engine.normalizeValues(submitValues),
+            formConfig: this.formConfig,
+            submit: this.formConfig?.submit,
+            error: submitErrors,
+            result: {
+              fieldNames: blockingFields,
+            },
+          });
+          return;
+        }
         this.form?.submit();
       });
 

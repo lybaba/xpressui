@@ -37,6 +37,8 @@ responses your frontend can rely on.
 - `validation.preValidate/customValidate/postValidate` allows host-defined
   validation hooks in the runtime validation chain
 - `form.setValidationI18n(...)` can switch validation locale/catalog at runtime
+- submit attempts blocked by client validation emit
+  `form-ui:validation-blocked-submit` before any network request
 
 ## Workflow-Aware Provider Additions
 

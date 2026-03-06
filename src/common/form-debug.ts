@@ -89,6 +89,7 @@ export type TFormDebugOptions = {
 
 const DEFAULT_DEBUG_EVENTS = [
   "form-ui:submit",
+  "form-ui:validation-blocked-submit",
   "form-ui:submit-success",
   "form-ui:submit-error",
   "form-ui:options-loaded",

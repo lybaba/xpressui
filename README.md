@@ -473,6 +473,7 @@ emits events. Your app decides what to do next.
 
 Events:
 - `form-ui:submit`
+- `form-ui:validation-blocked-submit`
 - `form-ui:submit-success`
 - `form-ui:submit-error`
 
@@ -1757,6 +1758,7 @@ notices, or banners without reading `providerResult.messages` manually.
 
 Core events emitted by `<form-ui>`:
 - `form-ui:submit`
+- `form-ui:validation-blocked-submit`
 - `form-ui:submit-success`
 - `form-ui:submit-error`
 - `form-ui:options-loaded`

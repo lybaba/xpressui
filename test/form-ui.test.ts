@@ -3931,6 +3931,56 @@ describe('FormUI', () => {
     expect(input.classList.contains('input-error')).toBe(false);
   });
 
+  it('emits validation-blocked-submit when submit is blocked by validation errors', async () => {
+    const element = renderFixture(`
+      <template id="validation-blocked">
+        <form
+          id="validation-blocked_form"
+          data-type="contactform"
+          data-name="validation-blocked"
+          data-label="Validation Blocked"
+        >
+          <div
+            data-type="section"
+            data-name="main"
+            data-label="Main"
+          ></div>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            data-type="email"
+            data-name="email"
+            data-label="Email"
+            data-required="true"
+            data-section-name="main"
+          />
+          <span id="email_error"></span>
+        </form>
+      </template>
+      <form-ui name="validation-blocked"></form-ui>
+    `);
+    const form = element.querySelector('#validation-blocked_form') as HTMLFormElement;
+    const input = element.querySelector('#email') as HTMLInputElement;
+    const onValidationBlocked = vi.fn();
+
+    element.addEventListener('form-ui:validation-blocked-submit', (event) => {
+      onValidationBlocked((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(onValidationBlocked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          fieldNames: ['email'],
+        }),
+      }),
+    );
+    expect(input.classList.contains('input-error')).toBe(true);
+  });
+
   it('can mount a form from a simple config object', () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

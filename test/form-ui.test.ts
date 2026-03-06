@@ -3132,6 +3132,25 @@ describe('FormUI', () => {
       'form-ui:workflow-step',
       'form-ui:submit-success',
     ]);
+    expect(observer.getLastWorkflowSnapshot()).toEqual(
+      expect.objectContaining({
+        type: 'form-ui:workflow-step',
+        detail: expect.objectContaining({
+          result: expect.objectContaining({
+            workflowState: 'submitted',
+          }),
+        }),
+      }),
+    );
+    expect(observer.getSnapshot()).toEqual(
+      expect.objectContaining({
+        lastWorkflowSnapshot: expect.objectContaining({
+          type: 'form-ui:workflow-step',
+        }),
+      }),
+    );
+    observer.clearLastWorkflowSnapshot();
+    expect(observer.getLastWorkflowSnapshot()).toBeNull();
 
     observer.clear();
     expect(observer.getEvents()).toEqual([]);

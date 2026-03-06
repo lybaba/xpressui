@@ -345,6 +345,7 @@ console.log(observer?.getTemplateDiagnostics());
 console.log(observer?.getActiveTemplateWarnings());
 console.log(observer?.getLastTemplateWarningState());
 console.log(observer?.getLastOutputSnapshot());
+console.log(observer?.getLastWorkflowSnapshot());
 console.log(observer?.getSnapshot());
 ```
 
@@ -357,6 +358,7 @@ The observer API:
 - `getActiveTemplateWarnings()`
 - `getLastTemplateWarningState()`
 - `getLastOutputSnapshot()`
+- `getLastWorkflowSnapshot()`
 - `getSnapshot()`
 - `clear()`
 - `clearSnapshot()`
@@ -367,6 +369,7 @@ The observer API:
 - `clearActiveTemplateWarnings()`
 - `clearLastTemplateWarningState()`
 - `clearLastOutputSnapshot()`
+- `clearLastWorkflowSnapshot()`
 - `detach()`
 
 `getRuleHistory()` returns only `form-ui:rule-applied` events. Use
@@ -394,7 +397,8 @@ event yourself.
 
 `getSnapshot()` returns the observer's current derived state in one read:
 recent rules, last rule-state event, active template warnings, last template
-warning-state event, and the last output snapshot event.
+warning-state event, last workflow snapshot event, and the last output snapshot
+event.
 
 ## Debug Panel
 

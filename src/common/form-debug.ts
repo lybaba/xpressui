@@ -45,12 +45,17 @@ export type TFormDebugOutputSnapshotRecord = TFormDebugEventRecord & {
   type: "form-ui:output-snapshot";
 };
 
+export type TFormDebugWorkflowSnapshotRecord = TFormDebugEventRecord & {
+  type: "form-ui:workflow-step" | "form-ui:workflow-state";
+};
+
 export type TFormDebugSnapshot = {
   recentAppliedRules: TFormRuleAppliedDetail[];
   lastRuleState: TFormDebugRuleStateRecord | null;
   activeTemplateWarnings: TFormActiveTemplateWarning[];
   lastTemplateWarningState: TFormDebugTemplateWarningStateRecord | null;
   lastOutputSnapshot: TFormDebugOutputSnapshotRecord | null;
+  lastWorkflowSnapshot: TFormDebugWorkflowSnapshotRecord | null;
 };
 
 export type TFormDebugObserver = {
@@ -62,6 +67,7 @@ export type TFormDebugObserver = {
   getActiveTemplateWarnings(): TFormActiveTemplateWarning[];
   getLastTemplateWarningState(): TFormDebugTemplateWarningStateRecord | null;
   getLastOutputSnapshot(): TFormDebugOutputSnapshotRecord | null;
+  getLastWorkflowSnapshot(): TFormDebugWorkflowSnapshotRecord | null;
   getSnapshot(): TFormDebugSnapshot;
   clear(): void;
   clearSnapshot(): void;
@@ -72,6 +78,7 @@ export type TFormDebugObserver = {
   clearActiveTemplateWarnings(): void;
   clearLastTemplateWarningState(): void;
   clearLastOutputSnapshot(): void;
+  clearLastWorkflowSnapshot(): void;
   detach(): void;
 };
 
@@ -133,6 +140,7 @@ export function attachFormDebugObserver(
   let activeTemplateWarnings: TFormActiveTemplateWarning[] = [];
   let lastTemplateWarningState: TFormDebugTemplateWarningStateRecord | null = null;
   let lastOutputSnapshot: TFormDebugOutputSnapshotRecord | null = null;
+  let lastWorkflowSnapshot: TFormDebugWorkflowSnapshotRecord | null = null;
   const listeners = DEFAULT_DEBUG_EVENTS.map((eventName) => {
     const listener = (event: Event) => {
       const customEvent = event as CustomEvent<any>;
@@ -182,6 +190,10 @@ export function attachFormDebugObserver(
         lastOutputSnapshot = record as TFormDebugOutputSnapshotRecord;
       }
 
+      if (record.type === "form-ui:workflow-step" || record.type === "form-ui:workflow-state") {
+        lastWorkflowSnapshot = record as TFormDebugWorkflowSnapshotRecord;
+      }
+
       options.onEvent?.(record);
     };
 
@@ -217,6 +229,9 @@ export function attachFormDebugObserver(
     getLastOutputSnapshot() {
       return lastOutputSnapshot ? { ...lastOutputSnapshot } : null;
     },
+    getLastWorkflowSnapshot() {
+      return lastWorkflowSnapshot ? { ...lastWorkflowSnapshot } : null;
+    },
     getSnapshot() {
       return {
         recentAppliedRules: [...recentAppliedRules],
@@ -224,6 +239,7 @@ export function attachFormDebugObserver(
         activeTemplateWarnings: [...activeTemplateWarnings],
         lastTemplateWarningState: lastTemplateWarningState ? { ...lastTemplateWarningState } : null,
         lastOutputSnapshot: lastOutputSnapshot ? { ...lastOutputSnapshot } : null,
+        lastWorkflowSnapshot: lastWorkflowSnapshot ? { ...lastWorkflowSnapshot } : null,
       };
     },
     clear() {
@@ -235,6 +251,7 @@ export function attachFormDebugObserver(
       activeTemplateWarnings = [];
       lastTemplateWarningState = null;
       lastOutputSnapshot = null;
+      lastWorkflowSnapshot = null;
     },
     clearSnapshot() {
       recentAppliedRules = [];
@@ -242,6 +259,7 @@ export function attachFormDebugObserver(
       activeTemplateWarnings = [];
       lastTemplateWarningState = null;
       lastOutputSnapshot = null;
+      lastWorkflowSnapshot = null;
     },
     clearRuleHistory() {
       ruleEvents.splice(0, ruleEvents.length);
@@ -263,6 +281,9 @@ export function attachFormDebugObserver(
     },
     clearLastOutputSnapshot() {
       lastOutputSnapshot = null;
+    },
+    clearLastWorkflowSnapshot() {
+      lastWorkflowSnapshot = null;
     },
     detach() {
       listeners.forEach(({ eventName, listener }) => {

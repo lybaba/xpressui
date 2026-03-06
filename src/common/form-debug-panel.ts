@@ -103,10 +103,7 @@ export function createFormDebugPanel(
       : "Last Updated: never";
     rules.textContent = JSON.stringify(snapshot.recentAppliedRules, null, 2);
     warnings.textContent = JSON.stringify(snapshot.activeTemplateWarnings, null, 2);
-    const workflowEvents = observer
-      .getEvents()
-      .filter((event) => event.type === "form-ui:workflow-step" || event.type === "form-ui:workflow-state");
-    workflow.textContent = JSON.stringify(workflowEvents.at(-1)?.detail?.result || null, null, 2);
+    workflow.textContent = JSON.stringify(snapshot.lastWorkflowSnapshot?.detail?.result || null, null, 2);
     outputSnapshot.textContent = JSON.stringify(snapshot.lastOutputSnapshot?.detail?.result || null, null, 2);
   };
 

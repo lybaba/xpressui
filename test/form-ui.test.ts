@@ -20,6 +20,7 @@ import {
   FormUploadRuntime,
   FormUI,
   getProviderDefinition,
+  getPublicApiManifest,
   normalizeProviderResult,
   resolveProviderTransition,
   mountFormUI,
@@ -121,6 +122,7 @@ describe('FormUI', () => {
     expect(publicApi.createLocalFormAdmin).toBe(createLocalFormAdmin);
     expect(publicApi.validatePublicFormConfig).toBe(validatePublicFormConfig);
     expect(publicApi.PUBLIC_FORM_SCHEMA_VERSION).toBe(PUBLIC_FORM_SCHEMA_VERSION);
+    expect(publicApi.getPublicApiManifest).toBe(getPublicApiManifest);
     expect(publicApi.registerProvider).toBe(registerProvider);
     expect(publicApi.getProviderDefinition).toBe(getProviderDefinition);
     expect(publicApi.createSubmitRequestFromProvider).toBe(createSubmitRequestFromProvider);
@@ -248,6 +250,17 @@ describe('FormUI', () => {
       value: 'secret',
       includeInSubmit: false,
     });
+  });
+
+  it('exposes a public api manifest with stable and advanced boundaries', () => {
+    const manifest = getPublicApiManifest();
+
+    expect(manifest.schemaVersion).toBe(1);
+    expect(manifest.stable).toContain('mountFormUI');
+    expect(manifest.stable).toContain('createMountSnippet');
+    expect(manifest.stable).toContain('FormUI');
+    expect(manifest.advanced).toContain('FormEngineRuntime');
+    expect(manifest.advanced).toContain('provider-registry helpers');
   });
 
   it('provides business form presets that can be converted to mountable markup', () => {

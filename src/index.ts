@@ -65,6 +65,7 @@ export { createFormPreset, fieldFactory, stepFactory } from "./common/form-prese
 export { createLocalFormAdmin } from "./common/form-admin";
 export { attachFormDebugObserver } from "./common/form-debug";
 export { createFormDebugPanel } from "./common/form-debug-panel";
+export { getPublicApiManifest } from "./common/public-api-manifest";
 export { FormEngineRuntime } from "./common/form-engine";
 export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
@@ -100,6 +101,7 @@ export type {
   TFormDebugTemplateWarningStateRecord,
 } from "./common/form-debug";
 export type { TFormDebugPanel, TFormDebugPanelOptions } from "./common/form-debug-panel";
+export type { TPublicApiManifest } from "./common/public-api-manifest";
 export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 export type { TFormUploadState } from "./common/form-upload";
 export type { TFormStepProgress, TFormWorkflowSnapshot } from "./common/form-steps";

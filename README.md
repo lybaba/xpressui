@@ -56,6 +56,9 @@ Public API you should treat as stable:
 - `createLocalFormAdmin(...)`
 - public schema helpers (`validatePublicFormConfig`, `migratePublicFormConfig`)
 
+You can also introspect this boundary programmatically with
+`getPublicApiManifest()`.
+
 Advanced building blocks available but better treated as lower-level/internal:
 - `FormEngineRuntime`
 - `FormDynamicRuntime`

@@ -137,6 +137,7 @@ Built-in renderer types:
 - `html`
 - `image`
 - `file`
+- `document`
 - `video`
 - `audio`
 - `map`
@@ -161,6 +162,22 @@ formUI.setFieldOutputRenderer("status", ({ value }) => {
   el.textContent = `Status: ${value}`;
   return el;
 });
+```
+
+Cookbook pattern:
+
+```ts
+formUI.setOutputRenderer("money", ({ value }) => {
+  const el = document.createElement("span");
+  el.textContent = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number(value || 0));
+  return el;
+});
+
+formUI.setFieldOutputRenderer("total_amount", "money");
+formUI.setFieldMediaPolicy("invoice_pdf", "embed");
 ```
 
 ### HTML Safety Policy
@@ -194,18 +211,19 @@ Trusted override:
 
 ### Media / Resource Display Policies
 
-Media renderers (`image` / `video` / `file`) support:
+Media renderers (`image` / `video` / `file` / `document`) support:
 
 - `large`
 - `thumbnail`
 - `link`
 - `gallery`
+- `embed` (default for `document`)
 
 Per-field controls:
 
 - markup attribute:
-  - `data-view-media-display="thumbnail|large|link|gallery"`
-  - `data-view-resource-display="thumbnail|large|link|gallery"` (alias)
+  - `data-view-media-display="thumbnail|large|link|gallery|embed"`
+  - `data-view-resource-display="thumbnail|large|link|gallery|embed"` (alias)
 - runtime API:
   - `setFieldMediaPolicy(fieldName, policy)`
   - `clearFieldMediaPolicy(fieldName)`
@@ -230,8 +248,8 @@ Snapshot shape:
 ```json
 {
   "field_name": {
-    "rendererType": "text|html|image|file|video|link|custom",
-    "mediaDisplayPolicy": "thumbnail|large|link|gallery",
+    "rendererType": "text|html|image|file|document|video|audio|map|link|custom",
+    "mediaDisplayPolicy": "thumbnail|large|link|gallery|embed",
     "value": "..."
   }
 }

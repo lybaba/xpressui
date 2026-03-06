@@ -10,7 +10,7 @@ It helps you:
 - plug in common workflows such as reservation and payment
 - build dynamic forms with conditional fields and API-driven select options
 - render resources in `view`/`hybrid` with built-in `text`, `html`, `image`,
-  `file`, `video`, `audio`, `map`, and `link` output renderers
+  `file`, `document`, `video`, `audio`, `map`, and `link` output renderers
 
 This repository currently ships a browser-focused Web Component library. It is
 not the old React `PostUI` API shown in earlier versions of the README.
@@ -191,6 +191,54 @@ Example:
   data-view-template="<section><h3>{{title}}</h3><p>{{notes}}</p></section>"
 ></textarea>
 ```
+
+## Renderer Extension Cookbook
+
+`FormUI` supports renderer extension without patching core runtime.
+
+Register a global renderer:
+
+```ts
+form.setOutputRenderer('badge', ({ value }) => {
+  const el = document.createElement('span');
+  el.className = 'status-badge';
+  el.textContent = String(value || '').toUpperCase();
+  return el;
+});
+```
+
+Bind renderer per field:
+
+```ts
+form.setFieldOutputRenderer('approval_status', 'badge');
+// or
+form.setFieldOutputRenderer('approval_status', ({ value }) => {
+  const strong = document.createElement('strong');
+  strong.textContent = `Status: ${value}`;
+  return strong;
+});
+```
+
+Control media/resource policy per field:
+
+```ts
+form.setFieldMediaPolicy('invoice_pdf', 'embed'); // document renderer
+form.setFieldMediaPolicy('gallery_images', 'gallery');
+form.clearFieldMediaPolicy('invoice_pdf');
+```
+
+Built-in display policies:
+- `thumbnail`
+- `large`
+- `link`
+- `gallery`
+- `embed` (used by `document` renderer by default)
+
+Production recommendations:
+- keep `allow-unsafe-html` disabled by default
+- prefer `viewTemplate` placeholders over raw HTML injection
+- force `link` policy for untrusted external media hosts
+- use field-level renderer overrides for brand-specific view blocks
 
 ## Headless Runtime
 

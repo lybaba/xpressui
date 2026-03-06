@@ -5838,6 +5838,28 @@ describe('FormUI', () => {
     ).toThrow(/Invalid public form config/);
   });
 
+  it('rejects invalid storage share-code claim policy types in public configs', () => {
+    expect(() =>
+      validatePublicFormConfig({
+        version: 1,
+        id: 'invalid-storage-share-code-policy',
+        uid: 'invalid-storage-share-code-policy',
+        type: 'contactform',
+        name: 'invalid-storage-share-code-policy',
+        title: 'Invalid Storage Share Code Policy',
+        storage: {
+          mode: 'draft',
+          adapter: 'local-storage',
+          shareCodeClaimThrottleMs: '1000',
+        },
+        sections: {
+          custom: [{ type: 'section', name: 'main', label: 'Main' }],
+          main: [{ type: 'email', name: 'email', label: 'Email' }],
+        },
+      } as any)
+    ).toThrow(/Invalid public form config/);
+  });
+
   it('accepts valid storage signature version in public configs', () => {
     const config = validatePublicFormConfig({
       version: 1,
@@ -10556,6 +10578,50 @@ describe('FormUI', () => {
         result: expect.objectContaining({
           token: 'remote_token_claim_invalid',
           signatureVersion: 'v2',
+        }),
+      }),
+    );
+  });
+
+  it('applies local share-code claim throttling and max-attempt guards', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ error: 'temporary' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'remote-share-code-throttle-form',
+      title: 'Remote Share Code Throttle Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-remote-share-code-throttle',
+        resumeEndpoint: 'https://api.example.test/resume',
+        shareCodeEndpoint: 'https://api.example.test/resume',
+        shareCodeClaimThrottleMs: 10_000,
+        shareCodeClaimMaxAttempts: 1,
+        shareCodeClaimBlockMs: 60_000,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const onClaimBlocked = vi.fn();
+    element.addEventListener('form-ui:resume-share-code-claim-blocked', (event) => {
+      onClaimBlocked((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await expect(element.claimResumeShareCode('SHARE-LOCK')).resolves.toBeNull();
+    await expect(element.claimResumeShareCode('SHARE-LOCK')).resolves.toBeNull();
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(onClaimBlocked).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          code: 'SHARE-LOCK',
+          reason: 'throttled',
         }),
       }),
     );

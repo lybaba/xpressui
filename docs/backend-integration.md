@@ -302,6 +302,15 @@ remote save/resume lifecycle operations:
 - `POST /resume` with `operation: "create-share-code"` creates a short share code from a token
 - `POST /resume` with `operation: "claim-share-code"` exchanges a share code for token + snapshot
 
+Client-side hardening options for share-code claim flows:
+- `storage.shareCodeClaimThrottleMs`
+- `storage.shareCodeClaimMaxAttempts`
+- `storage.shareCodeClaimWindowMs`
+- `storage.shareCodeClaimBlockMs`
+
+When local policy blocks a claim attempt, runtime emits
+`form-ui:resume-share-code-claim-blocked` without sending a backend request.
+
 `POST` request body:
 
 ```json

@@ -209,6 +209,10 @@ export type TFormStorageConfig = {
     retentionDraftDays?: number;
     retentionQueueDays?: number;
     retentionDeadLetterDays?: number;
+    shareCodeClaimThrottleMs?: number;
+    shareCodeClaimMaxAttempts?: number;
+    shareCodeClaimWindowMs?: number;
+    shareCodeClaimBlockMs?: number;
     resumeTokenSignatureVersion?: string;
     signResumeToken?: (payload: {
         token: string;

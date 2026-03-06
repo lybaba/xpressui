@@ -1458,6 +1458,10 @@ Current storage support:
 - `retentionDraftDays`
 - `retentionQueueDays`
 - `retentionDeadLetterDays`
+- `shareCodeClaimThrottleMs`
+- `shareCodeClaimMaxAttempts`
+- `shareCodeClaimWindowMs`
+- `shareCodeClaimBlockMs`
 
 `indexeddb` currently uses a compatibility-first local cache plus IndexedDB
 write-through, so the runtime API stays synchronous while still persisting to a
@@ -1499,6 +1503,7 @@ Draft events:
 - `form-ui:resume-token-invalid-signature`
 - `form-ui:resume-share-code-created`
 - `form-ui:resume-share-code-claimed`
+- `form-ui:resume-share-code-claim-blocked`
 
 Queue events:
 - `form-ui:queued`
@@ -1548,6 +1553,12 @@ If `shareCodeEndpoint` is configured (or omitted, fallback to `resumeEndpoint`):
 - `createResumeShareCode(token)` requests a short share code from a token
 - `claimResumeShareCode(code)` exchanges a code for token metadata + snapshot
 - `restoreFromShareCodeAsync(code)` claims and restores snapshot values in one call
+
+You can harden local share-code abuse behavior with:
+- `shareCodeClaimThrottleMs` (minimum delay between claim attempts for same code)
+- `shareCodeClaimMaxAttempts` (attempt cap inside a rolling window)
+- `shareCodeClaimWindowMs` (window duration for attempt counting)
+- `shareCodeClaimBlockMs` (temporary block period once cap is reached)
 
 If `resumeTokenTtlDays` is set, expired resume tokens are pruned on listing and
 restoring. `resumeEndpoint` is stored as metadata on each token so the same

@@ -125,6 +125,13 @@ type TResumeTokenState = {
   signatureVersion?: string;
 };
 
+type TShareCodeClaimPolicyState = {
+  attempts: number;
+  windowStartedAt: number;
+  lastAttemptAt: number;
+  blockedUntil: number;
+};
+
 type TFormPersistenceRuntimeOptions = {
   getFormConfig(): TFormConfig | null;
   getValues(): Record<string, any>;
@@ -144,6 +151,7 @@ export class FormPersistenceRuntime {
   syncInFlight: boolean;
   onlineHandler: (() => void) | null;
   resumeTokenMemory: Map<string, TResumeTokenState>;
+  shareCodeClaimPolicyState: Map<string, TShareCodeClaimPolicyState>;
 
   constructor(options: TFormPersistenceRuntimeOptions) {
     this.options = options;
@@ -152,6 +160,7 @@ export class FormPersistenceRuntime {
     this.syncInFlight = false;
     this.onlineHandler = null;
     this.resumeTokenMemory = new Map();
+    this.shareCodeClaimPolicyState = new Map();
   }
 
   setFormConfig(formConfig: TFormConfig | null): void {
@@ -541,6 +550,131 @@ export class FormPersistenceRuntime {
   getShareCodeEndpoint(): string | undefined {
     return this.options.getFormConfig()?.storage?.shareCodeEndpoint
       || this.getResumeEndpoint();
+  }
+
+  getShareCodeClaimThrottleMs(): number {
+    return Math.max(0, Number(this.options.getFormConfig()?.storage?.shareCodeClaimThrottleMs ?? 0));
+  }
+
+  getShareCodeClaimMaxAttempts(): number {
+    return Math.max(1, Number(this.options.getFormConfig()?.storage?.shareCodeClaimMaxAttempts ?? 5));
+  }
+
+  getShareCodeClaimWindowMs(): number {
+    return Math.max(0, Number(this.options.getFormConfig()?.storage?.shareCodeClaimWindowMs ?? 5 * 60 * 1000));
+  }
+
+  getShareCodeClaimBlockMs(): number {
+    return Math.max(0, Number(this.options.getFormConfig()?.storage?.shareCodeClaimBlockMs ?? 5 * 60 * 1000));
+  }
+
+  normalizeShareCodeKey(code: string): string {
+    return String(code || "").trim().toUpperCase();
+  }
+
+  getShareCodeClaimState(code: string): TShareCodeClaimPolicyState {
+    const now = Date.now();
+    const key = this.normalizeShareCodeKey(code);
+    const windowMs = this.getShareCodeClaimWindowMs();
+    const state = this.shareCodeClaimPolicyState.get(key) || {
+      attempts: 0,
+      windowStartedAt: now,
+      lastAttemptAt: 0,
+      blockedUntil: 0,
+    };
+
+    if (windowMs > 0 && now - state.windowStartedAt > windowMs) {
+      state.attempts = 0;
+      state.windowStartedAt = now;
+      state.blockedUntil = 0;
+    }
+
+    this.shareCodeClaimPolicyState.set(key, state);
+    return state;
+  }
+
+  emitShareCodeClaimBlocked(
+    code: string,
+    result: {
+      reason: "throttled" | "max-attempts";
+      blockedUntil?: number;
+      attempts?: number;
+      maxAttempts?: number;
+      throttleMs?: number;
+    },
+  ): void {
+    this.options.emitEvent(
+      "form-ui:resume-share-code-claim-blocked",
+      this.createEventDetail(this.options.getValues(), {
+        code,
+        ...result,
+      }),
+    );
+  }
+
+  shouldAllowShareCodeClaim(code: string): boolean {
+    const now = Date.now();
+    const key = this.normalizeShareCodeKey(code);
+    const state = this.getShareCodeClaimState(code);
+    const maxAttempts = this.getShareCodeClaimMaxAttempts();
+    const blockMs = this.getShareCodeClaimBlockMs();
+    const throttleMs = this.getShareCodeClaimThrottleMs();
+    if (throttleMs > 0 && state.lastAttemptAt > 0 && now - state.lastAttemptAt < throttleMs) {
+      this.emitShareCodeClaimBlocked(code, {
+        reason: "throttled",
+        blockedUntil: state.lastAttemptAt + throttleMs,
+        attempts: state.attempts,
+        maxAttempts: this.getShareCodeClaimMaxAttempts(),
+        throttleMs,
+      });
+      return false;
+    }
+
+    if (state.blockedUntil > now) {
+      this.emitShareCodeClaimBlocked(code, {
+        reason: "max-attempts",
+        blockedUntil: state.blockedUntil,
+        attempts: state.attempts,
+        maxAttempts,
+      });
+      return false;
+    }
+
+    if (state.attempts >= maxAttempts) {
+      if (state.blockedUntil <= now && blockMs > 0) {
+        state.blockedUntil = now + blockMs;
+      }
+      this.shareCodeClaimPolicyState.set(key, state);
+      this.emitShareCodeClaimBlocked(code, {
+        reason: "max-attempts",
+        blockedUntil: state.blockedUntil || undefined,
+        attempts: state.attempts,
+        maxAttempts,
+      });
+      return false;
+    }
+
+    state.lastAttemptAt = now;
+    this.shareCodeClaimPolicyState.set(key, state);
+    return true;
+  }
+
+  markShareCodeClaimFailure(code: string): void {
+    const now = Date.now();
+    const key = this.normalizeShareCodeKey(code);
+    const maxAttempts = this.getShareCodeClaimMaxAttempts();
+    const blockMs = this.getShareCodeClaimBlockMs();
+    const state = this.getShareCodeClaimState(code);
+    state.attempts += 1;
+    state.lastAttemptAt = now;
+    if (state.attempts >= maxAttempts && blockMs > 0) {
+      state.blockedUntil = now + blockMs;
+    }
+    this.shareCodeClaimPolicyState.set(key, state);
+  }
+
+  markShareCodeClaimSuccess(code: string): void {
+    this.shareCodeClaimPolicyState.delete(this.normalizeShareCodeKey(code));
   }
 
   getResumeTokenSignatureVersion(): string | undefined {
@@ -1107,6 +1241,9 @@ export class FormPersistenceRuntime {
     if (!endpoint || !code) {
       return null;
     }
+    if (!this.shouldAllowShareCodeClaim(code)) {
+      return null;
+    }
 
     try {
       const response = await fetch(endpoint, {
@@ -1124,15 +1261,18 @@ export class FormPersistenceRuntime {
         ? await response.json()
         : await response.text();
       if (!response.ok) {
+        this.markShareCodeClaimFailure(code);
         return null;
       }
 
       const parsed = this.parseRemoteShareCodeClaimResponse(result);
       if (!parsed) {
+        this.markShareCodeClaimFailure(code);
         return null;
       }
 
       if (!parsed.snapshot) {
+        this.markShareCodeClaimFailure(code);
         return null;
       }
 
@@ -1154,6 +1294,7 @@ export class FormPersistenceRuntime {
         ? baseState
         : this.applyResumeTokenSignature(parsed.token, baseState);
       if (!this.isResumeTokenSignatureValid(parsed.token, state)) {
+        this.markShareCodeClaimFailure(code);
         this.emitResumeTokenInvalidSignature(parsed.token, {
           savedAt: parsed.savedAt,
           resumeEndpoint: this.getResumeEndpoint(),
@@ -1163,6 +1304,7 @@ export class FormPersistenceRuntime {
       }
 
       this.persistResumeTokenState(parsed.token, state);
+      this.markShareCodeClaimSuccess(code);
       const lookup: TResumeLookupResult = {
         token: parsed.token,
         savedAt: parsed.savedAt,
@@ -1190,6 +1332,7 @@ export class FormPersistenceRuntime {
       );
       return lookup;
     } catch {
+      this.markShareCodeClaimFailure(code);
       return null;
     }
   }

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui headless runtime demo</title>
+    <link rel="stylesheet" href="../index.css" />
+    <style>
+      :root {
+        --bg: #f6faf6;
+        --ink: #1f2937;
+        --muted: #4b5563;
+        --line: #d1d5db;
+        --panel: #ffffff;
+        --accent: #0f766e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background:
+          radial-gradient(circle at 10% 8%, rgba(15, 118, 110, 0.12), transparent 30%),
+          linear-gradient(180deg, #fbfffb 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+
+      h1 { margin: 0 0 8px; }
+      p { margin: 0; color: var(--muted); }
+      a { color: #0f766e; }
+
+      .layout {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        gap: 18px;
+        align-items: start;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 0.92rem;
+      }
+
+      input,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 9px 10px;
+        background: #fff;
+      }
+
+      .row {
+        margin-top: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      button {
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        background: #fff;
+        color: #0f172a;
+        padding: 7px 12px;
+        cursor: pointer;
+      }
+
+      button.primary {
+        border-color: var(--accent);
+        color: #ffffff;
+        background: var(--accent);
+      }
+
+      h2 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      pre {
+        margin: 0;
+        background: #0f172a;
+        color: #dbeafe;
+        border-radius: 12px;
+        padding: 12px;
+        overflow: auto;
+        min-height: 180px;
+        font-size: 12px;
+        line-height: 1.42;
+      }
+
+      @media (max-width: 960px) {
+        .layout { grid-template-columns: 1fr; }
+        .field-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>Headless Runtime (sans FormUI)</h1>
+      <p>
+        Cette démo utilise uniquement <code>FormRuntime</code> pour validation,
+        normalisation, draft local et resume token.
+      </p>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="field-grid">
+            <label>
+              Email
+              <input id="email" type="email" value="buyer@example.com" />
+            </label>
+            <label>
+              Amount
+              <input id="amount" type="number" step="0.01" value="42.5" />
+            </label>
+            <label>
+              Currency
+              <input id="currency" type="text" value="EUR" />
+            </label>
+            <label>
+              Product
+              <input id="product" type="text" value="starter-pack" />
+            </label>
+          </div>
+          <label style="margin-top: 12px; display: grid; gap: 6px;">
+            Notes
+            <textarea id="notes" rows="3">Headless run</textarea>
+          </label>
+
+          <div class="row">
+            <button class="primary" type="button" id="btn-validate">Validate</button>
+            <button type="button" id="btn-normalize">Normalize</button>
+            <button type="button" id="btn-save">Save Draft</button>
+            <button type="button" id="btn-load">Load Draft</button>
+            <button type="button" id="btn-token">Create Token</button>
+            <button type="button" id="btn-list">List Tokens</button>
+            <button type="button" id="btn-clear">Clear Draft</button>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <h2>Runtime Output</h2>
+          <pre id="output">{}</pre>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module">
+      import { createFormConfig, FormRuntime } from "../dist/xpressui.mjs";
+
+      const output = document.getElementById("output");
+      const fields = {
+        email: document.getElementById("email"),
+        amount: document.getElementById("amount"),
+        currency: document.getElementById("currency"),
+        product: document.getElementById("product"),
+        notes: document.getElementById("notes"),
+      };
+
+      const getValues = () => ({
+        email: fields.email.value,
+        amount: fields.amount.value,
+        currency: fields.currency.value,
+        product: fields.product.value,
+        notes: fields.notes.value,
+      });
+
+      const syncInputs = (values = {}) => {
+        Object.entries(values).forEach(([name, value]) => {
+          const element = fields[name];
+          if (!element) {
+            return;
+          }
+          element.value = value == null ? "" : String(value);
+        });
+      };
+
+      const write = (payload) => {
+        output.textContent = JSON.stringify(payload, null, 2);
+      };
+
+      const formConfig = createFormConfig({
+        version: 1,
+        id: "headless_runtime_demo",
+        uid: "headless_runtime_demo_uid",
+        type: "contactform",
+        name: "headless-runtime-demo",
+        title: "Headless Runtime Demo",
+        storage: {
+          mode: "draft",
+          adapter: "local-storage",
+          key: "xpressui:demo:headless-runtime",
+          autoSaveMs: 0,
+        },
+        fields: [
+          { type: "email", name: "email", label: "Email", required: true },
+          { type: "price", name: "amount", label: "Amount", required: true },
+          { type: "text", name: "currency", label: "Currency", required: true },
+          { type: "text", name: "product", label: "Product", required: true },
+          { type: "textarea", name: "notes", label: "Notes" },
+        ],
+      });
+
+      const runtime = new FormRuntime(formConfig, {
+        getValues,
+      });
+
+      (formConfig.sections.main || []).forEach((field) => {
+        runtime.setField(field.name, field);
+      });
+
+      write({
+        message: "Ready",
+        values: getValues(),
+      });
+
+      document.getElementById("btn-validate").addEventListener("click", () => {
+        const values = getValues();
+        const errors = runtime.validateValues(values);
+        write({ action: "validate", values, errors, valid: Object.keys(errors).length === 0 });
+      });
+
+      document.getElementById("btn-normalize").addEventListener("click", () => {
+        const values = getValues();
+        const normalized = runtime.normalizeValues(values);
+        write({ action: "normalize", values, normalized });
+      });
+
+      document.getElementById("btn-save").addEventListener("click", () => {
+        runtime.saveDraft();
+        write({ action: "saveDraft", values: getValues() });
+      });
+
+      document.getElementById("btn-load").addEventListener("click", () => {
+        const draft = runtime.loadDraftValues() || {};
+        syncInputs(draft);
+        write({ action: "loadDraft", draft });
+      });
+
+      document.getElementById("btn-token").addEventListener("click", () => {
+        const token = runtime.createResumeToken();
+        write({ action: "createResumeToken", token });
+      });
+
+      document.getElementById("btn-list").addEventListener("click", () => {
+        const tokens = runtime.listResumeTokens();
+        write({ action: "listResumeTokens", tokens });
+      });
+
+      document.getElementById("btn-clear").addEventListener("click", () => {
+        runtime.clearDraft();
+        write({ action: "clearDraft" });
+      });
+    </script>
+  </body>
+</html>

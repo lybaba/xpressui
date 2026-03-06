@@ -160,6 +160,8 @@ Static browser demos are available in [`./demos`](/home/lyb/projects/xpressui/de
 - [`view-photo-gallery.html`](/home/lyb/projects/xpressui/demos/view-photo-gallery.html) (`mode="view"`)
 - [`hybrid-ecommerce.html`](/home/lyb/projects/xpressui/demos/hybrid-ecommerce.html) (`mode="hybrid"`)
 - [`hybrid-output-snapshot.html`](/home/lyb/projects/xpressui/demos/hybrid-output-snapshot.html) (`mode="hybrid"` + `form-ui:output-snapshot`)
+- [`headless-runtime.html`](/home/lyb/projects/xpressui/demos/headless-runtime.html) (headless `FormRuntime` only)
+- [`remote-resume-flow.html`](/home/lyb/projects/xpressui/demos/remote-resume-flow.html) (remote save/resume token lifecycle)
 
 For GitHub Pages packaging:
 

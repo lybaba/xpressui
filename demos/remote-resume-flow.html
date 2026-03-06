@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui remote save/resume demo</title>
+    <link rel="stylesheet" href="../index.css" />
+    <style>
+      :root {
+        --bg: #eef6ff;
+        --ink: #0f172a;
+        --muted: #475569;
+        --line: #cbd5e1;
+        --panel: #ffffff;
+        --accent: #1d4ed8;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background:
+          radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.15), transparent 34%),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+
+      main {
+        max-width: 1260px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+
+      h1 { margin: 0 0 8px; }
+      p { margin: 0; color: var(--muted); }
+      a { color: #0c4a6e; }
+
+      .layout {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        gap: 20px;
+        align-items: start;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      button {
+        border: 1px solid #93c5fd;
+        border-radius: 999px;
+        background: #fff;
+        color: #1d4ed8;
+        padding: 7px 12px;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      h2 { margin: 0 0 10px; font-size: 1rem; }
+
+      pre {
+        margin: 0;
+        border-radius: 12px;
+        background: #0f172a;
+        color: #dbeafe;
+        padding: 12px;
+        overflow: auto;
+        min-height: 220px;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .token {
+        margin: 0 0 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px dashed #93c5fd;
+        color: #1d4ed8;
+        font-size: 0.92rem;
+        word-break: break-all;
+      }
+
+      @media (max-width: 980px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>Remote Save / Resume Flow</h1>
+      <p>
+        Démo de cycle complet token distant: create, lookup, restore, invalidate,
+        avec endpoint mocké en local via <code>window.fetch</code>.
+      </p>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="controls">
+            <button class="primary" id="btn-create" type="button">Create Remote Token</button>
+            <button id="btn-lookup" type="button">Lookup Token</button>
+            <button id="btn-restore" type="button">Restore Token</button>
+            <button id="btn-invalidate" type="button">Invalidate Token</button>
+          </div>
+          <div class="token" id="token-value">Current token: none</div>
+          <div id="app"></div>
+        </section>
+
+        <aside class="panel">
+          <h2>Flow Output</h2>
+          <pre id="result">{}</pre>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module">
+      import { mountFormUI } from "../dist/xpressui.mjs";
+
+      const app = document.getElementById("app");
+      const result = document.getElementById("result");
+      const tokenValue = document.getElementById("token-value");
+
+      const write = (payload) => {
+        result.textContent = JSON.stringify(payload, null, 2);
+      };
+
+      const fakeRemoteStore = new Map();
+      const originalFetch = window.fetch.bind(window);
+
+      window.fetch = async (input, init = {}) => {
+        const requestUrl =
+          typeof input === "string"
+            ? input
+            : input instanceof Request
+              ? input.url
+              : "";
+
+        if (!requestUrl.includes("/api/resume")) {
+          return originalFetch(input, init);
+        }
+
+        const method = String(init.method || "POST").toUpperCase();
+        const parsedUrl = new URL(requestUrl, window.location.origin);
+
+        if (method === "GET") {
+          const token = parsedUrl.searchParams.get("token") || "";
+          const entry = fakeRemoteStore.get(token);
+          if (!entry) {
+            return new Response(JSON.stringify({ operation: "lookup", found: false }), {
+              status: 404,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          return new Response(JSON.stringify({
+            operation: "lookup",
+            token,
+            found: true,
+            snapshot: entry.snapshot,
+            metadata: entry.metadata,
+          }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        if (method === "DELETE") {
+          const token = parsedUrl.searchParams.get("token") || "";
+          const invalidated = fakeRemoteStore.delete(token);
+          return new Response(JSON.stringify({ operation: "invalidate", token, invalidated }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        const bodyText = typeof init.body === "string" ? init.body : "{}";
+        const payload = JSON.parse(bodyText || "{}");
+
+        if (payload.operation === "lookup") {
+          const token = String(payload.token || "");
+          const entry = fakeRemoteStore.get(token);
+          if (!entry) {
+            return new Response(JSON.stringify({ operation: "lookup", found: false }), {
+              status: 404,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          return new Response(JSON.stringify({
+            operation: "lookup",
+            token,
+            found: true,
+            snapshot: entry.snapshot,
+            metadata: entry.metadata,
+          }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        const token = `remote_${Math.random().toString(36).slice(2, 10)}`;
+        const snapshot = payload.snapshot || {};
+        const metadata = {
+          createdAt: Date.now(),
+          formName: payload.formName || "unknown",
+        };
+        fakeRemoteStore.set(token, { snapshot, metadata });
+
+        return new Response(JSON.stringify({
+          operation: "create",
+          token,
+          snapshot,
+          metadata,
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      };
+
+      const form = mountFormUI(app, {
+        version: 1,
+        id: "remote_resume_demo",
+        uid: "remote_resume_demo_uid",
+        type: "contactform",
+        name: "remote-resume-demo",
+        title: "Remote Resume Demo",
+        storage: {
+          mode: "draft",
+          adapter: "local-storage",
+          key: "xpressui:demo:remote-resume",
+          autoSaveMs: 0,
+          resumeEndpoint: "/api/resume",
+        },
+        fields: [
+          { type: "text", name: "full_name", label: "Full Name", required: true },
+          { type: "email", name: "email", label: "Email", required: true },
+          { type: "datetime", name: "slot", label: "Preferred Slot", required: true },
+          { type: "textarea", name: "notes", label: "Notes" },
+        ],
+      });
+
+      form.addEventListener("form-ui:resume-token-restored", (event) => {
+        write({ type: "resume-token-restored", detail: event.detail });
+      });
+
+      form.addEventListener("form-ui:draft-restored", (event) => {
+        write({ type: "draft-restored", detail: event.detail });
+      });
+
+      form.addEventListener("form-ui:resume-token-invalidated", (event) => {
+        write({ type: "resume-token-invalidated", detail: event.detail });
+      });
+
+      let activeToken = "";
+      const refreshTokenLabel = () => {
+        tokenValue.textContent = `Current token: ${activeToken || "none"}`;
+      };
+
+      document.getElementById("btn-create").addEventListener("click", async () => {
+        try {
+          activeToken = await form.createResumeTokenAsync();
+          refreshTokenLabel();
+          write({ action: "createResumeTokenAsync", token: activeToken, knownTokens: form.listResumeTokens() });
+        } catch (error) {
+          write({ action: "createResumeTokenAsync", error: String(error) });
+        }
+      });
+
+      document.getElementById("btn-lookup").addEventListener("click", async () => {
+        if (!activeToken) {
+          write({ action: "lookupResumeToken", error: "No token yet" });
+          return;
+        }
+        try {
+          const lookup = await form.lookupResumeToken(activeToken);
+          write({ action: "lookupResumeToken", token: activeToken, lookup });
+        } catch (error) {
+          write({ action: "lookupResumeToken", token: activeToken, error: String(error) });
+        }
+      });
+
+      document.getElementById("btn-restore").addEventListener("click", async () => {
+        if (!activeToken) {
+          write({ action: "restoreFromResumeTokenAsync", error: "No token yet" });
+          return;
+        }
+        try {
+          const restored = await form.restoreFromResumeTokenAsync(activeToken);
+          write({ action: "restoreFromResumeTokenAsync", token: activeToken, restored });
+        } catch (error) {
+          write({ action: "restoreFromResumeTokenAsync", token: activeToken, error: String(error) });
+        }
+      });
+
+      document.getElementById("btn-invalidate").addEventListener("click", async () => {
+        if (!activeToken) {
+          write({ action: "invalidateResumeToken", error: "No token yet" });
+          return;
+        }
+        try {
+          const invalidated = await form.invalidateResumeToken(activeToken);
+          write({ action: "invalidateResumeToken", token: activeToken, invalidated });
+          if (invalidated) {
+            activeToken = "";
+            refreshTokenLabel();
+          }
+        } catch (error) {
+          write({ action: "invalidateResumeToken", token: activeToken, error: String(error) });
+        }
+      });
+
+      write({ message: "Ready", knownTokens: form.listResumeTokens() });
+      refreshTokenLabel();
+    </script>
+  </body>
+</html>

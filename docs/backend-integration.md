@@ -365,6 +365,24 @@ Recommended `DELETE` response:
 
 `204` still works for backward compatibility.
 
+### Signed Resume Token Hooks
+
+For local/remote resume cache hardening, storage config can provide:
+
+- `resumeTokenSignatureVersion`
+- `signResumeToken(payload)` -> returns signature string
+- `verifyResumeToken(payload)` -> returns boolean
+
+When verification fails, runtime emits:
+
+- `form-ui:resume-token-invalid-signature`
+
+The payload includes:
+- `token`
+- `savedAt`
+- `resumeEndpoint`
+- `signatureVersion`
+
 ## Standard Provider Response Envelope
 
 `xpressui` can normalize older provider responses, but the recommended backend

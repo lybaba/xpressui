@@ -31,7 +31,9 @@ responses your frontend can rely on.
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events
 - `submit.transport(values, context)` lets the host app fully control the
-  submission transport without using built-in `fetch` logic
+  submission transport without using built-in `fetch` logic. Supported return
+  shapes are `Response`, `{ result }`, or `{ response, result? }` where
+  `response` is a native `Response`.
 - `validation.preValidate/customValidate/postValidate` allows host-defined
   validation hooks in the runtime validation chain
 

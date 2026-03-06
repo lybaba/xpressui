@@ -508,6 +508,10 @@ Supported submit options:
 - `providerResponseContract` (`compat`, `warn-v2`, `strict-v2`)
 - `lifecycle` (`preSubmit`, `postSuccess`, `postFailure`)
 - `transport(values, context)` (optional custom transport override)
+  - accepted return shapes:
+  - `{ result }`
+  - `{ response, result? }` where `response` is a native `Response`
+  - direct `Response` instance
 
 Custom transport example:
 

@@ -5360,6 +5360,80 @@ export class FormUI extends HTMLElement {
     return this.upload.submit(formValues, submitConfig, this.engine.getFields());
   }
 
+  parseTransportResponsePayload = async (response: Response): Promise<any> => {
+    if (response.status === 204 || response.status === 205) {
+      return null;
+    }
+    const contentType = response.headers.get("Content-Type") || "";
+    if (contentType.includes("application/json")) {
+      try {
+        return await response.clone().json();
+      } catch {
+        return null;
+      }
+    }
+    try {
+      const text = await response.clone().text();
+      return text ? text : null;
+    } catch {
+      return null;
+    }
+  }
+
+  createSubmitResponseError = (response: Response, result: any): Error & { response: Response; result: any } => {
+    const error = new Error(
+      result && typeof result === "object" && typeof result.error === "string"
+        ? result.error
+        : `Submit failed with status ${response.status}`,
+    ) as Error & { response: Response; result: any };
+    error.response = response;
+    error.result = result;
+    return error;
+  }
+
+  resolveTransportResult = async (
+    transportResult: any,
+  ): Promise<{ response?: Response; result: any }> => {
+    if (transportResult instanceof Response) {
+      const result = await this.parseTransportResponsePayload(transportResult);
+      if (!transportResult.ok) {
+        throw this.createSubmitResponseError(transportResult, result);
+      }
+      return {
+        response: transportResult,
+        result,
+      };
+    }
+
+    if (
+      transportResult &&
+      typeof transportResult === "object" &&
+      ("response" in transportResult || "result" in transportResult)
+    ) {
+      const response = (transportResult as any).response;
+      if (response !== undefined && !(response instanceof Response)) {
+        throw new Error("submit.transport envelope response must be a Response instance.");
+      }
+      const result =
+        (transportResult as any).result !== undefined
+          ? (transportResult as any).result
+          : response
+            ? await this.parseTransportResponsePayload(response)
+            : undefined;
+      if (response && !response.ok) {
+        throw this.createSubmitResponseError(response, result);
+      }
+      return {
+        response,
+        result,
+      };
+    }
+
+    return {
+      result: transportResult,
+    };
+  }
+
   emitApprovalStateEvents = (
     detail: TFormUISubmitDetail,
     result: any,
@@ -5614,18 +5688,16 @@ export class FormUI extends HTMLElement {
     try {
       const submitConfig = this.formConfig?.submit as TFormSubmitRequest;
       const transportResult = customTransport
-        ? await customTransport(formValues, {
-          formConfig: this.formConfig,
-          submit: submitConfig,
-          fields: this.engine.getFields(),
-        })
+        ? await this.resolveTransportResult(
+          await customTransport(formValues, {
+            formConfig: this.formConfig,
+            submit: submitConfig,
+            fields: this.engine.getFields(),
+          }),
+        )
         : await this.submitToApi(formValues, submitConfig);
-      const response = transportResult && typeof transportResult === "object" && "response" in transportResult
-        ? (transportResult as any).response
-        : undefined;
-      const result = transportResult && typeof transportResult === "object" && "result" in transportResult
-        ? (transportResult as any).result
-        : transportResult;
+      const response = transportResult?.response;
+      const result = transportResult?.result;
       this.enforceProviderResponseContract(result, submitConfig);
       const providerResult = normalizeProviderResult(
         submitConfig.action,

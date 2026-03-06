@@ -111,6 +111,7 @@ export type TFormSubmitTransportContext = {
 };
 
 export type TFormSubmitTransportResult =
+  | Response
   | {
       response?: Response;
       result?: any;

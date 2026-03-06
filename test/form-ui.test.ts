@@ -2996,6 +2996,66 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports submit.transport returning a Response directly', async () => {
+    const transport = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ submittedBy: 'response-transport' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-transport-response-form',
+      title: 'Submit Transport Response Form',
+      submit: {
+        endpoint: '/api/ignored-by-transport-response',
+        method: 'POST',
+        transport,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const onSubmitSuccess = vi.fn();
+    element.addEventListener('form-ui:submit-success', (event) => {
+      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await element.onSubmit({ email: 'response-transport@example.com' });
+
+    expect(onSubmitSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          submittedBy: 'response-transport',
+        },
+      }),
+    );
+  });
+
+  it('fails submit.transport envelope when response is not a Response instance', async () => {
+    const transport = vi.fn().mockResolvedValue({
+      response: { status: 200 },
+      result: { ok: true },
+    });
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'submit-transport-invalid-response-envelope-form',
+      title: 'Submit Transport Invalid Envelope Form',
+      submit: {
+        endpoint: '/api/ignored-by-transport-invalid-envelope',
+        method: 'POST',
+        transport,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    await expect(
+      element.onSubmit({ email: 'invalid-envelope@example.com' }),
+    ).rejects.toThrow(/submit\.transport envelope response must be a Response instance/i);
+  });
+
   it('supports validation hooks in the validation pipeline', () => {
     const container = document.createElement('div');
     const preValidate = vi.fn().mockImplementation((values) => ({

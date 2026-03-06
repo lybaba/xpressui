@@ -186,7 +186,7 @@ type TFormOutputRendererContext = {
   mediaDisplayPolicy: TMediaDisplayPolicy;
 };
 type TFormOutputRenderer = (context: TFormOutputRendererContext) => HTMLElement;
-type TOutputRendererType = "text" | "html" | "image" | "file" | "video" | "link";
+type TOutputRendererType = "text" | "html" | "image" | "file" | "video" | "audio" | "map" | "link";
 type TFieldOutputRendererOverride = string | TFormOutputRenderer;
 type TMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery";
 type TFormHtmlSanitizer = (
@@ -603,6 +603,64 @@ export class FormUI extends HTMLElement {
     return entries.filter((entry): entry is string => typeof entry === "string" && Boolean(entry));
   }
 
+  getMapSources = (value: any): string[] => {
+    const fromEntry = (entry: any): string[] => {
+      if (entry === undefined || entry === null) {
+        return [];
+      }
+
+      if (typeof entry === "string") {
+        return entry ? [entry] : [];
+      }
+
+      if (Array.isArray(entry)) {
+        return entry.flatMap((item) => fromEntry(item));
+      }
+
+      if (typeof entry === "object") {
+        const latitude = Number((entry as any).lat ?? (entry as any).latitude);
+        const longitude = Number((entry as any).lng ?? (entry as any).lon ?? (entry as any).longitude);
+        if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+          return [`https://www.google.com/maps?q=${latitude},${longitude}&output=embed`];
+        }
+
+        const url =
+          (entry as any).url
+          || (entry as any).href
+          || (entry as any).src
+          || (entry as any).value
+          || "";
+        return typeof url === "string" && url ? [url] : [];
+      }
+
+      return [];
+    };
+
+    return fromEntry(value);
+  }
+
+  isSafeMapEmbedSource = (source: string): boolean => {
+    try {
+      const parsed = new URL(source);
+      if (parsed.protocol !== "https:") {
+        return false;
+      }
+
+      const allowedHosts = new Set([
+        "www.google.com",
+        "maps.google.com",
+        "google.com",
+        "www.openstreetmap.org",
+        "openstreetmap.org",
+        "www.bing.com",
+        "bing.com",
+      ]);
+      return allowedHosts.has(parsed.hostname.toLowerCase());
+    } catch {
+      return false;
+    }
+  }
+
   resolveMediaDisplayPolicy = (
     fieldConfig: TFieldConfig,
     inputElement: HTMLElement | null,
@@ -802,12 +860,103 @@ export class FormUI extends HTMLElement {
       return element;
     };
 
+    const audioRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
+      const element = document.createElement("div");
+      const sources = this.getMediaSources(value);
+      if (!sources.length) {
+        return element;
+      }
+
+      if (mediaDisplayPolicy === "link") {
+        sources.forEach((source) => {
+          const link = document.createElement("a");
+          link.href = source;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.textContent = source;
+          link.style.display = "block";
+          element.appendChild(link);
+        });
+        return element;
+      }
+
+      const renderAudio = (source: string) => {
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.preload = "metadata";
+        audio.src = source;
+        audio.style.width = mediaDisplayPolicy === "thumbnail" ? "220px" : "100%";
+        return audio;
+      };
+
+      if (mediaDisplayPolicy === "gallery") {
+        const list = document.createElement("div");
+        list.setAttribute("data-media-gallery", "true");
+        list.style.display = "grid";
+        list.style.gap = "8px";
+        sources.forEach((source) => {
+          list.appendChild(renderAudio(source));
+        });
+        element.appendChild(list);
+        return element;
+      }
+
+      element.appendChild(renderAudio(sources[0]));
+      return element;
+    };
+
+    const mapRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
+      const element = document.createElement("div");
+      const sources = this.getMapSources(value);
+      if (!sources.length) {
+        return element;
+      }
+
+      if (mediaDisplayPolicy === "link") {
+        sources.forEach((source) => {
+          const link = document.createElement("a");
+          link.href = source;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.textContent = source;
+          link.style.display = "block";
+          element.appendChild(link);
+        });
+        return element;
+      }
+
+      const embedSource = sources.find((source) => this.isSafeMapEmbedSource(source));
+      if (!embedSource) {
+        const fallback = document.createElement("a");
+        fallback.href = sources[0];
+        fallback.target = "_blank";
+        fallback.rel = "noreferrer";
+        fallback.textContent = sources[0];
+        element.appendChild(fallback);
+        return element;
+      }
+
+      const frame = document.createElement("iframe");
+      frame.src = embedSource;
+      frame.loading = "lazy";
+      frame.referrerPolicy = "no-referrer-when-downgrade";
+      frame.style.width = "100%";
+      frame.style.height = mediaDisplayPolicy === "thumbnail" ? "200px" : "320px";
+      frame.style.border = "0";
+      frame.setAttribute("title", "Map preview");
+      frame.setAttribute("allowfullscreen", "");
+      element.appendChild(frame);
+      return element;
+    };
+
     return {
       text: textRenderer,
       html: htmlRenderer,
       image: imageRenderer,
       file: fileRenderer,
       video: videoRenderer,
+      audio: audioRenderer,
+      map: mapRenderer,
       link: linkRenderer,
     };
   }
@@ -1237,6 +1386,12 @@ export class FormUI extends HTMLElement {
       if (subType.includes("video")) {
         return "video";
       }
+      if (subType.includes("audio")) {
+        return "audio";
+      }
+      if (subType.includes("map")) {
+        return "map";
+      }
       if (subType.includes("file") || subType.includes("document")) {
         return "file";
       }
@@ -1261,10 +1416,16 @@ export class FormUI extends HTMLElement {
       if (accept.includes("video/")) {
         return "video";
       }
+      if (accept.includes("audio/")) {
+        return "audio";
+      }
       return "file";
     }
 
     if (fieldConfig.type === LINK_TYPE || fieldConfig.type === URL_TYPE) {
+      if (subType.includes("map")) {
+        return "map";
+      }
       return "link";
     }
 
@@ -1282,6 +1443,10 @@ export class FormUI extends HTMLElement {
 
     if (fieldConfig.type === "video" || accept.includes("video/")) {
       return "video";
+    }
+
+    if (fieldConfig.type === "audio" || accept.includes("audio/")) {
+      return "audio";
     }
 
     if (fieldConfig.type === TEXT_TYPE || fieldConfig.type === TEXTAREA_TYPE) {

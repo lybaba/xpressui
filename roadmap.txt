@@ -297,10 +297,13 @@ Completed MVP scope:
   - `viewTemplate` / `data-view-template` support for `html` fields
   - escaped placeholder interpolation by default
   - explicit trusted override via `viewTemplateUnsafe`
+- richer resource renderers:
+  - built-in `audio` renderer
+  - built-in `map` renderer (safe embed host allowlist + link fallback)
 
 Remaining:
 - renderer extension docs + production recipes
-- richer resource renderers (e.g. embedded docs/audio maps when needed)
+- richer resource renderers (e.g. embedded docs viewers when needed)
 
 Constraints:
 - avoid coupling runtime to WordPress/Ionic/Redux-specific APIs

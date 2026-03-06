@@ -134,6 +134,8 @@ Built-in renderer types:
 - `image`
 - `file`
 - `video`
+- `audio`
+- `map`
 - `link`
 
 Default renderer inference uses field type + `accept` + `subType/refType` metadata.

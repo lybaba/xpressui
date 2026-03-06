@@ -9,6 +9,8 @@ It helps you:
 - submit data to your backend with normalized payloads
 - plug in common workflows such as reservation and payment
 - build dynamic forms with conditional fields and API-driven select options
+- render resources in `view`/`hybrid` with built-in `text`, `html`, `image`,
+  `file`, `video`, `audio`, `map`, and `link` output renderers
 
 This repository currently ships a browser-focused Web Component library. It is
 not the old React `PostUI` API shown in earlier versions of the README.

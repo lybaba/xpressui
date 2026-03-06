@@ -34,7 +34,7 @@ export type TFormRuntimeSubmitResult = {
   result: any;
 };
 
-export type TFormOutputRendererType = "text" | "html" | "image" | "file" | "video" | "link";
+export type TFormOutputRendererType = "text" | "html" | "image" | "file" | "video" | "audio" | "map" | "link";
 export type TFormMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery";
 export type TFormOutputSnapshot = Record<string, {
   rendererType: TFormOutputRendererType;
@@ -359,6 +359,12 @@ export class FormRuntime {
       if (subType.includes("video")) {
         return "video";
       }
+      if (subType.includes("audio")) {
+        return "audio";
+      }
+      if (subType.includes("map")) {
+        return "map";
+      }
       if (subType.includes("file") || subType.includes("document")) {
         return "file";
       }
@@ -384,15 +390,25 @@ export class FormRuntime {
       if (accept.includes("video/")) {
         return "video";
       }
+      if (accept.includes("audio/")) {
+        return "audio";
+      }
       return "file";
     }
 
     if (fieldConfig.type === LINK_TYPE || fieldConfig.type === URL_TYPE) {
+      if (subType.includes("map")) {
+        return "map";
+      }
       return "link";
     }
 
     if (fieldConfig.type === "video" || accept.includes("video/")) {
       return "video";
+    }
+
+    if (fieldConfig.type === "audio" || accept.includes("audio/")) {
+      return "audio";
     }
 
     if (fieldConfig.type === TEXT_TYPE || fieldConfig.type === TEXTAREA_TYPE) {

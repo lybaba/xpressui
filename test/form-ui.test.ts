@@ -440,6 +440,28 @@ describe('FormUI', () => {
             data-section-name="main"
           />
           <input
+            id="audio_value"
+            name="audio_value"
+            type="text"
+            value="https://cdn.example.test/media/demo.mp3"
+            data-type="file"
+            data-accept="audio/*"
+            data-name="audio_value"
+            data-label="Audio"
+            data-section-name="main"
+          />
+          <input
+            id="map_value"
+            name="map_value"
+            type="text"
+            value="https://www.google.com/maps?q=48.8566,2.3522&output=embed"
+            data-type="link"
+            data-sub-type="map"
+            data-name="map_value"
+            data-label="Map"
+            data-section-name="main"
+          />
+          <input
             id="link_value"
             name="link_value"
             type="text"
@@ -481,6 +503,12 @@ describe('FormUI', () => {
 
     const videoOutput = element.querySelector('#video_value_view video') as HTMLVideoElement;
     expect(videoOutput.getAttribute('src')).toBe('https://cdn.example.test/media/demo.mp4');
+
+    const audioOutput = element.querySelector('#audio_value_view audio') as HTMLAudioElement;
+    expect(audioOutput.getAttribute('src')).toBe('https://cdn.example.test/media/demo.mp3');
+
+    const mapOutput = element.querySelector('#map_value_view iframe') as HTMLIFrameElement;
+    expect(mapOutput.getAttribute('src')).toBe('https://www.google.com/maps?q=48.8566,2.3522&output=embed');
 
     const linkOutput = element.querySelector('#link_value_view a') as HTMLAnchorElement;
     expect(linkOutput.getAttribute('href')).toBe('https://example.test/resource');

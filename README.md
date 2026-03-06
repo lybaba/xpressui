@@ -1358,6 +1358,8 @@ Frontend behavior:
   images are now center-cropped to an ID-card ratio before submit
 - when `TextDetector` is available, `document-scan` can emit OCR text and a
   lightweight MRZ parse for machine-readable identity documents
+- OCR/MRZ payloads now include a normalized contract block
+  (`normalized.contractVersion = "ocr-mrz-v2"`) for stable downstream parsing
 - `documentTextTargetField` can mirror detected OCR text into another field
 - `documentMrzTargetField` can mirror parsed MRZ data into another field
 - `requireValidDocumentMrz: true` blocks validation if the parsed MRZ checksum

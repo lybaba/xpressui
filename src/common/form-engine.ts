@@ -8,6 +8,7 @@ export type TStoredDocumentData = {
   text?: string | null;
   mrz?: Record<string, any> | null;
   fields?: Record<string, any> | null;
+  normalized?: Record<string, any> | null;
 };
 
 function redactDocumentData(
@@ -30,6 +31,15 @@ function redactDocumentData(
 
     case "summary":
       return {
+        ...(data.normalized
+          ? {
+              normalized: {
+                contractVersion: data.normalized.contractVersion,
+                status: data.normalized.status,
+                quality: data.normalized.quality,
+              },
+            }
+          : {}),
         mrz: data.mrz
           ? {
               format: data.mrz.format,
@@ -48,7 +58,11 @@ function redactDocumentData(
 
     case "full":
     default:
-      return { ...data };
+      const fullData = { ...data } as Record<string, any>;
+      if (!fullData.normalized) {
+        delete fullData.normalized;
+      }
+      return fullData;
   }
 }
 

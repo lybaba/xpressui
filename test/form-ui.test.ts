@@ -4738,6 +4738,14 @@ describe('FormUI', () => {
             documentNumber: 'L898902C3',
             valid: true,
           }),
+          normalized: expect.objectContaining({
+            contractVersion: 'ocr-mrz-v2',
+            status: 'mrz_detected',
+            quality: expect.objectContaining({
+              textLength: expect.any(Number),
+              estimatedConfidence: expect.any(Number),
+            }),
+          }),
         }),
       }),
     );
@@ -4791,6 +4799,10 @@ describe('FormUI', () => {
         fields: expect.objectContaining({
           firstName: 'ANNA MARIA',
           lastName: 'ERIKSSON',
+        }),
+        normalized: expect.objectContaining({
+          contractVersion: 'ocr-mrz-v2',
+          status: 'mrz_detected',
         }),
       }),
     );

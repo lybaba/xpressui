@@ -250,6 +250,17 @@ type TDocumentMrzResult = {
   valid?: boolean;
 };
 
+type TDocumentNormalizedContractV2 = {
+  contractVersion: "ocr-mrz-v2";
+  status: "text_only" | "mrz_detected" | "mrz_invalid";
+  quality: {
+    textLength: number;
+    estimatedConfidence: number;
+  };
+  mrz?: TDocumentMrzResult | null;
+  fields?: Record<string, any> | null;
+};
+
 type TDocumentPerspectiveCorners = {
   topLeft: { x: number; y: number };
   topRight: { x: number; y: number };
@@ -260,6 +271,7 @@ type TDocumentPerspectiveCorners = {
 type TDocumentScanInsight = {
   textBySlot: Array<string | null>;
   mrzBySlot: Array<TDocumentMrzResult | null>;
+  normalizedBySlot: Array<TDocumentNormalizedContractV2 | null>;
 };
 
 type TProductListItem = {
@@ -1837,10 +1849,35 @@ export class FormUI extends HTMLElement {
       this.documentScanInsights[fieldConfig.name] = {
         textBySlot: Array.from({ length: slotCount }, () => null),
         mrzBySlot: Array.from({ length: slotCount }, () => null),
+        normalizedBySlot: Array.from({ length: slotCount }, () => null),
       };
     }
 
     return this.documentScanInsights[fieldConfig.name];
+  }
+
+  buildDocumentNormalizedContract = (
+    detectedText: string,
+    mrz: TDocumentMrzResult | null,
+    fields: Record<string, any> | null,
+  ): TDocumentNormalizedContractV2 => {
+    const estimatedConfidence = Math.max(0, Math.min(1, Number((detectedText.length / 64).toFixed(2))));
+    const status: TDocumentNormalizedContractV2["status"] = !mrz
+      ? "text_only"
+      : mrz.valid === false
+        ? "mrz_invalid"
+        : "mrz_detected";
+
+    return {
+      contractVersion: "ocr-mrz-v2",
+      status,
+      quality: {
+        textLength: detectedText.length,
+        estimatedConfidence,
+      },
+      mrz: mrz || null,
+      fields: fields || null,
+    };
   }
 
   resolveFileInputValue = async (fieldConfig: TFieldConfig, input: HTMLInputElement) => {
@@ -2308,14 +2345,27 @@ export class FormUI extends HTMLElement {
             field: fieldConfig.name,
             slot: slotIndex,
             mrz,
+            normalized: this.buildDocumentNormalizedContract(
+              detectedText,
+              mrz || null,
+              normalizedFields,
+            ),
           },
         });
       }
+
+      const normalizedContract = this.buildDocumentNormalizedContract(
+        detectedText,
+        mrz || null,
+        normalizedFields,
+      );
+      insight.normalizedBySlot[slotIndex] = normalizedContract;
 
       this.engine.setDocumentData(fieldConfig.name, {
         text: detectedText,
         mrz,
         fields: normalizedFields,
+        normalized: normalizedContract,
       });
 
       this.emitFormEvent("form-ui:document-data", {
@@ -2327,6 +2377,7 @@ export class FormUI extends HTMLElement {
           slot: slotIndex,
           text: detectedText,
           mrz,
+          normalized: normalizedContract,
         },
       });
 

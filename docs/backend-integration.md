@@ -544,6 +544,19 @@ Suggested success response:
 }
 ```
 
+## Document OCR/MRZ Normalized Contract
+
+When document scan OCR/MRZ is enabled, runtime events and stored document data
+include a normalized block for downstream integrations:
+
+- `normalized.contractVersion = "ocr-mrz-v2"`
+- `normalized.status`: `text_only`, `mrz_detected`, `mrz_invalid`
+- `normalized.quality.textLength`
+- `normalized.quality.estimatedConfidence`
+
+This block is emitted alongside existing `text` / `mrz` / `fields` payloads to
+keep backward compatibility while providing a stricter contract.
+
 Suggested validation failure response:
 
 HTTP status: `422`

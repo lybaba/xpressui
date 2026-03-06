@@ -132,25 +132,7 @@ const stepOneFields = mainFields.filter((field) =>
   field.name === "products" || field.name === "lookbook"
 );
 const checkoutFields = [
-  { type: "text", name: "billing_full_name", label: "Full Name", required: true },
   { type: "email", name: "billing_email", label: "Email", required: true },
-  { type: "tel", name: "billing_phone", label: "Phone", required: true },
-  { type: "text", name: "shipping_address_line1", label: "Address", required: true },
-  { type: "text", name: "shipping_city", label: "City", required: true },
-  { type: "text", name: "shipping_zip", label: "ZIP / Postal Code", required: true },
-  {
-    type: "select-one",
-    name: "shipping_country",
-    label: "Country",
-    required: true,
-    choices: [
-      { value: "FR", label: "France" },
-      { value: "BE", label: "Belgium" },
-      { value: "CH", label: "Switzerland" },
-      { value: "US", label: "United States" }
-    ]
-  },
-  { type: "text", name: "payment_card_name", label: "Cardholder Name", required: true },
   { type: "text", name: "payment_card_number", label: "Card Number", required: true },
   { type: "text", name: "payment_card_expiry", label: "Expiry (MM/YY)", required: true },
   { type: "text", name: "payment_card_cvc", label: "CVC", required: true }
@@ -320,25 +302,7 @@ const form = mountFormUI(app, config);</code></pre>
         field.name === "products" || field.name === "lookbook"
       );
       const checkoutFields = [
-        { type: "text", name: "billing_full_name", label: "Full Name", required: true },
         { type: "email", name: "billing_email", label: "Email", required: true },
-        { type: "tel", name: "billing_phone", label: "Phone", required: true },
-        { type: "text", name: "shipping_address_line1", label: "Address", required: true },
-        { type: "text", name: "shipping_city", label: "City", required: true },
-        { type: "text", name: "shipping_zip", label: "ZIP / Postal Code", required: true },
-        {
-          type: "select-one",
-          name: "shipping_country",
-          label: "Country",
-          required: true,
-          choices: [
-            { value: "FR", label: "France" },
-            { value: "BE", label: "Belgium" },
-            { value: "CH", label: "Switzerland" },
-            { value: "US", label: "United States" }
-          ]
-        },
-        { type: "text", name: "payment_card_name", label: "Cardholder Name", required: true },
         { type: "text", name: "payment_card_number", label: "Card Number", required: true },
         { type: "text", name: "payment_card_expiry", label: "Expiry (MM/YY)", required: true },
         { type: "text", name: "payment_card_cvc", label: "CVC", required: true }

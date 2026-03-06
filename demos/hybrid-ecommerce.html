@@ -127,9 +127,9 @@ if (productsField) {
   choices: lookbookImages
 });
 (config.sections.main || []).push(
-  { type: "setting", name: "checkout_currency_setting", label: "Currency Setting", value: "EUR" },
-  { type: "setting", name: "checkout_shipping_setting", label: "Shipping Setting", value: 8.9 },
-  { type: "setting", name: "checkout_tax_rate_setting", label: "Tax Rate Setting", value: 0.2 }
+  { type: "setting", name: "checkout_currency_setting", label: "Currency Setting", value: "EUR", includeInSubmit: true },
+  { type: "setting", name: "checkout_shipping_setting", label: "Shipping Setting", value: 8.9, includeInSubmit: false },
+  { type: "setting", name: "checkout_tax_rate_setting", label: "Tax Rate Setting", value: 0.2, includeInSubmit: false }
 );
 
 const mainFields = config.sections.main || [];
@@ -308,9 +308,9 @@ const form = mountFormUI(app, config);</code></pre>
         choices: lookbookImages
       });
       (config.sections.main || []).push(
-        { type: "setting", name: "checkout_currency_setting", label: "Currency Setting", value: "EUR" },
-        { type: "setting", name: "checkout_shipping_setting", label: "Shipping Setting", value: 8.9 },
-        { type: "setting", name: "checkout_tax_rate_setting", label: "Tax Rate Setting", value: 0.2 }
+        { type: "setting", name: "checkout_currency_setting", label: "Currency Setting", value: "EUR", includeInSubmit: true },
+        { type: "setting", name: "checkout_shipping_setting", label: "Shipping Setting", value: 8.9, includeInSubmit: false },
+        { type: "setting", name: "checkout_tax_rate_setting", label: "Tax Rate Setting", value: 0.2, includeInSubmit: false }
       );
       // Convert preset into a 2-step checkout:
       // Step 1: product selection only

@@ -135,6 +135,32 @@ export const fieldFactory = {
       ...(overrides || {}),
     });
   },
+
+  settingPublic(
+    name: string,
+    label: string,
+    value: any,
+    overrides?: TFieldOverrides,
+  ): TSimpleFieldInput {
+    return buildField(SETTING_TYPE, name, label, {
+      value,
+      includeInSubmit: true,
+      ...(overrides || {}),
+    });
+  },
+
+  settingSensitive(
+    name: string,
+    label: string,
+    value: any,
+    overrides?: TFieldOverrides,
+  ): TSimpleFieldInput {
+    return buildField(SETTING_TYPE, name, label, {
+      value,
+      includeInSubmit: false,
+      ...(overrides || {}),
+    });
+  },
 };
 
 export const stepFactory = {
@@ -373,6 +399,9 @@ function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput | TFormCo
         name: "ecommerce-checkout-form",
         title: "E-commerce Checkout",
         fields: [
+          fieldFactory.settingPublic("checkout_currency_setting", "Currency Setting", "EUR"),
+          fieldFactory.settingSensitive("checkout_shipping_setting", "Shipping Setting", 8.9),
+          fieldFactory.settingSensitive("checkout_tax_rate_setting", "Tax Rate Setting", 0.2),
           fieldFactory.text("customer_name", "Customer Name", { required: true }),
           fieldFactory.email("customer_email", "Email", { required: true }),
           fieldFactory.productList(

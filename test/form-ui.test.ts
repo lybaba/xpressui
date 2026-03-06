@@ -226,6 +226,26 @@ describe('FormUI', () => {
       label: 'Tax Rate',
       value: 0.2,
     });
+
+    expect(
+      fieldFactory.settingPublic('currency', 'Currency', 'EUR'),
+    ).toEqual({
+      type: 'setting',
+      name: 'currency',
+      label: 'Currency',
+      value: 'EUR',
+      includeInSubmit: true,
+    });
+
+    expect(
+      fieldFactory.settingSensitive('internal_token', 'Internal Token', 'secret'),
+    ).toEqual({
+      type: 'setting',
+      name: 'internal_token',
+      label: 'Internal Token',
+      value: 'secret',
+      includeInSubmit: false,
+    });
   });
 
   it('provides business form presets that can be converted to mountable markup', () => {
@@ -275,6 +295,22 @@ describe('FormUI', () => {
       'document_step',
       'review_step',
     ]);
+    expect(
+      ecommercePreset.sections.main?.find((field) => field.name === 'checkout_currency_setting'),
+    ).toEqual(
+      expect.objectContaining({
+        type: 'setting',
+        includeInSubmit: true,
+      }),
+    );
+    expect(
+      ecommercePreset.sections.main?.find((field) => field.name === 'checkout_shipping_setting'),
+    ).toEqual(
+      expect.objectContaining({
+        type: 'setting',
+        includeInSubmit: false,
+      }),
+    );
     expect(ecommercePreset.sections.main?.some((field) => field.type === 'product-list')).toBe(true);
     expect(ecommercePreset.sections.main?.some((field) => field.name === 'products')).toBe(true);
   });

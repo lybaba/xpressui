@@ -245,7 +245,7 @@ Exit criteria:
 
 
 Phase 6: Demo and Developer Experience
-Status: In progress
+Status: In progress (expanded)
 
 Goal:
 Make the product easy to understand, adopt, and validate quickly.
@@ -258,19 +258,19 @@ Completed:
 - dedicated demos for:
   - `view` mode photo gallery
   - `hybrid` ecommerce checkout with product-list and image-gallery
-
-Remaining:
 - richer demo coverage:
   - simple one-page approval flow
   - remote save/resume flow
   - provider transition flow
-- snippet generation directly from form config
 - dedicated “headless only” demo without `FormUI`
+
+Remaining:
+- snippet generation directly from form config
 - docs that mirror demo scenarios exactly
 
 
 Phase 7: View Runtime and Resource Rendering
-Status: In progress (MVP shipped)
+Status: In progress (hardening complete, extending)
 
 Goal:
 Let one runtime support both data capture and data presentation so a `FormUI`
@@ -282,9 +282,9 @@ Completed MVP scope:
   - `view`
   - `hybrid`
 - output renderer registry by field type:
-  - text / html / image / file / video / link
+  - text / html / image / file / document / video / audio / map / link
 - media/resource display policies:
-  - thumbnail / large / link / gallery
+  - thumbnail / large / link / gallery / embed
 - shared output snapshot API reusable by:
   - debug/admin tools
   - headless consumers
@@ -300,10 +300,11 @@ Completed MVP scope:
 - richer resource renderers:
   - built-in `audio` renderer
   - built-in `map` renderer (safe embed host allowlist + link fallback)
+  - built-in `document` renderer (embedded PDF preview + safe link fallback)
+- renderer extension docs + production recipes
 
 Remaining:
-- renderer extension docs + production recipes
-- richer resource renderers (e.g. embedded docs viewers when needed)
+- richer resource renderers (advanced embedded docs viewers when needed)
 
 Constraints:
 - avoid coupling runtime to WordPress/Ionic/Redux-specific APIs
@@ -362,26 +363,27 @@ Priority Backlog
 ----------------
 
 P0:
-- complete Phase 7 hardening:
-  - secure template rendering for view blocks
-  - accessibility and keyboard/focus improvements for modal/drawer overlays
-  - renderer extension cookbook and production recipes
-
-P1:
 - signed / shareable resume tokens
 - harden presigned upload retries
 
+P1:
+- stronger OCR / MRZ normalization contracts
+- file/document privacy controls by field
+- upload policy hooks:
+  - virus scan callback
+  - content moderation callback
+  - file acceptance callback
+
 P2:
-- add more demos for headless and remote resume flows
 - improve API boundary docs and stable export documentation
 - reduce bundle size by trimming non-essential runtime paths
 - workflow snapshots reusable by admin/debug tools
+- snippet generation directly from form config
 
 P3:
 - View runtime hardening:
-  - secure template rendering for view content
-  - accessibility and keyboard/focus improvements for modal/drawer overlays
-  - renderer extension cookbook and advanced output adapters
+  - advanced output adapters
+  - richer embedded document viewers when needed
 
 
 Next Best Task
@@ -389,21 +391,18 @@ Next Best Task
 
 The most immediately profitable next feature is:
 
-- complete Phase 7 hardening:
-  - secure template rendering for view blocks
-  - accessibility and keyboard/focus improvements for modal/drawer overlays
-  - renderer extension cookbook and production recipes
+- signed / shareable resume tokens
 
 Why:
-- this is now the highest-risk product surface after the provider backlog was covered
-- it improves UX quality and production safety for view/hybrid commerce use cases
-- it reduces integration friction for host apps needing accessible, override-friendly renderers
+- it unlocks cross-device continuation for real workflows
+- it complements the already shipped remote resume API contracts
+- it provides a clear adoption win for production integrations
 
 Suggested first scope:
-- add focus trap + escape behavior for cart/gallery modals and restore focus on close
-- add ARIA semantics (`aria-modal`, labels, hidden background interaction)
-- document secure template patterns and renderer override recipes
+- add signed token generation/verification hooks on create/lookup
+- include token metadata (`issuedAt`, `expiresAt`, `signatureVersion`)
+- expose signature validation errors through normalized runtime events
 
 Follow-up scope (after current P0):
-- signed / shareable resume tokens
 - harden presigned upload retries
+- stronger OCR / MRZ normalization contracts

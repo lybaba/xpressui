@@ -146,7 +146,7 @@ Exit criteria:
 
 
 Phase 3: Save, Resume, and Offline Continuation
-Status: In progress
+Status: In progress (cross-device MVP shipped)
 
 Goal:
 Make interrupted workflows resumable locally and remotely.
@@ -372,7 +372,9 @@ Priority Backlog
 ----------------
 
 P0:
-- signed / shareable resume tokens
+- harden signed shareable token exchange contract:
+  - backend policy/rate limits
+  - abuse controls (attempt caps, claim throttling, expiration enforcement)
 - harden presigned upload retries
 
 P1:
@@ -400,18 +402,18 @@ Next Best Task
 
 The most immediately profitable next feature is:
 
-- signed / shareable resume tokens
+- harden presigned upload retries
 
 Why:
-- it unlocks cross-device continuation for real workflows
-- it complements the already shipped remote resume API contracts
-- it provides a clear adoption win for production integrations
+- it is the highest operational risk in production file flows
+- it directly improves reliability for business-critical uploads
+- it complements existing presigned upload strategy already in place
 
 Suggested first scope:
-- add signed token generation/verification hooks on create/lookup
-- include token metadata (`issuedAt`, `expiresAt`, `signatureVersion`)
-- expose signature validation errors through normalized runtime events
+- add bounded retry policy for presigned upload failures
+- include retry diagnostics in upload events (`attempt`, `nextRetryAt`, `reason`)
+- persist retry-safe state for interrupted uploads when feasible
 
 Follow-up scope (after current P0):
-- harden presigned upload retries
+- harden signed shareable token exchange contract (policy/rate limits)
 - stronger OCR / MRZ normalization contracts

@@ -57,6 +57,7 @@ import {
 import type { TFormProviderTransition, TNormalizedProviderResult } from "./common/provider-registry";
 export {
   createFormConfig,
+  createMountSnippet,
   createTemplateMarkup,
   mountFormUI,
 } from "./common/form-builder";

@@ -23,12 +23,15 @@ The public API is centered on:
 - `FormUploadRuntime` (the dedicated upload runtime)
 - `mountFormUI(...)`
 - `createFormConfig(...)`
+- `createMountSnippet(...)`
 - `createFormPreset(...)`
 - `fieldFactory`
 - `createTemplateMarkup(...)`
 
 The recommended path is `mountFormUI(...)`, which lets you mount a form from a
 plain object without hand-writing a full HTML template.
+If you need scaffolding code from an existing config object, use
+`createMountSnippet(...)`.
 
 `FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
 active template issues on the mounted component.
@@ -43,6 +46,7 @@ For storage/debug tooling outside the component instance, use
 Public API you should treat as stable:
 - `mountFormUI(...)`
 - `createFormConfig(...)`
+- `createMountSnippet(...)`
 - `createFormPreset(...)`
 - `fieldFactory`
 - `createTemplateMarkup(...)`
@@ -139,6 +143,29 @@ const form = createFormPreset('identity-check', {
 });
 
 mountFormUI(container, form);
+```
+
+## Snippet Generation
+
+Generate a ready-to-paste mount snippet from a form config:
+
+```ts
+import { createFormConfig, createMountSnippet } from '@lybaba/xpressui';
+
+const formConfig = createFormConfig({
+  name: 'contact-form',
+  title: 'Contact',
+  fields: [
+    { name: 'email', label: 'Email', type: 'email', required: true },
+  ],
+});
+
+const snippet = createMountSnippet(formConfig, {
+  containerSelector: '#app',
+  configVariableName: 'contactFormConfig',
+});
+
+console.log(snippet);
 ```
 
 Available presets:

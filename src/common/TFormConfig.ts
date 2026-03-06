@@ -66,6 +66,9 @@ export type TFormSubmitRequest = {
     uploadRetryBaseDelayMs?: number;
     uploadRetryMaxDelayMs?: number;
     uploadRetryJitter?: boolean;
+    fileAcceptancePolicy?: TFormUploadPolicyHook;
+    contentModerationPolicy?: TFormUploadPolicyHook;
+    virusScanPolicy?: TFormUploadPolicyHook;
     action?: string;
     lifecycle?: TFormSubmitLifecycle;
     transport?: TFormSubmitTransport;
@@ -113,6 +116,30 @@ export type TFormSubmitTransport = (
     values: Record<string, any>,
     context: TFormSubmitTransportContext,
 ) => TFormSubmitTransportResult | Promise<TFormSubmitTransportResult>;
+
+export type TFormUploadPolicyStage = 'file-acceptance' | 'content-moderation' | 'virus-scan';
+
+export type TFormUploadPolicyContext = {
+    stage: TFormUploadPolicyStage;
+    fieldName: string;
+    file: File;
+    values: Record<string, any>;
+    submit: TFormSubmitRequest;
+    formConfig: TFormConfig | null;
+    field?: TFieldConfig;
+};
+
+export type TFormUploadPolicyResult =
+    | boolean
+    | string
+    | {
+        allowed?: boolean;
+        reason?: string;
+      };
+
+export type TFormUploadPolicyHook = (
+    context: TFormUploadPolicyContext,
+) => TFormUploadPolicyResult | Promise<TFormUploadPolicyResult>;
 
 export type TFormValidationContext = {
     formConfig: TFormConfig | null;

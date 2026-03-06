@@ -1314,6 +1314,14 @@ Runtime diagnostics are emitted through `form-ui:upload-retry` with:
 - `result.nextRetryAt`
 - `result.reason`
 
+Optional policy hooks can run before any upload starts:
+- `submit.fileAcceptancePolicy(context)`
+- `submit.contentModerationPolicy(context)`
+- `submit.virusScanPolicy(context)`
+
+When a policy rejects a file, runtime emits `form-ui:file-policy-rejected` and
+submission is interrupted before binary transfer.
+
 Minimal Express example:
 
 ```ts

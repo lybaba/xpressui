@@ -1307,6 +1307,9 @@ Frontend behavior:
 - `submit.uploadRetryBaseDelayMs` (default `500`) controls base backoff delay
 - `submit.uploadRetryMaxDelayMs` (default `5000`) caps retry delay
 - `submit.uploadRetryJitter` adds small random jitter to retries
+- `submit.fileAcceptancePolicy(context)` can reject files before upload
+- `submit.contentModerationPolicy(context)` can block policy-violating media
+- `submit.virusScanPolicy(context)` can enforce external scan verdicts
 - `qr-scan` can start a live camera session and scan directly from the video
   stream when `getUserMedia` and `BarcodeDetector` are available
 - `document-scan` keeps a lightweight two-slot front/back workflow; its
@@ -1330,6 +1333,7 @@ Frontend behavior:
 
 Extra event:
 - `form-ui:file-validation-error`
+- `form-ui:file-policy-rejected`
 - `form-ui:queue-disabled-for-files`
 - `form-ui:upload-start`
 - `form-ui:upload-progress`

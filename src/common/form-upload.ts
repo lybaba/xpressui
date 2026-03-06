@@ -1,5 +1,10 @@
 import TFieldConfig from "./TFieldConfig";
-import { TFormSubmitRequest } from "./TFormConfig";
+import {
+  TFormSubmitRequest,
+  TFormUploadPolicyHook,
+  TFormUploadPolicyResult,
+  TFormUploadPolicyStage,
+} from "./TFormConfig";
 import { isFileLikeValue } from "./field";
 import { buildFormDataBody, resolveSubmitRequestUrl, submitFormValues } from "./form-submit";
 
@@ -164,6 +169,27 @@ function getRetryDelayMs(policy: TUploadRetryPolicy, attempt: number): number {
   return clamped + jitter;
 }
 
+function isUploadPolicyAllowed(result: TFormUploadPolicyResult): { allowed: boolean; reason?: string } {
+  if (typeof result === "boolean") {
+    return { allowed: result };
+  }
+  if (typeof result === "string") {
+    return {
+      allowed: false,
+      reason: result,
+    };
+  }
+  if (result && typeof result === "object") {
+    const allowed = result.allowed !== false;
+    return {
+      allowed,
+      reason: result.reason,
+    };
+  }
+
+  return { allowed: true };
+}
+
 export class FormUploadRuntime {
   emitEvent: NonNullable<TFormUploadRuntimeOptions["emitEvent"]>;
 
@@ -195,6 +221,7 @@ export class FormUploadRuntime {
   ): Promise<{ response: Response; result: any }> {
     const fileFieldNames = getFileFieldNames(values, fieldMap);
     const hasFileValues = fileFieldNames.length > 0;
+    await this.runUploadPolicies(values, submitConfig, fieldMap, fileFieldNames);
 
     if (!hasFileValues || submitConfig.mode !== "form-data") {
       return submitFormValues(values, submitConfig, fieldMap);
@@ -208,6 +235,87 @@ export class FormUploadRuntime {
     }
 
     return this.submitMultipart(values, submitConfig, fieldMap, fileFieldNames);
+  }
+
+  async runSingleUploadPolicy(
+    stage: TFormUploadPolicyStage,
+    hook: TFormUploadPolicyHook | undefined,
+    values: Record<string, any>,
+    submitConfig: TFormSubmitRequest,
+    fieldMap: Record<string, TFieldConfig>,
+    fileFieldNames: string[],
+  ): Promise<void> {
+    if (!hook || !fileFieldNames.length) {
+      return;
+    }
+
+    for (const fieldName of fileFieldNames) {
+      const fieldValue = values[fieldName];
+      const files = Array.isArray(fieldValue) ? fieldValue : [fieldValue];
+      const uploadFiles = files.filter((entry) => isFileLikeValue(entry)) as File[];
+      for (const file of uploadFiles) {
+        const result = await hook({
+          stage,
+          fieldName,
+          file,
+          values,
+          submit: submitConfig,
+          formConfig: null,
+          field: fieldMap[fieldName],
+        });
+        const decision = isUploadPolicyAllowed(result);
+        if (!decision.allowed) {
+          const reason = decision.reason || `${stage} policy rejected file "${file.name}".`;
+          this.emitEvent("form-ui:file-policy-rejected", {
+            values,
+            submit: submitConfig,
+            result: {
+              stage,
+              fieldName,
+              fileName: file.name,
+              reason,
+            },
+          });
+          throw new Error(reason);
+        }
+      }
+    }
+  }
+
+  async runUploadPolicies(
+    values: Record<string, any>,
+    submitConfig: TFormSubmitRequest,
+    fieldMap: Record<string, TFieldConfig>,
+    fileFieldNames: string[],
+  ): Promise<void> {
+    if (!fileFieldNames.length) {
+      return;
+    }
+
+    await this.runSingleUploadPolicy(
+      "file-acceptance",
+      submitConfig.fileAcceptancePolicy,
+      values,
+      submitConfig,
+      fieldMap,
+      fileFieldNames,
+    );
+    await this.runSingleUploadPolicy(
+      "content-moderation",
+      submitConfig.contentModerationPolicy,
+      values,
+      submitConfig,
+      fieldMap,
+      fileFieldNames,
+    );
+    await this.runSingleUploadPolicy(
+      "virus-scan",
+      submitConfig.virusScanPolicy,
+      values,
+      submitConfig,
+      fieldMap,
+      fileFieldNames,
+    );
   }
 
   async submitMultipart(

@@ -5190,6 +5190,60 @@ describe('FormUI', () => {
     (globalThis as any).XMLHttpRequest = originalXhr;
   });
 
+  it('supports upload policy hooks and rejects blocked files before upload', async () => {
+    const fetchMock = vi.spyOn(window, 'fetch');
+    const rejectedEvents: any[] = [];
+    const fileAcceptancePolicy = vi.fn().mockResolvedValue({
+      allowed: false,
+      reason: 'Executable files are not allowed.',
+    });
+    const runtime = new FormUploadRuntime({
+      emitEvent: (eventName, detail) => {
+        if (eventName === 'form-ui:file-policy-rejected') {
+          rejectedEvents.push(detail.result);
+        }
+        return true;
+      },
+    });
+    const file = new File(['binary'], 'malware.exe', { type: 'application/x-msdownload' });
+
+    await expect(
+      runtime.submit(
+        { attachment: file },
+        {
+          endpoint: 'https://api.example.test/finalize',
+          method: 'POST',
+          mode: 'form-data',
+          fileAcceptancePolicy,
+        },
+        {
+          attachment: {
+            name: 'attachment',
+            label: 'Attachment',
+            type: 'file',
+          },
+        },
+      ),
+    ).rejects.toThrow('Executable files are not allowed.');
+
+    expect(fileAcceptancePolicy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stage: 'file-acceptance',
+        fieldName: 'attachment',
+        file,
+      }),
+    );
+    expect(rejectedEvents).toEqual([
+      expect.objectContaining({
+        stage: 'file-acceptance',
+        fieldName: 'attachment',
+        fileName: 'malware.exe',
+        reason: 'Executable files are not allowed.',
+      }),
+    ]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('disables offline queue for forms that include file fields', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

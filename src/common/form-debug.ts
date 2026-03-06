@@ -46,7 +46,7 @@ export type TFormDebugOutputSnapshotRecord = TFormDebugEventRecord & {
 };
 
 export type TFormDebugWorkflowSnapshotRecord = TFormDebugEventRecord & {
-  type: "form-ui:workflow-step" | "form-ui:workflow-state";
+  type: "form-ui:workflow-step" | "form-ui:workflow-state" | "form-ui:workflow-snapshot";
 };
 
 export type TFormDebugSnapshot = {
@@ -126,6 +126,7 @@ const DEFAULT_DEBUG_EVENTS = [
   "form-ui:step-jumped",
   "form-ui:workflow-state",
   "form-ui:workflow-step",
+  "form-ui:workflow-snapshot",
   "form-ui:resume-share-code-claim-blocked",
   "form-ui:provider-contract-warning",
   "form-ui:validation-i18n-updated",
@@ -195,7 +196,11 @@ export function attachFormDebugObserver(
         lastOutputSnapshot = record as TFormDebugOutputSnapshotRecord;
       }
 
-      if (record.type === "form-ui:workflow-step" || record.type === "form-ui:workflow-state") {
+      if (
+        record.type === "form-ui:workflow-step" ||
+        record.type === "form-ui:workflow-state" ||
+        record.type === "form-ui:workflow-snapshot"
+      ) {
         lastWorkflowSnapshot = record as TFormDebugWorkflowSnapshotRecord;
       }
 

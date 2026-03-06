@@ -3307,13 +3307,21 @@ describe('FormUI', () => {
       'form-ui:submit',
       'form-ui:workflow-state',
       'form-ui:workflow-step',
+      'form-ui:workflow-snapshot',
       'form-ui:workflow-state',
       'form-ui:workflow-step',
+      'form-ui:workflow-snapshot',
       'form-ui:submit-success',
     ]);
+    const firstWorkflowState = observer.getEvents().find((event) => event.type === 'form-ui:workflow-state');
+    expect(firstWorkflowState?.detail?.result?.snapshot).toEqual(
+      expect.objectContaining({
+        workflowState: 'submitting',
+      }),
+    );
     expect(observer.getLastWorkflowSnapshot()).toEqual(
       expect.objectContaining({
-        type: 'form-ui:workflow-step',
+        type: 'form-ui:workflow-snapshot',
         detail: expect.objectContaining({
           result: expect.objectContaining({
             workflowState: 'submitted',
@@ -3324,7 +3332,7 @@ describe('FormUI', () => {
     expect(observer.getSnapshot()).toEqual(
       expect.objectContaining({
         lastWorkflowSnapshot: expect.objectContaining({
-          type: 'form-ui:workflow-step',
+          type: 'form-ui:workflow-snapshot',
         }),
       }),
     );
@@ -9505,16 +9513,22 @@ describe('FormUI', () => {
     expect(element.getWorkflowState()).toBe('pending_approval');
     expect(onWorkflowState).toHaveBeenCalledWith(
       expect.objectContaining({
-        result: {
+        result: expect.objectContaining({
           state: 'submitting',
           approvalState: null,
-        },
+          snapshot: expect.objectContaining({
+            workflowState: 'submitting',
+          }),
+        }),
       })
     );
     expect(onWorkflowState).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        result: {
+        result: expect.objectContaining({
           state: 'pending_approval',
+          snapshot: expect.objectContaining({
+            workflowState: 'pending_approval',
+          }),
           approvalState: expect.objectContaining({
             status: 'pending_approval',
             approvalId: 'apr_123',
@@ -9532,7 +9546,7 @@ describe('FormUI', () => {
               },
             },
           }),
-        },
+        }),
       })
     );
   });

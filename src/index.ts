@@ -4308,11 +4308,10 @@ export class FormUI extends HTMLElement {
       void this.dynamic.refreshRemoteOptions();
       this.syncStepVisibility();
       this.syncStepControls();
-      this.emitFormEvent("form-ui:workflow-step", {
+      this.emitWorkflowSnapshotEvent({
         values: this.form?.getState().values || {},
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
-        result: this.getWorkflowSnapshot(),
       });
       this.emitStepChange();
 
@@ -4567,6 +4566,19 @@ export class FormUI extends HTMLElement {
     return this.steps.getWorkflowSnapshot(values);
   }
 
+  emitWorkflowSnapshotEvent = (
+    detail: Omit<TFormUISubmitDetail, "result">,
+    response?: Response,
+  ) => {
+    const workflowDetail = {
+      ...detail,
+      ...(response ? { response } : {}),
+      result: this.getWorkflowSnapshot(),
+    };
+    this.emitFormEvent("form-ui:workflow-step", workflowDetail);
+    this.emitFormEvent("form-ui:workflow-snapshot", workflowDetail);
+  }
+
   goToWorkflowStep = (state?: string): boolean => {
     if (!this.steps.goToWorkflowStep(state)) {
       return false;
@@ -4586,11 +4598,10 @@ export class FormUI extends HTMLElement {
         stepName: this.getCurrentStepName(),
       },
     });
-    this.emitFormEvent("form-ui:workflow-step", {
+    this.emitWorkflowSnapshotEvent({
       values: this.form?.getState().values || {},
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
-      result: this.getWorkflowSnapshot(),
     });
     this.emitStepChange();
     return true;
@@ -4950,11 +4961,10 @@ export class FormUI extends HTMLElement {
     this.persistence.saveCurrentStepIndex(this.currentStepIndex);
     this.syncStepVisibility();
     this.syncStepControls();
-    this.emitFormEvent("form-ui:workflow-step", {
+    this.emitWorkflowSnapshotEvent({
       values,
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
-      result: this.getWorkflowSnapshot(),
     });
     this.emitStepChange();
     return true;
@@ -4968,11 +4978,10 @@ export class FormUI extends HTMLElement {
     this.persistence.saveCurrentStepIndex(this.currentStepIndex);
     this.syncStepVisibility();
     this.syncStepControls();
-    this.emitFormEvent("form-ui:workflow-step", {
+    this.emitWorkflowSnapshotEvent({
       values: this.form?.getState().values || {},
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
-      result: this.getWorkflowSnapshot(),
     });
     this.emitStepChange();
     return true;
@@ -5006,11 +5015,7 @@ export class FormUI extends HTMLElement {
         stepName: this.getCurrentStepName(),
       };
       if (routed) {
-        this.emitFormEvent("form-ui:workflow-step", {
-          ...detail,
-          response,
-          result: this.getWorkflowSnapshot(),
-        });
+        this.emitWorkflowSnapshotEvent(detail, response);
       }
       return routeResult;
     }
@@ -5025,13 +5030,10 @@ export class FormUI extends HTMLElement {
       result: {
         state: nextState,
         approvalState: this.approvalState,
+        snapshot: this.getWorkflowSnapshot(),
       },
     });
-    this.emitFormEvent("form-ui:workflow-step", {
-      ...detail,
-      response,
-      result: this.getWorkflowSnapshot(),
-    });
+    this.emitWorkflowSnapshotEvent(detail, response);
     return {
       routed,
       stepIndex: this.getCurrentStepIndex(),
@@ -5219,11 +5221,7 @@ export class FormUI extends HTMLElement {
         stepName: this.getCurrentStepName(),
       },
     });
-    this.emitFormEvent("form-ui:workflow-step", {
-      ...detail,
-      response,
-      result: this.getWorkflowSnapshot(),
-    });
+    this.emitWorkflowSnapshotEvent(detail, response);
     return {
       routed: true,
       stepIndex: this.getCurrentStepIndex(),

@@ -1733,6 +1733,7 @@ Event:
 - `form-ui:step-skipped`
 - `form-ui:step-jumped`
 - `form-ui:workflow-step`
+- `form-ui:workflow-snapshot`
 - `form-ui:provider-transition`
 - `form-ui:provider-step-routed`
 - `form-ui:provider-messages`
@@ -1799,6 +1800,7 @@ Provider-specific events:
 - `form-ui:approval-comment-success`
 - `form-ui:approval-comment-error`
 - `form-ui:workflow-state`
+- `form-ui:workflow-snapshot`
 - `form-ui:email-success`
 - `form-ui:email-error`
 - `form-ui:crm-success`

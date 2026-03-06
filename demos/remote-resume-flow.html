@@ -144,6 +144,9 @@
       };
 
       const fakeRemoteStore = new Map();
+      const signatureVersion = "v2";
+      const signPayload = ({ token, savedAt, issuedAt, expiresAt, snapshot }) =>
+        `${token}:${savedAt}:${issuedAt}:${expiresAt}:${snapshot?.draft?.email || ""}`;
       const originalFetch = window.fetch.bind(window);
 
       window.fetch = async (input, init = {}) => {
@@ -174,6 +177,11 @@
             operation: "lookup",
             token,
             found: true,
+            savedAt: entry.savedAt,
+            issuedAt: entry.issuedAt,
+            expiresAt: entry.expiresAt,
+            signatureVersion,
+            signature: entry.signature,
             snapshot: entry.snapshot,
             metadata: entry.metadata,
           }), {
@@ -207,6 +215,11 @@
             operation: "lookup",
             token,
             found: true,
+            savedAt: entry.savedAt,
+            issuedAt: entry.issuedAt,
+            expiresAt: entry.expiresAt,
+            signatureVersion,
+            signature: entry.signature,
             snapshot: entry.snapshot,
             metadata: entry.metadata,
           }), {
@@ -217,15 +230,38 @@
 
         const token = `remote_${Math.random().toString(36).slice(2, 10)}`;
         const snapshot = payload.snapshot || {};
+        const savedAt = Date.now();
+        const issuedAt = savedAt;
+        const expiresAt = issuedAt + 7 * 24 * 60 * 60 * 1000;
+        const signature = signPayload({
+          token,
+          savedAt,
+          issuedAt,
+          expiresAt,
+          snapshot,
+        });
         const metadata = {
-          createdAt: Date.now(),
+          createdAt: savedAt,
           formName: payload.formName || "unknown",
+          signatureVersion: payload.signatureVersion || signatureVersion,
         };
-        fakeRemoteStore.set(token, { snapshot, metadata });
+        fakeRemoteStore.set(token, {
+          snapshot,
+          metadata,
+          savedAt,
+          issuedAt,
+          expiresAt,
+          signature,
+        });
 
         return new Response(JSON.stringify({
           operation: "create",
           token,
+          savedAt,
+          issuedAt,
+          expiresAt,
+          signatureVersion,
+          signature,
           snapshot,
           metadata,
         }), {
@@ -247,6 +283,8 @@
           key: "xpressui:demo:remote-resume",
           autoSaveMs: 0,
           resumeEndpoint: "/api/resume",
+          resumeTokenSignatureVersion: signatureVersion,
+          verifyResumeToken: (payload) => signPayload(payload) === payload.signature,
         },
         fields: [
           { type: "text", name: "full_name", label: "Full Name", required: true },
@@ -266,6 +304,9 @@
 
       form.addEventListener("form-ui:resume-token-invalidated", (event) => {
         write({ type: "resume-token-invalidated", detail: event.detail });
+      });
+      form.addEventListener("form-ui:resume-token-invalid-signature", (event) => {
+        write({ type: "resume-token-invalid-signature", detail: event.detail });
       });
 
       let activeToken = "";

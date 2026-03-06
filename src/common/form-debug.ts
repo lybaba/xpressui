@@ -104,6 +104,8 @@ const DEFAULT_DEBUG_EVENTS = [
   "form-ui:queue-state",
   "form-ui:sync-success",
   "form-ui:sync-error",
+  "form-ui:upload-retry",
+  "form-ui:file-policy-rejected",
   "form-ui:dead-lettered",
   "form-ui:dead-letter-cleared",
   "form-ui:dead-letter-requeued",
@@ -124,6 +126,7 @@ const DEFAULT_DEBUG_EVENTS = [
   "form-ui:step-jumped",
   "form-ui:workflow-state",
   "form-ui:workflow-step",
+  "form-ui:resume-share-code-claim-blocked",
   "form-ui:output-snapshot",
 ];
 

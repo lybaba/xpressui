@@ -3192,6 +3192,39 @@ describe('FormUI', () => {
     observer.detach();
   });
 
+  it('observes upload and resume hardening events in the debug observer stream', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'debug-extra-events-form',
+      title: 'Debug Extra Events Form',
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const observer = attachFormDebugObserver(element, { maxEvents: 10 });
+
+    element.dispatchEvent(new CustomEvent('form-ui:upload-retry', {
+      bubbles: true,
+      detail: { result: { attempt: 1 } },
+    }));
+    element.dispatchEvent(new CustomEvent('form-ui:file-policy-rejected', {
+      bubbles: true,
+      detail: { result: { stage: 'file-acceptance' } },
+    }));
+    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-blocked', {
+      bubbles: true,
+      detail: { result: { reason: 'throttled' } },
+    }));
+
+    expect(observer.getEvents().map((entry) => entry.type)).toEqual([
+      'form-ui:upload-retry',
+      'form-ui:file-policy-rejected',
+      'form-ui:resume-share-code-claim-blocked',
+    ]);
+
+    observer.detach();
+  });
+
   it('can render a live debug panel from form events', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

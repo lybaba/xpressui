@@ -201,6 +201,9 @@ For GitHub Pages packaging:
 npm run pages:prepare
 ```
 
+Scenario mapping reference:
+- [`docs/demo-scenarios.md`](/home/lyb/projects/xpressui/docs/demo-scenarios.md)
+
 ## Secure View Templates
 
 For `mode="view"` and `mode="hybrid"`, `html` fields can render template blocks

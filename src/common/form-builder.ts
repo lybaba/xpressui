@@ -553,8 +553,23 @@ export function mountFormUI(
   const lifecycle = config.submit?.lifecycle;
   const submitTransport = config.submit?.transport;
   const validationConfig = (config as any).validation;
+  const storageConfig = (config as any).storage;
+  const signedResumeSettings =
+    storageConfig && (
+      storageConfig.signResumeToken
+      || storageConfig.verifyResumeToken
+      || storageConfig.resumeTokenSignatureVersion
+    )
+      ? {
+          ...(storageConfig.signResumeToken ? { signResumeToken: storageConfig.signResumeToken } : {}),
+          ...(storageConfig.verifyResumeToken ? { verifyResumeToken: storageConfig.verifyResumeToken } : {}),
+          ...(storageConfig.resumeTokenSignatureVersion
+            ? { resumeTokenSignatureVersion: storageConfig.resumeTokenSignatureVersion }
+            : {}),
+        }
+      : null;
   if (
-    (lifecycle || submitTransport || validationConfig) &&
+    (lifecycle || submitTransport || validationConfig || signedResumeSettings) &&
     element &&
     'formConfig' in element &&
     (element as any).formConfig &&
@@ -569,6 +584,12 @@ export function mountFormUI(
     }
     if (validationConfig) {
       (element as any).formConfig.validation = validationConfig;
+    }
+    if (signedResumeSettings && (element as any).formConfig.storage) {
+      (element as any).formConfig.storage = {
+        ...(element as any).formConfig.storage,
+        ...signedResumeSettings,
+      };
     }
   }
 

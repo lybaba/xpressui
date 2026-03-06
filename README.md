@@ -1374,6 +1374,9 @@ Current storage support:
 - `adapter: 'indexeddb'`
 - `resumeEndpoint`
 - `resumeTokenTtlDays`
+- `resumeTokenSignatureVersion`
+- `signResumeToken(payload)`
+- `verifyResumeToken(payload)`
 - `encryptionKey`
 - `retentionDays`
 - `retentionDraftDays`
@@ -1417,6 +1420,7 @@ Draft events:
 - `form-ui:resume-token-deleted`
 - `form-ui:resume-token-invalidated`
 - `form-ui:resume-token-expired`
+- `form-ui:resume-token-invalid-signature`
 
 Queue events:
 - `form-ui:queued`

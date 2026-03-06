@@ -151,6 +151,29 @@ export type TFormStorageConfig = {
     retentionDraftDays?: number;
     retentionQueueDays?: number;
     retentionDeadLetterDays?: number;
+    resumeTokenSignatureVersion?: string;
+    signResumeToken?: (payload: {
+        token: string;
+        formName?: string;
+        savedAt: number;
+        issuedAt: number;
+        expiresAt?: number;
+        snapshot: Record<string, any>;
+        resumeEndpoint?: string;
+        remote?: boolean;
+    }) => string | null;
+    verifyResumeToken?: (payload: {
+        token: string;
+        formName?: string;
+        savedAt: number;
+        issuedAt: number;
+        expiresAt?: number;
+        snapshot: Record<string, any>;
+        resumeEndpoint?: string;
+        remote?: boolean;
+        signature?: string;
+        signatureVersion?: string;
+    }) => boolean;
 };
 
 export type TFormStepLabels = {

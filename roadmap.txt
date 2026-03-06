@@ -165,9 +165,14 @@ Completed:
 - local encryption (best effort)
 - deterministic queue replay windows
 - queue scheduling diagnostics
+- signed token hooks for local/remote resume cache:
+  - `signResumeToken(payload)`
+  - `verifyResumeToken(payload)`
+  - `resumeTokenSignatureVersion`
+  - runtime invalid-signature event
 
 Remaining:
-- signed / shareable resume tokens
+- signed shareable token exchange contract (backend-issued tokens)
 - cross-device resume UX
 
 Exit criteria:

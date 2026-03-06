@@ -34,9 +34,13 @@ export type TFormStorageHealth = TStorageHealth & {
 export type TResumeTokenInfo = {
   token: string;
   savedAt: number;
+  issuedAt?: number;
+  expiresAt?: number;
   expired: boolean;
   resumeEndpoint?: string;
   remote?: boolean;
+  signatureVersion?: string;
+  signatureValid?: boolean;
 };
 
 export type TResumeLookupResult = TResumeTokenInfo & {
@@ -73,9 +77,13 @@ export type TRemoteResumeInvalidateResponse = {
 type TResumeTokenState = {
   version: 1;
   savedAt: number;
+  issuedAt?: number;
+  expiresAt?: number;
   snapshot: TFormStorageSnapshot;
   resumeEndpoint?: string;
   remote?: boolean;
+  signature?: string;
+  signatureVersion?: string;
 };
 
 type TFormPersistenceRuntimeOptions = {
@@ -455,6 +463,14 @@ export class FormPersistenceRuntime {
       : null;
   }
 
+  getResumeTokenExpiresAt(savedAt: number): number | undefined {
+    const ttlMs = this.getResumeTokenTtlMs();
+    if (!ttlMs) {
+      return undefined;
+    }
+    return savedAt + ttlMs;
+  }
+
   isResumeTokenExpired(savedAt?: number): boolean {
     const ttlMs = this.getResumeTokenTtlMs();
     if (!ttlMs || typeof savedAt !== "number") {
@@ -466,6 +482,89 @@ export class FormPersistenceRuntime {
 
   getResumeEndpoint(): string | undefined {
     return this.options.getFormConfig()?.storage?.resumeEndpoint;
+  }
+
+  getResumeTokenSignatureVersion(): string | undefined {
+    const version = this.options.getFormConfig()?.storage?.resumeTokenSignatureVersion;
+    return typeof version === "string" && version ? version : undefined;
+  }
+
+  buildResumeTokenSignaturePayload(token: string, state: TResumeTokenState): Record<string, any> {
+    return {
+      token,
+      formName: this.options.getFormConfig()?.name,
+      savedAt: state.savedAt,
+      issuedAt: state.issuedAt ?? state.savedAt,
+      expiresAt: state.expiresAt,
+      snapshot: state.snapshot,
+      resumeEndpoint: state.resumeEndpoint,
+      remote: state.remote,
+      signature: state.signature,
+      signatureVersion: state.signatureVersion ?? this.getResumeTokenSignatureVersion(),
+    };
+  }
+
+  applyResumeTokenSignature(token: string, state: TResumeTokenState): TResumeTokenState {
+    const signer = this.options.getFormConfig()?.storage?.signResumeToken;
+    const signatureVersion = this.getResumeTokenSignatureVersion();
+
+    if (!signer) {
+      return {
+        ...state,
+        ...(signatureVersion ? { signatureVersion } : {}),
+      };
+    }
+
+    try {
+      const signed = signer(this.buildResumeTokenSignaturePayload(token, state) as any);
+      if (typeof signed === "string" && signed) {
+        return {
+          ...state,
+          signature: signed,
+          ...(signatureVersion ? { signatureVersion } : {}),
+        };
+      }
+    } catch {
+      return state;
+    }
+
+    return {
+      ...state,
+      ...(signatureVersion ? { signatureVersion } : {}),
+    };
+  }
+
+  isResumeTokenSignatureValid(token: string, state: TResumeTokenState): boolean {
+    const verifier = this.options.getFormConfig()?.storage?.verifyResumeToken;
+    if (!verifier) {
+      return true;
+    }
+
+    if (!state.signature) {
+      return false;
+    }
+
+    try {
+      return Boolean(verifier(this.buildResumeTokenSignaturePayload(token, state) as any));
+    } catch {
+      return false;
+    }
+  }
+
+  emitResumeTokenInvalidSignature(token: string, state: {
+    savedAt?: number;
+    resumeEndpoint?: string;
+    signatureVersion?: string;
+  }): void {
+    this.options.emitEvent(
+      "form-ui:resume-token-invalid-signature",
+      this.createEventDetail({}, {
+        token,
+        savedAt: state.savedAt,
+        resumeEndpoint: state.resumeEndpoint,
+        signatureVersion: state.signatureVersion,
+      }),
+    );
   }
 
   parseResumeToken(token: string, raw: string | null): (TResumeTokenInfo & {
@@ -483,17 +582,44 @@ export class FormPersistenceRuntime {
           ? parsed.snapshot
           : null;
       const savedAt = typeof parsed?.savedAt === "number" ? parsed.savedAt : 0;
+      const issuedAt = typeof parsed?.issuedAt === "number" ? parsed.issuedAt : savedAt;
+      const expiresAt =
+        typeof parsed?.expiresAt === "number"
+          ? parsed.expiresAt
+          : this.getResumeTokenExpiresAt(savedAt);
       const expired = this.isResumeTokenExpired(savedAt);
+      const signatureVersion =
+        typeof parsed?.signatureVersion === "string" && parsed.signatureVersion
+          ? parsed.signatureVersion
+          : this.getResumeTokenSignatureVersion();
+      const signatureValid = this.isResumeTokenSignatureValid(token, {
+        version: 1,
+        savedAt,
+        issuedAt,
+        expiresAt,
+        snapshot: snapshot || { draft: null, queue: [], deadLetter: [] },
+        resumeEndpoint:
+          typeof parsed?.resumeEndpoint === "string"
+            ? parsed.resumeEndpoint
+            : this.getResumeEndpoint(),
+        remote: Boolean(parsed?.remote),
+        signature: typeof parsed?.signature === "string" ? parsed.signature : undefined,
+        signatureVersion,
+      });
 
       return {
         token,
         savedAt,
+        issuedAt,
+        expiresAt,
         expired,
         resumeEndpoint:
           typeof parsed?.resumeEndpoint === "string"
             ? parsed.resumeEndpoint
             : this.getResumeEndpoint(),
         remote: Boolean(parsed?.remote),
+        signatureVersion,
+        signatureValid,
         snapshot,
       };
     } catch {
@@ -688,13 +814,17 @@ export class FormPersistenceRuntime {
 
     const currentValues = this.options.getValues();
     const snapshot = this.buildResumeSnapshot();
+    const savedAt = Date.now();
 
-    const state: TResumeTokenState = {
+    const baseState: TResumeTokenState = {
       version: 1,
-      savedAt: Date.now(),
+      savedAt,
+      issuedAt: savedAt,
+      expiresAt: this.getResumeTokenExpiresAt(savedAt),
       snapshot,
       resumeEndpoint: this.getResumeEndpoint(),
     };
+    const state = this.applyResumeTokenSignature(token, baseState);
 
     try {
       if (!this.persistResumeTokenState(token, state)) {
@@ -705,7 +835,10 @@ export class FormPersistenceRuntime {
         this.createEventDetail(currentValues, {
           token,
           savedAt: state.savedAt,
+          issuedAt: state.issuedAt,
+          expiresAt: state.expiresAt,
           resumeEndpoint: state.resumeEndpoint,
+          signatureVersion: state.signatureVersion,
         }),
       );
       return token;
@@ -745,13 +878,17 @@ export class FormPersistenceRuntime {
         throw new Error("Invalid remote resume token response");
       }
 
-      this.persistResumeTokenState(parsed.token, {
+      const baseState: TResumeTokenState = {
         version: 1,
         savedAt: parsed.savedAt,
+        issuedAt: parsed.savedAt,
+        expiresAt: this.getResumeTokenExpiresAt(parsed.savedAt),
         snapshot,
         resumeEndpoint,
         remote: true,
-      });
+      };
+      const state = this.applyResumeTokenSignature(parsed.token, baseState);
+      this.persistResumeTokenState(parsed.token, state);
 
       try {
         this.options.emitEvent(
@@ -760,8 +897,11 @@ export class FormPersistenceRuntime {
             operation: parsed.operation,
             token: parsed.token,
             savedAt: parsed.savedAt,
+            issuedAt: state.issuedAt,
+            expiresAt: state.expiresAt,
             resumeEndpoint,
             remote: true,
+            signatureVersion: state.signatureVersion,
           }, response),
         );
       } catch {
@@ -781,6 +921,15 @@ export class FormPersistenceRuntime {
 
       const parsed = this.parseResumeToken(token, raw);
       if (!parsed?.snapshot) {
+        return null;
+      }
+      if (parsed.signatureValid === false) {
+        this.deleteResumeToken(token);
+        this.emitResumeTokenInvalidSignature(token, {
+          savedAt: parsed.savedAt,
+          resumeEndpoint: parsed.resumeEndpoint,
+          signatureVersion: parsed.signatureVersion,
+        });
         return null;
       }
       if (parsed.expired) {
@@ -804,7 +953,10 @@ export class FormPersistenceRuntime {
           token,
           snapshot,
           savedAt: parsed.savedAt,
+          issuedAt: parsed.issuedAt,
+          expiresAt: parsed.expiresAt,
           resumeEndpoint: parsed.resumeEndpoint,
+          signatureVersion: parsed.signatureVersion,
         }),
       );
       return restoredDraft;
@@ -823,6 +975,15 @@ export class FormPersistenceRuntime {
       if (!parsed) {
         return null;
       }
+      if (parsed.signatureValid === false) {
+        this.deleteResumeToken(token);
+        this.emitResumeTokenInvalidSignature(token, {
+          savedAt: parsed.savedAt,
+          resumeEndpoint: parsed.resumeEndpoint,
+          signatureVersion: parsed.signatureVersion,
+        });
+        return null;
+      }
       if (parsed.expired) {
         this.deleteResumeToken(token);
         return null;
@@ -831,9 +992,13 @@ export class FormPersistenceRuntime {
       return {
         token: parsed.token,
         savedAt: parsed.savedAt,
+        issuedAt: parsed.issuedAt,
+        expiresAt: parsed.expiresAt,
         expired: false,
         resumeEndpoint: parsed.resumeEndpoint,
         remote: parsed.remote,
+        signatureVersion: parsed.signatureVersion,
+        signatureValid: parsed.signatureValid,
         snapshot: parsed.snapshot,
       };
     }
@@ -858,21 +1023,38 @@ export class FormPersistenceRuntime {
       }
 
       if (parsed.snapshot) {
-        this.persistResumeTokenState(parsed.token, {
+        const baseState: TResumeTokenState = {
           version: 1,
           savedAt: parsed.savedAt,
+          issuedAt: parsed.savedAt,
+          expiresAt: this.getResumeTokenExpiresAt(parsed.savedAt),
           snapshot: parsed.snapshot,
           resumeEndpoint,
           remote: true,
-        });
+        };
+        const state = this.applyResumeTokenSignature(parsed.token, baseState);
+        this.persistResumeTokenState(parsed.token, state);
+        if (!this.isResumeTokenSignatureValid(parsed.token, state)) {
+          this.deleteResumeToken(parsed.token);
+          this.emitResumeTokenInvalidSignature(parsed.token, {
+            savedAt: parsed.savedAt,
+            resumeEndpoint,
+            signatureVersion: state.signatureVersion,
+          });
+          return null;
+        }
       }
 
       return {
         token: parsed.token,
         savedAt: parsed.savedAt,
+        issuedAt: parsed.savedAt,
+        expiresAt: this.getResumeTokenExpiresAt(parsed.savedAt),
         expired: false,
         resumeEndpoint,
         remote: true,
+        signatureVersion: this.getResumeTokenSignatureVersion(),
+        signatureValid: true,
         snapshot: parsed.snapshot,
       };
     } catch {
@@ -894,8 +1076,11 @@ export class FormPersistenceRuntime {
           token: lookup.token,
           snapshot: lookup.snapshot,
           savedAt: lookup.savedAt,
+          issuedAt: lookup.issuedAt,
+          expiresAt: lookup.expiresAt,
           resumeEndpoint: lookup.resumeEndpoint,
           remote: true,
+          signatureVersion: lookup.signatureVersion,
         }),
       );
       return restoredDraft;
@@ -928,6 +1113,16 @@ export class FormPersistenceRuntime {
           storage.removeItem(key);
           continue;
         }
+        if (parsed.signatureValid === false) {
+          storage.removeItem(key);
+          this.resumeTokenMemory.delete(token);
+          this.emitResumeTokenInvalidSignature(token, {
+            savedAt: parsed.savedAt,
+            resumeEndpoint: parsed.resumeEndpoint,
+            signatureVersion: parsed.signatureVersion,
+          });
+          continue;
+        }
 
         if (parsed.expired) {
           storage.removeItem(key);
@@ -938,9 +1133,13 @@ export class FormPersistenceRuntime {
         tokens.push({
           token: parsed.token,
           savedAt: parsed.savedAt,
+          issuedAt: parsed.issuedAt,
+          expiresAt: parsed.expiresAt,
           expired: false,
           resumeEndpoint: parsed.resumeEndpoint,
           remote: parsed.remote,
+          signatureVersion: parsed.signatureVersion,
+          signatureValid: parsed.signatureValid,
         });
       }
     }
@@ -954,16 +1153,27 @@ export class FormPersistenceRuntime {
         continue;
       }
       const parsed = this.parseResumeToken(token, null);
-      if (!parsed || parsed.expired) {
+      if (!parsed || parsed.expired || parsed.signatureValid === false) {
+        if (parsed?.signatureValid === false) {
+          this.emitResumeTokenInvalidSignature(token, {
+            savedAt: parsed.savedAt,
+            resumeEndpoint: parsed.resumeEndpoint,
+            signatureVersion: parsed.signatureVersion,
+          });
+        }
         this.resumeTokenMemory.delete(token);
         continue;
       }
       tokens.push({
         token: parsed.token,
         savedAt: parsed.savedAt,
+        issuedAt: parsed.issuedAt,
+        expiresAt: parsed.expiresAt,
         expired: false,
         resumeEndpoint: parsed.resumeEndpoint,
         remote: parsed.remote,
+        signatureVersion: parsed.signatureVersion,
+        signatureValid: parsed.signatureValid,
       });
     }
 

@@ -9565,6 +9565,64 @@ describe('FormUI', () => {
     expect(window.localStorage.getItem(storageKey)).toBeNull();
   });
 
+  it('rejects resume tokens when signature verification fails', async () => {
+    const signatureFor = (payload: Record<string, any>) => JSON.stringify({
+      token: payload.token,
+      savedAt: payload.savedAt,
+      draft: payload.snapshot?.draft || null,
+    });
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'resume-signed-form',
+      title: 'Resume Signed Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-resume-signed',
+        autoSaveMs: 0,
+        resumeTokenSignatureVersion: 'v1',
+        signResumeToken: (payload) => signatureFor(payload),
+        verifyResumeToken: (payload) => signatureFor(payload) === payload.signature,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#email') as HTMLInputElement;
+    const onInvalidSignature = vi.fn();
+
+    element.addEventListener('form-ui:resume-token-invalid-signature', (event) => {
+      onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    input.value = 'signed@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    const token = element.createResumeToken() as string;
+    const storageKey = `xpressui:resume:resume-signed-form:${token}`;
+    const rawState = window.localStorage.getItem(storageKey) as string;
+    const parsedState = JSON.parse(rawState) as Record<string, any>;
+    parsedState.snapshot.draft.email = 'tampered@example.com';
+    window.localStorage.setItem(storageKey, JSON.stringify(parsedState));
+
+    const restored = element.restoreFromResumeToken(token);
+    expect(restored).toBeNull();
+    expect(onInvalidSignature).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          token,
+          signatureVersion: 'v1',
+        }),
+      }),
+    );
+    expect(element.listResumeTokens()).toEqual([]);
+  });
+
   it('supports remote save and resume flows through resumeEndpoint', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockImplementation(async (input, init) => {
       const url = String(input);
@@ -9626,17 +9684,17 @@ describe('FormUI', () => {
     const token = await element.createResumeTokenAsync();
     expect(token).toBe('remote_token_123');
     expect(element.listResumeTokens()).toEqual([
-      {
+      expect.objectContaining({
         token: 'remote_token_123',
         savedAt: 123456,
         expired: false,
         resumeEndpoint: 'https://api.example.test/resume',
         remote: true,
-      },
+      }),
     ]);
 
     const lookup = await element.lookupResumeToken('remote_token_123');
-    expect(lookup).toEqual({
+    expect(lookup).toEqual(expect.objectContaining({
       token: 'remote_token_123',
       savedAt: 123456,
       expired: false,
@@ -9647,7 +9705,7 @@ describe('FormUI', () => {
         queue: [],
         deadLetter: [],
       },
-    });
+    }));
 
     input.value = '';
     input.dispatchEvent(new Event('input', { bubbles: true }));

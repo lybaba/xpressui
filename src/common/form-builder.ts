@@ -469,6 +469,30 @@ export function createTemplateMarkup(
         config.submit.uploadMethod
           ? `data-submit-upload-method="${escapeHtml(config.submit.uploadMethod)}"`
           : '',
+        config.submit.uploadChunkMethod
+          ? `data-submit-upload-chunk-method="${escapeHtml(config.submit.uploadChunkMethod)}"`
+          : '',
+        config.submit.uploadChunkSizeMb !== undefined
+          ? `data-submit-upload-chunk-size-mb="${escapeHtml(String(config.submit.uploadChunkSizeMb))}"`
+          : '',
+        config.submit.uploadResumeEnabled
+          ? `data-submit-upload-resume-enabled="true"`
+          : '',
+        config.submit.uploadResumeKey
+          ? `data-submit-upload-resume-key="${escapeHtml(config.submit.uploadResumeKey)}"`
+          : '',
+        config.submit.uploadRetryMaxAttempts !== undefined
+          ? `data-submit-upload-retry-max-attempts="${escapeHtml(String(config.submit.uploadRetryMaxAttempts))}"`
+          : '',
+        config.submit.uploadRetryBaseDelayMs !== undefined
+          ? `data-submit-upload-retry-base-delay-ms="${escapeHtml(String(config.submit.uploadRetryBaseDelayMs))}"`
+          : '',
+        config.submit.uploadRetryMaxDelayMs !== undefined
+          ? `data-submit-upload-retry-max-delay-ms="${escapeHtml(String(config.submit.uploadRetryMaxDelayMs))}"`
+          : '',
+        config.submit.uploadRetryJitter
+          ? `data-submit-upload-retry-jitter="true"`
+          : '',
         config.submit.action
           ? `data-submit-action="${escapeHtml(config.submit.action)}"`
           : '',

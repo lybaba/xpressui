@@ -93,6 +93,14 @@ export const ATTR_SUBMIT_PRESIGN_METHOD = "submitPresignMethod"
 export const ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY = "submitPresignUploadUrlKey"
 export const ATTR_SUBMIT_PRESIGN_FILE_URL_KEY = "submitPresignFileUrlKey"
 export const ATTR_SUBMIT_UPLOAD_METHOD = "submitUploadMethod"
+export const ATTR_SUBMIT_UPLOAD_CHUNK_METHOD = "submitUploadChunkMethod"
+export const ATTR_SUBMIT_UPLOAD_CHUNK_SIZE_MB = "submitUploadChunkSizeMb"
+export const ATTR_SUBMIT_UPLOAD_RESUME_ENABLED = "submitUploadResumeEnabled"
+export const ATTR_SUBMIT_UPLOAD_RESUME_KEY = "submitUploadResumeKey"
+export const ATTR_SUBMIT_UPLOAD_RETRY_MAX_ATTEMPTS = "submitUploadRetryMaxAttempts"
+export const ATTR_SUBMIT_UPLOAD_RETRY_BASE_DELAY_MS = "submitUploadRetryBaseDelayMs"
+export const ATTR_SUBMIT_UPLOAD_RETRY_MAX_DELAY_MS = "submitUploadRetryMaxDelayMs"
+export const ATTR_SUBMIT_UPLOAD_RETRY_JITTER = "submitUploadRetryJitter"
 export const ATTR_SUBMIT_ACTION = "submitAction"
 export const ATTR_VISIBLE_WHEN_FIELD = "visibleWhenField"
 export const ATTR_VISIBLE_WHEN_EQUALS = "visibleWhenEquals"
@@ -214,6 +222,14 @@ export const HTML_ATTR_SUBMIT_PRESIGN_METHOD = `${HTML_ATTR_PREFIX}submit-presig
 export const HTML_ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY = `${HTML_ATTR_PREFIX}submit-presign-upload-url-key`
 export const HTML_ATTR_SUBMIT_PRESIGN_FILE_URL_KEY = `${HTML_ATTR_PREFIX}submit-presign-file-url-key`
 export const HTML_ATTR_SUBMIT_UPLOAD_METHOD = `${HTML_ATTR_PREFIX}submit-upload-method`
+export const HTML_ATTR_SUBMIT_UPLOAD_CHUNK_METHOD = `${HTML_ATTR_PREFIX}submit-upload-chunk-method`
+export const HTML_ATTR_SUBMIT_UPLOAD_CHUNK_SIZE_MB = `${HTML_ATTR_PREFIX}submit-upload-chunk-size-mb`
+export const HTML_ATTR_SUBMIT_UPLOAD_RESUME_ENABLED = `${HTML_ATTR_PREFIX}submit-upload-resume-enabled`
+export const HTML_ATTR_SUBMIT_UPLOAD_RESUME_KEY = `${HTML_ATTR_PREFIX}submit-upload-resume-key`
+export const HTML_ATTR_SUBMIT_UPLOAD_RETRY_MAX_ATTEMPTS = `${HTML_ATTR_PREFIX}submit-upload-retry-max-attempts`
+export const HTML_ATTR_SUBMIT_UPLOAD_RETRY_BASE_DELAY_MS = `${HTML_ATTR_PREFIX}submit-upload-retry-base-delay-ms`
+export const HTML_ATTR_SUBMIT_UPLOAD_RETRY_MAX_DELAY_MS = `${HTML_ATTR_PREFIX}submit-upload-retry-max-delay-ms`
+export const HTML_ATTR_SUBMIT_UPLOAD_RETRY_JITTER = `${HTML_ATTR_PREFIX}submit-upload-retry-jitter`
 export const HTML_ATTR_SUBMIT_ACTION = `${HTML_ATTR_PREFIX}submit-action`
 export const HTML_ATTR_VISIBLE_WHEN_FIELD = `${HTML_ATTR_PREFIX}visible-when-field`
 export const HTML_ATTR_VISIBLE_WHEN_EQUALS = `${HTML_ATTR_PREFIX}visible-when-equals`
@@ -335,6 +351,14 @@ export const ATTR_MAP = {
     [HTML_ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY]: ATTR_SUBMIT_PRESIGN_UPLOAD_URL_KEY,
     [HTML_ATTR_SUBMIT_PRESIGN_FILE_URL_KEY]: ATTR_SUBMIT_PRESIGN_FILE_URL_KEY,
     [HTML_ATTR_SUBMIT_UPLOAD_METHOD]: ATTR_SUBMIT_UPLOAD_METHOD,
+    [HTML_ATTR_SUBMIT_UPLOAD_CHUNK_METHOD]: ATTR_SUBMIT_UPLOAD_CHUNK_METHOD,
+    [HTML_ATTR_SUBMIT_UPLOAD_CHUNK_SIZE_MB]: ATTR_SUBMIT_UPLOAD_CHUNK_SIZE_MB,
+    [HTML_ATTR_SUBMIT_UPLOAD_RESUME_ENABLED]: ATTR_SUBMIT_UPLOAD_RESUME_ENABLED,
+    [HTML_ATTR_SUBMIT_UPLOAD_RESUME_KEY]: ATTR_SUBMIT_UPLOAD_RESUME_KEY,
+    [HTML_ATTR_SUBMIT_UPLOAD_RETRY_MAX_ATTEMPTS]: ATTR_SUBMIT_UPLOAD_RETRY_MAX_ATTEMPTS,
+    [HTML_ATTR_SUBMIT_UPLOAD_RETRY_BASE_DELAY_MS]: ATTR_SUBMIT_UPLOAD_RETRY_BASE_DELAY_MS,
+    [HTML_ATTR_SUBMIT_UPLOAD_RETRY_MAX_DELAY_MS]: ATTR_SUBMIT_UPLOAD_RETRY_MAX_DELAY_MS,
+    [HTML_ATTR_SUBMIT_UPLOAD_RETRY_JITTER]: ATTR_SUBMIT_UPLOAD_RETRY_JITTER,
     [HTML_ATTR_SUBMIT_ACTION]: ATTR_SUBMIT_ACTION,
     [HTML_ATTR_VISIBLE_WHEN_FIELD]: ATTR_VISIBLE_WHEN_FIELD,
     [HTML_ATTR_VISIBLE_WHEN_EQUALS]: ATTR_VISIBLE_WHEN_EQUALS,
@@ -560,6 +584,22 @@ export default function getFormConfig(node: Element): TFormConfig {
             presignUploadUrlKey: (formConfig as any).submitPresignUploadUrlKey,
             presignFileUrlKey: (formConfig as any).submitPresignFileUrlKey,
             uploadMethod: (formConfig as any).submitUploadMethod,
+            uploadChunkMethod: (formConfig as any).submitUploadChunkMethod,
+            uploadChunkSizeMb: (formConfig as any).submitUploadChunkSizeMb
+              ? Number((formConfig as any).submitUploadChunkSizeMb)
+              : undefined,
+            uploadResumeEnabled: (formConfig as any).submitUploadResumeEnabled === 'true',
+            uploadResumeKey: (formConfig as any).submitUploadResumeKey,
+            uploadRetryMaxAttempts: (formConfig as any).submitUploadRetryMaxAttempts
+              ? Number((formConfig as any).submitUploadRetryMaxAttempts)
+              : undefined,
+            uploadRetryBaseDelayMs: (formConfig as any).submitUploadRetryBaseDelayMs
+              ? Number((formConfig as any).submitUploadRetryBaseDelayMs)
+              : undefined,
+            uploadRetryMaxDelayMs: (formConfig as any).submitUploadRetryMaxDelayMs
+              ? Number((formConfig as any).submitUploadRetryMaxDelayMs)
+              : undefined,
+            uploadRetryJitter: (formConfig as any).submitUploadRetryJitter === 'true',
             action: (formConfig as any).submitAction,
         };
         delete (formConfig as any).submitEndpoint;
@@ -580,6 +620,14 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).submitPresignUploadUrlKey;
         delete (formConfig as any).submitPresignFileUrlKey;
         delete (formConfig as any).submitUploadMethod;
+        delete (formConfig as any).submitUploadChunkMethod;
+        delete (formConfig as any).submitUploadChunkSizeMb;
+        delete (formConfig as any).submitUploadResumeEnabled;
+        delete (formConfig as any).submitUploadResumeKey;
+        delete (formConfig as any).submitUploadRetryMaxAttempts;
+        delete (formConfig as any).submitUploadRetryBaseDelayMs;
+        delete (formConfig as any).submitUploadRetryMaxDelayMs;
+        delete (formConfig as any).submitUploadRetryJitter;
         delete (formConfig as any).submitAction;
     }
 

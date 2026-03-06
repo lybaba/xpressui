@@ -2790,6 +2790,47 @@ describe('FormUI', () => {
     );
   });
 
+  it('preserves advanced upload submit options through template serialization', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, createFormConfig({
+      name: 'submit-upload-options-form',
+      title: 'Submit Upload Options Form',
+      submit: {
+        endpoint: '/api/upload-options',
+        method: 'POST',
+        uploadStrategy: 'presigned',
+        uploadMethod: 'PUT',
+        uploadChunkMethod: 'PATCH',
+        uploadChunkSizeMb: 4,
+        uploadResumeEnabled: true,
+        uploadResumeKey: 'upload-session',
+        uploadRetryMaxAttempts: 5,
+        uploadRetryBaseDelayMs: 200,
+        uploadRetryMaxDelayMs: 5000,
+        uploadRetryJitter: true,
+      },
+      fields: [
+        { name: 'attachment', label: 'Attachment', type: 'upload-file' },
+      ],
+    })) as FormUI;
+
+    expect((element as any).formConfig?.submit).toEqual(
+      expect.objectContaining({
+        endpoint: '/api/upload-options',
+        uploadStrategy: 'presigned',
+        uploadMethod: 'PUT',
+        uploadChunkMethod: 'PATCH',
+        uploadChunkSizeMb: 4,
+        uploadResumeEnabled: true,
+        uploadResumeKey: 'upload-session',
+        uploadRetryMaxAttempts: 5,
+        uploadRetryBaseDelayMs: 200,
+        uploadRetryMaxDelayMs: 5000,
+        uploadRetryJitter: true,
+      }),
+    );
+  });
+
   it('excludes setting fields from submit payloads by default', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ ok: true }), {

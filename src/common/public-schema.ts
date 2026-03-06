@@ -32,6 +32,8 @@ const PUBLIC_FORM_SCHEMA = {
         uploadRetryJitter: { type: "boolean" },
         uploadChunkMethod: { type: "string", enum: ["PUT", "PATCH", "POST"] },
         uploadChunkSizeMb: { type: "number", exclusiveMinimum: 0 },
+        uploadResumeKey: { type: "string", minLength: 1 },
+        uploadResumeEnabled: { type: "boolean" },
         settingFieldAllowlist: {
           type: "array",
           items: { type: "string", minLength: 1 },

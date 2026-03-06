@@ -64,6 +64,8 @@ export type TFormSubmitRequest = {
     uploadMethod?: 'POST' | 'PUT';
     uploadChunkMethod?: 'PUT' | 'PATCH' | 'POST';
     uploadChunkSizeMb?: number;
+    uploadResumeKey?: string;
+    uploadResumeEnabled?: boolean;
     uploadRetryMaxAttempts?: number;
     uploadRetryBaseDelayMs?: number;
     uploadRetryMaxDelayMs?: number;

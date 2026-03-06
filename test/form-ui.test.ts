@@ -5249,6 +5249,92 @@ describe('FormUI', () => {
     (globalThis as any).XMLHttpRequest = originalXhr;
   });
 
+  it('resumes chunked presigned uploads from persisted chunk index', async () => {
+    const originalXhr = window.XMLHttpRequest;
+
+    class MockXhr {
+      static ranges: string[] = [];
+      upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      status = 200;
+      responseText = '';
+      contentRange = '';
+
+      open() {}
+      setRequestHeader(key: string, value: string) {
+        if (key === 'Content-Range') {
+          this.contentRange = value;
+        }
+      }
+      getResponseHeader() {
+        return 'text/plain';
+      }
+      send() {
+        if (this.contentRange) {
+          MockXhr.ranges.push(this.contentRange);
+        }
+        this.upload.onprogress?.({
+          lengthComputable: true,
+          loaded: 100,
+          total: 100,
+        } as ProgressEvent);
+        this.onload?.();
+      }
+    }
+
+    (window as any).XMLHttpRequest = MockXhr;
+    (globalThis as any).XMLHttpRequest = MockXhr;
+
+    const fetchMock = vi.spyOn(window, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({
+          uploadUrl: 'https://upload.example.test/chunked-resume',
+          fileUrl: 'https://cdn.example.test/chunked-resume.bin',
+        }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ saved: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+
+    const runtime = new FormUploadRuntime();
+    const file = new File(['abcdefghij'], 'chunked-resume.bin', { type: 'application/octet-stream' });
+    const resumeKey = `xpressui:upload-resume:https://api.example.test/presign:attachment:${file.name}:${file.size}:${file.lastModified}`;
+    window.localStorage.setItem(resumeKey, '2');
+
+    await runtime.submit(
+      { attachment: file },
+      {
+        endpoint: 'https://api.example.test/finalize',
+        method: 'POST',
+        mode: 'form-data',
+        uploadStrategy: 'presigned',
+        presignEndpoint: 'https://api.example.test/presign',
+        uploadChunkSizeMb: 0.000002,
+      },
+      {
+        attachment: {
+          name: 'attachment',
+          label: 'Attachment',
+          type: 'file',
+        },
+      },
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(MockXhr.ranges[0]).not.toContain('bytes 0-');
+    expect(window.localStorage.getItem(resumeKey)).toBeNull();
+
+    (window as any).XMLHttpRequest = originalXhr;
+    (globalThis as any).XMLHttpRequest = originalXhr;
+  });
+
   it('retries presigned upload operations and emits retry diagnostics', async () => {
     const originalXhr = window.XMLHttpRequest;
     const emittedRetryDetails: any[] = [];

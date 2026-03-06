@@ -198,6 +198,90 @@ function getChunkSizeBytes(submitConfig: TFormSubmitRequest): number {
   return Math.max(1, Math.floor(chunkSizeMb * 1024 * 1024));
 }
 
+function getUploadResumeStorage(): Storage | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function shouldUseUploadResume(submitConfig: TFormSubmitRequest): boolean {
+  return submitConfig.uploadResumeEnabled !== false;
+}
+
+function getUploadResumeKey(
+  submitConfig: TFormSubmitRequest,
+  fieldName: string,
+  file: File,
+): string {
+  const namespace = submitConfig.uploadResumeKey
+    || submitConfig.presignEndpoint
+    || submitConfig.endpoint
+    || "default";
+  return `xpressui:upload-resume:${namespace}:${fieldName}:${file.name}:${file.size}:${file.lastModified}`;
+}
+
+function loadUploadResumeChunkIndex(
+  submitConfig: TFormSubmitRequest,
+  fieldName: string,
+  file: File,
+): number {
+  if (!shouldUseUploadResume(submitConfig)) {
+    return 0;
+  }
+  const storage = getUploadResumeStorage();
+  if (!storage) {
+    return 0;
+  }
+  const raw = storage.getItem(getUploadResumeKey(submitConfig, fieldName, file));
+  if (!raw) {
+    return 0;
+  }
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return 0;
+  }
+  return parsed;
+}
+
+function saveUploadResumeChunkIndex(
+  submitConfig: TFormSubmitRequest,
+  fieldName: string,
+  file: File,
+  chunkIndex: number,
+): void {
+  if (!shouldUseUploadResume(submitConfig)) {
+    return;
+  }
+  const storage = getUploadResumeStorage();
+  if (!storage) {
+    return;
+  }
+  storage.setItem(
+    getUploadResumeKey(submitConfig, fieldName, file),
+    String(Math.max(0, chunkIndex)),
+  );
+}
+
+function clearUploadResumeChunkIndex(
+  submitConfig: TFormSubmitRequest,
+  fieldName: string,
+  file: File,
+): void {
+  if (!shouldUseUploadResume(submitConfig)) {
+    return;
+  }
+  const storage = getUploadResumeStorage();
+  if (!storage) {
+    return;
+  }
+  storage.removeItem(getUploadResumeKey(submitConfig, fieldName, file));
+}
+
 export class FormUploadRuntime {
   emitEvent: NonNullable<TFormUploadRuntimeOptions["emitEvent"]>;
 
@@ -507,7 +591,26 @@ export class FormUploadRuntime {
 
         const chunkMethod = submitConfig.uploadChunkMethod || uploadMethod;
         const totalChunks = Math.ceil(file.size / chunkSizeBytes);
-        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+        const storedResumeChunkIndex = Math.max(0, loadUploadResumeChunkIndex(submitConfig, fieldName, file));
+        const resumeChunkIndex = storedResumeChunkIndex >= totalChunks
+          ? 0
+          : storedResumeChunkIndex;
+        if (resumeChunkIndex > 0) {
+          this.emitUploadEvent(
+            "form-ui:upload-progress",
+            values,
+            submitConfig,
+            createUploadState(fileFieldNames, "uploading", Math.round(((completed + resumeChunkIndex / totalChunks) / total) * 100)),
+            {
+              strategy: "presigned",
+              fieldName,
+              resumed: true,
+              resumeChunkIndex,
+              chunkCount: totalChunks,
+            },
+          );
+        }
+        for (let chunkIndex = resumeChunkIndex; chunkIndex < totalChunks; chunkIndex += 1) {
           const start = chunkIndex * chunkSizeBytes;
           const end = Math.min(file.size, start + chunkSizeBytes);
           const chunk = file.slice(start, end);
@@ -536,7 +639,9 @@ export class FormUploadRuntime {
               );
             },
           );
+          saveUploadResumeChunkIndex(submitConfig, fieldName, file, chunkIndex + 1);
         }
+        clearUploadResumeChunkIndex(submitConfig, fieldName, file);
       };
 
       await executeWithRetry(

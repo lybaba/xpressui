@@ -1326,6 +1326,8 @@ Runtime diagnostics are emitted through `form-ui:upload-retry` with:
 Large-file option:
 - `submit.uploadChunkSizeMb` splits direct upload into multiple chunk requests
 - `submit.uploadChunkMethod` controls each chunk request method
+- `submit.uploadResumeEnabled` reuses persisted local chunk checkpoints
+- `submit.uploadResumeKey` sets a custom checkpoint namespace
 
 Each chunk sends `Content-Range` and binary body. Ensure your signed upload
 endpoint accepts ranged chunk writes when this mode is enabled.

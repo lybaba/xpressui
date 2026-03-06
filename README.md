@@ -1347,6 +1347,8 @@ Frontend behavior:
 - `submit.uploadChunkSizeMb` enables chunked direct upload for large files in
   presigned mode
 - `submit.uploadChunkMethod` overrides method for each chunk (`PUT`/`PATCH`/`POST`)
+- `submit.uploadResumeEnabled` restores chunk progress from local storage (default enabled)
+- `submit.uploadResumeKey` customizes local resume namespace for chunked uploads
 - `submit.fileAcceptancePolicy(context)` can reject files before upload
 - `submit.contentModerationPolicy(context)` can block policy-violating media
 - `submit.virusScanPolicy(context)` can enforce external scan verdicts

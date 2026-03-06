@@ -306,6 +306,7 @@ remote save/resume lifecycle operations:
 {
   "operation": "create",
   "formName": "checkout-form",
+  "signatureVersion": "v2",
   "snapshot": {
     "draft": {
       "email": "remote-resume@example.com"
@@ -322,7 +323,11 @@ Recommended `POST` response:
 {
   "operation": "create",
   "token": "remote_token_123",
-  "savedAt": 123456
+  "savedAt": 123456,
+  "issuedAt": 123456,
+  "expiresAt": 223456,
+  "signatureVersion": "v2",
+  "signature": "signed_payload_hash"
 }
 ```
 
@@ -333,6 +338,10 @@ Recommended `GET` response:
   "operation": "lookup",
   "token": "remote_token_123",
   "savedAt": 123456,
+  "issuedAt": 123456,
+  "expiresAt": 223456,
+  "signatureVersion": "v2",
+  "signature": "signed_payload_hash",
   "snapshot": {
     "draft": {
       "email": "remote-resume@example.com"
@@ -364,6 +373,10 @@ Recommended `DELETE` response:
 ```
 
 `204` still works for backward compatibility.
+
+When `storage.verifyResumeToken(...)` is configured, `xpressui` verifies remote
+signed payloads before caching/restoring them. Invalid signatures are rejected
+and emit `form-ui:resume-token-invalid-signature`.
 
 ### Signed Resume Token Hooks
 

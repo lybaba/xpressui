@@ -9884,6 +9884,181 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports signed remote resume token contracts with signature metadata', async () => {
+    const sign = (payload: Record<string, any>) =>
+      `${payload.token}:${payload.savedAt}:${payload.issuedAt}:${payload.expiresAt}:${payload.snapshot?.draft?.email || ''}`;
+    const fetchSpy = vi.spyOn(window, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === 'https://api.example.test/resume' && init?.method === 'POST') {
+        const body = JSON.parse(String(init?.body || '{}')) as Record<string, any>;
+        const token = 'remote_token_signed';
+        const savedAt = 2222;
+        const issuedAt = 2222;
+        const expiresAt = 3333;
+        const signature = sign({
+          token,
+          savedAt,
+          issuedAt,
+          expiresAt,
+          snapshot: body.snapshot,
+        });
+        return new Response(JSON.stringify({
+          operation: 'create',
+          token,
+          savedAt,
+          issuedAt,
+          expiresAt,
+          signature,
+          signatureVersion: 'v2',
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url === 'https://api.example.test/resume?token=remote_token_signed' && init?.method === 'GET') {
+        const snapshot = {
+          draft: { email: 'signed-remote@example.com' },
+          queue: [],
+          deadLetter: [],
+        };
+        const token = 'remote_token_signed';
+        const savedAt = 2222;
+        const issuedAt = 2222;
+        const expiresAt = 3333;
+        const signature = sign({
+          token,
+          savedAt,
+          issuedAt,
+          expiresAt,
+          snapshot,
+        });
+        return new Response(JSON.stringify({
+          operation: 'lookup',
+          token,
+          savedAt,
+          issuedAt,
+          expiresAt,
+          signature,
+          signatureVersion: 'v2',
+          snapshot,
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (url === 'https://api.example.test/resume?token=remote_token_signed' && init?.method === 'DELETE') {
+        return new Response(null, { status: 204 });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'remote-resume-signed-contract-form',
+      title: 'Remote Resume Signed Contract Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-remote-resume-signed-contract',
+        resumeEndpoint: 'https://api.example.test/resume',
+        resumeTokenSignatureVersion: 'v2',
+        verifyResumeToken: (payload) => sign(payload) === payload.signature,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+
+    const input = element.querySelector('#email') as HTMLInputElement;
+    input.value = 'signed-remote@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+
+    await expect(element.createResumeTokenAsync()).resolves.toBe('remote_token_signed');
+    const createCall = fetchSpy.mock.calls.find(
+      ([url, init]) => String(url) === 'https://api.example.test/resume' && init?.method === 'POST',
+    );
+    const createBody = JSON.parse(String(createCall?.[1]?.body || '{}'));
+    expect(createBody.signatureVersion).toBe('v2');
+
+    const lookup = await element.lookupResumeToken('remote_token_signed');
+    expect(lookup).toEqual(expect.objectContaining({
+      token: 'remote_token_signed',
+      signatureVersion: 'v2',
+      signatureValid: true,
+      issuedAt: 2222,
+      expiresAt: 3333,
+    }));
+
+    await expect(element.invalidateResumeToken('remote_token_signed')).resolves.toBe(true);
+  });
+
+  it('rejects remote resume token creation when signed contract verification fails', async () => {
+    const sign = (payload: Record<string, any>) =>
+      `${payload.token}:${payload.savedAt}:${payload.issuedAt}:${payload.expiresAt}:${payload.snapshot?.draft?.email || ''}`;
+    vi.spyOn(window, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === 'https://api.example.test/resume' && init?.method === 'POST') {
+        return new Response(JSON.stringify({
+          operation: 'create',
+          token: 'remote_token_signed_invalid',
+          savedAt: 4444,
+          issuedAt: 4444,
+          expiresAt: 5555,
+          signature: 'bad-signature',
+          signatureVersion: 'v2',
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'remote-resume-signed-invalid-form',
+      title: 'Remote Resume Signed Invalid Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-remote-resume-signed-invalid',
+        resumeEndpoint: 'https://api.example.test/resume',
+        resumeTokenSignatureVersion: 'v2',
+        verifyResumeToken: (payload) => sign(payload) === payload.signature,
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    }) as FormUI;
+    const onInvalidSignature = vi.fn();
+    element.addEventListener('form-ui:resume-token-invalid-signature', (event) => {
+      onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await expect(element.createResumeTokenAsync()).resolves.toBeNull();
+    expect(onInvalidSignature).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          token: 'remote_token_signed_invalid',
+          signatureVersion: 'v2',
+        }),
+      }),
+    );
+    expect(element.listResumeTokens()).toEqual([]);
+  });
+
   it('queues submissions locally when the network fails', async () => {
     const fetchSpy = vi
       .spyOn(window, 'fetch')

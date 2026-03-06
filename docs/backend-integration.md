@@ -557,6 +557,10 @@ include a normalized block for downstream integrations:
 This block is emitted alongside existing `text` / `mrz` / `fields` payloads to
 keep backward compatibility while providing a stricter contract.
 
+Field-level privacy options:
+- `documentExcludeFromSubmit: true` skips document OCR/MRZ data for that field
+- `documentMaskPaths: string[]` masks configured document paths before submit
+
 Suggested validation failure response:
 
 HTTP status: `422`

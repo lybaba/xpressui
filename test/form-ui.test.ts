@@ -5812,6 +5812,93 @@ describe('FormUI', () => {
     });
   });
 
+  it('can exclude document data from submit payload for sensitive document fields', () => {
+    const formConfig = createFormConfig({
+      name: 'headless-document-exclude-submit-form',
+      title: 'Headless Document Exclude Submit Form',
+      submit: {
+        endpoint: '/api/submit',
+        includeDocumentData: true,
+        documentDataMode: 'summary',
+      },
+      fields: [
+        {
+          name: 'passport',
+          label: 'Passport',
+          type: 'document-scan',
+          documentExcludeFromSubmit: true,
+        },
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const runtime = new FormRuntime(formConfig);
+    (formConfig.sections.main || []).forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+    runtime.engine.setDocumentData('passport', {
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3', valid: true },
+      fields: { firstName: 'ANNA MARIA' },
+    });
+
+    expect(runtime.buildSubmissionValues({ email: 'doc@example.com' })).toEqual({
+      email: 'doc@example.com',
+    });
+  });
+
+  it('can mask configured document paths before submit payload building', () => {
+    const formConfig = createFormConfig({
+      name: 'headless-document-mask-submit-form',
+      title: 'Headless Document Mask Submit Form',
+      submit: {
+        endpoint: '/api/submit',
+        includeDocumentData: true,
+        documentDataMode: 'summary',
+      },
+      fields: [
+        {
+          name: 'passport',
+          label: 'Passport',
+          type: 'document-scan',
+          documentMaskPaths: ['mrz.documentNumber', 'fields.firstName'],
+        },
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const runtime = new FormRuntime(formConfig);
+    (formConfig.sections.main || []).forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+    runtime.engine.setDocumentData('passport', {
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3', valid: true },
+      fields: { firstName: 'ANNA MARIA', lastName: 'ERIKSSON' },
+    });
+
+    expect(runtime.buildSubmissionValues({ email: 'doc@example.com' })).toEqual({
+      email: 'doc@example.com',
+      document: {
+        field: 'passport',
+        mrz: expect.objectContaining({
+          documentNumber: '***',
+          valid: true,
+        }),
+        fields: {
+          firstName: '***',
+          lastName: 'ERIKSSON',
+        },
+      },
+    });
+  });
+
   it('exposes active template warnings through the composed headless runtime', () => {
     let values: Record<string, any> = {
       firstName: '',

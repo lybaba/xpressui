@@ -129,6 +129,37 @@ function filterDocumentDataByPaths(
   return hasObjectContent(filtered) ? filtered : null;
 }
 
+function maskDocumentDataByPaths(
+  data: Record<string, any>,
+  fieldPaths?: string[],
+  maskValue: string = "***",
+): Record<string, any> {
+  if (!fieldPaths?.length) {
+    return data;
+  }
+
+  const masked = { ...data };
+  fieldPaths.forEach((path) => {
+    const normalizedPath = path.trim();
+    if (!normalizedPath) {
+      return;
+    }
+
+    const segments = normalizedPath.split(".").filter(Boolean);
+    if (!segments.length) {
+      return;
+    }
+
+    const value = getNestedValue(masked, segments);
+    if (typeof value === "undefined") {
+      return;
+    }
+    setNestedValue(masked, segments, maskValue);
+  });
+
+  return masked;
+}
+
 function getFileList(value: any): File[] {
   if (!value) {
     return [];
@@ -248,9 +279,16 @@ export class FormEngineRuntime {
 
     if (entries.length === 1) {
       const [fieldName, data] = entries[0];
+      const fieldConfig = this.inputFields[fieldName];
+      if (fieldConfig?.documentExcludeFromSubmit) {
+        return normalizedValues;
+      }
       const redactedData = redactDocumentData(data, documentDataMode);
-      const filteredData = redactedData
-        ? filterDocumentDataByPaths(redactedData, documentFieldPaths)
+      const maskedData = redactedData
+        ? maskDocumentDataByPaths(redactedData, fieldConfig?.documentMaskPaths)
+        : null;
+      const filteredData = maskedData
+        ? filterDocumentDataByPaths(maskedData, documentFieldPaths)
         : null;
       if (!filteredData) {
         return normalizedValues;
@@ -267,11 +305,18 @@ export class FormEngineRuntime {
     const redactedEntries = Object.fromEntries(
       entries
         .map(([fieldName, data]) => {
+          const fieldConfig = this.inputFields[fieldName];
+          if (fieldConfig?.documentExcludeFromSubmit) {
+            return [fieldName, null] as const;
+          }
           const redactedData = redactDocumentData(data, documentDataMode);
+          const maskedData = redactedData
+            ? maskDocumentDataByPaths(redactedData, fieldConfig?.documentMaskPaths)
+            : null;
           return [
             fieldName,
-            redactedData
-              ? filterDocumentDataByPaths(redactedData, documentFieldPaths)
+            maskedData
+              ? filterDocumentDataByPaths(maskedData, documentFieldPaths)
               : null,
           ] as const;
         })

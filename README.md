@@ -1368,6 +1368,10 @@ Frontend behavior:
   `documentNumberTargetField`, `documentNationalityTargetField`,
   `documentBirthDateTargetField`, `documentExpiryDateTargetField`,
   `documentSexTargetField` can autopopulate normalized identity fields
+- `documentExcludeFromSubmit: true` excludes OCR/MRZ document payload from
+  submit values for that field
+- `documentMaskPaths: string[]` masks sensitive document paths (for example
+  `mrz.documentNumber`, `fields.firstName`) before submit
 - `submit.includeDocumentData: true` injects the normalized `document` object
   directly into submitted values
 - `submit.documentDataMode` controls redaction: `full`, `summary`,

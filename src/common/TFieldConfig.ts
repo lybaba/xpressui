@@ -65,6 +65,8 @@ type TFieldConfig = {
     documentBirthDateTargetField?: string;
     documentExpiryDateTargetField?: string;
     documentSexTargetField?: string;
+    documentExcludeFromSubmit?: boolean;
+    documentMaskPaths?: string[];
     fileDropMode?: 'replace' | 'append';
     minFiles?: number;
     maxFiles?: number;

@@ -6928,6 +6928,79 @@ describe('FormUI', () => {
     );
   });
 
+  it('supports a payment-capture provider with normalized capture payload and workflow transition', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        status: 'captured',
+        captureId: 'cap_123',
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'payment-capture-form',
+      title: 'Payment Capture Form',
+      provider: {
+        type: 'payment-capture',
+        endpoint: 'https://api.example.test/payments/capture',
+      },
+      fields: [
+        {
+          name: 'payment_intent_id',
+          label: 'Payment Intent',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'amount_to_capture',
+          label: 'Capture Amount',
+          type: 'price',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const paymentIntentId = element.querySelector('#payment_intent_id') as HTMLInputElement;
+    const amountToCapture = element.querySelector('#amount_to_capture') as HTMLInputElement;
+    const form = element.querySelector('#payment-capture-form_form') as HTMLFormElement;
+    const onCaptureSuccess = vi.fn();
+
+    element.addEventListener('form-ui:payment-capture-success', (event) => {
+      onCaptureSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    paymentIntentId.value = 'pi_123';
+    paymentIntentId.dispatchEvent(new Event('input', { bubbles: true }));
+    amountToCapture.value = '42.50';
+    amountToCapture.dispatchEvent(new Event('input', { bubbles: true }));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/payments/capture',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'payment-capture',
+          capture: {
+            payment_intent_id: 'pi_123',
+            amount_to_capture: 42.5,
+          },
+        }),
+      })
+    );
+    expect(onCaptureSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          status: 'captured',
+          captureId: 'cap_123',
+        },
+      })
+    );
+    expect(element.getWorkflowState()).toBe('completed');
+  });
+
   it('supports a webhook provider with a generic normalized payload', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ delivered: true }), {
@@ -7693,6 +7766,79 @@ describe('FormUI', () => {
         result: { rescheduled: true, bookingId: 'bk_123' },
       })
     );
+  });
+
+  it('supports a calendar-availability-hold provider for temporary booking holds', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        status: 'hold_pending',
+        holdId: 'hold_123',
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'calendar-availability-hold-form',
+      title: 'Calendar Availability Hold Form',
+      provider: {
+        type: 'calendar-availability-hold',
+        endpoint: 'https://api.example.test/availability/hold',
+      },
+      fields: [
+        {
+          name: 'slot_id',
+          label: 'Slot ID',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'customer_email',
+          label: 'Customer Email',
+          type: 'email',
+          required: true,
+        },
+      ],
+    }) as FormUI;
+    const slotId = element.querySelector('#slot_id') as HTMLInputElement;
+    const customerEmail = element.querySelector('#customer_email') as HTMLInputElement;
+    const form = element.querySelector('#calendar-availability-hold-form_form') as HTMLFormElement;
+    const onHoldSuccess = vi.fn();
+
+    element.addEventListener('form-ui:calendar-availability-hold-success', (event) => {
+      onHoldSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    slotId.value = 'slot_0900';
+    slotId.dispatchEvent(new Event('input', { bubbles: true }));
+    customerEmail.value = 'holder@example.com';
+    customerEmail.dispatchEvent(new Event('input', { bubbles: true }));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/availability/hold',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'calendar-availability-hold',
+          hold: {
+            slot_id: 'slot_0900',
+            customer_email: 'holder@example.com',
+          },
+        }),
+      })
+    );
+    expect(onHoldSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          status: 'hold_pending',
+          holdId: 'hold_123',
+        },
+      })
+    );
+    expect(element.getWorkflowState()).toBe('hold_pending');
   });
 
   it('supports an approval-request provider and emits pending approval events', async () => {
@@ -8576,6 +8722,78 @@ describe('FormUI', () => {
         }),
       }),
     );
+  });
+
+  it('supports an identity-review provider for manual verification decisions', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        status: 'pending_approval',
+        reviewId: 'rev_123',
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'identity-review-form',
+      title: 'Identity Review Form',
+      provider: {
+        type: 'identity-review',
+        endpoint: 'https://api.example.test/identity/review',
+      },
+      fields: [
+        {
+          name: 'verification_id',
+          label: 'Verification ID',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'reviewer_note',
+          label: 'Reviewer Note',
+          type: 'textarea',
+        },
+      ],
+    }) as FormUI;
+    const verificationId = element.querySelector('#verification_id') as HTMLInputElement;
+    const reviewerNote = element.querySelector('#reviewer_note') as HTMLTextAreaElement;
+    const form = element.querySelector('#identity-review-form_form') as HTMLFormElement;
+    const onIdentityReviewSuccess = vi.fn();
+
+    element.addEventListener('form-ui:identity-review-success', (event) => {
+      onIdentityReviewSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    verificationId.value = 'ver_123';
+    verificationId.dispatchEvent(new Event('input', { bubbles: true }));
+    reviewerNote.value = 'Manual review requested.';
+    reviewerNote.dispatchEvent(new Event('input', { bubbles: true }));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://api.example.test/identity/review',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'identity-review',
+          review: {
+            verification_id: 'ver_123',
+            reviewer_note: 'Manual review requested.',
+          },
+        }),
+      }),
+    );
+    expect(onIdentityReviewSuccess).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: {
+          status: 'pending_approval',
+          reviewId: 'rev_123',
+        },
+      }),
+    );
+    expect(element.getWorkflowState()).toBe('pending_approval');
   });
 
   it('supports custom providers registered through the provider registry', async () => {

@@ -443,6 +443,11 @@ Helper shortcuts:
 Providers are thin presets on top of `submit`. They normalize payloads so your
 backend receives stable request shapes.
 
+New workflow-aware providers are also available:
+- `calendar-availability-hold`
+- `payment-capture`
+- `identity-review`
+
 ### Reservation
 
 ```ts

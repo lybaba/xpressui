@@ -958,3 +958,136 @@ registerProvider("identity-verification-webhook", {
   successEventName: "form-ui:identity-verification-webhook-success",
   errorEventName: "form-ui:identity-verification-webhook-error",
 });
+
+registerProvider("calendar-availability-hold", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "calendar-availability-hold",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "calendar-availability-hold",
+      hold: values,
+    };
+  },
+  resolveTransition(result) {
+    if (!result || typeof result !== "object") {
+      return null;
+    }
+
+    const status =
+      typeof result.status === "string"
+        ? result.status
+        : typeof result.holdStatus === "string"
+          ? result.holdStatus
+          : "";
+    if (
+      status === "hold_pending" ||
+      status === "hold_confirmed" ||
+      status === "hold_expired"
+    ) {
+      return {
+        type: "workflow",
+        state: status,
+      };
+    }
+
+    return null;
+  },
+  successEventName: "form-ui:calendar-availability-hold-success",
+  errorEventName: "form-ui:calendar-availability-hold-error",
+});
+
+registerProvider("payment-capture", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "payment-capture",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "payment-capture",
+      capture: values,
+    };
+  },
+  resolveTransition(result) {
+    if (!result || typeof result !== "object") {
+      return null;
+    }
+
+    const status =
+      typeof result.status === "string"
+        ? result.status
+        : typeof result.captureStatus === "string"
+          ? result.captureStatus
+          : "";
+    if (status === "captured" || status === "succeeded" || status === "completed") {
+      return {
+        type: "workflow",
+        state: "completed",
+      };
+    }
+
+    if (status === "failed" || status === "declined" || status === "rejected") {
+      return {
+        type: "workflow",
+        state: "error",
+      };
+    }
+
+    return null;
+  },
+  successEventName: "form-ui:payment-capture-success",
+  errorEventName: "form-ui:payment-capture-error",
+});
+
+registerProvider("identity-review", {
+  createSubmitRequest(provider) {
+    return {
+      endpoint: provider.endpoint,
+      method: provider.method || "POST",
+      headers: provider.headers,
+      action: "identity-review",
+    };
+  },
+  buildPayload(values) {
+    return {
+      action: "identity-review",
+      review: values,
+    };
+  },
+  resolveTransition(result) {
+    if (!result || typeof result !== "object") {
+      return null;
+    }
+
+    const status =
+      typeof result.status === "string"
+        ? result.status
+        : typeof result.reviewStatus === "string"
+          ? result.reviewStatus
+          : "";
+    if (
+      status === "pending_approval" ||
+      status === "approved" ||
+      status === "completed" ||
+      status === "rejected"
+    ) {
+      return {
+        type: "workflow",
+        state: status,
+      };
+    }
+
+    return null;
+  },
+  successEventName: "form-ui:identity-review-success",
+  errorEventName: "form-ui:identity-review-error",
+});

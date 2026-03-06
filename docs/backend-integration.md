@@ -27,6 +27,77 @@ responses your frontend can rely on.
 - The component emits `form-ui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events
 
+## Workflow-Aware Provider Additions
+
+### `calendar-availability-hold`
+
+Request payload:
+
+```json
+{
+  "action": "calendar-availability-hold",
+  "hold": {
+    "slot_id": "slot_0900",
+    "customer_email": "holder@example.com"
+  }
+}
+```
+
+Suggested response statuses:
+- `hold_pending`
+- `hold_confirmed`
+- `hold_expired`
+
+Provider events:
+- success: `form-ui:calendar-availability-hold-success`
+- error: `form-ui:calendar-availability-hold-error`
+
+### `payment-capture`
+
+Request payload:
+
+```json
+{
+  "action": "payment-capture",
+  "capture": {
+    "payment_intent_id": "pi_123",
+    "amount_to_capture": 42.5
+  }
+}
+```
+
+Suggested response statuses:
+- success-like: `captured`, `succeeded`, `completed`
+- failure-like: `failed`, `declined`, `rejected`
+
+Provider events:
+- success: `form-ui:payment-capture-success`
+- error: `form-ui:payment-capture-error`
+
+### `identity-review`
+
+Request payload:
+
+```json
+{
+  "action": "identity-review",
+  "review": {
+    "verification_id": "ver_123",
+    "reviewer_note": "Manual review requested."
+  }
+}
+```
+
+Suggested response statuses:
+- `pending_approval`
+- `approved`
+- `completed`
+- `rejected`
+
+Provider events:
+- success: `form-ui:identity-review-success`
+- error: `form-ui:identity-review-error`
+
 ## View And Hybrid Runtime Contract
 
 `FormUI` can now run in three render modes:

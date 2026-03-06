@@ -134,9 +134,7 @@ Implemented providers:
 
 Remaining:
 - richer workflow-aware providers:
-  - `calendar-availability-hold`
-  - `payment-capture`
-  - `identity-review`
+  - none in current P0 scope
 
 Completed:
 - consistent provider-specific error normalization
@@ -354,10 +352,10 @@ Priority Backlog
 ----------------
 
 P0:
-- richer workflow-aware providers:
-  - `calendar-availability-hold`
-  - `payment-capture`
-  - `identity-review`
+- complete Phase 7 hardening:
+  - secure template rendering for view blocks
+  - accessibility and keyboard/focus improvements for modal/drawer overlays
+  - renderer extension cookbook and production recipes
 
 P1:
 - signed / shareable resume tokens
@@ -381,24 +379,21 @@ Next Best Task
 
 The most immediately profitable next feature is:
 
-- implement the remaining workflow-aware providers:
-  - `calendar-availability-hold`
-  - `payment-capture`
-  - `identity-review`
-
-Why:
-- this is the P0 backlog and directly expands business workflow coverage
-- it validates the provider contract and routing stack on real integrations
-- it delivers immediate product value for orchestration-centric adopters
-
-Suggested first scope:
-- add `calendar-availability-hold` with normalized status + transition behavior
-- add `payment-capture` with explicit capture-success/failure contracts
-- add `identity-review` for manual decision workflows and provider events
-- document response contracts and add conformance tests for all three
-
-Follow-up scope (after current P0):
 - complete Phase 7 hardening:
   - secure template rendering for view blocks
-  - accessibility hardening for cart/gallery overlays and keyboard flows
-  - advanced renderer docs with integration examples
+  - accessibility and keyboard/focus improvements for modal/drawer overlays
+  - renderer extension cookbook and production recipes
+
+Why:
+- this is now the highest-risk product surface after the provider backlog was covered
+- it improves UX quality and production safety for view/hybrid commerce use cases
+- it reduces integration friction for host apps needing accessible, override-friendly renderers
+
+Suggested first scope:
+- add focus trap + escape behavior for cart/gallery modals and restore focus on close
+- add ARIA semantics (`aria-modal`, labels, hidden background interaction)
+- document secure template patterns and renderer override recipes
+
+Follow-up scope (after current P0):
+- signed / shareable resume tokens
+- harden presigned upload retries

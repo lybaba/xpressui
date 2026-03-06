@@ -10059,6 +10059,156 @@ describe('FormUI', () => {
     expect(element.listResumeTokens()).toEqual([]);
   });
 
+  it('supports remote share-code exchange for cross-device resume', async () => {
+    const sign = (payload: Record<string, any>) =>
+      `${payload.token}:${payload.savedAt}:${payload.issuedAt}:${payload.expiresAt}:${payload.snapshot?.draft?.email || ''}`;
+    const fetchSpy = vi.spyOn(window, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === 'https://api.example.test/resume' && init?.method === 'POST') {
+        const body = JSON.parse(String(init?.body || '{}')) as Record<string, any>;
+        if (body.operation === 'create-share-code') {
+          return new Response(JSON.stringify({
+            operation: 'create-share-code',
+            code: 'SHARE-42',
+            token: body.token,
+            expiresAt: 7777,
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        if (body.operation === 'claim-share-code') {
+          const snapshot = {
+            draft: { email: 'cross-device@example.com' },
+            queue: [],
+            deadLetter: [],
+          };
+          const token = 'remote_token_claimed';
+          const savedAt = 6000;
+          const issuedAt = 6000;
+          const expiresAt = 9000;
+          return new Response(JSON.stringify({
+            operation: 'claim-share-code',
+            code: body.code,
+            token,
+            savedAt,
+            issuedAt,
+            expiresAt,
+            signatureVersion: 'v2',
+            signature: sign({ token, savedAt, issuedAt, expiresAt, snapshot }),
+            snapshot,
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'remote-share-code-form',
+      title: 'Remote Share Code Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-remote-share-code',
+        resumeEndpoint: 'https://api.example.test/resume',
+        shareCodeEndpoint: 'https://api.example.test/resume',
+        resumeTokenSignatureVersion: 'v2',
+        verifyResumeToken: (payload) => sign(payload) === payload.signature,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    const code = await element.createResumeShareCode('remote_token_123');
+    expect(code).toBe('SHARE-42');
+
+    const claim = await element.claimResumeShareCode('SHARE-42');
+    expect(claim).toEqual(expect.objectContaining({
+      token: 'remote_token_claimed',
+      signatureVersion: 'v2',
+      signatureValid: true,
+    }));
+
+    const restored = await element.restoreFromShareCodeAsync('SHARE-42');
+    expect(restored).toEqual({ email: 'cross-device@example.com' });
+    expect((element.querySelector('#email') as HTMLInputElement).value).toBe('cross-device@example.com');
+
+    const createShareCall = fetchSpy.mock.calls.find(([url, init]) => {
+      const body = JSON.parse(String(init?.body || '{}')) as Record<string, any>;
+      return String(url) === 'https://api.example.test/resume'
+        && init?.method === 'POST'
+        && body.operation === 'create-share-code';
+    });
+    expect(createShareCall).toBeDefined();
+  });
+
+  it('rejects share-code claim when signature verification fails', async () => {
+    vi.spyOn(window, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === 'https://api.example.test/resume' && init?.method === 'POST') {
+        const body = JSON.parse(String(init?.body || '{}')) as Record<string, any>;
+        if (body.operation === 'claim-share-code') {
+          return new Response(JSON.stringify({
+            operation: 'claim-share-code',
+            code: body.code,
+            token: 'remote_token_claim_invalid',
+            savedAt: 8000,
+            issuedAt: 8000,
+            expiresAt: 9000,
+            signatureVersion: 'v2',
+            signature: 'bad-signature',
+            snapshot: {
+              draft: { email: 'tampered@example.com' },
+              queue: [],
+              deadLetter: [],
+            },
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'remote-share-code-invalid-form',
+      title: 'Remote Share Code Invalid Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-remote-share-code-invalid',
+        resumeEndpoint: 'https://api.example.test/resume',
+        shareCodeEndpoint: 'https://api.example.test/resume',
+        resumeTokenSignatureVersion: 'v2',
+        verifyResumeToken: () => false,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const onInvalidSignature = vi.fn();
+    element.addEventListener('form-ui:resume-token-invalid-signature', (event) => {
+      onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    await expect(element.claimResumeShareCode('SHARE-FAIL')).resolves.toBeNull();
+    expect(onInvalidSignature).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          token: 'remote_token_claim_invalid',
+          signatureVersion: 'v2',
+        }),
+      }),
+    );
+  });
+
   it('queues submissions locally when the network fails', async () => {
     const fetchSpy = vi
       .spyOn(window, 'fetch')

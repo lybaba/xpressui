@@ -4327,6 +4327,10 @@ export class FormUI extends HTMLElement {
     return this.persistence.createResumeTokenAsync();
   }
 
+  createResumeShareCode = (token: string): Promise<string | null> => {
+    return this.persistence.createResumeShareCode(token);
+  }
+
   listResumeTokens = (): TResumeTokenInfo[] => {
     return this.persistence.listResumeTokens();
   }
@@ -4358,8 +4362,27 @@ export class FormUI extends HTMLElement {
     return this.persistence.lookupResumeToken(token);
   }
 
+  claimResumeShareCode = (code: string): Promise<TResumeLookupResult | null> => {
+    return this.persistence.claimResumeShareCode(code);
+  }
+
   restoreFromResumeTokenAsync = async (token: string): Promise<Record<string, any> | null> => {
     const restoredValues = await this.persistence.restoreFromResumeTokenAsync(token);
+    if (!restoredValues || !this.form) {
+      return restoredValues;
+    }
+
+    Object.entries(restoredValues).forEach(([fieldName, fieldValue]) => {
+      this.form?.change(fieldName, fieldValue);
+    });
+    this.persistence.emitDraftRestored(restoredValues);
+    this.updateConditionalFields();
+    await this.refreshRemoteOptions();
+    return restoredValues;
+  }
+
+  restoreFromShareCodeAsync = async (code: string): Promise<Record<string, any> | null> => {
+    const restoredValues = await this.persistence.restoreFromShareCodeAsync(code);
     if (!restoredValues || !this.form) {
       return restoredValues;
     }

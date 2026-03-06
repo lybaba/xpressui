@@ -145,6 +145,7 @@ export type TFormStorageConfig = {
     key?: string;
     autoSaveMs?: number;
     resumeEndpoint?: string;
+    shareCodeEndpoint?: string;
     resumeTokenTtlDays?: number;
     encryptionKey?: string;
     retentionDays?: number;

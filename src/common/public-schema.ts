@@ -41,6 +41,7 @@ const PUBLIC_FORM_SCHEMA = {
         key: { type: "string", minLength: 1 },
         autoSaveMs: { type: "integer", minimum: 0 },
         resumeEndpoint: { type: "string", minLength: 1 },
+        shareCodeEndpoint: { type: "string", minLength: 1 },
         resumeTokenTtlDays: { type: "number", minimum: 0 },
         retentionDays: { type: "number", minimum: 0 },
         retentionDraftDays: { type: "number", minimum: 0 },

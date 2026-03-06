@@ -48,6 +48,7 @@ export type TResumeLookupResult = TResumeTokenInfo & {
 };
 
 export type TRemoteResumeOperation = "create" | "lookup" | "invalidate";
+export type TRemoteShareCodeOperation = "create-share-code" | "claim-share-code";
 
 export type TRemoteResumeCreateRequest = {
   operation: "create";
@@ -81,6 +82,35 @@ export type TRemoteResumeInvalidateResponse = {
   operation: "invalidate";
   token: string;
   invalidated: boolean;
+};
+
+export type TRemoteResumeShareCodeCreateRequest = {
+  operation: "create-share-code";
+  token: string;
+};
+
+export type TRemoteResumeShareCodeCreateResponse = {
+  operation: "create-share-code";
+  code: string;
+  token?: string;
+  expiresAt?: number;
+};
+
+export type TRemoteResumeShareCodeClaimRequest = {
+  operation: "claim-share-code";
+  code: string;
+};
+
+export type TRemoteResumeShareCodeClaimResponse = {
+  operation: "claim-share-code";
+  code: string;
+  token: string;
+  savedAt: number;
+  issuedAt?: number;
+  expiresAt?: number;
+  signature?: string;
+  signatureVersion?: string;
+  snapshot: TFormStorageSnapshot | null;
 };
 
 type TResumeTokenState = {
@@ -508,6 +538,11 @@ export class FormPersistenceRuntime {
     return this.options.getFormConfig()?.storage?.resumeEndpoint;
   }
 
+  getShareCodeEndpoint(): string | undefined {
+    return this.options.getFormConfig()?.storage?.shareCodeEndpoint
+      || this.getResumeEndpoint();
+  }
+
   getResumeTokenSignatureVersion(): string | undefined {
     const version = this.options.getFormConfig()?.storage?.resumeTokenSignatureVersion;
     return typeof version === "string" && version ? version : undefined;
@@ -589,6 +624,75 @@ export class FormPersistenceRuntime {
         signatureVersion: state.signatureVersion,
       }),
     );
+  }
+
+  parseRemoteShareCodeCreateResponse(result: unknown): TRemoteResumeShareCodeCreateResponse | null {
+    const normalizedResult =
+      typeof result === "string"
+        ? (() => {
+            try {
+              return JSON.parse(result) as unknown;
+            } catch {
+              return null;
+            }
+          })()
+        : result;
+
+    if (!normalizedResult || typeof normalizedResult !== "object") {
+      return null;
+    }
+
+    const response = normalizedResult as Record<string, any>;
+    if (typeof response.code !== "string" || !response.code) {
+      return null;
+    }
+
+    return {
+      operation: "create-share-code",
+      code: response.code,
+      token: typeof response.token === "string" ? response.token : undefined,
+      expiresAt: typeof response.expiresAt === "number" ? response.expiresAt : undefined,
+    };
+  }
+
+  parseRemoteShareCodeClaimResponse(result: unknown): TRemoteResumeShareCodeClaimResponse | null {
+    const normalizedResult =
+      typeof result === "string"
+        ? (() => {
+            try {
+              return JSON.parse(result) as unknown;
+            } catch {
+              return null;
+            }
+          })()
+        : result;
+
+    if (!normalizedResult || typeof normalizedResult !== "object") {
+      return null;
+    }
+
+    const response = normalizedResult as Record<string, any>;
+    if (typeof response.code !== "string" || !response.code) {
+      return null;
+    }
+    if (typeof response.token !== "string" || !response.token) {
+      return null;
+    }
+
+    return {
+      operation: "claim-share-code",
+      code: response.code,
+      token: response.token,
+      savedAt: typeof response.savedAt === "number" ? response.savedAt : Date.now(),
+      issuedAt: typeof response.issuedAt === "number" ? response.issuedAt : undefined,
+      expiresAt: typeof response.expiresAt === "number" ? response.expiresAt : undefined,
+      signature: typeof response.signature === "string" ? response.signature : undefined,
+      signatureVersion:
+        typeof response.signatureVersion === "string"
+          ? response.signatureVersion
+          : undefined,
+      snapshot: this.normalizeResumeSnapshot(response.snapshot),
+    };
   }
 
   parseResumeToken(token: string, raw: string | null): (TResumeTokenInfo & {
@@ -950,6 +1054,168 @@ export class FormPersistenceRuntime {
     } catch {
       return null;
     }
+  }
+
+  async createResumeShareCode(token: string): Promise<string | null> {
+    const endpoint = this.getShareCodeEndpoint();
+    if (!endpoint || !token) {
+      return null;
+    }
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          operation: "create-share-code",
+          token,
+        } satisfies TRemoteResumeShareCodeCreateRequest),
+      });
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+      if (!response.ok) {
+        return null;
+      }
+
+      const parsed = this.parseRemoteShareCodeCreateResponse(result);
+      if (!parsed) {
+        return null;
+      }
+
+      this.options.emitEvent(
+        "form-ui:resume-share-code-created",
+        this.createEventDetail(this.options.getValues(), {
+          operation: parsed.operation,
+          code: parsed.code,
+          token: parsed.token || token,
+          expiresAt: parsed.expiresAt,
+          endpoint,
+        }, response),
+      );
+      return parsed.code;
+    } catch {
+      return null;
+    }
+  }
+
+  async claimResumeShareCode(code: string): Promise<TResumeLookupResult | null> {
+    const endpoint = this.getShareCodeEndpoint();
+    if (!endpoint || !code) {
+      return null;
+    }
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          operation: "claim-share-code",
+          code,
+        } satisfies TRemoteResumeShareCodeClaimRequest),
+      });
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : await response.text();
+      if (!response.ok) {
+        return null;
+      }
+
+      const parsed = this.parseRemoteShareCodeClaimResponse(result);
+      if (!parsed) {
+        return null;
+      }
+
+      if (!parsed.snapshot) {
+        return null;
+      }
+
+      const baseState: TResumeTokenState = {
+        version: 1,
+        savedAt: parsed.savedAt,
+        issuedAt: parsed.issuedAt ?? parsed.savedAt,
+        expiresAt:
+          typeof parsed.expiresAt === "number"
+            ? parsed.expiresAt
+            : this.getResumeTokenExpiresAt(parsed.savedAt),
+        snapshot: parsed.snapshot,
+        resumeEndpoint: this.getResumeEndpoint(),
+        remote: true,
+        ...(parsed.signature ? { signature: parsed.signature } : {}),
+        ...(parsed.signatureVersion ? { signatureVersion: parsed.signatureVersion } : {}),
+      };
+      const state = baseState.signature
+        ? baseState
+        : this.applyResumeTokenSignature(parsed.token, baseState);
+      if (!this.isResumeTokenSignatureValid(parsed.token, state)) {
+        this.emitResumeTokenInvalidSignature(parsed.token, {
+          savedAt: parsed.savedAt,
+          resumeEndpoint: this.getResumeEndpoint(),
+          signatureVersion: state.signatureVersion,
+        });
+        return null;
+      }
+
+      this.persistResumeTokenState(parsed.token, state);
+      const lookup: TResumeLookupResult = {
+        token: parsed.token,
+        savedAt: parsed.savedAt,
+        issuedAt: state.issuedAt,
+        expiresAt: state.expiresAt,
+        expired: false,
+        resumeEndpoint: this.getResumeEndpoint(),
+        remote: true,
+        signatureVersion: state.signatureVersion,
+        signatureValid: true,
+        snapshot: parsed.snapshot,
+      };
+
+      this.options.emitEvent(
+        "form-ui:resume-share-code-claimed",
+        this.createEventDetail(this.options.getValues(), {
+          operation: parsed.operation,
+          code: parsed.code,
+          token: parsed.token,
+          savedAt: parsed.savedAt,
+          issuedAt: state.issuedAt,
+          expiresAt: state.expiresAt,
+          signatureVersion: state.signatureVersion,
+        }, response),
+      );
+      return lookup;
+    } catch {
+      return null;
+    }
+  }
+
+  async restoreFromShareCodeAsync(code: string): Promise<Record<string, any> | null> {
+    const lookup = await this.claimResumeShareCode(code);
+    if (!lookup || !lookup.snapshot) {
+      return null;
+    }
+
+    const restoredDraft = this.applyResumeSnapshot(lookup.snapshot);
+    this.options.emitEvent(
+      "form-ui:resume-token-restored",
+      this.createEventDetail(restoredDraft, {
+        token: lookup.token,
+        snapshot: lookup.snapshot,
+        savedAt: lookup.savedAt,
+        issuedAt: lookup.issuedAt,
+        expiresAt: lookup.expiresAt,
+        resumeEndpoint: lookup.resumeEndpoint,
+        remote: true,
+        signatureVersion: lookup.signatureVersion,
+        shareCode: code,
+      }),
+    );
+    return restoredDraft;
   }
 
   restoreFromResumeToken(token: string): Record<string, any> | null {

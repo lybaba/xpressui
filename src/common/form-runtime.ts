@@ -114,12 +114,15 @@ export type TFormRuntimePublicApi = Pick<
   | "validateCurrentStep"
   | "createResumeToken"
   | "createResumeTokenAsync"
+  | "createResumeShareCode"
   | "listResumeTokens"
   | "deleteResumeToken"
   | "invalidateResumeToken"
   | "lookupResumeToken"
+  | "claimResumeShareCode"
   | "restoreFromResumeToken"
   | "restoreFromResumeTokenAsync"
+  | "restoreFromShareCodeAsync"
   | "clearDeadLetterQueue"
   | "requeueDeadLetterEntry"
   | "replayDeadLetterEntry"
@@ -522,6 +525,10 @@ export class FormRuntime {
     return this.persistence.createResumeTokenAsync();
   }
 
+  createResumeShareCode(token: string): Promise<string | null> {
+    return this.persistence.createResumeShareCode(token);
+  }
+
   listResumeTokens(): TResumeTokenInfo[] {
     return this.persistence.listResumeTokens();
   }
@@ -542,8 +549,16 @@ export class FormRuntime {
     return this.persistence.lookupResumeToken(token);
   }
 
+  claimResumeShareCode(code: string): Promise<TResumeLookupResult | null> {
+    return this.persistence.claimResumeShareCode(code);
+  }
+
   restoreFromResumeTokenAsync(token: string): Promise<Record<string, any> | null> {
     return this.persistence.restoreFromResumeTokenAsync(token);
+  }
+
+  restoreFromShareCodeAsync(code: string): Promise<Record<string, any> | null> {
+    return this.persistence.restoreFromShareCodeAsync(code);
   }
 
   clearDeadLetterQueue(): void {

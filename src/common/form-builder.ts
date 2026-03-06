@@ -483,6 +483,9 @@ export function createTemplateMarkup(
         config.storage.resumeEndpoint
           ? `data-storage-resume-endpoint="${escapeHtml(config.storage.resumeEndpoint)}"`
           : '',
+        config.storage.shareCodeEndpoint
+          ? `data-storage-share-code-endpoint="${escapeHtml(config.storage.shareCodeEndpoint)}"`
+          : '',
         config.storage.resumeTokenTtlDays !== undefined
           ? `data-storage-resume-token-ttl-days="${escapeHtml(String(config.storage.resumeTokenTtlDays))}"`
           : '',

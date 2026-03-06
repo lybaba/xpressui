@@ -112,6 +112,7 @@ export const ATTR_STORAGE_ADAPTER = "storageAdapter"
 export const ATTR_STORAGE_KEY = "storageKey"
 export const ATTR_STORAGE_AUTOSAVE_MS = "storageAutoSaveMs"
 export const ATTR_STORAGE_RESUME_ENDPOINT = "storageResumeEndpoint"
+export const ATTR_STORAGE_SHARE_CODE_ENDPOINT = "storageShareCodeEndpoint"
 export const ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS = "storageResumeTokenTtlDays"
 export const ATTR_STORAGE_ENCRYPTION_KEY = "storageEncryptionKey"
 export const ATTR_STORAGE_RETENTION_DAYS = "storageRetentionDays"
@@ -231,6 +232,7 @@ export const HTML_ATTR_STORAGE_ADAPTER = `${HTML_ATTR_PREFIX}storage-adapter`
 export const HTML_ATTR_STORAGE_KEY = `${HTML_ATTR_PREFIX}storage-key`
 export const HTML_ATTR_STORAGE_AUTOSAVE_MS = `${HTML_ATTR_PREFIX}storage-autosave-ms`
 export const HTML_ATTR_STORAGE_RESUME_ENDPOINT = `${HTML_ATTR_PREFIX}storage-resume-endpoint`
+export const HTML_ATTR_STORAGE_SHARE_CODE_ENDPOINT = `${HTML_ATTR_PREFIX}storage-share-code-endpoint`
 export const HTML_ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS = `${HTML_ATTR_PREFIX}storage-resume-token-ttl-days`
 export const HTML_ATTR_STORAGE_ENCRYPTION_KEY = `${HTML_ATTR_PREFIX}storage-encryption-key`
 export const HTML_ATTR_STORAGE_RETENTION_DAYS = `${HTML_ATTR_PREFIX}storage-retention-days`
@@ -350,6 +352,7 @@ export const ATTR_MAP = {
     [HTML_ATTR_STORAGE_KEY]: ATTR_STORAGE_KEY,
     [HTML_ATTR_STORAGE_AUTOSAVE_MS]: ATTR_STORAGE_AUTOSAVE_MS,
     [HTML_ATTR_STORAGE_RESUME_ENDPOINT]: ATTR_STORAGE_RESUME_ENDPOINT,
+    [HTML_ATTR_STORAGE_SHARE_CODE_ENDPOINT]: ATTR_STORAGE_SHARE_CODE_ENDPOINT,
     [HTML_ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS]: ATTR_STORAGE_RESUME_TOKEN_TTL_DAYS,
     [HTML_ATTR_STORAGE_ENCRYPTION_KEY]: ATTR_STORAGE_ENCRYPTION_KEY,
     [HTML_ATTR_STORAGE_RETENTION_DAYS]: ATTR_STORAGE_RETENTION_DAYS,
@@ -584,6 +587,7 @@ export default function getFormConfig(node: Element): TFormConfig {
                 ? Number((formConfig as any).storageAutoSaveMs)
                 : undefined,
             resumeEndpoint: (formConfig as any).storageResumeEndpoint,
+            shareCodeEndpoint: (formConfig as any).storageShareCodeEndpoint,
             resumeTokenTtlDays: (formConfig as any).storageResumeTokenTtlDays
                 ? Number((formConfig as any).storageResumeTokenTtlDays)
                 : undefined,
@@ -606,6 +610,7 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).storageKey;
         delete (formConfig as any).storageAutoSaveMs;
         delete (formConfig as any).storageResumeEndpoint;
+        delete (formConfig as any).storageShareCodeEndpoint;
         delete (formConfig as any).storageResumeTokenTtlDays;
         delete (formConfig as any).storageEncryptionKey;
         delete (formConfig as any).storageRetentionDays;

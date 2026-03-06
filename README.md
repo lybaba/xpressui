@@ -1373,6 +1373,7 @@ Current storage support:
 - `adapter: 'local-storage'`
 - `adapter: 'indexeddb'`
 - `resumeEndpoint`
+- `shareCodeEndpoint`
 - `resumeTokenTtlDays`
 - `resumeTokenSignatureVersion`
 - `signResumeToken(payload)`
@@ -1421,6 +1422,8 @@ Draft events:
 - `form-ui:resume-token-invalidated`
 - `form-ui:resume-token-expired`
 - `form-ui:resume-token-invalid-signature`
+- `form-ui:resume-share-code-created`
+- `form-ui:resume-share-code-claimed`
 
 Queue events:
 - `form-ui:queued`
@@ -1440,12 +1443,15 @@ Runtime inspection helpers:
 - `form.getStorageHealth()`
 - `form.createResumeToken()`
 - `form.createResumeTokenAsync()`
+- `form.createResumeShareCode(token)`
 - `form.listResumeTokens()`
 - `form.deleteResumeToken(token)`
 - `form.invalidateResumeToken(token)`
 - `form.lookupResumeToken(token)`
+- `form.claimResumeShareCode(code)`
 - `form.restoreFromResumeToken(token)`
 - `form.restoreFromResumeTokenAsync(token)`
+- `form.restoreFromShareCodeAsync(code)`
 - `form.clearDeadLetterQueue()`
 - `form.requeueDeadLetterEntry(entryId)`
 - `form.replayDeadLetterEntry(entryId)`
@@ -1462,6 +1468,11 @@ If `resumeEndpoint` is configured:
 - `lookupResumeToken(token)` fetches token metadata and snapshot details
 - `restoreFromResumeTokenAsync(token)` restores from the backend snapshot
 - `invalidateResumeToken(token)` sends a `DELETE` request for the token and removes the local token cache
+
+If `shareCodeEndpoint` is configured (or omitted, fallback to `resumeEndpoint`):
+- `createResumeShareCode(token)` requests a short share code from a token
+- `claimResumeShareCode(code)` exchanges a code for token metadata + snapshot
+- `restoreFromShareCodeAsync(code)` claims and restores snapshot values in one call
 
 If `resumeTokenTtlDays` is set, expired resume tokens are pruned on listing and
 restoring. `resumeEndpoint` is stored as metadata on each token so the same

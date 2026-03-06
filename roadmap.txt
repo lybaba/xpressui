@@ -170,9 +170,13 @@ Completed:
   - `verifyResumeToken(payload)`
   - `resumeTokenSignatureVersion`
   - runtime invalid-signature event
+- share-code exchange MVP for cross-device continuation:
+  - `create-share-code` contract
+  - `claim-share-code` contract
+  - runtime APIs to claim/restore via share code
 
 Remaining:
-- signed shareable token exchange contract (backend-issued tokens)
+- hardened signed shareable token exchange contract (backend policy/rate limits)
 - cross-device resume UX
 
 Exit criteria:

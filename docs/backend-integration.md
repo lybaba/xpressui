@@ -299,6 +299,8 @@ remote save/resume lifecycle operations:
 - `POST /resume` creates or updates a resumable snapshot and returns a token
 - `GET /resume?token=...` looks up a token and returns the stored snapshot
 - `DELETE /resume?token=...` invalidates the token
+- `POST /resume` with `operation: "create-share-code"` creates a short share code from a token
+- `POST /resume` with `operation: "claim-share-code"` exchanges a share code for token + snapshot
 
 `POST` request body:
 
@@ -314,6 +316,26 @@ remote save/resume lifecycle operations:
     "queue": [],
     "deadLetter": []
   }
+}
+```
+
+Share code create request body:
+
+```json
+{
+  "operation": "create-share-code",
+  "token": "remote_token_123"
+}
+```
+
+Share code create response:
+
+```json
+{
+  "operation": "create-share-code",
+  "code": "SHARE-42",
+  "token": "remote_token_123",
+  "expiresAt": 223456
 }
 ```
 
@@ -336,6 +358,37 @@ Recommended `GET` response:
 ```json
 {
   "operation": "lookup",
+  "token": "remote_token_123",
+  "savedAt": 123456,
+  "issuedAt": 123456,
+  "expiresAt": 223456,
+  "signatureVersion": "v2",
+  "signature": "signed_payload_hash",
+  "snapshot": {
+    "draft": {
+      "email": "remote-resume@example.com"
+    },
+    "queue": [],
+    "deadLetter": []
+  }
+}
+```
+
+Share code claim request body:
+
+```json
+{
+  "operation": "claim-share-code",
+  "code": "SHARE-42"
+}
+```
+
+Share code claim response:
+
+```json
+{
+  "operation": "claim-share-code",
+  "code": "SHARE-42",
   "token": "remote_token_123",
   "savedAt": 123456,
   "issuedAt": 123456,

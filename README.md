@@ -1405,6 +1405,10 @@ Extra event:
 - `form-ui:document-data`
 - `form-ui:document-fields-populated`
 
+Retry/upload diagnostics include structured fields such as `stage`, `fieldName`,
+`fileName`, `attempt`, `maxAttempts`, `nextRetryAt`, `reason`, and `status`
+when available.
+
 You can also define basic rules at the form level:
 
 ```ts

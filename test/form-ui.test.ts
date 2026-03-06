@@ -5704,17 +5704,93 @@ describe('FormUI', () => {
       expect.arrayContaining([
         expect.objectContaining({
           stage: 'presign',
+          fieldName: 'attachment',
+          fileName: 'retry-file.pdf',
           attempt: 1,
+          maxAttempts: 3,
+          reason: expect.any(String),
+          nextRetryAt: expect.any(Number),
         }),
         expect.objectContaining({
           stage: 'upload',
+          fieldName: 'attachment',
+          fileName: 'retry-file.pdf',
           attempt: 1,
+          maxAttempts: 3,
+          reason: expect.any(String),
+          nextRetryAt: expect.any(Number),
         }),
       ]),
     );
 
     (window as any).XMLHttpRequest = originalXhr;
     (globalThis as any).XMLHttpRequest = originalXhr;
+  });
+
+  it('emits structured upload-error details when presign retries are exhausted', async () => {
+    const uploadErrorEvents: any[] = [];
+    const fetchMock = vi.spyOn(window, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: 'presign down' }), {
+          status: 503,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: 'presign down' }), {
+          status: 503,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    const runtime = new FormUploadRuntime({
+      emitEvent: (eventName, detail) => {
+        if (eventName === 'form-ui:upload-error') {
+          uploadErrorEvents.push(detail.result);
+        }
+        return true;
+      },
+    });
+    const file = new File(['content'], 'presign-fail.pdf', { type: 'application/pdf' });
+
+    await expect(
+      runtime.submit(
+        { attachment: file },
+        {
+          endpoint: 'https://api.example.test/finalize',
+          method: 'POST',
+          mode: 'form-data',
+          uploadStrategy: 'presigned',
+          presignEndpoint: 'https://api.example.test/presign',
+          uploadRetryMaxAttempts: 2,
+          uploadRetryBaseDelayMs: 0,
+          uploadRetryMaxDelayMs: 0,
+        },
+        {
+          attachment: {
+            name: 'attachment',
+            label: 'Attachment',
+            type: 'file',
+          },
+        },
+      ),
+    ).rejects.toBeTruthy();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(uploadErrorEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          strategy: 'presigned',
+          stage: 'presign',
+          fieldName: 'attachment',
+          fileName: 'presign-fail.pdf',
+          attempt: 2,
+          maxAttempts: 2,
+          retryable: true,
+          reason: expect.any(String),
+          status: 503,
+        }),
+      ]),
+    );
   });
 
   it('supports upload policy hooks and rejects blocked files before upload', async () => {

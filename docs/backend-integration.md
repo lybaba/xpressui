@@ -1344,10 +1344,16 @@ errors), retries are attempted within `uploadRetryMaxAttempts`.
 Runtime diagnostics are emitted through `form-ui:upload-retry` with:
 - `result.stage` (`presign` or `upload`)
 - `result.fieldName`
+- `result.fileName`
 - `result.attempt`
 - `result.maxAttempts`
 - `result.nextRetryAt`
 - `result.reason`
+- `result.status` (when available)
+
+When retries are exhausted, `form-ui:upload-error` includes the same retry
+context (`stage`, `fieldName`, `fileName`, `attempt`, `maxAttempts`,
+`retryable`, `reason`, `status`) to ease operational diagnostics.
 
 Large-file option:
 - `submit.uploadChunkSizeMb` splits direct upload into multiple chunk requests

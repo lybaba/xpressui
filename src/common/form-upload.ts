@@ -129,6 +129,15 @@ type TUploadRetryPolicy = {
   jitter: boolean;
 };
 
+type TUploadRetryFailureMeta = {
+  stage: TUploadRetryStage;
+  attempt: number;
+  maxAttempts: number;
+  retryable: boolean;
+  status?: number;
+  reason: string;
+};
+
 function sleep(ms: number): Promise<void> {
   if (ms <= 0) {
     return Promise.resolve();
@@ -155,6 +164,32 @@ function shouldRetryUploadError(error: any): boolean {
   }
 
   return true;
+}
+
+function getUploadErrorReason(error: any): string {
+  return (
+    error?.message
+    || error?.result?.error
+    || error?.result?.message
+    || "upload_retry"
+  );
+}
+
+function toUploadRetryFailureMeta(
+  stage: TUploadRetryStage,
+  attempt: number,
+  maxAttempts: number,
+  retryable: boolean,
+  error: any,
+): TUploadRetryFailureMeta {
+  return {
+    stage,
+    attempt,
+    maxAttempts,
+    retryable,
+    status: error?.response?.status,
+    reason: getUploadErrorReason(error),
+  };
 }
 
 function getRetryDelayMs(policy: TUploadRetryPolicy, attempt: number): number {
@@ -502,13 +537,24 @@ export class FormUploadRuntime {
         operation: () => Promise<T>,
       ): Promise<T> => {
         let lastError: any = null;
+        let attemptsPerformed = 0;
         for (let attempt = 1; attempt <= retryPolicy.maxAttempts; attempt += 1) {
+          attemptsPerformed = attempt;
           try {
             return await operation();
           } catch (error: any) {
             lastError = error;
             const retryable = shouldRetryUploadError(error);
             if (!retryable || attempt >= retryPolicy.maxAttempts) {
+              if (lastError && typeof lastError === "object") {
+                (lastError as any).__uploadRetry = toUploadRetryFailureMeta(
+                  stage,
+                  attempt,
+                  retryPolicy.maxAttempts,
+                  retryable,
+                  error,
+                );
+              }
               break;
             }
             const delayMs = getRetryDelayMs(retryPolicy, attempt);
@@ -522,20 +568,27 @@ export class FormUploadRuntime {
                 strategy: "presigned",
                 stage,
                 fieldName,
+                fileName: file.name,
                 attempt,
                 maxAttempts: retryPolicy.maxAttempts,
                 nextRetryAt,
                 delayMs,
-                reason:
-                  error?.message
-                  || error?.result?.error
-                  || error?.result?.message
-                  || "upload_retry",
+                reason: getUploadErrorReason(error),
                 status: error?.response?.status,
               },
             );
             await sleep(delayMs);
           }
+        }
+
+        if (lastError && typeof lastError === "object" && !(lastError as any).__uploadRetry) {
+          (lastError as any).__uploadRetry = toUploadRetryFailureMeta(
+            stage,
+            Math.max(1, attemptsPerformed),
+            retryPolicy.maxAttempts,
+            shouldRetryUploadError(lastError),
+            lastError,
+          );
         }
 
         throw lastError;
@@ -562,6 +615,26 @@ export class FormUploadRuntime {
         }
 
         return result;
+      }).catch((error) => {
+        const retryMeta = (error as any)?.__uploadRetry as TUploadRetryFailureMeta | undefined;
+        this.emitUploadEvent(
+          "form-ui:upload-error",
+          values,
+          submitConfig,
+          createUploadState(fileFieldNames, "error", Math.round((completed / total) * 100)),
+          {
+            strategy: "presigned",
+            stage: "presign",
+            fieldName,
+            fileName: file.name,
+            attempt: retryMeta?.attempt,
+            maxAttempts: retryMeta?.maxAttempts,
+            retryable: retryMeta?.retryable,
+            reason: retryMeta?.reason || getUploadErrorReason(error),
+            status: retryMeta?.status ?? error?.response?.status,
+          },
+        );
+        throw error;
       });
       const uploadUrl = presignResult[submitConfig.presignUploadUrlKey || "uploadUrl"];
       const fileUrl = presignResult[submitConfig.presignFileUrlKey || "fileUrl"];
@@ -648,12 +721,23 @@ export class FormUploadRuntime {
         "upload",
         uploadFileInChunks,
       ).catch((error) => {
+        const retryMeta = (error as any)?.__uploadRetry as TUploadRetryFailureMeta | undefined;
         this.emitUploadEvent(
           "form-ui:upload-error",
           values,
           submitConfig,
           createUploadState(fileFieldNames, "error", Math.round((completed / total) * 100)),
-          { strategy: "presigned", fieldName },
+          {
+            strategy: "presigned",
+            stage: "upload",
+            fieldName,
+            fileName: file.name,
+            attempt: retryMeta?.attempt,
+            maxAttempts: retryMeta?.maxAttempts,
+            retryable: retryMeta?.retryable,
+            reason: retryMeta?.reason || getUploadErrorReason(error),
+            status: retryMeta?.status ?? error?.response?.status,
+          },
         );
         throw error;
       });

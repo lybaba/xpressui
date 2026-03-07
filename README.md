@@ -54,6 +54,9 @@ Public API you should treat as stable:
 - `FormRuntime`
 - `FormUploadRuntime`
 - `createLocalFormAdmin(...)`
+- document contract helpers (`DOCUMENT_NORMALIZED_CONTRACT_VERSION`, `createNormalizedDocumentContract`, `isDocumentNormalizedContractV2`, `summarizeNormalizedDocumentContract`)
+- provider envelope guards (`PROVIDER_RESPONSE_CONTRACT_VERSION`, `validateProviderResponseEnvelopeV2`, `isProviderResponseEnvelopeV2`)
+- resume contract helpers (`REMOTE_RESUME_CONTRACT_VERSION`, `isRemoteResumePolicy`, `getRemoteResumePolicy`)
 - public schema helpers (`validatePublicFormConfig`, `migratePublicFormConfig`)
 
 You can also introspect this boundary programmatically with

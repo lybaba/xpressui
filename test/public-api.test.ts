@@ -71,6 +71,16 @@ describe("Public API", () => {
         "FormRuntime",
         "FormUploadRuntime",
         "createLocalFormAdmin",
+        "DOCUMENT_NORMALIZED_CONTRACT_VERSION",
+        "createNormalizedDocumentContract",
+        "isDocumentNormalizedContractV2",
+        "summarizeNormalizedDocumentContract",
+        "PROVIDER_RESPONSE_CONTRACT_VERSION",
+        "validateProviderResponseEnvelopeV2",
+        "isProviderResponseEnvelopeV2",
+        "REMOTE_RESUME_CONTRACT_VERSION",
+        "isRemoteResumePolicy",
+        "getRemoteResumePolicy",
         "validatePublicFormConfig",
         "migratePublicFormConfig",
       ]),
@@ -87,13 +97,18 @@ describe("Public API", () => {
         "getProviderDefinition",
         "createSubmitRequestFromProvider",
         "resolveProviderTransition",
+        "createNormalizedProviderResult",
+        "isNormalizedProviderResult",
         "normalizeProviderResult",
-        "validateProviderResponseEnvelopeV2",
-        "isProviderResponseEnvelopeV2",
         "validateProviderRequest",
         "getProviderSuccessEventName",
         "getProviderErrorEventName",
       ]),
     );
+
+    const exportedKeys = new Set(Object.keys(publicApi));
+    for (const exportName of [...manifest.stable, ...manifest.advanced]) {
+      expect(exportedKeys.has(exportName)).toBe(true);
+    }
   });
 });

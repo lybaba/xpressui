@@ -3,6 +3,11 @@
 This guide defines practical request and response contracts for the built-in
 providers shipped by `@lybaba/xpressui`.
 
+Canonical contract references:
+- [`docs/contracts/document-contract.md`](/home/lyb/projects/xpressui/docs/contracts/document-contract.md)
+- [`docs/contracts/provider-envelope.md`](/home/lyb/projects/xpressui/docs/contracts/provider-envelope.md)
+- [`docs/contracts/resume-contract.md`](/home/lyb/projects/xpressui/docs/contracts/resume-contract.md)
+
 The frontend component can submit directly to your backend and emit events based
 on the response. These examples show the payloads your API should accept and the
 responses your frontend can rely on.

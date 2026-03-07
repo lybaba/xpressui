@@ -204,6 +204,11 @@ npm run pages:prepare
 Scenario mapping reference:
 - [`docs/demo-scenarios.md`](/home/lyb/projects/xpressui/docs/demo-scenarios.md)
 
+Contract references:
+- [`docs/contracts/document-contract.md`](/home/lyb/projects/xpressui/docs/contracts/document-contract.md)
+- [`docs/contracts/provider-envelope.md`](/home/lyb/projects/xpressui/docs/contracts/provider-envelope.md)
+- [`docs/contracts/resume-contract.md`](/home/lyb/projects/xpressui/docs/contracts/resume-contract.md)
+
 ## Secure View Templates
 
 For `mode="view"` and `mode="hybrid"`, `html` fields can render template blocks

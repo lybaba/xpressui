@@ -1,4 +1,9 @@
 import { TFormProviderRequest, TFormSubmitRequest } from "./TFormConfig";
+import {
+  TFormProviderTransition,
+  TNormalizedProviderResult,
+  TProviderResponseEnvelopeV2,
+} from "./provider-contract";
 
 export type TFormProviderDefinition = {
   createSubmitRequest?(
@@ -17,33 +22,11 @@ export type TFormProviderDefinition = {
   errorEventName?: string;
 };
 
-export type TFormProviderTransition =
-  | {
-      type: "step";
-      target: string | number;
-    }
-  | {
-      type: "workflow";
-      state: string;
-    };
-
-export type TNormalizedProviderResult = {
-  status: string | null;
-  transition: TFormProviderTransition | null;
-  messages: string[];
-  errors: any[];
-  nextActions?: any[];
-  data: any;
-};
-
-export type TProviderResponseEnvelopeV2 = {
-  status?: string;
-  transition?: TFormProviderTransition;
-  messages?: string[];
-  errors?: any[];
-  nextActions?: any[];
-  data?: any;
-};
+export type {
+  TFormProviderTransition,
+  TNormalizedProviderResult,
+  TProviderResponseEnvelopeV2,
+} from "./provider-contract";
 
 type TProviderConfigFieldSchema = {
   type: "string" | "number" | "boolean" | "array" | "object";

@@ -64,6 +64,38 @@ import {
   registerProvider,
 } from "./common/provider-registry";
 import type { TFormProviderTransition, TNormalizedProviderResult } from "./common/provider-registry";
+import {
+  getDocumentScanInsight,
+  getDocumentScanSlotCount,
+  getFileValueList,
+  hasFileValues,
+  isDocumentScanField,
+  isQrScanField,
+} from "./ui/form-ui.document";
+export type {
+  TFormApprovalState,
+  TFormUISubmitDetail,
+  TFormWorkflowState,
+} from "./ui/form-ui.types";
+import type {
+  TBarcodeDetectorResult,
+  TDocumentPerspectiveCorners,
+  TFieldOutputRendererOverride,
+  TFormApprovalState,
+  TFormHtmlSanitizer,
+  TFormOutputRenderer,
+  TFormRenderMode,
+  TFormUISubmitDetail,
+  TFormWorkflowState,
+  TImageGalleryItem,
+  TMediaDisplayPolicy,
+  TOutputRendererType,
+  TProductCartItem,
+  TProductListItem,
+  TProviderTransitionRouteResult,
+  TQrScannerState,
+  TWorkflowRouteResult,
+} from "./ui/form-ui.types";
 export {
   createNormalizedDocumentContract,
 } from "./common/document-contract";
@@ -171,128 +203,6 @@ export type {
   TFormSubmitLifecycleHookResult,
   TFormSubmitLifecycleStage,
 } from "./common/TFormConfig";
-
-export type TFormUISubmitDetail = {
-  values: Record<string, any>;
-  formConfig: TFormConfig | null;
-  submit?: TFormSubmitRequest;
-  response?: Response;
-  result?: any;
-  providerResult?: TNormalizedProviderResult;
-  error?: unknown;
-};
-
-export type TFormApprovalState = {
-  status: string;
-  approvalId?: string;
-  result?: any;
-  providerResult?: TNormalizedProviderResult;
-};
-
-export type TFormWorkflowState =
-  | "draft"
-  | "submitting"
-  | "submitted"
-  | "pending_approval"
-  | "approved"
-  | "completed"
-  | "rejected"
-  | "error";
-
-type TWorkflowRouteResult = {
-  routed: boolean;
-  stepIndex: number;
-  stepName: string | null;
-};
-
-type TProviderTransitionRouteResult = {
-  routed: boolean;
-  stepIndex: number;
-  stepName: string | null;
-};
-
-type TFormRenderMode = "form" | "view" | "hybrid";
-type TFormOutputRendererContext = {
-  fieldConfig: TFieldConfig;
-  value: any;
-  mode: TFormRenderMode;
-  unsafeHtml: boolean;
-  mediaDisplayPolicy: TMediaDisplayPolicy;
-};
-type TFormOutputRenderer = (context: TFormOutputRendererContext) => HTMLElement;
-type TOutputRendererType =
-  | "text"
-  | "html"
-  | "image"
-  | "file"
-  | "video"
-  | "audio"
-  | "map"
-  | "link"
-  | "document";
-type TFieldOutputRendererOverride = string | TFormOutputRenderer;
-type TMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery" | "embed";
-type TFormHtmlSanitizer = (
-  html: string,
-  context: {
-    fieldConfig: TFieldConfig;
-    mode: TFormRenderMode;
-  },
-) => string;
-
-type TBarcodeDetectorResult = {
-  rawValue?: string;
-};
-
-type TQrScannerState = {
-  status: "idle" | "starting" | "live" | "error";
-  message?: string;
-};
-
-type TDocumentPerspectiveCorners = {
-  topLeft: { x: number; y: number };
-  topRight: { x: number; y: number };
-  bottomRight: { x: number; y: number };
-  bottomLeft: { x: number; y: number };
-};
-
-type TProductListItem = {
-  id: string;
-  name: string;
-  sale_price: number | null;
-  discount_price: number | null;
-  image_thumbnail: string;
-  image_medium: string;
-  photos_full: string[];
-};
-
-type TProductCartItem = TProductListItem & {
-  quantity: number;
-};
-
-type TImageGalleryItem = {
-  id: string;
-  name: string;
-  image_thumbnail: string;
-  image_medium: string;
-  photos_full: string[];
-};
-
-function hasFileValues(value: any): boolean {
-  if (isFileLikeValue(value)) {
-    return true;
-  }
-
-  if (Array.isArray(value)) {
-    return value.some((entry) => hasFileValues(entry));
-  }
-
-  if (value && typeof value === "object") {
-    return Object.values(value).some((entry) => hasFileValues(entry));
-  }
-
-  return false;
-}
 
 export class FormUI extends HTMLElement {
   form: FormApi<any, any> | null;
@@ -1805,38 +1715,16 @@ export class FormUI extends HTMLElement {
     });
   }
 
-  getFileValueList = (value: any) => {
-    return Array.isArray(value)
-      ? value
-      : value && typeof value === "object"
-        ? [value]
-        : [];
-  }
+  getFileValueList = getFileValueList
 
-  isQrScanField = (fieldConfig: TFieldConfig) => {
-    return fieldConfig.type === QR_SCAN_TYPE;
-  }
+  isQrScanField = isQrScanField
 
-  isDocumentScanField = (fieldConfig: TFieldConfig) => {
-    return fieldConfig.type === DOCUMENT_SCAN_TYPE;
-  }
+  isDocumentScanField = isDocumentScanField
 
-  getDocumentScanSlotCount = (fieldConfig: TFieldConfig) => {
-    return fieldConfig.documentScanMode === "single" ? 1 : 2;
-  }
+  getDocumentScanSlotCount = getDocumentScanSlotCount
 
-  getDocumentScanInsight = (fieldConfig: TFieldConfig): TDocumentScanInsight => {
-    const slotCount = this.getDocumentScanSlotCount(fieldConfig);
-    if (!this.documentScanInsights[fieldConfig.name]) {
-      this.documentScanInsights[fieldConfig.name] = {
-        textBySlot: Array.from({ length: slotCount }, () => null),
-        mrzBySlot: Array.from({ length: slotCount }, () => null),
-        normalizedBySlot: Array.from({ length: slotCount }, () => null),
-      };
-    }
-
-    return this.documentScanInsights[fieldConfig.name];
-  }
+  getDocumentScanInsight = (fieldConfig: TFieldConfig): TDocumentScanInsight =>
+    getDocumentScanInsight(this.documentScanInsights, fieldConfig)
 
   buildDocumentNormalizedContract = createNormalizedDocumentContract
 

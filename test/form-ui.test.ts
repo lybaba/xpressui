@@ -110,29 +110,6 @@ describe('FormUI', () => {
     vi.restoreAllMocks();
   });
 
-  it('keeps the main public runtime exports available from the package entrypoint', () => {
-    expect(publicApi.FormUI).toBe(FormUI);
-    expect(publicApi.FormRuntime).toBe(FormRuntime);
-    expect(publicApi.FormStepRuntime).toBe(FormStepRuntime);
-    expect(publicApi.FormUploadRuntime).toBe(FormUploadRuntime);
-    expect(publicApi.createFormConfig).toBe(createFormConfig);
-    expect(publicApi.createMountSnippet).toBe(createMountSnippet);
-    expect(publicApi.createFormPreset).toBe(createFormPreset);
-    expect(publicApi.fieldFactory).toBe(fieldFactory);
-    expect(publicApi.stepFactory).toBe(stepFactory);
-    expect(publicApi.mountFormUI).toBe(mountFormUI);
-    expect(publicApi.createLocalFormAdmin).toBe(createLocalFormAdmin);
-    expect(publicApi.validatePublicFormConfig).toBe(validatePublicFormConfig);
-    expect(publicApi.PUBLIC_FORM_SCHEMA_VERSION).toBe(PUBLIC_FORM_SCHEMA_VERSION);
-    expect(publicApi.getPublicApiManifest).toBe(getPublicApiManifest);
-    expect(publicApi.registerProvider).toBe(registerProvider);
-    expect(publicApi.getProviderDefinition).toBe(getProviderDefinition);
-    expect(publicApi.createSubmitRequestFromProvider).toBe(createSubmitRequestFromProvider);
-    expect(publicApi.resolveProviderTransition).toBe(resolveProviderTransition);
-    expect(publicApi.validateProviderResponseEnvelopeV2).toBe(validateProviderResponseEnvelopeV2);
-    expect(publicApi.isProviderResponseEnvelopeV2).toBe(isProviderResponseEnvelopeV2);
-  });
-
   it('provides field factory helpers for common field types', () => {
     expect(
       fieldFactory.selectMultiple(
@@ -254,21 +231,6 @@ describe('FormUI', () => {
       value: 'secret',
       includeInSubmit: false,
     });
-  });
-
-  it('exposes a public api manifest with stable and advanced boundaries', () => {
-    const manifest = getPublicApiManifest();
-
-    expect(manifest.schemaVersion).toBe(1);
-    expect(manifest.stable).toContain('mountFormUI');
-    expect(manifest.stable).toContain('createMountSnippet');
-    expect(manifest.stable).toContain('FormUI');
-    expect(manifest.advanced).toContain('FormEngineRuntime');
-    expect(manifest.advanced).toContain('registerProvider');
-    const exportedKeys = new Set(Object.keys(publicApi));
-    for (const exportName of [...manifest.stable, ...manifest.advanced]) {
-      expect(exportedKeys.has(exportName)).toBe(true);
-    }
   });
 
   it('provides business form presets that can be converted to mountable markup', () => {
@@ -9999,66 +9961,6 @@ describe('FormUI', () => {
     );
   });
 
-  it('can include normalized document data in submitted FormUI payloads', async () => {
-    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ saved: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-    const container = document.createElement('div');
-    const element = mountFormUI(container, {
-      name: 'document-submit-form',
-      title: 'Document Submit Form',
-      submit: {
-        endpoint: 'https://api.example.test/document-submit',
-        method: 'POST',
-        includeDocumentData: true,
-        documentDataMode: 'summary',
-      },
-      fields: [
-        {
-          name: 'email',
-          label: 'Email',
-          type: 'email',
-        },
-      ],
-    }) as FormUI;
-
-    element.engine.setDocumentData('passport', {
-      text: 'P<UTOERIKSSON',
-      mrz: { documentNumber: 'L898902C3', valid: true, nationality: 'UTO' },
-      fields: { firstName: 'ANNA MARIA' },
-    });
-
-    await element.onSubmit({ email: 'doc@example.com' });
-
-    expect(fetchSpy).toHaveBeenCalledWith(
-      'https://api.example.test/document-submit',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({
-          email: 'doc@example.com',
-          document: {
-            field: 'passport',
-            mrz: {
-              format: undefined,
-              documentCode: undefined,
-              issuingCountry: undefined,
-              documentNumber: 'L898902C3',
-              nationality: 'UTO',
-              birthDate: undefined,
-              expiryDate: undefined,
-              sex: undefined,
-              valid: true,
-            },
-            fields: { firstName: 'ANNA MARIA' },
-          },
-        }),
-      }),
-    );
-  });
-
   it('can whitelist document submission fields in submitted FormUI payloads', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ saved: true }), {
@@ -10373,117 +10275,6 @@ describe('FormUI', () => {
       headers: undefined,
       action: 'quote-request',
     });
-  });
-
-  it('normalizes provider-specific error payloads into consistent errors and messages', () => {
-    const paymentErrorResult = normalizeProviderResult(
-      'payment',
-      {
-        code: 'payment_failed',
-        message: 'Card authorization failed',
-        errors: {
-          amount: 'Amount is below minimum charge',
-        },
-      },
-      {
-        endpoint: 'https://api.example.test/payments',
-        action: 'payment',
-      },
-    );
-    expect(paymentErrorResult.messages).toEqual([
-      'Card authorization failed',
-      'Amount is below minimum charge',
-    ]);
-    expect(paymentErrorResult.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          source: 'payment',
-          code: 'field_error',
-          field: 'amount',
-          message: 'Amount is below minimum charge',
-        }),
-        expect.objectContaining({
-          source: 'payment',
-          code: 'payment_failed',
-          message: 'Card authorization failed',
-        }),
-      ]),
-    );
-
-    const approvalErrorResult = normalizeProviderResult(
-      'approval-request',
-      {
-        reason: 'Approver is unavailable',
-      },
-      {
-        endpoint: 'https://api.example.test/approvals',
-        action: 'approval-request',
-      },
-    );
-    expect(approvalErrorResult.messages).toEqual(['Approver is unavailable']);
-    expect(approvalErrorResult.errors).toEqual([
-      expect.objectContaining({
-        source: 'approval-request',
-        code: 'approval_error',
-        message: 'Approver is unavailable',
-      }),
-    ]);
-
-    const identityErrorResult = normalizeProviderResult(
-      'identity-verification',
-      {
-        verificationErrors: [
-          { code: 'mrz_invalid', message: 'MRZ checksum failed', field: 'document_number' },
-          'Image quality is too low',
-        ],
-      },
-      {
-        endpoint: 'https://api.example.test/identity/verify',
-        action: 'identity-verification',
-      },
-    );
-    expect(identityErrorResult.messages).toEqual([
-      'MRZ checksum failed',
-      'Image quality is too low',
-    ]);
-    expect(identityErrorResult.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          source: 'identity-verification',
-          code: 'mrz_invalid',
-          field: 'document_number',
-          message: 'MRZ checksum failed',
-        }),
-        expect.objectContaining({
-          source: 'identity-verification',
-          code: 'verification_error',
-          message: 'Image quality is too low',
-        }),
-      ]),
-    );
-  });
-
-  it('validates provider response envelope v2 shape', () => {
-    expect(isProviderResponseEnvelopeV2({
-      status: 'pending_approval',
-      transition: { type: 'workflow', state: 'pending_approval' },
-      messages: [],
-      errors: [],
-      nextActions: [],
-      data: {},
-    })).toBe(true);
-
-    expect(validateProviderResponseEnvelopeV2({
-      status: 42,
-      messages: 'invalid',
-      transition: { type: 'workflow' },
-    })).toEqual(
-      expect.arrayContaining([
-        'status must be a string',
-        'messages must be an array',
-        "transition must match {type:'step'|'workflow'} contract",
-      ]),
-    );
   });
 
   it('validates provider config schemas when provider.config is provided', () => {

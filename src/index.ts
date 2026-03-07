@@ -107,6 +107,7 @@ import {
   syncStepVisibility as syncConfiguredStepVisibility,
 } from "./ui/form-ui.workflow";
 import {
+  applyFieldValuePresentation as applyConfiguredFieldValuePresentation,
   bindSelectionFieldEvents as bindConfiguredSelectionFieldEvents,
   bindSimpleFieldEvents as bindConfiguredSimpleFieldEvents,
   getFieldContainer as getConfiguredFieldContainer,
@@ -4529,54 +4530,47 @@ export class FormUI extends HTMLElement {
         }
 
         // update value
-        if (settingField) {
-          if (inputElement instanceof HTMLInputElement) {
-            inputElement.value = value === undefined || value === null
-              ? ""
-              : typeof value === "string"
-                ? value
-                : JSON.stringify(value);
-          }
-        } else if (fieldViewOnly) {
-          this.applyFieldViewPresentation(fieldConfig, inputElement, selectionElement, errorElement, value);
-        } else if (input.type === "checkbox") {
-          (<HTMLInputElement>input).checked = value;
-        } else if (input instanceof HTMLInputElement && input.type === "file") {
-          this.renderFileSelection(fieldConfig, value, selectionElement);
-          if (
-            !value ||
-            (Array.isArray(value) && !value.length) ||
-            (typeof value === "string" && this.isQrScanField(fieldConfig))
-          ) {
-            input.value = "";
-          }
-        } else if (this.isProductListField(fieldConfig)) {
-          this.renderProductListSelection(fieldConfig, value, selectionElement);
-          input.value = JSON.stringify(this.getProductCartItems(value));
-        } else if (this.isImageGalleryField(fieldConfig)) {
-          this.renderImageGallerySelection(fieldConfig, value, selectionElement);
-          input.value = JSON.stringify(this.getImageGallerySelectionItems(value));
-        } else if (input instanceof HTMLSelectElement && input.multiple) {
-          const selectedValues = Array.isArray(value)
-            ? value.map((entry) => String(entry))
-            : [];
-          Array.from(input.options).forEach((option) => {
-            option.selected = selectedValues.includes(option.value);
-          });
-        } else {
-          input.value = value === undefined ? "" : value;
-        }
-
-        if (this.getRenderMode() === "hybrid" && inputElement) {
-          this.renderViewField(
-            fieldConfig,
-            value,
-            inputElement,
-            undefined,
-            this.form?.getState().values || {},
-          );
-          this.emitOutputSnapshot(this.form?.getState().values || {});
-        }
+        applyConfiguredFieldValuePresentation({
+          input,
+          inputElement,
+          selectionElement,
+          errorElement,
+          fieldConfig,
+          value,
+          settingField,
+          fieldViewOnly,
+          isQrScanField: this.isQrScanField(fieldConfig),
+          isProductListField: this.isProductListField(fieldConfig),
+          isImageGalleryField: this.isImageGalleryField(fieldConfig),
+          applyFieldViewPresentation: () => {
+            this.applyFieldViewPresentation(fieldConfig, inputElement, selectionElement, errorElement, value);
+          },
+          renderFileSelection: () => {
+            this.renderFileSelection(fieldConfig, value, selectionElement);
+          },
+          renderProductListSelection: () => {
+            this.renderProductListSelection(fieldConfig, value, selectionElement);
+          },
+          renderImageGallerySelection: () => {
+            this.renderImageGallerySelection(fieldConfig, value, selectionElement);
+          },
+          getProductCartItems: () => this.getProductCartItems(value),
+          getImageGallerySelectionItems: () => this.getImageGallerySelectionItems(value),
+          isHybridMode: this.getRenderMode() === "hybrid",
+          renderHybridView: () => {
+            if (!inputElement) {
+              return;
+            }
+            this.renderViewField(
+              fieldConfig,
+              value,
+              inputElement,
+              undefined,
+              this.form?.getState().values || {},
+            );
+            this.emitOutputSnapshot(this.form?.getState().values || {});
+          },
+        });
 
         // show/hide errors
         if (errorElement && inputElement) {

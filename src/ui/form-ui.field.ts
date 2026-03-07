@@ -262,3 +262,69 @@ export function bindSelectionFieldEvents(options: {
     options.applyDroppedFiles(droppedFiles);
   });
 }
+
+export function applyFieldValuePresentation(options: {
+  input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+  inputElement: HTMLElement | null;
+  selectionElement: HTMLElement | null;
+  errorElement: HTMLElement | null;
+  fieldConfig: { name: string };
+  value: any;
+  settingField: boolean;
+  fieldViewOnly: boolean;
+  isQrScanField: boolean;
+  isProductListField: boolean;
+  isImageGalleryField: boolean;
+  applyFieldViewPresentation: () => void;
+  renderFileSelection: () => void;
+  renderProductListSelection: () => void;
+  renderImageGallerySelection: () => void;
+  getProductCartItems: () => any[];
+  getImageGallerySelectionItems: () => any[];
+  isHybridMode: boolean;
+  renderHybridView: () => void;
+}): void {
+  const {
+    input,
+    inputElement,
+    value,
+  } = options;
+
+  if (options.settingField) {
+    if (inputElement instanceof HTMLInputElement) {
+      inputElement.value = value === undefined || value === null
+        ? ""
+        : typeof value === "string"
+          ? value
+          : JSON.stringify(value);
+    }
+  } else if (options.fieldViewOnly) {
+    options.applyFieldViewPresentation();
+  } else if (input instanceof HTMLInputElement && input.type === "checkbox") {
+    input.checked = value;
+  } else if (input instanceof HTMLInputElement && input.type === "file") {
+    options.renderFileSelection();
+    if (!value || (Array.isArray(value) && !value.length) || (typeof value === "string" && options.isQrScanField)) {
+      input.value = "";
+    }
+  } else if (options.isProductListField) {
+    options.renderProductListSelection();
+    input.value = JSON.stringify(options.getProductCartItems());
+  } else if (options.isImageGalleryField) {
+    options.renderImageGallerySelection();
+    input.value = JSON.stringify(options.getImageGallerySelectionItems());
+  } else if (input instanceof HTMLSelectElement && input.multiple) {
+    const selectedValues = Array.isArray(value)
+      ? value.map((entry) => String(entry))
+      : [];
+    Array.from(input.options).forEach((option) => {
+      option.selected = selectedValues.includes(option.value);
+    });
+  } else {
+    input.value = value === undefined ? "" : value;
+  }
+
+  if (options.isHybridMode && inputElement) {
+    options.renderHybridView();
+  }
+}

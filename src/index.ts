@@ -107,6 +107,7 @@ import {
   syncStepVisibility as syncConfiguredStepVisibility,
 } from "./ui/form-ui.workflow";
 import {
+  bindSimpleFieldEvents as bindConfiguredSimpleFieldEvents,
   getFieldContainer as getConfiguredFieldContainer,
   getFieldElement as getConfiguredFieldElement,
   renderFieldErrorState as renderConfiguredFieldErrorState,
@@ -4430,35 +4431,22 @@ export class FormUI extends HTMLElement {
         if (!this.registered[name]) {
           // first time, register event listeners
           if (!fieldViewOnly && !settingField) {
-            input.addEventListener("blur", () => blur());
-            input.addEventListener("input", (event: any) => {
-              if (input instanceof HTMLInputElement && input.type === "file") {
-                return;
-              }
-
-              const nextValue =
-                input.type === "checkbox"
-                  ? (<HTMLInputElement>event.target)?.checked
-                  : input instanceof HTMLSelectElement && input.multiple
-                    ? Array.from((<HTMLSelectElement>event.target)?.selectedOptions || []).map(
-                        (option) => option.value,
-                      )
-                  : (<HTMLInputElement>event.target)?.value;
-              change(nextValue);
-              this.scheduleDraftSave();
-              this.updateConditionalFields();
-              void this.refreshRemoteOptions(name);
-            });
-            input.addEventListener("change", async () => {
-              if (input instanceof HTMLInputElement && input.type === "file") {
-                const nextValue = await this.resolveFileInputValue(fieldConfig, input);
+            bindConfiguredSimpleFieldEvents({
+              input,
+              fieldConfig,
+              onBlur: () => blur(),
+              onFocus: () => focus(),
+              onChangeValue: (nextValue) => {
                 change(nextValue);
-              }
-              this.scheduleDraftSave();
-              this.updateConditionalFields();
-              void this.refreshRemoteOptions(name);
+              },
+              onAfterChange: () => {
+                this.scheduleDraftSave();
+                this.updateConditionalFields();
+                void this.refreshRemoteOptions(name);
+              },
+              resolveFileInputValue: async (nextFieldConfig, nextInput) =>
+                this.resolveFileInputValue(nextFieldConfig as TFieldConfig, nextInput),
             });
-            input.addEventListener("focus", () => focus());
           }
           if (selectionElement && !fieldViewOnly && !settingField) {
             selectionElement.addEventListener("click", (event) => {

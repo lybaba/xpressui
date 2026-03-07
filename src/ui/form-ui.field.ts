@@ -65,3 +65,44 @@ export function renderFieldErrorState(options: {
   }
   options.errors[fieldName] = false;
 }
+
+export function bindSimpleFieldEvents(options: {
+  input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+  fieldConfig: { name: string };
+  onBlur: () => void;
+  onFocus: () => void;
+  onChangeValue: (value: any) => void | Promise<void>;
+  onAfterChange: () => void;
+  resolveFileInputValue: (
+    fieldConfig: { name: string },
+    input: HTMLInputElement,
+  ) => Promise<any>;
+}): void {
+  const { input, fieldConfig } = options;
+
+  input.addEventListener("blur", () => options.onBlur());
+  input.addEventListener("input", (event: Event) => {
+    if (input instanceof HTMLInputElement && input.type === "file") {
+      return;
+    }
+
+    const nextValue =
+      input instanceof HTMLInputElement && input.type === "checkbox"
+        ? (event.target as HTMLInputElement | null)?.checked
+        : input instanceof HTMLSelectElement && input.multiple
+          ? Array.from((event.target as HTMLSelectElement | null)?.selectedOptions || []).map(
+              (option) => option.value,
+            )
+          : (event.target as HTMLInputElement | HTMLTextAreaElement | null)?.value;
+    void options.onChangeValue(nextValue);
+    options.onAfterChange();
+  });
+  input.addEventListener("change", async () => {
+    if (input instanceof HTMLInputElement && input.type === "file") {
+      const nextValue = await options.resolveFileInputValue(fieldConfig, input);
+      await options.onChangeValue(nextValue);
+    }
+    options.onAfterChange();
+  });
+  input.addEventListener("focus", () => options.onFocus());
+}

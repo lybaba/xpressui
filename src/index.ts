@@ -3,8 +3,6 @@ import TFormConfig, {
   TFormValidationErrorsHook,
   TFormValidationI18nConfig,
   TFormValidationHook,
-  TFormSubmitLifecycleHook,
-  TFormSubmitLifecycleHookResult,
   TFormSubmitLifecycleStage,
   TFormSubmitRequest,
 } from "./common/TFormConfig";
@@ -55,9 +53,10 @@ import {
 } from "./common/resume-contract";
 import {
   assertProviderResponseContract,
-  getSubmitLifecycleHooks as getConfiguredSubmitLifecycleHooks,
+  buildProviderMessagesResult,
+  buildSubmitHookErrorResult,
   getProviderContractWarning,
-  parseTransportResponsePayload,
+  resolveApprovalStateUpdate,
   resolveSubmitTransportResult,
   runConfiguredSubmitLifecycleStage,
 } from "./common/form-submit-runtime";
@@ -4411,86 +4410,29 @@ export class FormUI extends HTMLElement {
     return this.upload.submit(formValues, submitConfig, this.engine.getFields());
   }
 
-  parseTransportResponsePayload = (response: Response): Promise<any> => {
-    return parseTransportResponsePayload(response);
-  }
-
-  createSubmitResponseError = (response: Response, result: any): Error & { response: Response; result: any } => {
-    const error = new Error(
-      result && typeof result === "object" && typeof result.error === "string"
-        ? result.error
-        : `Submit failed with status ${response.status}`,
-    ) as Error & { response: Response; result: any };
-    error.response = response;
-    error.result = result;
-    return error;
-  }
-
-  resolveTransportResult = (
-    transportResult: any,
-  ): Promise<{ response?: Response; result: any }> => {
-    return resolveSubmitTransportResult(transportResult);
-  }
-
   emitApprovalStateEvents = (
     detail: TFormUISubmitDetail,
     result: any,
     providerResult?: TNormalizedProviderResult,
     response?: Response,
   ) => {
-    const action = this.formConfig?.submit?.action;
-    if (action !== "approval-request" && action !== "approval-decision") {
-      return;
-    }
-
-    const status = providerResult?.status || "";
-    const normalizedData = providerResult?.data;
-    const approvalId =
-      (normalizedData &&
-      typeof normalizedData === "object" &&
-      typeof normalizedData.approvalId === "string"
-        ? normalizedData.approvalId
-        : undefined) ||
-      (result && typeof result === "object" && typeof result.approvalId === "string"
-        ? result.approvalId
-        : undefined) ||
-      this.approvalState?.approvalId;
-    this.approvalState = {
-      status: status || "unknown",
-      approvalId,
+    const approvalUpdate = resolveApprovalStateUpdate({
+      action: this.formConfig?.submit?.action,
       result,
       providerResult,
-    };
-    this.emitFormEvent("form-ui:approval-state", {
-      ...detail,
+      currentApprovalId: this.approvalState?.approvalId,
+      detail,
       response,
-      result: this.approvalState,
+    });
+    if (!approvalUpdate.approvalState) {
+      return;
+    }
+
+    this.approvalState = approvalUpdate.approvalState;
+    approvalUpdate.events.forEach((event) => {
+      this.emitFormEvent(event.eventName, event.detail);
     });
     this.syncApprovalStateFields();
-
-    if (status === "pending_approval") {
-      this.emitFormEvent("form-ui:approval-requested", {
-        ...detail,
-        response,
-        result,
-        providerResult,
-      });
-      return;
-    }
-
-    if (status === "approved" || status === "completed") {
-      this.emitFormEvent("form-ui:approval-complete", {
-        ...detail,
-        response,
-        result,
-        providerResult,
-      });
-      return;
-    }
-
-    if (status === "rejected") {
-      return;
-    }
   }
 
   emitProviderMessages = (
@@ -4499,21 +4441,15 @@ export class FormUI extends HTMLElement {
     response?: Response,
     source: "success" | "error" = "success",
   ) => {
-    if (!providerResult?.messages?.length) {
+    const result = buildProviderMessagesResult(providerResult, source);
+    if (!result) {
       return;
     }
 
     this.emitFormEvent("form-ui:provider-messages", {
       ...detail,
       response,
-      result: {
-        status: providerResult.status,
-        source,
-        messages: providerResult.messages,
-        ...(providerResult.nextActions?.length
-          ? { nextActions: providerResult.nextActions }
-          : {}),
-      },
+      result,
     });
   }
 
@@ -4534,39 +4470,16 @@ export class FormUI extends HTMLElement {
     assertProviderResponseContract(result, submitConfig);
   }
 
-  getSubmitLifecycleHooks = (
-    stage: TFormSubmitLifecycleStage,
-  ): TFormSubmitLifecycleHook[] => {
-    return getConfiguredSubmitLifecycleHooks(this.formConfig?.submit, stage);
-  }
-
   emitSubmitHookError = (
     stage: TFormSubmitLifecycleStage,
     detail: TFormUISubmitDetail,
     hookError: unknown,
   ) => {
-    const hookMeta =
-      hookError && typeof hookError === "object"
-        ? {
-          hookIndex: typeof (hookError as any).hookIndex === "number" ? (hookError as any).hookIndex : undefined,
-          hookName: typeof (hookError as any).hookName === "string" ? (hookError as any).hookName : undefined,
-        }
-        : {};
     this.emitFormEvent("form-ui:submit-hook-error", {
       ...detail,
       error: hookError,
-      result: {
-        stage,
-        ...hookMeta,
-      },
+      result: buildSubmitHookErrorResult(stage, hookError),
     });
-  }
-
-  runSubmitLifecycleStage = (
-    stage: TFormSubmitLifecycleStage,
-    detail: TFormUISubmitDetail,
-  ): Promise<{ canceled: boolean; values: Record<string, any> }> => {
-    return runConfiguredSubmitLifecycleStage(this.formConfig?.submit, stage, detail);
   }
 
   onSubmit = async (values: Record<string, any>) => {
@@ -4593,7 +4506,7 @@ export class FormUI extends HTMLElement {
       submit: this.formConfig?.submit,
     };
     try {
-      const preSubmitResult = await this.runSubmitLifecycleStage("preSubmit", detail);
+      const preSubmitResult = await runConfiguredSubmitLifecycleStage(this.formConfig?.submit, "preSubmit", detail);
       if (preSubmitResult.canceled) {
         this.emitFormEvent("form-ui:submit-canceled", {
           ...detail,
@@ -4631,7 +4544,7 @@ export class FormUI extends HTMLElement {
       this.setWorkflowState("submitted", detail);
       this.emitFormEvent("form-ui:submit-success", detail);
       try {
-        await this.runSubmitLifecycleStage("postSuccess", detail);
+        await runConfiguredSubmitLifecycleStage(this.formConfig?.submit, "postSuccess", detail);
       } catch (hookError) {
         this.emitSubmitHookError("postSuccess", detail, hookError);
       }
@@ -4641,7 +4554,7 @@ export class FormUI extends HTMLElement {
     try {
       const submitConfig = this.formConfig?.submit as TFormSubmitRequest;
       const transportResult = customTransport
-        ? await this.resolveTransportResult(
+        ? await resolveSubmitTransportResult(
           await customTransport(formValues, {
             formConfig: this.formConfig,
             submit: submitConfig,
@@ -4676,7 +4589,7 @@ export class FormUI extends HTMLElement {
         this.emitFormEvent(providerSuccessEvent, successDetail);
       }
       try {
-        await this.runSubmitLifecycleStage("postSuccess", successDetail);
+        await runConfiguredSubmitLifecycleStage(this.formConfig?.submit, "postSuccess", successDetail);
       } catch (hookError) {
         this.emitSubmitHookError("postSuccess", successDetail, hookError);
       }
@@ -4725,7 +4638,7 @@ export class FormUI extends HTMLElement {
         this.emitFormEvent(providerErrorEvent, errorDetail);
       }
       try {
-        await this.runSubmitLifecycleStage("postFailure", errorDetail);
+        await runConfiguredSubmitLifecycleStage(this.formConfig?.submit, "postFailure", errorDetail);
       } catch (hookError) {
         this.emitSubmitHookError("postFailure", errorDetail, hookError);
       }

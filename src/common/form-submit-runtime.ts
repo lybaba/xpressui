@@ -36,6 +36,18 @@ export type TSubmitLifecycleDetail = {
   error?: unknown;
 };
 
+export type TResolvedApprovalState = {
+  status: string;
+  approvalId?: string;
+  result?: any;
+  providerResult?: TNormalizedProviderResult;
+};
+
+export type TResolvedSubmitEvent = {
+  eventName: string;
+  detail: TSubmitLifecycleDetail;
+};
+
 export async function parseTransportResponsePayload(response: Response): Promise<any> {
   if (response.status === 204 || response.status === 205) {
     return null;
@@ -203,4 +215,122 @@ export async function runConfiguredSubmitLifecycleStage(
   }
 
   return { canceled: false, values: nextValues };
+}
+
+export function buildSubmitHookErrorResult(
+  stage: TFormSubmitLifecycleStage,
+  hookError: unknown,
+): { stage: TFormSubmitLifecycleStage; hookIndex?: number; hookName?: string } {
+  const hookMeta =
+    hookError && typeof hookError === "object"
+      ? {
+        hookIndex: typeof (hookError as any).hookIndex === "number" ? (hookError as any).hookIndex : undefined,
+        hookName: typeof (hookError as any).hookName === "string" ? (hookError as any).hookName : undefined,
+      }
+      : {};
+
+  return {
+    stage,
+    ...hookMeta,
+  };
+}
+
+export function buildProviderMessagesResult(
+  providerResult?: TNormalizedProviderResult,
+  source: "success" | "error" = "success",
+): {
+  status: string;
+  source: "success" | "error";
+  messages: string[];
+  nextActions?: TNormalizedProviderResult["nextActions"];
+} | null {
+  if (!providerResult?.messages?.length) {
+    return null;
+  }
+
+  return {
+    status: providerResult.status || "unknown",
+    source,
+    messages: providerResult.messages,
+    ...(providerResult.nextActions?.length
+      ? { nextActions: providerResult.nextActions }
+      : {}),
+  };
+}
+
+export function resolveApprovalStateUpdate(options: {
+  action?: TFormSubmitRequest["action"];
+  result: any;
+  providerResult?: TNormalizedProviderResult;
+  currentApprovalId?: string;
+  detail: TSubmitLifecycleDetail;
+  response?: Response;
+}): {
+  approvalState: TResolvedApprovalState | null;
+  events: TResolvedSubmitEvent[];
+} {
+  if (options.action !== "approval-request" && options.action !== "approval-decision") {
+    return {
+      approvalState: null,
+      events: [],
+    };
+  }
+
+  const status = options.providerResult?.status || "";
+  const normalizedData = options.providerResult?.data;
+  const approvalId =
+    (normalizedData &&
+    typeof normalizedData === "object" &&
+    typeof normalizedData.approvalId === "string"
+      ? normalizedData.approvalId
+      : undefined) ||
+    (options.result && typeof options.result === "object" && typeof options.result.approvalId === "string"
+      ? options.result.approvalId
+      : undefined) ||
+    options.currentApprovalId;
+
+  const approvalState: TResolvedApprovalState = {
+    status: status || "unknown",
+    approvalId,
+    result: options.result,
+    providerResult: options.providerResult,
+  };
+
+  const events: TResolvedSubmitEvent[] = [
+    {
+      eventName: "form-ui:approval-state",
+      detail: {
+        ...options.detail,
+        response: options.response,
+        result: approvalState,
+      },
+    },
+  ];
+
+  if (status === "pending_approval") {
+    events.push({
+      eventName: "form-ui:approval-requested",
+      detail: {
+        ...options.detail,
+        response: options.response,
+        result: options.result,
+        providerResult: options.providerResult,
+      },
+    });
+  } else if (status === "approved" || status === "completed") {
+    events.push({
+      eventName: "form-ui:approval-complete",
+      detail: {
+        ...options.detail,
+        response: options.response,
+        result: options.result,
+        providerResult: options.providerResult,
+      },
+    });
+  }
+
+  return {
+    approvalState,
+    events,
+  };
 }

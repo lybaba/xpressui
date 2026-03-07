@@ -94,6 +94,21 @@ import {
   isDocumentScanField,
   isQrScanField,
 } from "./ui/form-ui.document";
+import {
+  getImageGalleryCatalog as getImageGalleryCatalogItems,
+  getImageGallerySelectionItems,
+  getProductCartItems as getNormalizedProductCartItems,
+  getProductCartTotal as getNormalizedProductCartTotal,
+  getProductListCatalog as getProductListCatalogItems,
+} from "./ui/form-ui.commerce";
+import {
+  collectDomFieldValues,
+  getOutputRendererType as getFieldOutputRendererType,
+  isFieldViewMode as isConfiguredFieldViewMode,
+  readInputElementValue as readFieldInputElementValue,
+  readViewValuesAttribute as readConfiguredViewValuesAttribute,
+  resolveFieldViewValue as resolveConfiguredFieldViewValue,
+} from "./ui/form-ui.view";
 export type {
   TFormApprovalState,
   TFormUISubmitDetail,
@@ -1375,52 +1390,11 @@ export class FormUI extends HTMLElement {
   }
 
   readViewValuesAttribute = (): Record<string, any> => {
-    const rawAttribute = this.getAttribute("view-values") || this.getAttribute("data-view-values");
-    if (!rawAttribute) {
-      return {};
-    }
-
-    try {
-      const parsed = JSON.parse(rawAttribute);
-      return parsed && typeof parsed === "object" ? parsed : {};
-    } catch {
-      return {};
-    }
+    return readConfiguredViewValuesAttribute(this);
   }
 
   collectDomFieldValues = (formElem: HTMLFormElement): Record<string, any> => {
-    const domValues: Record<string, any> = {};
-    Array.from(formElem.elements).forEach((node) => {
-      const fieldConfig = getFieldConfig(node);
-      if (!fieldConfig?.name || fieldConfig.type === UNKNOWN_TYPE) {
-        return;
-      }
-
-      if (node instanceof HTMLInputElement) {
-        if (node.type === "checkbox") {
-          domValues[fieldConfig.name] = node.checked;
-        } else if (node.type === "radio") {
-          if (node.checked) {
-            domValues[fieldConfig.name] = node.value;
-          }
-        } else {
-          domValues[fieldConfig.name] = node.value;
-        }
-        return;
-      }
-
-      if (node instanceof HTMLSelectElement) {
-        domValues[fieldConfig.name] = node.multiple
-          ? Array.from(node.selectedOptions).map((option) => option.value)
-          : node.value;
-        return;
-      }
-
-      if (node instanceof HTMLTextAreaElement) {
-        domValues[fieldConfig.name] = node.value;
-      }
-    });
-    return domValues;
+    return collectDomFieldValues(formElem);
   }
 
   getInitialViewValues = (formElem: HTMLFormElement): Record<string, any> => {
@@ -1436,152 +1410,23 @@ export class FormUI extends HTMLElement {
   }
 
   getOutputRendererType = (fieldConfig: TFieldConfig): TOutputRendererType => {
-    const subType = String(fieldConfig.subType || fieldConfig.refType || "").toLowerCase();
-    const accept = String(fieldConfig.accept || "").toLowerCase();
-
-    if (fieldConfig.type === OUTPUT_TYPE || fieldConfig.type === MEDIA_TYPE) {
-      if (subType.includes("html")) {
-        return "html";
-      }
-      if (subType.includes("image")) {
-        return "image";
-      }
-      if (subType.includes("video")) {
-        return "video";
-      }
-      if (subType.includes("audio")) {
-        return "audio";
-      }
-      if (subType.includes("map")) {
-        return "map";
-      }
-      if (
-        subType.includes("document")
-        || subType.includes("pdf")
-        || subType.includes("viewer")
-        || subType.includes("embed")
-      ) {
-        return "document";
-      }
-      if (subType.includes("file") || subType.includes("document")) {
-        return "file";
-      }
-      if (subType.includes("link") || subType.includes("url")) {
-        return "link";
-      }
-    }
-
-    if (fieldConfig.type === HTML_TYPE || fieldConfig.type === RICH_EDITOR_TYPE) {
-      return "html";
-    }
-
-    if (
-      fieldConfig.type === IMAGE_TYPE ||
-      fieldConfig.type === UPLOAD_IMAGE_TYPE ||
-      fieldConfig.type === CAMERA_PHOTO_TYPE
-    ) {
-      return "image";
-    }
-
-    if (fieldConfig.type === UPLOAD_FILE_TYPE || fieldConfig.type === DOCUMENT_SCAN_TYPE) {
-      if (accept.includes("video/")) {
-        return "video";
-      }
-      if (accept.includes("audio/")) {
-        return "audio";
-      }
-      if (accept.includes("application/pdf")) {
-        return "document";
-      }
-      return "file";
-    }
-
-    if (fieldConfig.type === LINK_TYPE || fieldConfig.type === URL_TYPE) {
-      if (subType.includes("map")) {
-        return "map";
-      }
-      return "link";
-    }
-
-    if (fieldConfig.type === PRODUCT_LIST_TYPE) {
-      return "text";
-    }
-
-    if (fieldConfig.type === IMAGE_GALLERY_TYPE) {
-      return "image";
-    }
-
-    if (fieldConfig.type === SETTING_TYPE) {
-      return "text";
-    }
-
-    if (fieldConfig.type === "video" || accept.includes("video/")) {
-      return "video";
-    }
-
-    if (fieldConfig.type === "audio" || accept.includes("audio/")) {
-      return "audio";
-    }
-
-    if (fieldConfig.type === TEXT_TYPE || fieldConfig.type === TEXTAREA_TYPE) {
-      return "text";
-    }
-
-    return "text";
+    return getFieldOutputRendererType(fieldConfig);
   }
 
   isFieldViewMode = (fieldConfig: TFieldConfig, inputElement: HTMLElement | null): boolean => {
-    const configMode = String((fieldConfig as any).viewMode || "").toLowerCase();
-    const attrMode = String(
-      inputElement?.getAttribute("data-field-render-mode")
-      || inputElement?.getAttribute("data-view-mode")
-      || "",
-    ).toLowerCase();
-    return configMode === "view" || attrMode === "view";
+    return isConfiguredFieldViewMode(fieldConfig, inputElement);
   }
 
   readInputElementValue = (
     fieldConfig: TFieldConfig,
     inputElement: HTMLElement | null,
   ): any => {
-    if (!inputElement) {
-      return undefined;
-    }
-
-    if (inputElement instanceof HTMLInputElement) {
-      if (inputElement.type === "checkbox") {
-        return inputElement.checked;
-      }
-
-      if (
-        inputElement.type === "hidden"
-        && (this.isProductListField(fieldConfig) || this.isImageGalleryField(fieldConfig))
-      ) {
-        if (!inputElement.value) {
-          return [];
-        }
-        try {
-          const parsed = JSON.parse(inputElement.value);
-          return Array.isArray(parsed) ? parsed : [];
-        } catch {
-          return [];
-        }
-      }
-
-      return inputElement.value;
-    }
-
-    if (inputElement instanceof HTMLSelectElement) {
-      return inputElement.multiple
-        ? Array.from(inputElement.selectedOptions).map((option) => option.value)
-        : inputElement.value;
-    }
-
-    if (inputElement instanceof HTMLTextAreaElement) {
-      return inputElement.value;
-    }
-
-    return undefined;
+    return readFieldInputElementValue(
+      (nextFieldConfig) => this.isProductListField(nextFieldConfig),
+      (nextFieldConfig) => this.isImageGalleryField(nextFieldConfig),
+      fieldConfig,
+      inputElement,
+    );
   }
 
   resolveFieldViewValue = (
@@ -1589,41 +1434,14 @@ export class FormUI extends HTMLElement {
     inputElement: HTMLElement | null,
     stateValue: any,
   ): any => {
-    if (stateValue !== undefined) {
-      return stateValue;
-    }
-
-    const overrideValues = {
-      ...this.readViewValuesAttribute(),
-      ...this.viewValues,
-    };
-    if (Object.prototype.hasOwnProperty.call(overrideValues, fieldConfig.name)) {
-      return overrideValues[fieldConfig.name];
-    }
-
-    const attrViewValue = inputElement?.getAttribute("data-view-value");
-    if (attrViewValue) {
-      try {
-        return JSON.parse(attrViewValue);
-      } catch {
-        return attrViewValue;
-      }
-    }
-
-    const inputValue = this.readInputElementValue(fieldConfig, inputElement);
-    if (inputValue !== undefined && inputValue !== "") {
-      return inputValue;
-    }
-
-    if ((fieldConfig as any).value !== undefined) {
-      return (fieldConfig as any).value;
-    }
-
-    if (fieldConfig.defaultValue !== undefined) {
-      return fieldConfig.defaultValue;
-    }
-
-    return "";
+    return resolveConfiguredFieldViewValue(
+      this,
+      fieldConfig,
+      inputElement,
+      stateValue,
+      this.viewValues,
+      (nextFieldConfig, nextInputElement) => this.readInputElementValue(nextFieldConfig, nextInputElement),
+    );
   }
 
   applyFieldViewPresentation = (
@@ -2611,132 +2429,23 @@ export class FormUI extends HTMLElement {
   }
 
   getProductListCatalog = (fieldConfig: TFieldConfig): TProductListItem[] => {
-    const source = Array.isArray(fieldConfig.choices) ? fieldConfig.choices : [];
-    return source
-      .slice(0, 20)
-      .map((choice, index) => {
-        const id = String((choice as any).value || (choice as any).id || `product_${index + 1}`);
-        const name = String((choice as any).name || (choice as any).label || id);
-        const salePriceRaw = (choice as any).sale_price ?? (choice as any).salePrice;
-        const discountPriceRaw = (choice as any).discount_price ?? (choice as any).discountPrice;
-        const sale_price = salePriceRaw === undefined || salePriceRaw === null
-          ? null
-          : Number(salePriceRaw);
-        const discount_price = discountPriceRaw === undefined || discountPriceRaw === null
-          ? null
-          : Number(discountPriceRaw);
-        const image_thumbnail = String(
-          (choice as any).image_thumbnail
-          || (choice as any).imageThumbnail
-          || "",
-        );
-        const image_medium = String(
-          (choice as any).image_medium
-          || (choice as any).imageMedium
-          || image_thumbnail,
-        );
-        const photosSource = (choice as any).photos_full ?? (choice as any).photosFull;
-        const photos_full = Array.isArray(photosSource)
-          ? photosSource.map((entry: any) => String(entry)).filter(Boolean)
-          : [];
-
-        return {
-          id,
-          name,
-          sale_price: Number.isFinite(sale_price as number) ? sale_price : null,
-          discount_price: Number.isFinite(discount_price as number) ? discount_price : null,
-          image_thumbnail,
-          image_medium,
-          photos_full,
-        };
-      });
+    return getProductListCatalogItems(fieldConfig);
   }
 
   getImageGalleryCatalog = (fieldConfig: TFieldConfig): TImageGalleryItem[] => {
-    const source = Array.isArray(fieldConfig.choices) ? fieldConfig.choices : [];
-    return source
-      .slice(0, 20)
-      .map((choice, index) => {
-        const id = String((choice as any).value || (choice as any).id || `image_${index + 1}`);
-        const name = String((choice as any).name || (choice as any).label || id);
-        const image_thumbnail = String(
-          (choice as any).image_thumbnail
-          || (choice as any).imageThumbnail
-          || "",
-        );
-        const image_medium = String(
-          (choice as any).image_medium
-          || (choice as any).imageMedium
-          || image_thumbnail,
-        );
-        const photosSource = (choice as any).photos_full ?? (choice as any).photosFull;
-        const photos_full = Array.isArray(photosSource)
-          ? photosSource.map((entry: any) => String(entry)).filter(Boolean)
-          : [];
-
-        return {
-          id,
-          name,
-          image_thumbnail,
-          image_medium,
-          photos_full,
-        };
-      });
+    return getImageGalleryCatalogItems(fieldConfig);
   }
 
   getProductCartItems = (value: any): TProductCartItem[] => {
-    if (!Array.isArray(value)) {
-      return [];
-    }
-
-    return value
-      .filter((entry) => entry && typeof entry === "object")
-      .map((entry) => {
-        const quantityRaw = Number((entry as any).quantity || 1);
-        return {
-          id: String((entry as any).id || (entry as any).value || ""),
-          name: String((entry as any).name || (entry as any).label || ""),
-          sale_price: (entry as any).sale_price === undefined || (entry as any).sale_price === null
-            ? null
-            : Number((entry as any).sale_price),
-          discount_price: (entry as any).discount_price === undefined || (entry as any).discount_price === null
-            ? null
-            : Number((entry as any).discount_price),
-          image_thumbnail: String((entry as any).image_thumbnail || ""),
-          image_medium: String((entry as any).image_medium || ""),
-          photos_full: Array.isArray((entry as any).photos_full)
-            ? (entry as any).photos_full.map((photo: any) => String(photo)).filter(Boolean)
-            : [],
-          quantity: Number.isFinite(quantityRaw) && quantityRaw > 0 ? Math.round(quantityRaw) : 1,
-        };
-      })
-      .filter((entry) => Boolean(entry.id));
+    return getNormalizedProductCartItems(value);
   }
 
   getImageGallerySelectionItems = (value: any): TImageGalleryItem[] => {
-    if (!Array.isArray(value)) {
-      return [];
-    }
-
-    return value
-      .filter((entry) => entry && typeof entry === "object")
-      .map((entry, index) => ({
-        id: String((entry as any).id || (entry as any).value || `image_${index + 1}`),
-        name: String((entry as any).name || (entry as any).label || (entry as any).id || ""),
-        image_thumbnail: String((entry as any).image_thumbnail || ""),
-        image_medium: String((entry as any).image_medium || ""),
-        photos_full: Array.isArray((entry as any).photos_full)
-          ? (entry as any).photos_full.map((photo: any) => String(photo)).filter(Boolean)
-          : [],
-      }))
-      .filter((entry) => Boolean(entry.id));
+    return getImageGallerySelectionItems(value);
   }
 
   getProductCartTotal = (cartItems: TProductCartItem[]): number => {
-    return cartItems.reduce((sum, item) => {
-      const unitPrice = item.discount_price ?? item.sale_price ?? 0;
-      return sum + (Number.isFinite(unitPrice) ? unitPrice : 0) * item.quantity;
-    }, 0);
+    return getNormalizedProductCartTotal(cartItems);
   }
 
   getProductCartEntries = (): Array<{ fieldName: string; item: TProductCartItem }> => {

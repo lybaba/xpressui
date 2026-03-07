@@ -51,6 +51,14 @@ import {
   TFormStorageHealth,
   TFormStorageSnapshot,
 } from "./common/form-persistence";
+import {
+  assertProviderResponseContract,
+  getSubmitLifecycleHooks as getConfiguredSubmitLifecycleHooks,
+  getProviderContractWarning,
+  parseTransportResponsePayload,
+  resolveSubmitTransportResult,
+  runConfiguredSubmitLifecycleStage,
+} from "./common/form-submit-runtime";
 import { getRestorableStorageValues } from "./common/form-storage";
 import { FormStepRuntime } from "./common/form-steps";
 import { FormRuntime } from "./common/form-runtime";
@@ -59,7 +67,6 @@ import { validatePublicFormConfig } from "./common/public-schema";
 import {
   getProviderErrorEventName,
   getProviderSuccessEventName,
-  validateProviderResponseEnvelopeV2,
   normalizeProviderResult,
   registerProvider,
 } from "./common/provider-registry";
@@ -5255,24 +5262,8 @@ export class FormUI extends HTMLElement {
     return this.upload.submit(formValues, submitConfig, this.engine.getFields());
   }
 
-  parseTransportResponsePayload = async (response: Response): Promise<any> => {
-    if (response.status === 204 || response.status === 205) {
-      return null;
-    }
-    const contentType = response.headers.get("Content-Type") || "";
-    if (contentType.includes("application/json")) {
-      try {
-        return await response.clone().json();
-      } catch {
-        return null;
-      }
-    }
-    try {
-      const text = await response.clone().text();
-      return text ? text : null;
-    } catch {
-      return null;
-    }
+  parseTransportResponsePayload = (response: Response): Promise<any> => {
+    return parseTransportResponsePayload(response);
   }
 
   createSubmitResponseError = (response: Response, result: any): Error & { response: Response; result: any } => {
@@ -5286,47 +5277,10 @@ export class FormUI extends HTMLElement {
     return error;
   }
 
-  resolveTransportResult = async (
+  resolveTransportResult = (
     transportResult: any,
   ): Promise<{ response?: Response; result: any }> => {
-    if (transportResult instanceof Response) {
-      const result = await this.parseTransportResponsePayload(transportResult);
-      if (!transportResult.ok) {
-        throw this.createSubmitResponseError(transportResult, result);
-      }
-      return {
-        response: transportResult,
-        result,
-      };
-    }
-
-    if (
-      transportResult &&
-      typeof transportResult === "object" &&
-      ("response" in transportResult || "result" in transportResult)
-    ) {
-      const response = (transportResult as any).response;
-      if (response !== undefined && !(response instanceof Response)) {
-        throw new Error("submit.transport envelope response must be a Response instance.");
-      }
-      const result =
-        (transportResult as any).result !== undefined
-          ? (transportResult as any).result
-          : response
-            ? await this.parseTransportResponsePayload(response)
-            : undefined;
-      if (response && !response.ok) {
-        throw this.createSubmitResponseError(response, result);
-      }
-      return {
-        response,
-        result,
-      };
-    }
-
-    return {
-      result: transportResult,
-    };
+    return resolveSubmitTransportResult(transportResult);
   }
 
   emitApprovalStateEvents = (
@@ -5418,43 +5372,23 @@ export class FormUI extends HTMLElement {
     result: any,
     submitConfig: TFormSubmitRequest,
   ) => {
-    const mode = submitConfig.providerResponseContract || "compat";
-    if (mode === "compat") {
-      return;
+    const warning = getProviderContractWarning(result, submitConfig);
+    if (warning) {
+      this.emitFormEvent("form-ui:provider-contract-warning", {
+        values: this.engine.normalizeValues(this.form?.getState().values || {}),
+        formConfig: this.formConfig,
+        submit: submitConfig,
+        result: warning,
+      });
     }
 
-    const validationErrors = validateProviderResponseEnvelopeV2(result);
-    if (!validationErrors.length) {
-      return;
-    }
-
-    this.emitFormEvent("form-ui:provider-contract-warning", {
-      values: this.engine.normalizeValues(this.form?.getState().values || {}),
-      formConfig: this.formConfig,
-      submit: submitConfig,
-      result: {
-        mode,
-        errors: validationErrors,
-        expectedContract: "provider-envelope-v2",
-      },
-    });
-
-    if (mode === "strict-v2") {
-      throw new Error(
-        `Provider response contract mismatch: ${validationErrors.join("; ")}`,
-      );
-    }
+    assertProviderResponseContract(result, submitConfig);
   }
 
   getSubmitLifecycleHooks = (
     stage: TFormSubmitLifecycleStage,
   ): TFormSubmitLifecycleHook[] => {
-    const lifecycle = this.formConfig?.submit?.lifecycle;
-    const candidate = lifecycle?.[stage];
-    if (!candidate) {
-      return [];
-    }
-    return Array.isArray(candidate) ? candidate : [candidate];
+    return getConfiguredSubmitLifecycleHooks(this.formConfig?.submit, stage);
   }
 
   emitSubmitHookError = (
@@ -5479,55 +5413,11 @@ export class FormUI extends HTMLElement {
     });
   }
 
-  runSubmitLifecycleStage = async (
+  runSubmitLifecycleStage = (
     stage: TFormSubmitLifecycleStage,
     detail: TFormUISubmitDetail,
   ): Promise<{ canceled: boolean; values: Record<string, any> }> => {
-    const hooks = this.getSubmitLifecycleHooks(stage);
-    if (!hooks.length) {
-      return { canceled: false, values: detail.values };
-    }
-
-    let nextValues = detail.values;
-    for (let hookIndex = 0; hookIndex < hooks.length; hookIndex += 1) {
-      const hook = hooks[hookIndex];
-      let hookResult: TFormSubmitLifecycleHookResult;
-      try {
-        hookResult = await hook({
-          stage,
-          values: nextValues,
-          formConfig: detail.formConfig,
-          submit: detail.submit,
-          response: detail.response,
-          result: detail.result,
-          providerResult: detail.providerResult,
-          error: detail.error,
-        });
-      } catch (error) {
-        const lifecycleError =
-          error instanceof Error ? error : new Error(String(error));
-        (lifecycleError as any).stage = stage;
-        (lifecycleError as any).hookIndex = hookIndex;
-        (lifecycleError as any).hookName = hook.name || "anonymous";
-        throw lifecycleError;
-      }
-
-      if (stage === "preSubmit") {
-        if (hookResult === false) {
-          return { canceled: true, values: nextValues };
-        }
-
-        if (
-          hookResult &&
-          typeof hookResult === "object" &&
-          !Array.isArray(hookResult)
-        ) {
-          nextValues = hookResult as Record<string, any>;
-        }
-      }
-    }
-
-    return { canceled: false, values: nextValues };
+    return runConfiguredSubmitLifecycleStage(this.formConfig?.submit, stage, detail);
   }
 
   onSubmit = async (values: Record<string, any>) => {

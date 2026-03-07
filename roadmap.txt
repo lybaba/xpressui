@@ -61,6 +61,13 @@ Major capabilities already implemented in the codebase:
   - floating cart trigger with drawer editor
 - product demos published via GitHub Pages
 - CI / release checks
+- structural refactor progress:
+  - contracts extracted from `FormUI`
+  - view/output rendering helpers extracted
+  - workflow step UI helpers extracted
+  - submit/provider event helpers extracted
+  - field DOM/event/presentation helpers extracted
+  - `src/index.ts` materially reduced and more orchestral
 
 Current built-in provider families:
 - booking / reservation
@@ -186,6 +193,9 @@ Remaining:
   - expiration enforcement
   - claim policy parity with client safeguards
 - cross-device resume UX
+  - better success/error/expired/conflict states
+  - clearer share-code creation/claim flows
+  - stronger device-to-device continuation affordances
 
 Exit criteria:
 - a user can safely leave and resume a workflow later, on the same device or another one
@@ -259,6 +269,8 @@ Remaining:
 - backend-compatible resumable binary upload contracts beyond local chunk resume
 - stronger OCR / MRZ normalization contracts
 - file/document privacy controls by field
+  - clearer masking/exclusion behavior in submit/debug/storage paths
+  - stronger workflow use of normalized OCR confidence/status fields
 
 Exit criteria:
 - file and identity flows are safe enough for real operational workflows
@@ -287,6 +299,10 @@ Completed:
 
 Remaining:
 - docs that mirror demo scenarios exactly
+- richer backend integration examples for:
+  - provider envelopes
+  - OCR/MRZ normalized document flows
+  - remote resume/share-code flows
 
 
 Phase 7: View Runtime and Resource Rendering
@@ -325,6 +341,35 @@ Completed MVP scope:
 
 Remaining:
 - richer resource renderers (advanced embedded docs viewers when needed)
+
+
+Phase 8: Productization and Operational UX
+-----------------------------------------
+Status: Not started
+
+Goal:
+Turn the stabilized runtime surface into clearer end-user and integrator product flows.
+
+Target scope:
+- cross-device resume UX:
+  - explicit share-code lifecycle states
+  - expiry/conflict/error handling
+  - clearer claim/recovery experiences
+- document/privacy UX:
+  - visible field-level masking/exclusion semantics
+  - clearer operator confidence around OCR/MRZ output
+- resumable upload UX:
+  - backend-compatible upload continuation beyond local chunk markers
+  - better interruption/retry states for large uploads
+- admin/debug workflows:
+  - workflow snapshot inspection
+  - replay/debug surfaces for queue, dead-letter, transitions, resume state
+- provider integration productization:
+  - stronger end-to-end examples
+  - richer `nextActions` and message handling patterns
+
+Exit criteria:
+- main business flows are not only technically possible, but productized enough for integrators and operators
 
 Constraints:
 - avoid coupling runtime to WordPress/Ionic/Redux-specific APIs
@@ -387,21 +432,31 @@ P0:
   - rate limits
   - expiration enforcement
   - abuse controls aligned with current client/runtime safeguards
+- cross-device resume UX:
+  - clearer share-code lifecycle
+  - explicit expiry/block/conflict states
+  - more guided device-to-device continuation
 
 P1:
 - stronger OCR / MRZ normalization contracts
 - file/document privacy controls by field
 - backend-compatible resumable binary upload contracts
+- document/privacy product UX on top of normalized OCR/MRZ flows
 
 P2:
 - reduce bundle size by trimming non-essential runtime paths
 - broaden admin/debug tooling that consumes workflow snapshots
 - docs that mirror demo scenarios exactly
+- richer backend integration examples for canonical product scenarios
 
 P3:
 - View runtime hardening:
   - advanced output adapters
   - richer embedded document viewers when needed
+- richer provider product patterns:
+  - `nextActions`
+  - operator-facing provider messages
+  - end-to-end approval/identity recipes
 
 
 Next Best Task
@@ -409,15 +464,23 @@ Next Best Task
 
 The most immediately profitable next feature is:
 
-- stronger OCR / MRZ normalization contracts
+- cross-device resume UX hardening
 
 Why:
-- OCR and MRZ data already influence validation and submission flows
-- downstream integrations benefit from a stricter normalized contract
-- this reduces ambiguity before adding more identity/document providers
+- the save/resume contract is already largely in place
+- the remaining gap is now product UX rather than runtime capability
+- this is one of the most visible differentiators for real interrupted workflows
+- it unlocks a clearer integrator story for same-device and cross-device continuation
 
 Suggested first scope:
-- formalize a versioned normalized OCR/MRZ payload shape
+- add explicit share-code lifecycle states:
+  - created
+  - claimed
+  - expired
+  - blocked
+  - invalid
+- improve UI/runtime events for cross-device continuation outcomes
+- align demos/docs around one canonical remote resume/share-code journey
 - document required/optional normalized fields
 - align provider-facing and submission-facing document contracts
 

@@ -1,4 +1,6 @@
 import type {
+  TFormValidationErrorsHook,
+  TFormValidationHook,
   TFormSubmitLifecycleHook,
   TFormSubmitLifecycleHookResult,
   TFormSubmitLifecycleStage,
@@ -6,6 +8,7 @@ import type {
 } from "./TFormConfig";
 import { validateProviderResponseEnvelopeV2 } from "./provider-registry";
 import {
+  TFormProviderTransition,
   PROVIDER_RESPONSE_CONTRACT_VERSION,
 } from "./provider-contract";
 import type { TNormalizedProviderResult } from "./provider-contract";
@@ -333,4 +336,177 @@ export function resolveApprovalStateUpdate(options: {
     approvalState,
     events,
   };
+}
+
+export function normalizeExplicitProviderTransition(result: any): TFormProviderTransition | null {
+  const transition = result?.transition;
+  if (!transition || typeof transition !== "object") {
+    return null;
+  }
+
+  if (transition.type === "workflow" && typeof transition.state === "string" && transition.state) {
+    return {
+      type: "workflow",
+      state: transition.state,
+    };
+  }
+
+  if (
+    transition.type === "step"
+    && (typeof transition.target === "string" || Number.isFinite(transition.target))
+  ) {
+    return {
+      type: "step",
+      target: transition.target as string | number,
+    };
+  }
+
+  return null;
+}
+
+export function normalizeStatusWorkflowTransition(
+  providerResult?: TNormalizedProviderResult,
+): TFormProviderTransition | null {
+  const status = providerResult?.status;
+  if (
+    status === "draft" ||
+    status === "submitting" ||
+    status === "submitted" ||
+    status === "pending_approval" ||
+    status === "approved" ||
+    status === "completed" ||
+    status === "rejected" ||
+    status === "error"
+  ) {
+    return {
+      type: "workflow",
+      state: status,
+    };
+  }
+
+  return null;
+}
+
+export function getProviderTransitionKey(transition: TFormProviderTransition): string {
+  return transition.type === "workflow"
+    ? `workflow:${transition.state}`
+    : `step:${String(transition.target)}`;
+}
+
+export function buildProviderTransitionCandidates(
+  policy: NonNullable<TFormSubmitRequest["providerRoutingPolicy"]>,
+  result: any,
+  providerResult?: TNormalizedProviderResult,
+): TFormProviderTransition[] {
+  const explicitTransition = normalizeExplicitProviderTransition(result);
+  const normalizedTransition = providerResult?.transition || null;
+  const statusWorkflowTransition = normalizeStatusWorkflowTransition(providerResult);
+  const stepTransition =
+    explicitTransition?.type === "step"
+      ? explicitTransition
+      : normalizedTransition?.type === "step"
+        ? normalizedTransition
+        : null;
+  const workflowTransition =
+    explicitTransition?.type === "workflow"
+      ? explicitTransition
+      : normalizedTransition?.type === "workflow"
+        ? normalizedTransition
+        : null;
+
+  let ordered: Array<TFormProviderTransition | null> = [];
+  if (policy === "workflow-only") {
+    ordered = [workflowTransition, statusWorkflowTransition];
+  } else if (policy === "step-only") {
+    ordered = [stepTransition];
+  } else if (policy === "workflow-first") {
+    ordered = [workflowTransition, statusWorkflowTransition, stepTransition];
+  } else if (policy === "step-first") {
+    ordered = [stepTransition, workflowTransition, statusWorkflowTransition];
+  } else {
+    ordered = [explicitTransition, normalizedTransition, statusWorkflowTransition];
+  }
+
+  const unique: TFormProviderTransition[] = [];
+  const seen = new Set<string>();
+  ordered.forEach((candidate) => {
+    if (!candidate) {
+      return;
+    }
+    const key = getProviderTransitionKey(candidate);
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    unique.push(candidate);
+  });
+
+  return unique;
+}
+
+export function getValidationHooks(
+  formConfig: { validation?: any } | any,
+  stage: "preValidate" | "customValidate",
+): TFormValidationHook[] {
+  const candidate = formConfig?.validation?.[stage];
+  if (!candidate) {
+    return [];
+  }
+  return Array.isArray(candidate) ? candidate : [candidate];
+}
+
+export function getValidationErrorHooks(
+  formConfig: { validation?: any } | any,
+): TFormValidationErrorsHook[] {
+  const candidate = formConfig?.validation?.postValidate;
+  if (!candidate) {
+    return [];
+  }
+  return Array.isArray(candidate) ? candidate : [candidate];
+}
+
+export function mergeValidationErrors(
+  baseErrors: Record<string, any>,
+  incomingErrors: Record<string, any>,
+): Record<string, any> {
+  return {
+    ...(baseErrors || {}),
+    ...(incomingErrors || {}),
+  };
+}
+
+export function runValidationHooks(options: {
+  formConfig: any;
+  values: Record<string, any>;
+  validateValues: (values: Record<string, any>) => Record<string, any>;
+}): Record<string, any> {
+  let nextValues = options.values;
+  const validationContext = {
+    formConfig: options.formConfig,
+  };
+
+  getValidationHooks(options.formConfig, "preValidate").forEach((hook) => {
+    const hookResult = hook(nextValues, validationContext);
+    if (hookResult && typeof hookResult === "object" && !Array.isArray(hookResult)) {
+      nextValues = hookResult;
+    }
+  });
+
+  let errors = options.validateValues(nextValues);
+
+  getValidationHooks(options.formConfig, "customValidate").forEach((hook) => {
+    const hookResult = hook(nextValues, validationContext);
+    if (hookResult && typeof hookResult === "object" && !Array.isArray(hookResult)) {
+      errors = mergeValidationErrors(errors, hookResult);
+    }
+  });
+
+  getValidationErrorHooks(options.formConfig).forEach((hook) => {
+    const hookResult = hook(nextValues, errors, validationContext);
+    if (hookResult && typeof hookResult === "object" && !Array.isArray(hookResult)) {
+      errors = hookResult;
+    }
+  });
+
+  return errors;
 }

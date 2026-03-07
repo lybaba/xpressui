@@ -59,6 +59,11 @@ import {
   TFormStorageSnapshot,
 } from "./common/form-persistence";
 import {
+  getRemoteResumePolicy,
+  isRemoteResumePolicy,
+  REMOTE_RESUME_CONTRACT_VERSION,
+} from "./common/resume-contract";
+import {
   assertProviderResponseContract,
   getSubmitLifecycleHooks as getConfiguredSubmitLifecycleHooks,
   getProviderContractWarning,
@@ -133,6 +138,11 @@ export { getPublicApiManifest } from "./common/public-api-manifest";
 export { FormEngineRuntime } from "./common/form-engine";
 export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
+export {
+  getRemoteResumePolicy,
+  isRemoteResumePolicy,
+  REMOTE_RESUME_CONTRACT_VERSION,
+} from "./common/resume-contract";
 export { FormRuntime } from "./common/form-runtime";
 export { FormUploadRuntime } from "./common/form-upload";
 export { FormStepRuntime } from "./common/form-steps";
@@ -186,6 +196,11 @@ export type {
   TFormStorageHealth,
   TFormStorageSnapshot,
 } from "./common/form-persistence";
+export type {
+  TRemoteResumeContractVersion,
+  TRemoteResumePolicy,
+  TRemoteResumePolicyCode,
+} from "./common/resume-contract";
 export type { TCreateFormPresetOptions, TFormPresetName } from "./common/form-presets";
 export type {
   TFormProviderConfigSchema,

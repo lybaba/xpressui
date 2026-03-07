@@ -306,6 +306,8 @@ calls are sent.
 If `storage.resumeEndpoint` is configured, `xpressui` uses one endpoint for
 remote save/resume lifecycle operations:
 
+- contract version for the documented backend envelope: `resume-contract-v1`
+
 - `POST /resume` creates or updates a resumable snapshot and returns a token
 - `GET /resume?token=...` looks up a token and returns the stored snapshot
 - `DELETE /resume?token=...` invalidates the token
@@ -423,6 +425,28 @@ Share code claim response:
   }
 }
 ```
+
+Recommended blocked/rate-limited claim response:
+
+HTTP status: `429` or `403`
+
+```json
+{
+  "contractVersion": "resume-contract-v1",
+  "operation": "claim-share-code",
+  "policy": {
+    "code": "rate_limited",
+    "reason": "Too many claim attempts",
+    "retryAfterSeconds": 60,
+    "blockedUntil": 123516
+  }
+}
+```
+
+Policy guidance:
+- return `policy.code` for `rate_limited`, `blocked`, `expired`, or `invalid_signature`
+- include retry/backoff metadata when the client should pause before another claim
+- keep backend claim enforcement aligned with the client-side throttle and blocking windows
 
 `GET` not-found response:
 

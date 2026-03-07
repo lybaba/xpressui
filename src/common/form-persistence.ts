@@ -2,6 +2,11 @@ import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
 import { isFileFieldType } from "./field";
 import { generateRuntimeId } from "./id";
 import {
+  getRemoteResumePolicy,
+  TRemoteResumeContractVersion,
+  TRemoteResumePolicy,
+} from "./resume-contract";
+import {
   createStorageAdapter,
   getSerializableStorageValues,
   getRestorableStorageValues,
@@ -59,16 +64,19 @@ export type TRemoteResumeCreateRequest = {
 
 export type TRemoteResumeCreateResponse = {
   operation: "create";
+  contractVersion?: TRemoteResumeContractVersion;
   token: string;
   savedAt: number;
   issuedAt?: number;
   expiresAt?: number;
   signature?: string;
   signatureVersion?: string;
+  policy?: TRemoteResumePolicy;
 };
 
 export type TRemoteResumeLookupResponse = {
   operation: "lookup";
+  contractVersion?: TRemoteResumeContractVersion;
   token: string;
   savedAt: number;
   issuedAt?: number;
@@ -76,12 +84,15 @@ export type TRemoteResumeLookupResponse = {
   signature?: string;
   signatureVersion?: string;
   snapshot: TFormStorageSnapshot | null;
+  policy?: TRemoteResumePolicy;
 };
 
 export type TRemoteResumeInvalidateResponse = {
   operation: "invalidate";
+  contractVersion?: TRemoteResumeContractVersion;
   token: string;
   invalidated: boolean;
+  policy?: TRemoteResumePolicy;
 };
 
 export type TRemoteResumeShareCodeCreateRequest = {
@@ -91,9 +102,11 @@ export type TRemoteResumeShareCodeCreateRequest = {
 
 export type TRemoteResumeShareCodeCreateResponse = {
   operation: "create-share-code";
+  contractVersion?: TRemoteResumeContractVersion;
   code: string;
   token?: string;
   expiresAt?: number;
+  policy?: TRemoteResumePolicy;
 };
 
 export type TRemoteResumeShareCodeClaimRequest = {
@@ -103,6 +116,7 @@ export type TRemoteResumeShareCodeClaimRequest = {
 
 export type TRemoteResumeShareCodeClaimResponse = {
   operation: "claim-share-code";
+  contractVersion?: TRemoteResumeContractVersion;
   code: string;
   token: string;
   savedAt: number;
@@ -111,6 +125,7 @@ export type TRemoteResumeShareCodeClaimResponse = {
   signature?: string;
   signatureVersion?: string;
   snapshot: TFormStorageSnapshot | null;
+  policy?: TRemoteResumePolicy;
 };
 
 type TResumeTokenState = {
@@ -1261,6 +1276,28 @@ export class FormPersistenceRuntime {
         ? await response.json()
         : await response.text();
       if (!response.ok) {
+        const remotePolicy = getRemoteResumePolicy(result);
+        if (remotePolicy) {
+          this.options.emitEvent(
+            "form-ui:resume-share-code-claim-blocked",
+            this.createEventDetail(this.options.getValues(), {
+              code,
+              reason: remotePolicy.code,
+              backend: true,
+              endpoint,
+              ...(remotePolicy.reason ? { message: remotePolicy.reason } : {}),
+              ...(remotePolicy.retryAfterSeconds !== undefined
+                ? { retryAfterSeconds: remotePolicy.retryAfterSeconds }
+                : {}),
+              ...(remotePolicy.blockedUntil !== undefined
+                ? { blockedUntil: remotePolicy.blockedUntil }
+                : {}),
+              ...(remotePolicy.expiresAt !== undefined
+                ? { expiresAt: remotePolicy.expiresAt }
+                : {}),
+            }, response),
+          );
+        }
         this.markShareCodeClaimFailure(code);
         return null;
       }

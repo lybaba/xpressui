@@ -562,9 +562,50 @@ include a normalized block for downstream integrations:
 - `normalized.status`: `text_only`, `mrz_detected`, `mrz_invalid`
 - `normalized.quality.textLength`
 - `normalized.quality.estimatedConfidence`
+- `normalized.mrz`: normalized MRZ payload or `null`
+- `normalized.fields`: normalized extracted fields or `null`
 
 This block is emitted alongside existing `text` / `mrz` / `fields` payloads to
 keep backward compatibility while providing a stricter contract.
+
+Suggested normalized payload shape:
+
+```json
+{
+  "contractVersion": "ocr-mrz-v2",
+  "status": "mrz_detected",
+  "quality": {
+    "textLength": 88,
+    "estimatedConfidence": 1
+  },
+  "mrz": {
+    "format": "TD3",
+    "documentCode": "P",
+    "issuingCountry": "UTO",
+    "documentNumber": "L898902C3",
+    "nationality": "UTO",
+    "birthDate": "740812",
+    "expiryDate": "120415",
+    "sex": "F",
+    "valid": true
+  },
+  "fields": {
+    "firstName": "ANNA MARIA",
+    "lastName": "ERIKSSON",
+    "documentNumber": "L898902C3",
+    "nationality": "UTO",
+    "birthDate": "740812",
+    "expiryDate": "120415",
+    "sex": "F"
+  }
+}
+```
+
+Contract notes:
+- `contractVersion`, `status`, and `quality` are always present
+- `mrz` is `null` when no MRZ was detected
+- `fields` contains normalized extraction keys when available
+- host backends should key off `contractVersion` rather than inferred shape
 
 Field-level privacy options:
 - `documentExcludeFromSubmit: true` skips document OCR/MRZ data for that field

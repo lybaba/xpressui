@@ -1,3 +1,7 @@
+export const DOCUMENT_NORMALIZED_CONTRACT_VERSION = "ocr-mrz-v2" as const;
+
+export type TDocumentNormalizedContractVersion = typeof DOCUMENT_NORMALIZED_CONTRACT_VERSION;
+
 export type TDocumentMrzResult = {
   format: "TD1" | "TD2" | "TD3";
   lines: string[];
@@ -19,15 +23,29 @@ export type TDocumentMrzResult = {
   valid?: boolean;
 };
 
+export type TDocumentNormalizedStatus = "text_only" | "mrz_detected" | "mrz_invalid";
+
+export type TDocumentNormalizedQuality = {
+  textLength: number;
+  estimatedConfidence: number;
+};
+
+export type TDocumentNormalizedFields = {
+  firstName?: string;
+  lastName?: string;
+  documentNumber?: string;
+  nationality?: string;
+  birthDate?: string;
+  expiryDate?: string;
+  sex?: string;
+} & Record<string, any>;
+
 export type TDocumentNormalizedContractV2 = {
-  contractVersion: "ocr-mrz-v2";
-  status: "text_only" | "mrz_detected" | "mrz_invalid";
-  quality: {
-    textLength: number;
-    estimatedConfidence: number;
-  };
+  contractVersion: TDocumentNormalizedContractVersion;
+  status: TDocumentNormalizedStatus;
+  quality: TDocumentNormalizedQuality;
   mrz?: TDocumentMrzResult | null;
-  fields?: Record<string, any> | null;
+  fields?: TDocumentNormalizedFields | null;
 };
 
 export type TDocumentScanInsight = {
@@ -39,7 +57,7 @@ export type TDocumentScanInsight = {
 export function createNormalizedDocumentContract(
   detectedText: string,
   mrz: TDocumentMrzResult | null,
-  fields: Record<string, any> | null,
+  fields: TDocumentNormalizedFields | null,
 ): TDocumentNormalizedContractV2 {
   const estimatedConfidence = Math.max(0, Math.min(1, Number((detectedText.length / 64).toFixed(2))));
   const status: TDocumentNormalizedContractV2["status"] = !mrz
@@ -49,7 +67,7 @@ export function createNormalizedDocumentContract(
       : "mrz_detected";
 
   return {
-    contractVersion: "ocr-mrz-v2",
+    contractVersion: DOCUMENT_NORMALIZED_CONTRACT_VERSION,
     status,
     quality: {
       textLength: detectedText.length,
@@ -57,5 +75,45 @@ export function createNormalizedDocumentContract(
     },
     mrz: mrz || null,
     fields: fields || null,
+  };
+}
+
+export function isDocumentNormalizedContractV2(
+  value: unknown,
+): value is TDocumentNormalizedContractV2 {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const contract = value as Record<string, any>;
+  if (contract.contractVersion !== DOCUMENT_NORMALIZED_CONTRACT_VERSION) {
+    return false;
+  }
+
+  if (!["text_only", "mrz_detected", "mrz_invalid"].includes(contract.status)) {
+    return false;
+  }
+
+  if (!contract.quality || typeof contract.quality !== "object") {
+    return false;
+  }
+
+  return (
+    typeof contract.quality.textLength === "number" &&
+    typeof contract.quality.estimatedConfidence === "number"
+  );
+}
+
+export function summarizeNormalizedDocumentContract(
+  contract: TDocumentNormalizedContractV2 | null | undefined,
+): Pick<TDocumentNormalizedContractV2, "contractVersion" | "status" | "quality"> | null {
+  if (!contract) {
+    return null;
+  }
+
+  return {
+    contractVersion: contract.contractVersion,
+    status: contract.status,
+    quality: contract.quality,
   };
 }

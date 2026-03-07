@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  DOCUMENT_NORMALIZED_CONTRACT_VERSION,
   createNormalizedDocumentContract,
   FormUI,
+  isDocumentNormalizedContractV2,
   mountFormUI,
+  summarizeNormalizedDocumentContract,
 } from "../src/index";
 import { resetDomAndStorage } from "./test-utils";
 
@@ -47,6 +50,22 @@ describe("Document Contract", () => {
         },
       }),
     );
+  });
+
+  it("validates and summarizes the normalized OCR/MRZ contract", () => {
+    const contract = createNormalizedDocumentContract(
+      "P<UTOERIKSSON",
+      null,
+      { firstName: "ANNA MARIA" },
+    );
+
+    expect(isDocumentNormalizedContractV2(contract)).toBe(true);
+    expect(isDocumentNormalizedContractV2({ contractVersion: "ocr-mrz-v1" })).toBe(false);
+    expect(summarizeNormalizedDocumentContract(contract)).toEqual({
+      contractVersion: DOCUMENT_NORMALIZED_CONTRACT_VERSION,
+      status: "text_only",
+      quality: contract.quality,
+    });
   });
 
   it("can include normalized document data in submitted FormUI payloads", async () => {

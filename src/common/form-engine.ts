@@ -1,3 +1,4 @@
+import type { TDocumentMrzResult, TDocumentNormalizedContractV2 } from "./document-contract";
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig from "./TFormConfig";
 import { CUSTOM_SECTION } from "./Constants";
@@ -6,9 +7,9 @@ import { isFileFieldType, isFileLikeValue, normalizeFormValues } from "./field";
 
 export type TStoredDocumentData = {
   text?: string | null;
-  mrz?: Record<string, any> | null;
+  mrz?: TDocumentMrzResult | null;
   fields?: Record<string, any> | null;
-  normalized?: Record<string, any> | null;
+  normalized?: TDocumentNormalizedContractV2 | null;
 };
 
 function redactDocumentData(

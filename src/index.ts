@@ -13,9 +13,16 @@ import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { FormEngineRuntime } from "./common/form-engine";
 import {
+  DOCUMENT_NORMALIZED_CONTRACT_VERSION,
   createNormalizedDocumentContract,
+  isDocumentNormalizedContractV2,
+  summarizeNormalizedDocumentContract,
   TDocumentMrzResult,
   TDocumentNormalizedContractV2,
+  TDocumentNormalizedFields,
+  TDocumentNormalizedQuality,
+  TDocumentNormalizedStatus,
+  TDocumentNormalizedContractVersion,
   TDocumentScanInsight,
 } from "./common/document-contract";
 import {
@@ -104,7 +111,10 @@ import type {
   TWorkflowRouteResult,
 } from "./ui/form-ui.types";
 export {
+  DOCUMENT_NORMALIZED_CONTRACT_VERSION,
   createNormalizedDocumentContract,
+  isDocumentNormalizedContractV2,
+  summarizeNormalizedDocumentContract,
 } from "./common/document-contract";
 export {
   createFormConfig,
@@ -190,6 +200,10 @@ export type {
 } from "./common/form-runtime";
 export type { TStoredDocumentData } from "./common/form-engine";
 export type {
+  TDocumentNormalizedContractVersion,
+  TDocumentNormalizedFields,
+  TDocumentNormalizedQuality,
+  TDocumentNormalizedStatus,
   TDocumentMrzResult,
   TDocumentNormalizedContractV2,
   TDocumentScanInsight,

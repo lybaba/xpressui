@@ -99,6 +99,14 @@ import {
   resolveFieldViewValue as resolveConfiguredFieldViewValue,
 } from "./ui/form-ui.view";
 import {
+  ensureStepControls as ensureConfiguredStepControls,
+  getCurrentStepFieldElements as getConfiguredCurrentStepFieldElements,
+  getStepButtonLabels as getConfiguredStepButtonLabels,
+  getStepElements as getConfiguredStepElements,
+  syncStepControls as syncConfiguredStepControls,
+  syncStepVisibility as syncConfiguredStepVisibility,
+} from "./ui/form-ui.workflow";
+import {
   createDefaultHtmlSanitizer as createConfiguredDefaultHtmlSanitizer,
   createDefaultOutputRenderers as createConfiguredDefaultOutputRenderers,
   escapeHtml as escapeConfiguredHtml,
@@ -3571,10 +3579,7 @@ export class FormUI extends HTMLElement {
   }
 
   getStepButtonLabels = (): { previous: string; next: string } => {
-    return {
-      previous: this.formConfig?.stepLabels?.previous || "Back",
-      next: this.formConfig?.stepLabels?.next || "Next",
-    };
+    return getConfiguredStepButtonLabels(this.formConfig);
   }
 
   getWorkflowSnapshot = () => {
@@ -3685,27 +3690,11 @@ export class FormUI extends HTMLElement {
   }
 
   getCurrentStepFieldElements = (): Array<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement> => {
-    const currentStepName = this.getCurrentStepName();
-    if (!currentStepName) {
-      return [];
-    }
-
-    return Array.from(
-      this.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-        "input[data-section-name], select[data-section-name], textarea[data-section-name]",
-      ),
-    ).filter((element) => element.getAttribute("data-section-name") === currentStepName);
+    return getConfiguredCurrentStepFieldElements(this, this.getCurrentStepName());
   }
 
   getStepElements = (sectionName: string): HTMLElement[] => {
-    const fieldNodes = Array.from(this.querySelectorAll("[data-section-name]"))
-      .filter((node) => node.getAttribute("data-section-name") === sectionName)
-      .map((node) => (node.closest("label") as HTMLElement | null) || node as HTMLElement);
-    const sectionNodes = Array.from(this.querySelectorAll('[data-type="section"]'))
-      .filter((node) => node.getAttribute("data-name") === sectionName)
-      .map((node) => node as HTMLElement);
-
-    return Array.from(new Set([...sectionNodes, ...fieldNodes]));
+    return getConfiguredStepElements(this, sectionName);
   }
 
   validateCurrentStep = (): boolean => {
@@ -3732,171 +3721,51 @@ export class FormUI extends HTMLElement {
   }
 
   ensureStepControls = (formElem: HTMLFormElement) => {
-    if (this.stepNames.length <= 1) {
-      this.stepControlContainer = null;
-      this.stepProgressElement = null;
-      this.stepSummaryElement = null;
-      this.stepBackButton = null;
-      this.stepNextButton = null;
-      return;
-    }
-
-    const existingContainer = formElem.querySelector("[data-form-step-controls]") as HTMLElement | null;
-    if (existingContainer) {
-      this.stepControlContainer = existingContainer;
-      this.stepProgressElement = existingContainer.querySelector(
-        "[data-form-step-progress]",
-      ) as HTMLElement | null;
-      this.stepSummaryElement = existingContainer.querySelector(
-        "[data-form-step-summary]",
-      ) as HTMLElement | null;
-      this.stepBackButton = existingContainer.querySelector(
-        '[data-step-action="back"]',
-      ) as HTMLButtonElement | null;
-      this.stepNextButton = existingContainer.querySelector(
-        '[data-step-action="next"]',
-      ) as HTMLButtonElement | null;
-      return;
-    }
-
-    const controlsContainer = document.createElement("div");
-    controlsContainer.setAttribute("data-form-step-controls", "true");
-    controlsContainer.className = "mt-4 flex flex-wrap items-center gap-2";
-    controlsContainer.style.marginTop = "16px";
-    controlsContainer.style.display = "flex";
-    controlsContainer.style.flexWrap = "wrap";
-    controlsContainer.style.alignItems = "center";
-    controlsContainer.style.gap = "8px";
-    const buttonLabels = this.getStepButtonLabels();
-
-    const progressElement = document.createElement("div");
-    progressElement.setAttribute("data-form-step-progress", "true");
-    progressElement.className = "text-sm font-medium";
-    progressElement.style.fontSize = "14px";
-    progressElement.style.fontWeight = "600";
-
-    const summaryElement = document.createElement("div");
-    summaryElement.setAttribute("data-form-step-summary", "true");
-    summaryElement.className = "text-xs opacity-80";
-    summaryElement.style.fontSize = "12px";
-    summaryElement.style.opacity = "0.8";
-    summaryElement.style.flexBasis = "100%";
-
-    const backButton = document.createElement("button");
-    backButton.type = "button";
-    backButton.textContent = buttonLabels.previous;
-    backButton.setAttribute("data-step-action", "back");
-    backButton.className = "btn btn-outline btn-sm";
-    backButton.addEventListener("click", () => {
-      this.previousStep();
+    const controls = ensureConfiguredStepControls({
+      formElem,
+      stepCount: this.stepNames.length,
+      buttonLabels: this.getStepButtonLabels(),
+      onPrevious: () => {
+        this.previousStep();
+      },
+      onNext: () => {
+        this.nextStep();
+      },
     });
-
-    const nextButton = document.createElement("button");
-    nextButton.type = "button";
-    nextButton.textContent = buttonLabels.next;
-    nextButton.setAttribute("data-step-action", "next");
-    nextButton.className = "btn btn-primary btn-sm";
-    nextButton.addEventListener("click", () => {
-      this.nextStep();
-    });
-
-    controlsContainer.appendChild(progressElement);
-    controlsContainer.appendChild(summaryElement);
-    controlsContainer.appendChild(backButton);
-    controlsContainer.appendChild(nextButton);
-    formElem.appendChild(controlsContainer);
-
-    this.stepControlContainer = controlsContainer;
-    this.stepProgressElement = progressElement;
-    this.stepSummaryElement = summaryElement;
-    this.stepBackButton = backButton;
-    this.stepNextButton = nextButton;
+    this.stepControlContainer = controls.container;
+    this.stepProgressElement = controls.progress;
+    this.stepSummaryElement = controls.summary;
+    this.stepBackButton = controls.backButton;
+    this.stepNextButton = controls.nextButton;
   }
 
   syncStepVisibility = () => {
-    if (this.stepNames.length <= 1) {
-      return;
-    }
-
-    this.stepNames.forEach((sectionName, index) => {
-      const isActive = index === this.currentStepIndex;
-      this.getStepElements(sectionName).forEach((element) => {
-        const isStepHidden = element.getAttribute("data-step-hidden") === "true";
-        if (!isActive) {
-          element.setAttribute("data-step-hidden", "true");
-          element.style.display = "none";
-          return;
-        }
-
-        if (isStepHidden) {
-          element.removeAttribute("data-step-hidden");
-          element.style.display = "";
-        }
-      });
+    syncConfiguredStepVisibility({
+      stepNames: this.stepNames,
+      currentStepIndex: this.currentStepIndex,
+      getStepElements: (sectionName) => this.getStepElements(sectionName),
     });
   }
 
   syncStepControls = () => {
     const formElement = this.querySelector("form");
-    if (!formElement) {
-      return;
-    }
-
-    const submitButtons = Array.from(
-      formElement.querySelectorAll<HTMLButtonElement | HTMLInputElement>(
-        'button[type="submit"], input[type="submit"]',
-      ),
-    );
-
-    if (this.stepNames.length <= 1) {
-      submitButtons.forEach((button) => {
-        button.disabled = this.submitLockedByRules;
-        (button as HTMLElement).style.display = "";
-        if (button instanceof HTMLButtonElement) {
-          button.title = this.submitLockedByRules && this.submitLockMessage
-            ? this.submitLockMessage
-            : "";
-        }
-      });
-      return;
-    }
-
-    const isLastStep = this.isLastStep();
-    const progress = this.getStepProgress();
-    if (this.stepProgressElement) {
-      const suffix = this.isCurrentStepSkippable() ? " (Optional)" : "";
-      this.stepProgressElement.textContent =
-        `Step ${progress.stepNumber} of ${progress.stepCount} (${progress.percent}%)${suffix}`;
-    }
-    if (this.stepSummaryElement) {
-      const summary = this.getStepSummary();
-      if (!summary.length) {
-        this.stepSummaryElement.textContent = "";
-        this.stepSummaryElement.style.display = "none";
-      } else {
-        this.stepSummaryElement.textContent = summary
-          .map((entry) => `${entry.label}: ${Array.isArray(entry.value) ? entry.value.join(", ") : String(entry.value)}`)
-          .join(" | ");
-        this.stepSummaryElement.style.display = "";
-      }
-    }
-    if (this.stepBackButton) {
-      this.stepBackButton.disabled = this.currentStepIndex === 0;
-      this.stepBackButton.style.display = this.currentStepIndex === 0 ? "none" : "";
-    }
-    if (this.stepNextButton) {
-      this.stepNextButton.disabled = isLastStep;
-      this.stepNextButton.style.display = isLastStep ? "none" : "";
-    }
-
-    submitButtons.forEach((button) => {
-      button.disabled = !isLastStep || this.submitLockedByRules;
-      (button as HTMLElement).style.display = isLastStep ? "" : "none";
-      if (button instanceof HTMLButtonElement) {
-        button.title = this.submitLockedByRules && this.submitLockMessage
-          ? this.submitLockMessage
-          : "";
-      }
+    syncConfiguredStepControls({
+      formElement,
+      stepCount: this.stepNames.length,
+      currentStepIndex: this.currentStepIndex,
+      isLastStep: this.isLastStep(),
+      progress: this.getStepProgress(),
+      isCurrentStepSkippable: this.isCurrentStepSkippable(),
+      summary: this.getStepSummary(),
+      submitLockedByRules: this.submitLockedByRules,
+      submitLockMessage: this.submitLockMessage,
+      controls: {
+        container: this.stepControlContainer,
+        progress: this.stepProgressElement,
+        summary: this.stepSummaryElement,
+        backButton: this.stepBackButton,
+        nextButton: this.stepNextButton,
+      },
     });
   }
 

@@ -5,7 +5,7 @@ import TFormConfig, {
   TFormSubmitRequest,
 } from "./common/TFormConfig";
 import { TValidator } from "./common/Validator";
-import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
+import getFormConfig, { getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { FormEngineRuntime } from "./common/form-engine";
 import {
@@ -106,6 +106,11 @@ import {
   syncStepControls as syncConfiguredStepControls,
   syncStepVisibility as syncConfiguredStepVisibility,
 } from "./ui/form-ui.workflow";
+import {
+  getFieldContainer as getConfiguredFieldContainer,
+  getFieldElement as getConfiguredFieldElement,
+  renderFieldErrorState as renderConfiguredFieldErrorState,
+} from "./ui/form-ui.field";
 import {
   createDefaultHtmlSanitizer as createConfiguredDefaultHtmlSanitizer,
   createDefaultOutputRenderers as createConfiguredDefaultOutputRenderers,
@@ -4351,14 +4356,7 @@ export class FormUI extends HTMLElement {
   }
 
   getFieldElement = (fieldName: string) => {
-    const nodes = Array.from(this.querySelectorAll("[id]"));
-    for (const node of nodes) {
-      if ((node as HTMLElement).id === fieldName) {
-        return node as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-      }
-    }
-
-    return null;
+    return getConfiguredFieldElement(this, fieldName);
   }
 
   renderFieldErrorState = (
@@ -4372,30 +4370,15 @@ export class FormUI extends HTMLElement {
     touched?: boolean,
     error?: unknown,
   ) => {
-    if (!errorElement || !inputElement) {
-      return;
-    }
-
-    const ruleError = this.ruleFieldErrors[fieldName];
-    const displayedError = ruleError || (touched ? error : undefined);
-    if (displayedError) {
-      const errorClass = getErrorClass(inputElement);
-      errorElement.innerHTML = ruleError
-        ? ruleError
-        : (displayedError as TValidationError).errorMessage;
-      errorElement.style.display = "block";
-      inputElement.classList.add(errorClass);
-      this.errors[fieldName] = true;
-      return;
-    }
-
-    if (this.errors[fieldName]) {
-      errorElement.innerHTML = "";
-      errorElement.style.display = "none";
-      const errorClass = getErrorClass(inputElement);
-      inputElement.classList.remove(errorClass);
-    }
-    this.errors[fieldName] = false;
+    renderConfiguredFieldErrorState({
+      fieldName,
+      inputElement,
+      errorElement,
+      touched,
+      error,
+      errors: this.errors,
+      ruleFieldErrors: this.ruleFieldErrors,
+    });
   }
 
   syncFieldErrorDisplay = (fieldName: string) => {
@@ -4412,17 +4395,7 @@ export class FormUI extends HTMLElement {
   }
 
   getFieldContainer = (fieldName: string) => {
-    const fieldElement = this.getFieldElement(fieldName);
-    if (!fieldElement) {
-      return null;
-    }
-
-    const closestLabel = fieldElement.closest("label");
-    if (closestLabel) {
-      return closestLabel as HTMLElement;
-    }
-
-    return fieldElement.parentElement as HTMLElement | null;
+    return getConfiguredFieldContainer(this, fieldName);
   }
 
   getFieldValue = (fieldName: string) => {

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  createNormalizedProviderResult,
+  isNormalizedProviderResult,
   isProviderResponseEnvelopeV2,
   normalizeProviderResult,
+  PROVIDER_RESPONSE_CONTRACT_VERSION,
   validateProviderResponseEnvelopeV2,
 } from "../src/index";
 
@@ -115,5 +118,23 @@ describe("Provider Contract", () => {
         "transition must match {type:'step'|'workflow'} contract",
       ]),
     );
+  });
+
+  it("creates and validates a normalized provider result with stable array fields", () => {
+    const result = createNormalizedProviderResult({
+      status: "pending_approval",
+      data: { approvalId: "apr_123" },
+    });
+
+    expect(result).toEqual({
+      status: "pending_approval",
+      transition: null,
+      messages: [],
+      errors: [],
+      data: { approvalId: "apr_123" },
+    });
+    expect(isNormalizedProviderResult(result)).toBe(true);
+    expect(isNormalizedProviderResult({ status: "ok", messages: [] })).toBe(false);
+    expect(PROVIDER_RESPONSE_CONTRACT_VERSION).toBe("provider-envelope-v2");
   });
 });

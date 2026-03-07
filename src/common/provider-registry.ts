@@ -1,8 +1,10 @@
 import { TFormProviderRequest, TFormSubmitRequest } from "./TFormConfig";
 import {
+  createNormalizedProviderResult,
   TFormProviderTransition,
   TNormalizedProviderResult,
   TProviderResponseEnvelopeV2,
+  PROVIDER_RESPONSE_CONTRACT_VERSION,
 } from "./provider-contract";
 
 export type TFormProviderDefinition = {
@@ -23,9 +25,16 @@ export type TFormProviderDefinition = {
 };
 
 export type {
+  TProviderResponseContractVersion,
   TFormProviderTransition,
+  TNormalizedProviderNextAction,
   TNormalizedProviderResult,
   TProviderResponseEnvelopeV2,
+} from "./provider-contract";
+export {
+  createNormalizedProviderResult,
+  isNormalizedProviderResult,
+  PROVIDER_RESPONSE_CONTRACT_VERSION,
 } from "./provider-contract";
 
 type TProviderConfigFieldSchema = {
@@ -638,14 +647,14 @@ export function normalizeProviderResult(
       ...normalizeProviderMessagesFromErrors(normalizedErrors),
     ]),
   );
-  return {
+  return createNormalizedProviderResult({
     status: normalizeProviderStatus(result),
     transition: resolveProviderTransition(action, result, submitConfig),
     messages: normalizedMessages,
     errors: normalizedErrors,
     ...(nextActions ? { nextActions } : {}),
     data: normalizeProviderData(result),
-  };
+  });
 }
 
 registerProvider("reservation", {

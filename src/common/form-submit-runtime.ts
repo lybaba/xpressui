@@ -5,6 +5,9 @@ import type {
   TFormSubmitRequest,
 } from "./TFormConfig";
 import { validateProviderResponseEnvelopeV2 } from "./provider-registry";
+import {
+  PROVIDER_RESPONSE_CONTRACT_VERSION,
+} from "./provider-contract";
 import type { TNormalizedProviderResult } from "./provider-contract";
 
 export type TResolvedSubmitTransportResult = {
@@ -20,7 +23,7 @@ export type TSubmitResponseError = Error & {
 export type TProviderContractWarning = {
   mode: "warn-v2" | "strict-v2";
   errors: string[];
-  expectedContract: "provider-envelope-v2";
+  expectedContract: typeof PROVIDER_RESPONSE_CONTRACT_VERSION;
 };
 
 export type TSubmitLifecycleDetail = {
@@ -124,7 +127,7 @@ export function getProviderContractWarning(
   return {
     mode,
     errors: validationErrors,
-    expectedContract: "provider-envelope-v2",
+    expectedContract: PROVIDER_RESPONSE_CONTRACT_VERSION,
   };
 }
 

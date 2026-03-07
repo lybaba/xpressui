@@ -72,6 +72,9 @@ import { FormRuntime } from "./common/form-runtime";
 import { FormUploadRuntime, TFormUploadState } from "./common/form-upload";
 import { validatePublicFormConfig } from "./common/public-schema";
 import {
+  createNormalizedProviderResult,
+  isNormalizedProviderResult,
+  PROVIDER_RESPONSE_CONTRACT_VERSION,
   getProviderErrorEventName,
   getProviderSuccessEventName,
   normalizeProviderResult,
@@ -141,12 +144,15 @@ export {
   validatePublicFormConfig,
 } from "./common/public-schema";
 export {
+  createNormalizedProviderResult,
   createSubmitRequestFromProvider,
   getProviderDefinition,
   getProviderErrorEventName,
   getProviderSuccessEventName,
+  isNormalizedProviderResult,
   isProviderResponseEnvelopeV2,
   normalizeProviderResult,
+  PROVIDER_RESPONSE_CONTRACT_VERSION,
   resolveProviderTransition,
   registerProvider,
   validateProviderResponseEnvelopeV2,
@@ -183,8 +189,10 @@ export type {
 export type { TCreateFormPresetOptions, TFormPresetName } from "./common/form-presets";
 export type {
   TFormProviderConfigSchema,
+  TNormalizedProviderNextAction,
   TFormProviderTransition,
   TNormalizedProviderResult,
+  TProviderResponseContractVersion,
   TProviderResponseEnvelopeV2,
 } from "./common/provider-registry";
 export type {

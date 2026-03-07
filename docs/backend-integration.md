@@ -22,6 +22,7 @@ responses your frontend can rely on.
   - `compat` (default)
   - `warn-v2` (emit warnings when response shape drifts)
   - `strict-v2` (treat response shape drift as submit error)
+- normalized provider envelope contract version: `provider-envelope-v2`
 - `type: "setting"` fields are excluded from outbound submit payloads by default
   and can be re-included using:
   - `field.includeInSubmit: true` (field-level)
@@ -471,6 +472,27 @@ The payload includes:
 
 `xpressui` can normalize older provider responses, but the recommended backend
 contract is a shared envelope that keeps all providers consistent:
+
+```json
+{
+  "status": "pending_approval",
+  "transition": { "type": "workflow", "state": "pending_approval" },
+  "messages": ["Manual review required"],
+  "errors": [],
+  "nextActions": [{ "type": "review", "label": "Open case" }],
+  "data": {
+    "approvalId": "apr_123"
+  }
+}
+```
+
+Normalized runtime result guarantees:
+- `status`: `string | null`
+- `transition`: normalized transition or `null`
+- `messages`: always an array
+- `errors`: always an array
+- `nextActions`: optional array when the provider returned next actions
+- `data`: passthrough provider payload bucket
 
 ```json
 {

@@ -86,7 +86,7 @@ Roadmap Phases
 --------------
 
 Phase 1: Core Platform Stabilization
-Status: Mostly complete
+Status: Complete
 
 Goal:
 Keep the SDK core stable and predictable before adding broader surface area.
@@ -98,10 +98,10 @@ Completed:
 - provider registry extraction
 - engine / dynamic / persistence / upload / steps runtimes
 - public headless runtime composition
+- stricter public API boundary manifest
+- stable vs advanced/internal API documentation
 
 Remaining:
-- formalize a stricter public API boundary
-- document which exports are stable vs advanced/internal
 - standardize provider response/result contracts
 
 Exit criteria:
@@ -146,7 +146,7 @@ Exit criteria:
 
 
 Phase 3: Save, Resume, and Offline Continuation
-Status: In progress (cross-device MVP shipped)
+Status: In progress (cross-device hardening mostly shipped)
 
 Goal:
 Make interrupted workflows resumable locally and remotely.
@@ -174,9 +174,17 @@ Completed:
   - `create-share-code` contract
   - `claim-share-code` contract
   - runtime APIs to claim/restore via share code
+- signed token verification events and invalid-signature handling
+- share-code abuse controls in runtime:
+  - claim throttling
+  - attempt caps
+  - temporary blocking windows
 
 Remaining:
-- hardened signed shareable token exchange contract (backend policy/rate limits)
+- backend-enforced signed shareable token exchange policy:
+  - server-side rate limits
+  - expiration enforcement
+  - claim policy parity with client safeguards
 - cross-device resume UX
 
 Exit criteria:
@@ -184,7 +192,7 @@ Exit criteria:
 
 
 Phase 4: Workflow and Rules Expansion
-Status: In progress
+Status: Mostly complete
 
 Goal:
 Move from strong field logic to stronger workflow orchestration.
@@ -214,9 +222,10 @@ Completed:
 - step review summaries
 - workflow state integration
 - provider-driven workflow routing policies
+- workflow snapshots reusable by admin/debug tools
 
 Remaining:
-- workflow snapshots reusable by admin/debug tools
+- broader admin/debug workflows built directly on snapshots
 
 Exit criteria:
 - complex business flows can be expressed declaratively without ad hoc glue code
@@ -233,28 +242,30 @@ Completed:
 - preview thumbnails
 - drag-and-drop
 - presigned upload strategy
+- bounded retry policy for presigned upload failures
+- retry diagnostics in upload events (`attempt`, `nextRetryAt`, `reason`)
+- chunked uploads with resumable local progress markers when configured
 - camera capture
 - QR scan
 - document scan
 - OCR / MRZ parsing
 - document data redaction controls
-
-Remaining:
-- upload retry policy for presigned flows
-- resumable binary uploads
-- stronger OCR / MRZ normalization contracts
-- file/document privacy controls by field
 - upload policy hooks:
   - virus scan callback
   - content moderation callback
   - file acceptance callback
+
+Remaining:
+- backend-compatible resumable binary upload contracts beyond local chunk resume
+- stronger OCR / MRZ normalization contracts
+- file/document privacy controls by field
 
 Exit criteria:
 - file and identity flows are safe enough for real operational workflows
 
 
 Phase 6: Demo and Developer Experience
-Status: In progress (expanded)
+Status: In progress (expanded, snippet support shipped)
 
 Goal:
 Make the product easy to understand, adopt, and validate quickly.
@@ -272,9 +283,9 @@ Completed:
   - remote save/resume flow
   - provider transition flow
 - dedicated “headless only” demo without `FormUI`
+- snippet generation directly from form config (`createMountSnippet(...)`)
 
 Remaining:
-- snippet generation directly from form config
 - docs that mirror demo scenarios exactly
 
 
@@ -372,24 +383,20 @@ Priority Backlog
 ----------------
 
 P0:
-- harden signed shareable token exchange contract:
-  - backend policy/rate limits
-  - abuse controls (attempt caps, claim throttling, expiration enforcement)
-- harden presigned upload retries
+- backend-enforced signed shareable token exchange contract:
+  - rate limits
+  - expiration enforcement
+  - abuse controls aligned with current client/runtime safeguards
 
 P1:
 - stronger OCR / MRZ normalization contracts
 - file/document privacy controls by field
-- upload policy hooks:
-  - virus scan callback
-  - content moderation callback
-  - file acceptance callback
+- backend-compatible resumable binary upload contracts
 
 P2:
-- improve API boundary docs and stable export documentation
 - reduce bundle size by trimming non-essential runtime paths
-- workflow snapshots reusable by admin/debug tools
-- snippet generation directly from form config
+- broaden admin/debug tooling that consumes workflow snapshots
+- docs that mirror demo scenarios exactly
 
 P3:
 - View runtime hardening:
@@ -402,18 +409,18 @@ Next Best Task
 
 The most immediately profitable next feature is:
 
-- harden presigned upload retries
+- stronger OCR / MRZ normalization contracts
 
 Why:
-- it is the highest operational risk in production file flows
-- it directly improves reliability for business-critical uploads
-- it complements existing presigned upload strategy already in place
+- OCR and MRZ data already influence validation and submission flows
+- downstream integrations benefit from a stricter normalized contract
+- this reduces ambiguity before adding more identity/document providers
 
 Suggested first scope:
-- add bounded retry policy for presigned upload failures
-- include retry diagnostics in upload events (`attempt`, `nextRetryAt`, `reason`)
-- persist retry-safe state for interrupted uploads when feasible
+- formalize a versioned normalized OCR/MRZ payload shape
+- document required/optional normalized fields
+- align provider-facing and submission-facing document contracts
 
 Follow-up scope (after current P0):
 - harden signed shareable token exchange contract (policy/rate limits)
-- stronger OCR / MRZ normalization contracts
+- backend-compatible resumable binary uploads

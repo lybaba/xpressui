@@ -28,24 +28,13 @@ import {
 import {
   APPROVAL_STATE_TYPE,
   CAMERA_PHOTO_TYPE,
-  HTML_TYPE,
-  IMAGE_TYPE,
   DOCUMENT_SCAN_TYPE,
   isFileFieldType,
-  isFileLikeValue,
-  LINK_TYPE,
-  MEDIA_TYPE,
-  OUTPUT_TYPE,
   IMAGE_GALLERY_TYPE,
   PRODUCT_LIST_TYPE,
   QR_SCAN_TYPE,
-  RICH_EDITOR_TYPE,
   SETTING_TYPE,
-  TEXTAREA_TYPE,
-  TEXT_TYPE,
   UPLOAD_FILE_TYPE,
-  UPLOAD_IMAGE_TYPE,
-  URL_TYPE,
   UNKNOWN_TYPE,
 } from "./common/field";
 import { FormDynamicRuntime } from "./common/form-dynamic";
@@ -110,6 +99,25 @@ import {
   readViewValuesAttribute as readConfiguredViewValuesAttribute,
   resolveFieldViewValue as resolveConfiguredFieldViewValue,
 } from "./ui/form-ui.view";
+import {
+  createDefaultHtmlSanitizer as createConfiguredDefaultHtmlSanitizer,
+  createDefaultOutputRenderers as createConfiguredDefaultOutputRenderers,
+  escapeHtml as escapeConfiguredHtml,
+  getDisplayText as getConfiguredDisplayText,
+  getFileMeta as getConfiguredFileMeta,
+  getFileMetas as getConfiguredFileMetas,
+  getMapSources as getConfiguredMapSources,
+  getMediaSources as getConfiguredMediaSources,
+  isEmbeddableDocumentSource as isConfiguredEmbeddableDocumentSource,
+  isSafeMapEmbedSource as isConfiguredSafeMapEmbedSource,
+  normalizeViewValue as normalizeConfiguredViewValue,
+  readTemplateTokenValue as readConfiguredTemplateTokenValue,
+  renderViewTemplate as renderConfiguredViewTemplate,
+  resolveMediaDisplayPolicy as resolveConfiguredMediaDisplayPolicy,
+  resolveOutputRendererForField as resolveConfiguredOutputRendererForField,
+  resolveViewTemplateValue as resolveConfiguredViewTemplateValue,
+  shouldRenderUnsafeHtml as shouldConfiguredRenderUnsafeHtml,
+} from "./ui/form-ui.output";
 export type {
   TFormApprovalState,
   TFormUISubmitDetail,
@@ -352,10 +360,10 @@ export class FormUI extends HTMLElement {
     this.overlayReturnFocusElement = null;
     this.hostAriaHiddenBeforeOverlay = null;
     this.viewValues = {};
-    this.outputRenderers = this.createDefaultOutputRenderers();
     this.fieldOutputRenderers = {};
     this.fieldMediaPolicies = {};
-    this.htmlSanitizer = this.defaultHtmlSanitizer;
+    this.htmlSanitizer = createConfiguredDefaultHtmlSanitizer();
+    this.outputRenderers = this.createDefaultOutputRenderers();
     this.allowUnsafeHtml = false;
     this.dynamic = new FormDynamicRuntime({
       getFieldConfigs: () => Object.values(this.engine.getFields()),
@@ -501,175 +509,35 @@ export class FormUI extends HTMLElement {
   }
 
   normalizeViewValue = (value: any): any => {
-    if (value === undefined || value === null) {
-      return value;
-    }
-
-    if (Array.isArray(value)) {
-      return value
-        .map((entry) => this.normalizeViewValue(entry))
-        .filter((entry) => entry !== undefined && entry !== null && entry !== "");
-    }
-
-    if (isFileLikeValue(value)) {
-      return value;
-    }
-
-    if (typeof value === "object") {
-      const mediaValue =
-        value.url
-        || value.href
-        || value.src
-        || value.path
-        || value.value
-        || value.fileName
-        || value.name;
-      return mediaValue !== undefined ? mediaValue : value;
-    }
-
-    return value;
+    return normalizeConfiguredViewValue(value);
   }
 
   getDisplayText = (value: any): string => {
-    if (value === undefined || value === null) {
-      return "";
-    }
-
-    if (Array.isArray(value)) {
-      return value
-        .map((entry) => this.getDisplayText(entry))
-        .filter(Boolean)
-        .join(", ");
-    }
-
-    if (isFileLikeValue(value)) {
-      return value.name || "";
-    }
-
-    if (typeof value === "object") {
-      return JSON.stringify(value);
-    }
-
-    return String(value);
+    return getConfiguredDisplayText(value);
   }
 
   getFileMeta = (value: any): { href: string; label: string } | null => {
-    const normalized = this.normalizeViewValue(value);
-    if (isFileLikeValue(value)) {
-      return {
-        href: "",
-        label: value.name || "file",
-      };
-    }
-
-    const source = Array.isArray(normalized) ? normalized[0] : normalized;
-    if (typeof source !== "string" || !source) {
-      return null;
-    }
-
-    const fileNameCandidate = source.split("?")[0].split("/").pop();
-    return {
-      href: source,
-      label: fileNameCandidate || source,
-    };
+    return getConfiguredFileMeta(value);
   }
 
   getFileMetas = (value: any): Array<{ href: string; label: string }> => {
-    if (Array.isArray(value)) {
-      return value
-        .map((entry) => this.getFileMeta(entry))
-        .filter((entry): entry is { href: string; label: string } => Boolean(entry));
-    }
-
-    const meta = this.getFileMeta(value);
-    return meta ? [meta] : [];
+    return getConfiguredFileMetas(value);
   }
 
   getMediaSources = (value: any): string[] => {
-    const normalized = this.normalizeViewValue(value);
-    const entries = Array.isArray(normalized) ? normalized : [normalized];
-    return entries.filter((entry): entry is string => typeof entry === "string" && Boolean(entry));
+    return getConfiguredMediaSources(value);
   }
 
   isEmbeddableDocumentSource = (source: string): boolean => {
-    if (!source) {
-      return false;
-    }
-
-    if (source.startsWith("blob:") || source.startsWith("data:application/pdf")) {
-      return true;
-    }
-
-    const lowerSource = source.toLowerCase();
-    if (lowerSource.includes(".pdf")) {
-      return true;
-    }
-
-    try {
-      const parsed = new URL(source);
-      const pathname = parsed.pathname.toLowerCase();
-      return pathname.endsWith(".pdf");
-    } catch {
-      return false;
-    }
+    return isConfiguredEmbeddableDocumentSource(source);
   }
 
   getMapSources = (value: any): string[] => {
-    const fromEntry = (entry: any): string[] => {
-      if (entry === undefined || entry === null) {
-        return [];
-      }
-
-      if (typeof entry === "string") {
-        return entry ? [entry] : [];
-      }
-
-      if (Array.isArray(entry)) {
-        return entry.flatMap((item) => fromEntry(item));
-      }
-
-      if (typeof entry === "object") {
-        const latitude = Number((entry as any).lat ?? (entry as any).latitude);
-        const longitude = Number((entry as any).lng ?? (entry as any).lon ?? (entry as any).longitude);
-        if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
-          return [`https://www.google.com/maps?q=${latitude},${longitude}&output=embed`];
-        }
-
-        const url =
-          (entry as any).url
-          || (entry as any).href
-          || (entry as any).src
-          || (entry as any).value
-          || "";
-        return typeof url === "string" && url ? [url] : [];
-      }
-
-      return [];
-    };
-
-    return fromEntry(value);
+    return getConfiguredMapSources(value);
   }
 
   isSafeMapEmbedSource = (source: string): boolean => {
-    try {
-      const parsed = new URL(source);
-      if (parsed.protocol !== "https:") {
-        return false;
-      }
-
-      const allowedHosts = new Set([
-        "www.google.com",
-        "maps.google.com",
-        "google.com",
-        "www.openstreetmap.org",
-        "openstreetmap.org",
-        "www.bing.com",
-        "bing.com",
-      ]);
-      return allowedHosts.has(parsed.hostname.toLowerCase());
-    } catch {
-      return false;
-    }
+    return isConfiguredSafeMapEmbedSource(source);
   }
 
   resolveMediaDisplayPolicy = (
@@ -677,368 +545,18 @@ export class FormUI extends HTMLElement {
     inputElement: HTMLElement | null,
     rendererType?: string,
   ): TMediaDisplayPolicy => {
-    const runtimePolicy = this.fieldMediaPolicies[fieldConfig.name];
-    if (runtimePolicy) {
-      return runtimePolicy;
-    }
-
-    const attributePolicy =
-      inputElement?.getAttribute("data-view-media-display")
-      || inputElement?.getAttribute("data-view-resource-display");
-    if (
-      attributePolicy === "thumbnail"
-      || attributePolicy === "large"
-      || attributePolicy === "link"
-      || attributePolicy === "gallery"
-      || attributePolicy === "embed"
-    ) {
-      return attributePolicy;
-    }
-
-    if (rendererType === "file" || rendererType === "link") {
-      return "link";
-    }
-    if (rendererType === "document") {
-      return "embed";
-    }
-
-    return "large";
+    return resolveConfiguredMediaDisplayPolicy(
+      this.fieldMediaPolicies,
+      fieldConfig,
+      inputElement,
+      rendererType,
+    );
   }
 
   createDefaultOutputRenderers = (): Record<TOutputRendererType, TFormOutputRenderer> => {
-    const textRenderer: TFormOutputRenderer = ({ value }) => {
-      const element = document.createElement("span");
-      element.textContent = this.getDisplayText(value);
-      return element;
-    };
-
-    const htmlRenderer: TFormOutputRenderer = ({ value, fieldConfig, mode, unsafeHtml }) => {
-      const element = document.createElement("div");
-      const htmlContent = this.getDisplayText(value);
-      element.innerHTML = unsafeHtml
-        ? htmlContent
-        : this.htmlSanitizer(htmlContent, {
-          fieldConfig,
-          mode,
-        });
-      return element;
-    };
-
-    const imageRenderer: TFormOutputRenderer = ({ value, fieldConfig, mediaDisplayPolicy }) => {
-      const element = document.createElement("div");
-      const sources = fieldConfig.type === IMAGE_GALLERY_TYPE
-        ? (Array.isArray(value) ? value : [])
-          .filter((entry) => entry && typeof entry === "object")
-          .map((entry) =>
-            String(
-              (entry as any).image_medium
-              || (entry as any).image_thumbnail
-              || "",
-            ),
-          )
-          .filter(Boolean)
-        : this.getMediaSources(value);
-      if (!sources.length) {
-        return element;
-      }
-
-      if (mediaDisplayPolicy === "link") {
-        sources.forEach((source) => {
-          const link = document.createElement("a");
-          link.href = source;
-          link.target = "_blank";
-          link.rel = "noreferrer";
-          link.textContent = source;
-          link.style.display = "block";
-          element.appendChild(link);
-        });
-        return element;
-      }
-
-      const renderImage = (source: string) => {
-        const image = document.createElement("img");
-        image.src = source;
-        image.alt = fieldConfig.label || fieldConfig.name || "image";
-        image.style.height = "auto";
-        image.style.display = "block";
-        image.style.maxWidth = mediaDisplayPolicy === "thumbnail" ? "160px" : "100%";
-        image.style.objectFit = mediaDisplayPolicy === "thumbnail" ? "cover" : "contain";
-        return image;
-      };
-
-      if (mediaDisplayPolicy === "gallery") {
-        const gallery = document.createElement("div");
-        gallery.setAttribute("data-media-gallery", "true");
-        gallery.style.display = "grid";
-        gallery.style.gridTemplateColumns = "repeat(auto-fill, minmax(120px, 1fr))";
-        gallery.style.gap = "8px";
-        sources.forEach((source) => {
-          gallery.appendChild(renderImage(source));
-        });
-        element.appendChild(gallery);
-        return element;
-      }
-
-      element.appendChild(renderImage(sources[0]));
-      return element;
-    };
-
-    const linkRenderer: TFormOutputRenderer = ({ value }) => {
-      const element = document.createElement("div");
-      const normalized = this.normalizeViewValue(value);
-      const href = Array.isArray(normalized) ? normalized[0] : normalized;
-      if (typeof href !== "string" || !href) {
-        return element;
-      }
-
-      const link = document.createElement("a");
-      link.href = href;
-      link.target = "_blank";
-      link.rel = "noreferrer";
-      link.textContent = href;
-      element.appendChild(link);
-      return element;
-    };
-
-    const fileRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
-      const element = document.createElement("div");
-      const fileMetas = this.getFileMetas(value);
-      if (!fileMetas.length) {
-        return element;
-      }
-
-      const shouldRenderAll = mediaDisplayPolicy === "gallery";
-      const items = shouldRenderAll ? fileMetas : [fileMetas[0]];
-      items.forEach((fileMeta) => {
-        if (!fileMeta.href) {
-          const text = document.createElement("span");
-          text.textContent = fileMeta.label;
-          text.style.display = "block";
-          element.appendChild(text);
-          return;
-        }
-
-        const link = document.createElement("a");
-        link.href = fileMeta.href;
-        link.target = "_blank";
-        link.rel = "noreferrer";
-        link.download = "";
-        link.textContent = fileMeta.label;
-        link.style.display = "block";
-        element.appendChild(link);
-      });
-      return element;
-    };
-
-    const documentRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
-      const element = document.createElement("div");
-      const sources = this.getMediaSources(value);
-      if (!sources.length) {
-        return element;
-      }
-
-      if (mediaDisplayPolicy === "link") {
-        sources.forEach((source) => {
-          const link = document.createElement("a");
-          link.href = source;
-          link.target = "_blank";
-          link.rel = "noreferrer";
-          link.textContent = source;
-          link.style.display = "block";
-          element.appendChild(link);
-        });
-        return element;
-      }
-
-      const renderEmbed = (source: string) => {
-        if (!this.isEmbeddableDocumentSource(source)) {
-          const link = document.createElement("a");
-          link.href = source;
-          link.target = "_blank";
-          link.rel = "noreferrer";
-          link.textContent = source;
-          link.style.display = "block";
-          return link;
-        }
-
-        const frame = document.createElement("iframe");
-        frame.src = source;
-        frame.loading = "lazy";
-        frame.style.width = "100%";
-        frame.style.border = "1px solid rgba(15, 23, 42, 0.12)";
-        frame.style.borderRadius = "10px";
-        frame.style.background = "#ffffff";
-        frame.style.height =
-          mediaDisplayPolicy === "thumbnail"
-            ? "220px"
-            : mediaDisplayPolicy === "large"
-              ? "520px"
-              : "420px";
-        frame.setAttribute("title", "Document preview");
-        return frame;
-      };
-
-      if (mediaDisplayPolicy === "gallery") {
-        const gallery = document.createElement("div");
-        gallery.setAttribute("data-media-gallery", "true");
-        gallery.style.display = "grid";
-        gallery.style.gap = "10px";
-        sources.forEach((source) => {
-          gallery.appendChild(renderEmbed(source));
-        });
-        element.appendChild(gallery);
-        return element;
-      }
-
-      element.appendChild(renderEmbed(sources[0]));
-      return element;
-    };
-
-    const videoRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
-      const element = document.createElement("div");
-      const sources = this.getMediaSources(value);
-      if (!sources.length) {
-        return element;
-      }
-
-      if (mediaDisplayPolicy === "link") {
-        sources.forEach((source) => {
-          const link = document.createElement("a");
-          link.href = source;
-          link.target = "_blank";
-          link.rel = "noreferrer";
-          link.textContent = source;
-          link.style.display = "block";
-          element.appendChild(link);
-        });
-        return element;
-      }
-
-      const renderVideo = (source: string) => {
-        const video = document.createElement("video");
-        video.controls = true;
-        video.preload = "metadata";
-        video.style.maxWidth = mediaDisplayPolicy === "thumbnail" ? "220px" : "100%";
-        video.src = source;
-        return video;
-      };
-
-      if (mediaDisplayPolicy === "gallery") {
-        const list = document.createElement("div");
-        list.setAttribute("data-media-gallery", "true");
-        list.style.display = "grid";
-        list.style.gap = "8px";
-        sources.forEach((source) => {
-          list.appendChild(renderVideo(source));
-        });
-        element.appendChild(list);
-        return element;
-      }
-
-      element.appendChild(renderVideo(sources[0]));
-      return element;
-    };
-
-    const audioRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
-      const element = document.createElement("div");
-      const sources = this.getMediaSources(value);
-      if (!sources.length) {
-        return element;
-      }
-
-      if (mediaDisplayPolicy === "link") {
-        sources.forEach((source) => {
-          const link = document.createElement("a");
-          link.href = source;
-          link.target = "_blank";
-          link.rel = "noreferrer";
-          link.textContent = source;
-          link.style.display = "block";
-          element.appendChild(link);
-        });
-        return element;
-      }
-
-      const renderAudio = (source: string) => {
-        const audio = document.createElement("audio");
-        audio.controls = true;
-        audio.preload = "metadata";
-        audio.src = source;
-        audio.style.width = mediaDisplayPolicy === "thumbnail" ? "220px" : "100%";
-        return audio;
-      };
-
-      if (mediaDisplayPolicy === "gallery") {
-        const list = document.createElement("div");
-        list.setAttribute("data-media-gallery", "true");
-        list.style.display = "grid";
-        list.style.gap = "8px";
-        sources.forEach((source) => {
-          list.appendChild(renderAudio(source));
-        });
-        element.appendChild(list);
-        return element;
-      }
-
-      element.appendChild(renderAudio(sources[0]));
-      return element;
-    };
-
-    const mapRenderer: TFormOutputRenderer = ({ value, mediaDisplayPolicy }) => {
-      const element = document.createElement("div");
-      const sources = this.getMapSources(value);
-      if (!sources.length) {
-        return element;
-      }
-
-      if (mediaDisplayPolicy === "link") {
-        sources.forEach((source) => {
-          const link = document.createElement("a");
-          link.href = source;
-          link.target = "_blank";
-          link.rel = "noreferrer";
-          link.textContent = source;
-          link.style.display = "block";
-          element.appendChild(link);
-        });
-        return element;
-      }
-
-      const embedSource = sources.find((source) => this.isSafeMapEmbedSource(source));
-      if (!embedSource) {
-        const fallback = document.createElement("a");
-        fallback.href = sources[0];
-        fallback.target = "_blank";
-        fallback.rel = "noreferrer";
-        fallback.textContent = sources[0];
-        element.appendChild(fallback);
-        return element;
-      }
-
-      const frame = document.createElement("iframe");
-      frame.src = embedSource;
-      frame.loading = "lazy";
-      frame.referrerPolicy = "no-referrer-when-downgrade";
-      frame.style.width = "100%";
-      frame.style.height = mediaDisplayPolicy === "thumbnail" ? "200px" : "320px";
-      frame.style.border = "0";
-      frame.setAttribute("title", "Map preview");
-      frame.setAttribute("allowfullscreen", "");
-      element.appendChild(frame);
-      return element;
-    };
-
-    return {
-      text: textRenderer,
-      html: htmlRenderer,
-      image: imageRenderer,
-      file: fileRenderer,
-      video: videoRenderer,
-      audio: audioRenderer,
-      map: mapRenderer,
-      link: linkRenderer,
-      document: documentRenderer,
-    };
+    return createConfiguredDefaultOutputRenderers({
+      htmlSanitizer: (html, context) => this.htmlSanitizer(html, context),
+    });
   }
 
   getRenderMode = (): TFormRenderMode => {
@@ -1070,85 +588,14 @@ export class FormUI extends HTMLElement {
     return { ...this.viewValues };
   }
 
-  defaultHtmlSanitizer: TFormHtmlSanitizer = (html: string) => {
-    if (typeof document === "undefined") {
-      return html
-        .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-        .replace(/\son[a-z]+\s*=\s*(['"]).*?\1/gi, "");
-    }
-
-    const template = document.createElement("template");
-    template.innerHTML = html;
-
-    const blockedTags = [
-      "script",
-      "style",
-      "iframe",
-      "object",
-      "embed",
-      "link",
-      "meta",
-      "base",
-    ];
-    template.content
-      .querySelectorAll(blockedTags.join(","))
-      .forEach((node) => node.remove());
-
-    template.content.querySelectorAll("*").forEach((element) => {
-      Array.from(element.attributes).forEach((attribute) => {
-        const attributeName = attribute.name.toLowerCase();
-        const attributeValue = String(attribute.value || "").trim().toLowerCase();
-        if (attributeName.startsWith("on")) {
-          element.removeAttribute(attribute.name);
-          return;
-        }
-
-        if (attributeName === "srcdoc") {
-          element.removeAttribute(attribute.name);
-          return;
-        }
-
-        if (
-          (attributeName === "href" || attributeName === "src" || attributeName === "xlink:href")
-          && attributeValue.startsWith("javascript:")
-        ) {
-          element.removeAttribute(attribute.name);
-        }
-      });
-    });
-
-    return template.innerHTML;
-  }
+  defaultHtmlSanitizer: TFormHtmlSanitizer = createConfiguredDefaultHtmlSanitizer()
 
   escapeHtml = (value: string): string => {
-    return value
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
+    return escapeConfiguredHtml(value);
   }
 
   readTemplateTokenValue = (values: Record<string, any>, tokenPath: string): any => {
-    const path = String(tokenPath || "").trim();
-    if (!path) {
-      return "";
-    }
-
-    if (Object.prototype.hasOwnProperty.call(values, path)) {
-      return values[path];
-    }
-
-    const segments = path.split(".");
-    let cursor: any = values;
-    for (const segment of segments) {
-      if (!cursor || typeof cursor !== "object" || !(segment in cursor)) {
-        return "";
-      }
-      cursor = cursor[segment];
-    }
-
-    return cursor;
+    return readConfiguredTemplateTokenValue(values, tokenPath);
   }
 
   renderViewTemplate = (
@@ -1156,11 +603,7 @@ export class FormUI extends HTMLElement {
     values: Record<string, any>,
     escapeValues: boolean,
   ): string => {
-    return String(template).replace(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g, (_, token: string) => {
-      const value = this.readTemplateTokenValue(values, token);
-      const textValue = this.getDisplayText(value);
-      return escapeValues ? this.escapeHtml(textValue) : textValue;
-    });
+    return renderConfiguredViewTemplate(template, values, escapeValues);
   }
 
   resolveViewTemplateValue = (
@@ -1170,24 +613,13 @@ export class FormUI extends HTMLElement {
     value: any,
     valuesContext?: Record<string, any>,
   ): any => {
-    if (rendererType !== "html") {
-      return value;
-    }
-
-    const template = inputElement.getAttribute("data-view-template") || fieldConfig.viewTemplate;
-    if (!template) {
-      return value;
-    }
-
-    const rawUnsafe =
-      inputElement.getAttribute("data-view-template-unsafe")
-      ?? (fieldConfig.viewTemplateUnsafe ? "true" : "false");
-    const templateUnsafe = rawUnsafe === "true";
-    const tokenValues = {
-      ...(valuesContext || {}),
+    return resolveConfiguredViewTemplateValue(
+      fieldConfig,
+      inputElement,
+      rendererType,
       value,
-    };
-    return this.renderViewTemplate(template, tokenValues, !templateUnsafe);
+      valuesContext,
+    );
   }
 
   setHtmlSanitizer = (sanitizer: TFormHtmlSanitizer) => {
@@ -1210,21 +642,7 @@ export class FormUI extends HTMLElement {
   }
 
   shouldRenderUnsafeHtml = (inputElement: HTMLElement | null): boolean => {
-    if (this.allowUnsafeHtml) {
-      return true;
-    }
-
-    const unsafeGlobalAttr = this.getAttribute("allow-unsafe-html") || this.getAttribute("data-allow-unsafe-html");
-    if (unsafeGlobalAttr === "true") {
-      return true;
-    }
-
-    if (!inputElement) {
-      return false;
-    }
-
-    const unsafeFieldAttr = inputElement.getAttribute("data-view-html-unsafe");
-    return unsafeFieldAttr === "true";
+    return shouldConfiguredRenderUnsafeHtml(this, this.allowUnsafeHtml, inputElement);
   }
 
   setOutputRenderer = (rendererType: string, renderer: TFormOutputRenderer) => {
@@ -1288,34 +706,13 @@ export class FormUI extends HTMLElement {
     fieldConfig: TFieldConfig,
     inputElement: HTMLElement,
   ): { rendererType: string; renderer: TFormOutputRenderer } => {
-    const fieldOverride = this.fieldOutputRenderers[fieldConfig.name];
-    if (typeof fieldOverride === "function") {
-      return {
-        rendererType: "custom",
-        renderer: fieldOverride,
-      };
-    }
-
-    if (typeof fieldOverride === "string" && this.outputRenderers[fieldOverride]) {
-      return {
-        rendererType: fieldOverride,
-        renderer: this.outputRenderers[fieldOverride],
-      };
-    }
-
-    const rendererOverride = inputElement.getAttribute("data-view-renderer");
-    if (rendererOverride && this.outputRenderers[rendererOverride]) {
-      return {
-        rendererType: rendererOverride,
-        renderer: this.outputRenderers[rendererOverride],
-      };
-    }
-
-    const defaultRendererType = this.getOutputRendererType(fieldConfig);
-    return {
-      rendererType: defaultRendererType,
-      renderer: this.outputRenderers[defaultRendererType] || this.outputRenderers.text,
-    };
+    return resolveConfiguredOutputRendererForField({
+      fieldConfig,
+      inputElement,
+      outputRenderers: this.outputRenderers,
+      fieldOutputRenderers: this.fieldOutputRenderers,
+      getOutputRendererType: (nextFieldConfig) => this.getOutputRendererType(nextFieldConfig),
+    });
   }
 
   getOutputSnapshot = (values?: Record<string, any>) => {

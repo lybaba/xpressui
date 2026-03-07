@@ -107,6 +107,7 @@ import {
   syncStepVisibility as syncConfiguredStepVisibility,
 } from "./ui/form-ui.workflow";
 import {
+  bindSelectionFieldEvents as bindConfiguredSelectionFieldEvents,
   bindSimpleFieldEvents as bindConfiguredSimpleFieldEvents,
   getFieldContainer as getConfiguredFieldContainer,
   getFieldElement as getConfiguredFieldElement,
@@ -4449,156 +4450,63 @@ export class FormUI extends HTMLElement {
             });
           }
           if (selectionElement && !fieldViewOnly && !settingField) {
-            selectionElement.addEventListener("click", (event) => {
-              const target = event.target as HTMLElement | null;
-              const productActionButton = target?.closest("[data-product-action]") as HTMLElement | null;
-              if (this.isProductListField(fieldConfig) && productActionButton) {
-                event.preventDefault();
-                event.stopPropagation();
-                const action = productActionButton.getAttribute("data-product-action");
-                const productId = productActionButton.getAttribute("data-product-id");
-                if (
-                  (action === "add" || action === "inc" || action === "dec" || action === "remove")
-                  && productId
-                ) {
-                  const nextCart = this.getNextProductCartItems(
-                    fieldConfig,
-                    this.getFieldValue(name),
-                    action,
-                    productId,
-                  );
-                  change(nextCart);
-                  this.scheduleDraftSave();
-                  this.updateConditionalFields();
-                  void this.refreshRemoteOptions(name);
+            bindConfiguredSelectionFieldEvents({
+              selectionElement,
+              input,
+              fieldConfig,
+              isFileField: isFileFieldType(fieldConfig.type),
+              isProductListField: this.isProductListField(fieldConfig),
+              isImageGalleryField: this.isImageGalleryField(fieldConfig),
+              getCurrentValue: () => this.getFieldValue(name),
+              onChangeValue: (nextValue) => {
+                change(nextValue);
+              },
+              onAfterChange: () => {
+                this.scheduleDraftSave();
+                this.updateConditionalFields();
+                void this.refreshRemoteOptions(name);
+              },
+              getNextProductCartItems: (action, productId) =>
+                this.getNextProductCartItems(fieldConfig, this.getFieldValue(name), action, productId),
+              getNextImageGallerySelectionItems: (action, imageId) =>
+                this.getNextImageGallerySelectionItems(fieldConfig, this.getFieldValue(name), action, imageId),
+              openProductGallery: (productId) => {
+                const product = this.getProductListCatalog(fieldConfig).find((entry) => entry.id === productId);
+                if (product) {
+                  this.openProductListGallery(product);
                 }
-                return;
-              }
-
-              const imageGalleryActionButton = target?.closest("[data-image-gallery-action]") as HTMLElement | null;
-              if (this.isImageGalleryField(fieldConfig) && imageGalleryActionButton) {
-                event.preventDefault();
-                event.stopPropagation();
-                const action = imageGalleryActionButton.getAttribute("data-image-gallery-action");
-                const imageId = imageGalleryActionButton.getAttribute("data-image-id");
-                if (
-                  (action === "toggle" || action === "remove")
-                  && imageId
-                ) {
-                  const nextSelection = this.getNextImageGallerySelectionItems(
-                    fieldConfig,
-                    this.getFieldValue(name),
-                    action,
-                    imageId,
-                  );
-                  change(nextSelection);
-                  this.scheduleDraftSave();
-                  this.updateConditionalFields();
-                  void this.refreshRemoteOptions(name);
+              },
+              openImageGallery: (imageId) => {
+                const imageItem = this.getImageGalleryCatalog(fieldConfig).find((entry) => entry.id === imageId);
+                if (imageItem) {
+                  this.openImageGalleryItem(imageItem);
                 }
-                return;
-              }
-
-              if (this.isProductListField(fieldConfig)) {
-                const productCard = target?.closest("[data-product-open-gallery]") as HTMLElement | null;
-                if (productCard) {
-                  const productId = productCard.getAttribute("data-product-open-gallery");
-                  if (productId) {
-                    const product = this.getProductListCatalog(fieldConfig).find((entry) => entry.id === productId);
-                    if (product) {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      this.openProductListGallery(product);
-                    }
-                  }
-                  return;
-                }
-              }
-
-              if (this.isImageGalleryField(fieldConfig)) {
-                const imageCard = target?.closest("[data-image-open-gallery]") as HTMLElement | null;
-                if (imageCard) {
-                  const imageId = imageCard.getAttribute("data-image-open-gallery");
-                  if (imageId) {
-                    const imageItem = this.getImageGalleryCatalog(fieldConfig).find((entry) => entry.id === imageId);
-                    if (imageItem) {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      this.openImageGalleryItem(imageItem);
-                    }
-                  }
-                  return;
-                }
-              }
-
-              const qrAction = target?.closest("[data-qr-action]") as HTMLElement | null;
-              if (qrAction) {
-                event.preventDefault();
-                event.stopPropagation();
-                const action = qrAction.getAttribute("data-qr-action");
-                if (action === "start") {
-                  void this.startQrCamera(fieldConfig);
-                } else if (action === "scan") {
-                  void this.scanQrFromLiveVideo(fieldConfig);
-                } else if (action === "stop") {
-                  this.stopQrCamera(name);
-                }
-                return;
-              }
-
-              const documentScanSlotButton = target?.closest("[data-document-scan-slot]") as HTMLElement | null;
-              if (documentScanSlotButton) {
-                event.preventDefault();
-                event.stopPropagation();
-                const slotIndex = Number(documentScanSlotButton.getAttribute("data-document-scan-slot"));
-                if (!Number.isNaN(slotIndex)) {
-                  this.activeDocumentScanSlot[name] = slotIndex;
-                  this.renderFileSelection(fieldConfig, this.getFieldValue(name), selectionElement);
-                  if (input instanceof HTMLInputElement && input.type === "file") {
-                    input.click();
-                  }
-                }
-                return;
-              }
-
-              const removeButton = target?.closest("[data-remove-file-index]") as HTMLElement | null;
-              if (!removeButton) {
-                return;
-              }
-
-              event.preventDefault();
-              event.stopPropagation();
-
-              const fileIndex = Number(removeButton.getAttribute("data-remove-file-index"));
-              if (Number.isNaN(fileIndex)) {
-                return;
-              }
-
-              this.removeSelectedFile(name, fileIndex);
+              },
+              startQrCamera: () => {
+                void this.startQrCamera(fieldConfig);
+              },
+              scanQrCamera: () => {
+                void this.scanQrFromLiveVideo(fieldConfig);
+              },
+              stopQrCamera: () => {
+                this.stopQrCamera(name);
+              },
+              setActiveDocumentScanSlot: (slotIndex) => {
+                this.activeDocumentScanSlot[name] = slotIndex;
+              },
+              refreshSelection: () => {
+                this.renderFileSelection(fieldConfig, this.getFieldValue(name), selectionElement);
+              },
+              removeSelectedFile: (fileIndex) => {
+                this.removeSelectedFile(name, fileIndex);
+              },
+              setFileDragState: (active) => {
+                this.setFileDragState(name, active);
+              },
+              applyDroppedFiles: (files) => {
+                void this.applyDroppedFiles(name, files);
+              },
             });
-            if (isFileFieldType(fieldConfig.type)) {
-              selectionElement.addEventListener("dragenter", (event) => {
-                event.preventDefault();
-                this.setFileDragState(name, true);
-              });
-              selectionElement.addEventListener("dragover", (event) => {
-                event.preventDefault();
-                this.setFileDragState(name, true);
-              });
-              selectionElement.addEventListener("dragleave", (event) => {
-                const relatedTarget = event.relatedTarget as Node | null;
-                if (relatedTarget && selectionElement.contains(relatedTarget)) {
-                  return;
-                }
-                this.setFileDragState(name, false);
-              });
-              selectionElement.addEventListener("drop", (event) => {
-                event.preventDefault();
-                this.setFileDragState(name, false);
-                const droppedFiles = Array.from(event.dataTransfer?.files || []);
-                void this.applyDroppedFiles(name, droppedFiles);
-              });
-            }
           }
           if (fieldViewOnly) {
             const configuredViewValue = this.resolveFieldViewValue(fieldConfig, inputElement, value);

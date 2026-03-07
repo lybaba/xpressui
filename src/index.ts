@@ -54,6 +54,7 @@ import {
   FormPersistenceRuntime,
   TFormQueueState,
   TResumeLookupResult,
+  TResumeShareCodeInfo,
   TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
@@ -207,6 +208,7 @@ export type {
   TRemoteResumeInvalidateResponse,
   TRemoteResumeLookupResponse,
   TRemoteResumeOperation,
+  TResumeShareCodeInfo,
   TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
@@ -4037,6 +4039,10 @@ export class FormUI extends HTMLElement {
 
   createResumeShareCode = (token: string): Promise<string | null> => {
     return this.persistence.createResumeShareCode(token);
+  }
+
+  createResumeShareCodeDetail = (token: string): Promise<TResumeShareCodeInfo | null> => {
+    return this.persistence.createResumeShareCodeDetail(token);
   }
 
   listResumeTokens = (): TResumeTokenInfo[] => {

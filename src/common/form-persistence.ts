@@ -109,6 +109,13 @@ export type TRemoteResumeShareCodeCreateResponse = {
   policy?: TRemoteResumePolicy;
 };
 
+export type TResumeShareCodeInfo = {
+  code: string;
+  token?: string;
+  expiresAt?: number;
+  endpoint?: string;
+};
+
 export type TRemoteResumeShareCodeClaimRequest = {
   operation: "claim-share-code";
   code: string;
@@ -1206,6 +1213,11 @@ export class FormPersistenceRuntime {
   }
 
   async createResumeShareCode(token: string): Promise<string | null> {
+    const detail = await this.createResumeShareCodeDetail(token);
+    return detail?.code || null;
+  }
+
+  async createResumeShareCodeDetail(token: string): Promise<TResumeShareCodeInfo | null> {
     const endpoint = this.getShareCodeEndpoint();
     if (!endpoint || !token) {
       return null;
@@ -1245,7 +1257,12 @@ export class FormPersistenceRuntime {
           endpoint,
         }, response),
       );
-      return parsed.code;
+      return {
+        code: parsed.code,
+        token: parsed.token || token,
+        expiresAt: parsed.expiresAt,
+        endpoint,
+      };
     } catch {
       return null;
     }

@@ -315,6 +315,14 @@ describe("Remote Resume", () => {
       fields: [{ name: "email", label: "Email", type: "email" }],
     }) as FormUI;
 
+    const detail = await element.createResumeShareCodeDetail("remote_token_123");
+    expect(detail).toEqual({
+      code: "SHARE-42",
+      token: "remote_token_123",
+      expiresAt: 7777,
+      endpoint: "https://api.example.test/resume",
+    });
+
     const code = await element.createResumeShareCode("remote_token_123");
     expect(code).toBe("SHARE-42");
 

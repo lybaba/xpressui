@@ -365,6 +365,10 @@ Share code create response:
 }
 ```
 
+Runtime helpers:
+- `createResumeShareCode(token)` returns the short code string for compatibility
+- `createResumeShareCodeDetail(token)` returns `{ code, token, expiresAt, endpoint }` for richer cross-device UX
+
 Recommended `POST` response:
 
 ```json

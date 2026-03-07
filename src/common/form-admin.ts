@@ -1,6 +1,6 @@
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
-import { TResumeLookupResult, TResumeTokenInfo } from "./form-persistence";
+import { TResumeLookupResult, TResumeShareCodeInfo, TResumeTokenInfo } from "./form-persistence";
 import { FormStepRuntime, TFormStepProgress, TFormWorkflowSnapshot } from "./form-steps";
 import {
   createStorageAdapter,
@@ -128,6 +128,7 @@ export type TLocalFormAdmin = {
   getStorageHealth(): TStorageHealth;
   listResumeTokens(): TResumeTokenInfo[];
   createResumeShareCode(token: string): Promise<string | null>;
+  createResumeShareCodeDetail(token: string): Promise<TResumeShareCodeInfo | null>;
   claimResumeShareCode(code: string): Promise<TResumeLookupResult | null>;
   restoreFromShareCode(code: string): Promise<Record<string, any> | null>;
   deleteResumeToken(token: string): boolean;
@@ -387,6 +388,10 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
     },
     listResumeTokens,
     async createResumeShareCode(token) {
+      const detail = await this.createResumeShareCodeDetail(token);
+      return detail?.code || null;
+    },
+    async createResumeShareCodeDetail(token) {
       const endpoint = getShareCodeEndpoint();
       if (!endpoint || !token) {
         return null;
@@ -411,7 +416,16 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
           return null;
         }
         const code = (result as Record<string, any>).code;
-        return typeof code === "string" && code ? code : null;
+        if (typeof code !== "string" || !code) {
+          return null;
+        }
+        const payload = result as Record<string, any>;
+        return {
+          code,
+          token: typeof payload.token === "string" && payload.token ? payload.token : token,
+          expiresAt: typeof payload.expiresAt === "number" ? payload.expiresAt : undefined,
+          endpoint,
+        };
       } catch {
         return null;
       }

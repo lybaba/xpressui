@@ -11372,6 +11372,11 @@ describe('FormUI', () => {
     });
     const admin = createLocalFormAdmin(formConfig);
 
+    await expect(admin.createResumeShareCodeDetail('existing_token')).resolves.toEqual({
+      code: 'ADMIN-42',
+      token: 'existing_token',
+      endpoint: 'https://api.example.test/resume',
+    });
     await expect(admin.createResumeShareCode('existing_token')).resolves.toBe('ADMIN-42');
     const claim = await admin.claimResumeShareCode('ADMIN-42');
     expect(claim).toEqual(expect.objectContaining({

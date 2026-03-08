@@ -3,6 +3,7 @@ import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
 import {
   TResumeLookupResult,
   TResumeShareCodeClaimDetail,
+  TResumeShareCodeRestoreDetail,
   TResumeShareCodeInfo,
   TResumeTokenInfo,
 } from "./form-persistence";
@@ -350,6 +351,7 @@ export type TLocalFormAdmin = {
   createResumeShareCodeDetail(token: string): Promise<TResumeShareCodeInfo | null>;
   claimResumeShareCodeDetail(code: string): Promise<TResumeShareCodeClaimDetail | null>;
   claimResumeShareCode(code: string): Promise<TResumeLookupResult | null>;
+  restoreFromShareCodeDetail(code: string): Promise<TResumeShareCodeRestoreDetail | null>;
   restoreFromShareCode(code: string): Promise<Record<string, any> | null>;
   deleteResumeToken(token: string): boolean;
   invalidateResumeToken(token: string): Promise<boolean>;
@@ -881,20 +883,37 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       }
     },
     async restoreFromShareCode(code) {
-      const lookup = await this.claimResumeShareCode(code);
-      if (!lookup?.snapshot) {
-        return null;
+      const detail = await this.restoreFromShareCodeDetail(code);
+      return detail?.restoredValues || null;
+    },
+    async restoreFromShareCodeDetail(code) {
+      const claim = await this.claimResumeShareCodeDetail(code);
+      if (!claim || claim.status !== "claimed" || !claim.lookup?.snapshot) {
+        return {
+          code,
+          status: "claim_failed",
+          claim,
+          message: claim?.message || "Share-code restore could not continue.",
+        };
       }
 
-      if (lookup.snapshot.draft) {
-        storageAdapter?.saveDraft(lookup.snapshot.draft);
+      if (claim.lookup.snapshot.draft) {
+        storageAdapter?.saveDraft(claim.lookup.snapshot.draft);
       } else {
         storageAdapter?.clearDraft();
       }
-      storageAdapter?.saveQueue(Array.isArray(lookup.snapshot.queue) ? lookup.snapshot.queue : []);
-      storageAdapter?.saveDeadLetterQueue(Array.isArray(lookup.snapshot.deadLetter) ? lookup.snapshot.deadLetter : []);
+      storageAdapter?.saveQueue(Array.isArray(claim.lookup.snapshot.queue) ? claim.lookup.snapshot.queue : []);
+      storageAdapter?.saveDeadLetterQueue(
+        Array.isArray(claim.lookup.snapshot.deadLetter) ? claim.lookup.snapshot.deadLetter : [],
+      );
 
-      return (lookup.snapshot?.draft || {}) as Record<string, any>;
+      return {
+        code,
+        status: "restored",
+        claim,
+        restoredValues: (claim.lookup.snapshot?.draft || {}) as Record<string, any>,
+        token: claim.lookup.token,
+      };
     },
     deleteResumeToken(token) {
       if (typeof window === "undefined") {

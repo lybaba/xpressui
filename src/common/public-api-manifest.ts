@@ -26,6 +26,7 @@ const STABLE_PUBLIC_API = [
   "REMOTE_RESUME_CONTRACT_VERSION",
   "isRemoteResumePolicy",
   "getRemoteResumePolicy",
+  "getResumeShareCodeClaimPresentation",
   "validatePublicFormConfig",
   "migratePublicFormConfig",
 ];

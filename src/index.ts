@@ -41,6 +41,7 @@ import {
   TFormQueueState,
   TResumeLookupResult,
   TResumeShareCodeClaimDetail,
+  TResumeShareCodeRestoreDetail,
   TResumeShareCodeInfo,
   TResumeTokenInfo,
   TFormStorageHealth,
@@ -48,6 +49,7 @@ import {
 } from "./common/form-persistence";
 import {
   getRemoteResumePolicy,
+  getResumeShareCodeClaimPresentation,
   isRemoteResumePolicy,
   REMOTE_RESUME_CONTRACT_VERSION,
 } from "./common/resume-contract";
@@ -194,6 +196,7 @@ export { FormDynamicRuntime } from "./common/form-dynamic";
 export { FormPersistenceRuntime } from "./common/form-persistence";
 export {
   getRemoteResumePolicy,
+  getResumeShareCodeClaimPresentation,
   isRemoteResumePolicy,
   REMOTE_RESUME_CONTRACT_VERSION,
 } from "./common/resume-contract";
@@ -243,6 +246,7 @@ export type { TPublicApiManifest } from "./common/public-api-manifest";
 export type { TFormActiveTemplateWarning } from "./common/form-dynamic";
 export type { TFormUploadState } from "./common/form-upload";
 export type { TFormStepProgress, TFormWorkflowSnapshot } from "./common/form-steps";
+export type { TResumeShareCodeClaimPresentation } from "./common/resume-contract";
 export type {
   TFormQueueState,
   TResumeLookupResult,
@@ -252,6 +256,7 @@ export type {
   TRemoteResumeLookupResponse,
   TRemoteResumeOperation,
   TResumeShareCodeClaimDetail,
+  TResumeShareCodeRestoreDetail,
   TResumeShareCodeInfo,
   TResumeTokenInfo,
   TFormStorageHealth,
@@ -3719,6 +3724,22 @@ export class FormUI extends HTMLElement {
     return this.persistence.claimResumeShareCodeDetail(code);
   }
 
+  restoreFromShareCodeDetailAsync = async (code: string): Promise<TResumeShareCodeRestoreDetail | null> => {
+    const detail = await this.persistence.restoreFromShareCodeDetailAsync(code);
+    const restoredValues = detail?.restoredValues || null;
+    if (!restoredValues || !this.form) {
+      return detail;
+    }
+
+    Object.entries(restoredValues).forEach(([fieldName, fieldValue]) => {
+      this.form?.change(fieldName, fieldValue);
+    });
+    this.persistence.emitDraftRestored(restoredValues);
+    this.updateConditionalFields();
+    await this.refreshRemoteOptions();
+    return detail;
+  }
+
   restoreFromResumeTokenAsync = async (token: string): Promise<Record<string, any> | null> => {
     const restoredValues = await this.persistence.restoreFromResumeTokenAsync(token);
     if (!restoredValues || !this.form) {
@@ -3735,18 +3756,8 @@ export class FormUI extends HTMLElement {
   }
 
   restoreFromShareCodeAsync = async (code: string): Promise<Record<string, any> | null> => {
-    const restoredValues = await this.persistence.restoreFromShareCodeAsync(code);
-    if (!restoredValues || !this.form) {
-      return restoredValues;
-    }
-
-    Object.entries(restoredValues).forEach(([fieldName, fieldValue]) => {
-      this.form?.change(fieldName, fieldValue);
-    });
-    this.persistence.emitDraftRestored(restoredValues);
-    this.updateConditionalFields();
-    await this.refreshRemoteOptions();
-    return restoredValues;
+    const detail = await this.restoreFromShareCodeDetailAsync(code);
+    return detail?.restoredValues || null;
   }
 
   clearDeadLetterQueue = () => {

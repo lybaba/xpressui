@@ -114,6 +114,22 @@
         word-break: break-all;
       }
 
+      .status-pill {
+        margin: 0 0 10px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        font-size: 0.92rem;
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .status-pill[data-tone="success"] { background: #ecfdf5; color: #166534; border-color: #86efac; }
+      .status-pill[data-tone="warning"] { background: #fff7ed; color: #9a3412; border-color: #fdba74; }
+      .status-pill[data-tone="error"] { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+      .status-pill[data-tone="info"] { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
+
       @media (max-width: 980px) {
         .layout { grid-template-columns: 1fr; }
       }
@@ -141,6 +157,7 @@
           </div>
           <div class="token" id="token-value">Current token: none</div>
           <div class="share-code" id="share-code-value">Current share code: none</div>
+          <div class="status-pill" id="claim-status" data-tone="info">Claim status: Idle</div>
           <div id="app"></div>
         </section>
 
@@ -172,6 +189,7 @@
       import {
         createLocalFormAdmin,
         createFormOpsPanel,
+        getResumeShareCodeClaimPresentation,
         mountFormUI,
       } from "../dist/xpressui.mjs";
 
@@ -182,9 +200,15 @@
       const incidentSummary = document.getElementById("incident-summary");
       const tokenValue = document.getElementById("token-value");
       const shareCodeValue = document.getElementById("share-code-value");
+      const claimStatus = document.getElementById("claim-status");
 
       const write = (payload) => {
         result.textContent = JSON.stringify(payload, null, 2);
+      };
+      const updateClaimStatus = (detail) => {
+        const presentation = getResumeShareCodeClaimPresentation(detail);
+        claimStatus.setAttribute("data-tone", presentation.tone);
+        claimStatus.textContent = `Claim status: ${presentation.label}`;
       };
 
       const fakeRemoteStore = new Map();
@@ -443,6 +467,11 @@
       });
       form.addEventListener("form-ui:resume-share-code-claim-state", (event) => {
         write({ type: "resume-share-code-claim-state", detail: event.detail });
+        updateClaimStatus(event.detail?.result || null);
+        refreshAdminPanels();
+      });
+      form.addEventListener("form-ui:resume-share-code-restore-state", (event) => {
+        write({ type: "resume-share-code-restore-state", detail: event.detail });
         refreshAdminPanels();
       });
       form.addEventListener("form-ui:draft-saved", refreshAdminPanels);
@@ -544,21 +573,23 @@
 
       document.getElementById("btn-restore-code").addEventListener("click", async () => {
         if (!activeShareCode) {
-          write({ action: "restoreFromShareCodeAsync", error: "No share code yet" });
+          write({ action: "restoreFromShareCodeDetailAsync", error: "No share code yet" });
           return;
         }
         try {
-          const restored = await form.restoreFromShareCodeAsync(activeShareCode);
-          write({ action: "restoreFromShareCodeAsync", code: activeShareCode, restored });
+          const restored = await form.restoreFromShareCodeDetailAsync(activeShareCode);
+          write({ action: "restoreFromShareCodeDetailAsync", code: activeShareCode, restored });
+          updateClaimStatus(restored?.claim || null);
           refreshAdminPanels();
         } catch (error) {
-          write({ action: "restoreFromShareCodeAsync", code: activeShareCode, error: String(error) });
+          write({ action: "restoreFromShareCodeDetailAsync", code: activeShareCode, error: String(error) });
         }
       });
 
       write({ message: "Ready", knownTokens: form.listResumeTokens() });
       refreshTokenLabel();
       refreshShareCodeLabel();
+      updateClaimStatus(null);
       refreshAdminPanels();
     </script>
   </body>

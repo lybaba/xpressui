@@ -49,7 +49,11 @@ Notes:
   - `not_found`
   - `invalid_response`
   - `network_error`
+- `restoreFromShareCodeDetailAsync(code)` turns claim + restore into one explicit result:
+  - `restored`
+  - `claim_failed`
 - the browser runtime also emits `form-ui:resume-share-code-claim-state` for every normalized outcome
+- the browser runtime emits `form-ui:resume-share-code-restore-state` for every restore attempt
 - local tooling can inspect persisted resume state with `createLocalFormAdmin(formConfig)` and:
   - `getOperationalSummary()`
   - `getIncidentSummary()`

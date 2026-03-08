@@ -15,6 +15,7 @@ import {
   FormUploadRuntime,
   getProviderDefinition,
   getPublicApiManifest,
+  getResumeShareCodeClaimPresentation,
   isProviderResponseEnvelopeV2,
   mountFormUI,
   PUBLIC_FORM_SCHEMA_VERSION,
@@ -51,6 +52,7 @@ describe("Public API", () => {
     expect(publicApi.validatePublicFormConfig).toBe(validatePublicFormConfig);
     expect(publicApi.PUBLIC_FORM_SCHEMA_VERSION).toBe(PUBLIC_FORM_SCHEMA_VERSION);
     expect(publicApi.getPublicApiManifest).toBe(getPublicApiManifest);
+    expect(publicApi.getResumeShareCodeClaimPresentation).toBe(getResumeShareCodeClaimPresentation);
     expect(publicApi.registerProvider).toBe(registerProvider);
     expect(publicApi.getProviderDefinition).toBe(getProviderDefinition);
     expect(publicApi.createSubmitRequestFromProvider).toBe(createSubmitRequestFromProvider);
@@ -85,6 +87,7 @@ describe("Public API", () => {
         "REMOTE_RESUME_CONTRACT_VERSION",
         "isRemoteResumePolicy",
         "getRemoteResumePolicy",
+        "getResumeShareCodeClaimPresentation",
         "validatePublicFormConfig",
         "migratePublicFormConfig",
       ]),

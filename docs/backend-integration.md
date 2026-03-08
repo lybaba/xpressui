@@ -464,6 +464,9 @@ Policy guidance:
 
 Client-side events:
 - `form-ui:resume-share-code-claim-state` emits every claim outcome with the normalized lifecycle state
+- `form-ui:resume-share-code-restore-state` emits every restore attempt with:
+  - `restored`
+  - `claim_failed`
 
 ### Local Admin / Debug Surfaces For Resume Flows
 
@@ -505,6 +508,7 @@ document.body.append(opsPanel.element);
 
 console.log(admin.getOperationalSummary());
 console.log(admin.getIncidentSummary(5));
+console.log(await form.restoreFromShareCodeDetailAsync("SHARE-42"));
 ```
 - `form-ui:resume-share-code-claim-blocked` remains the dedicated blocked/throttled event for existing integrations
 

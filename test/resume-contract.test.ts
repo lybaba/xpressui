@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getRemoteResumePolicy,
+  getResumeShareCodeClaimPresentation,
   isRemoteResumePolicy,
   mountFormUI,
   REMOTE_RESUME_CONTRACT_VERSION,
@@ -86,5 +87,26 @@ describe("Resume Contract", () => {
         }),
       }),
     );
+  });
+
+  it("maps normalized claim statuses to stable UI presentation metadata", () => {
+    expect(getResumeShareCodeClaimPresentation({ status: "claimed" })).toEqual({
+      tone: "success",
+      label: "Ready to restore",
+      retryable: false,
+      restorable: true,
+    });
+    expect(getResumeShareCodeClaimPresentation({ status: "throttled" })).toEqual({
+      tone: "warning",
+      label: "Temporarily throttled",
+      retryable: true,
+      restorable: false,
+    });
+    expect(getResumeShareCodeClaimPresentation({ status: "not_found" })).toEqual({
+      tone: "error",
+      label: "Code not found",
+      retryable: false,
+      restorable: false,
+    });
   });
 });

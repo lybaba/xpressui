@@ -11319,6 +11319,125 @@ describe('FormUI', () => {
     );
   });
 
+  it('returns detailed share-code restore state and emits restore-state events', async () => {
+    const sign = (payload: Record<string, any>) =>
+      `${payload.token}:${payload.savedAt}:${payload.issuedAt}:${payload.expiresAt}:${payload.snapshot?.draft?.email || ''}`;
+    vi.spyOn(window, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url === 'https://api.example.test/resume' && init?.method === 'POST') {
+        const body = JSON.parse(String(init?.body || '{}')) as Record<string, any>;
+        if (body.operation === 'claim-share-code') {
+          const snapshot = {
+            draft: { email: 'restored-by-detail@example.com' },
+            queue: [],
+            deadLetter: [],
+          };
+          const token = 'remote_token_restore_detail';
+          const savedAt = 1000;
+          const issuedAt = 1000;
+          const expiresAt = 2000;
+          return new Response(JSON.stringify({
+            operation: 'claim-share-code',
+            code: body.code,
+            token,
+            savedAt,
+            issuedAt,
+            expiresAt,
+            signatureVersion: 'v2',
+            signature: sign({ token, savedAt, issuedAt, expiresAt, snapshot }),
+            snapshot,
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'remote-share-code-restore-detail-form',
+      title: 'Remote Share Code Restore Detail Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-remote-share-code-restore-detail',
+        resumeEndpoint: 'https://api.example.test/resume',
+        shareCodeEndpoint: 'https://api.example.test/resume',
+        resumeTokenSignatureVersion: 'v2',
+        verifyResumeToken: (payload) => sign(payload) === payload.signature,
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const onRestoreState = vi.fn();
+    element.addEventListener('form-ui:resume-share-code-restore-state', (event) => {
+      onRestoreState((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
+
+    const detail = await element.restoreFromShareCodeDetailAsync('SHARE-RESTORE');
+    expect(detail).toEqual(expect.objectContaining({
+      code: 'SHARE-RESTORE',
+      status: 'restored',
+      token: 'remote_token_restore_detail',
+      restoredValues: { email: 'restored-by-detail@example.com' },
+    }));
+    expect((element.querySelector('#email') as HTMLInputElement).value).toBe('restored-by-detail@example.com');
+    expect(onRestoreState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          code: 'SHARE-RESTORE',
+          status: 'restored',
+          token: 'remote_token_restore_detail',
+        }),
+      }),
+    );
+  });
+
+  it('returns a failed detailed restore state when claim cannot continue', async () => {
+    vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        contractVersion: REMOTE_RESUME_CONTRACT_VERSION,
+        operation: 'claim-share-code',
+        policy: {
+          code: 'expired',
+          reason: 'Code expired',
+        },
+      }), {
+        status: 410,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'remote-share-code-restore-failed-form',
+      title: 'Remote Share Code Restore Failed Form',
+      storage: {
+        mode: 'draft',
+        adapter: 'local-storage',
+        key: 'xpressui:test-remote-share-code-restore-failed',
+        resumeEndpoint: 'https://api.example.test/resume',
+        shareCodeEndpoint: 'https://api.example.test/resume',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    const detail = await element.restoreFromShareCodeDetailAsync('SHARE-EXPIRED');
+    expect(detail).toEqual(expect.objectContaining({
+      code: 'SHARE-EXPIRED',
+      status: 'claim_failed',
+      claim: expect.objectContaining({
+        status: 'expired',
+      }),
+    }));
+    expect(await element.restoreFromShareCodeAsync('SHARE-EXPIRED')).toBeNull();
+  });
+
   it('applies local share-code claim throttling and max-attempt guards', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ error: 'temporary' }), {

@@ -145,6 +145,15 @@ export type TResumeShareCodeClaimDetail = {
   lookup?: TResumeLookupResult | null;
 };
 
+export type TResumeShareCodeRestoreDetail = {
+  code: string;
+  status: "restored" | "claim_failed";
+  claim: TResumeShareCodeClaimDetail | null;
+  restoredValues?: Record<string, any> | null;
+  token?: string;
+  message?: string;
+};
+
 export type TRemoteResumeShareCodeClaimRequest = {
   operation: "claim-share-code";
   code: string;
@@ -1570,27 +1579,53 @@ export class FormPersistenceRuntime {
   }
 
   async restoreFromShareCodeAsync(code: string): Promise<Record<string, any> | null> {
-    const lookup = await this.claimResumeShareCode(code);
-    if (!lookup || !lookup.snapshot) {
-      return null;
+    const detail = await this.restoreFromShareCodeDetailAsync(code);
+    return detail?.restoredValues || null;
+  }
+
+  async restoreFromShareCodeDetailAsync(code: string): Promise<TResumeShareCodeRestoreDetail | null> {
+    const claim = await this.claimResumeShareCodeDetail(code);
+    if (!claim || claim.status !== "claimed" || !claim.lookup?.snapshot) {
+      const detail: TResumeShareCodeRestoreDetail = {
+        code,
+        status: "claim_failed",
+        claim,
+        message: claim?.message || "Share-code restore could not continue.",
+      };
+      this.options.emitEvent(
+        "form-ui:resume-share-code-restore-state",
+        this.createEventDetail(this.options.getValues(), detail),
+      );
+      return detail;
     }
 
-    const restoredDraft = this.applyResumeSnapshot(lookup.snapshot);
+    const restoredDraft = this.applyResumeSnapshot(claim.lookup.snapshot);
     this.options.emitEvent(
       "form-ui:resume-token-restored",
       this.createEventDetail(restoredDraft, {
-        token: lookup.token,
-        snapshot: lookup.snapshot,
-        savedAt: lookup.savedAt,
-        issuedAt: lookup.issuedAt,
-        expiresAt: lookup.expiresAt,
-        resumeEndpoint: lookup.resumeEndpoint,
+        token: claim.lookup.token,
+        snapshot: claim.lookup.snapshot,
+        savedAt: claim.lookup.savedAt,
+        issuedAt: claim.lookup.issuedAt,
+        expiresAt: claim.lookup.expiresAt,
+        resumeEndpoint: claim.lookup.resumeEndpoint,
         remote: true,
-        signatureVersion: lookup.signatureVersion,
+        signatureVersion: claim.lookup.signatureVersion,
         shareCode: code,
       }),
     );
-    return restoredDraft;
+    const detail: TResumeShareCodeRestoreDetail = {
+      code,
+      status: "restored",
+      claim,
+      restoredValues: restoredDraft,
+      token: claim.lookup.token,
+    };
+    this.options.emitEvent(
+      "form-ui:resume-share-code-restore-state",
+      this.createEventDetail(restoredDraft, detail),
+    );
+    return detail;
   }
 
   restoreFromResumeToken(token: string): Record<string, any> | null {

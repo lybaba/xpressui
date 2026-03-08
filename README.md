@@ -1626,6 +1626,7 @@ Standalone local admin helper:
 - `admin.getWorkflowSnapshot(values?)`
 - `admin.getStepProgress(values?)`
 - `admin.getWorkflowContext(values?)`
+- `admin.getOperationalSummary(values?)`
 
 It can inspect and manage local state without a mounted `FormUI` instance:
 - `getSnapshot()`

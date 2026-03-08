@@ -56,6 +56,34 @@ export type TLocalQueueQuery = {
   limit?: number;
 };
 
+export type TLocalFormOperationalSummary = {
+  storageHealth: TStorageHealth;
+  snapshot: {
+    hasDraft: boolean;
+    queueLength: number;
+    deadLetterLength: number;
+  };
+  queue: {
+    pending: number;
+    retrying: number;
+    deadLetter: number;
+    nextAttemptAt?: number;
+  };
+  resume: {
+    total: number;
+    local: number;
+    remote: number;
+    signed: number;
+    invalidSignature: number;
+    latestSavedAt?: number;
+  };
+  workflow: {
+    currentStepIndex: number | null;
+    stepProgress: TFormStepProgress;
+    workflowSnapshot: TFormWorkflowSnapshot;
+  };
+};
+
 function matchesQuery(entry: TQueuedSubmission, query?: TLocalQueueQuery): boolean {
   if (!query) {
     return true;
@@ -149,6 +177,7 @@ export type TLocalFormAdmin = {
     stepProgress: TFormStepProgress;
     workflowSnapshot: TFormWorkflowSnapshot;
   };
+  getOperationalSummary(values?: Record<string, any>): TLocalFormOperationalSummary;
   clearDraft(): void;
   clearQueue(): void;
   clearDeadLetter(): void;
@@ -301,6 +330,56 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       currentStepIndex: getCurrentStepIndex(),
       stepProgress: getStepProgress(),
       workflowSnapshot: getWorkflowSnapshot(values),
+    };
+  };
+
+  const getOperationalSummary = (values?: Record<string, any>): TLocalFormOperationalSummary => {
+    const snapshot = getSnapshot();
+    const resumeTokens = listResumeTokens();
+    const queue = snapshot.queue || [];
+    const deadLetter = snapshot.deadLetter || [];
+    const nextAttemptAt = queue.reduce<number | undefined>((current, entry) => {
+      if (typeof current !== "number") {
+        return entry.nextAttemptAt;
+      }
+      return Math.min(current, entry.nextAttemptAt);
+    }, undefined);
+
+    return {
+      storageHealth:
+        storageAdapter?.getHealth() || {
+          adapter: "local-storage",
+          encryptionEnabled: false,
+          hasDraft: false,
+          queueLength: 0,
+          deadLetterLength: 0,
+          totalEntries: 0,
+          retentionMs: {
+            draft: null,
+            queue: null,
+            deadLetter: null,
+          },
+        },
+      snapshot: {
+        hasDraft: Boolean(snapshot.draft && Object.keys(snapshot.draft).length),
+        queueLength: queue.length,
+        deadLetterLength: deadLetter.length,
+      },
+      queue: {
+        pending: queue.length,
+        retrying: queue.filter((entry) => entry.attempts > 0).length,
+        deadLetter: deadLetter.length,
+        ...(typeof nextAttemptAt === "number" ? { nextAttemptAt } : {}),
+      },
+      resume: {
+        total: resumeTokens.length,
+        local: resumeTokens.filter((entry) => !entry.remote).length,
+        remote: resumeTokens.filter((entry) => entry.remote).length,
+        signed: resumeTokens.filter((entry) => Boolean(entry.signatureVersion)).length,
+        invalidSignature: resumeTokens.filter((entry) => entry.signatureValid === false).length,
+        ...(resumeTokens[0]?.savedAt ? { latestSavedAt: resumeTokens[0].savedAt } : {}),
+      },
+      workflow: getWorkflowContext(values),
     };
   };
 
@@ -671,6 +750,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
     getWorkflowSnapshot,
     getStepProgress,
     getWorkflowContext,
+    getOperationalSummary,
     clearDraft() {
       storageAdapter?.clearDraft();
     },

@@ -11745,6 +11745,30 @@ describe('FormUI', () => {
         }),
       }),
     );
+    expect(admin.getOperationalSummary()).toEqual(
+      expect.objectContaining({
+        snapshot: {
+          hasDraft: true,
+          queueLength: 0,
+          deadLetterLength: 0,
+        },
+        queue: expect.objectContaining({
+          pending: 0,
+          deadLetter: 0,
+        }),
+        resume: expect.objectContaining({
+          total: 0,
+          local: 0,
+          remote: 0,
+        }),
+        workflow: expect.objectContaining({
+          currentStepIndex: 1,
+          stepProgress: expect.objectContaining({
+            stepIndex: 1,
+          }),
+        }),
+      }),
+    );
   });
 
   it('can export and import local admin snapshots', () => {

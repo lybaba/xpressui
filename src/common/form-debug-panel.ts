@@ -73,6 +73,18 @@ export function createFormDebugPanel(
   const outputSnapshot = document.createElement("pre");
   outputSnapshot.className = "xpressui-debug-panel__output-snapshot";
 
+  const resumeClaimTitle = document.createElement("strong");
+  resumeClaimTitle.textContent = "Resume Claim";
+
+  const resumeClaim = document.createElement("pre");
+  resumeClaim.className = "xpressui-debug-panel__resume-claim";
+
+  const providerWarningTitle = document.createElement("strong");
+  providerWarningTitle.textContent = "Provider Contract Warning";
+
+  const providerWarning = document.createElement("pre");
+  providerWarning.className = "xpressui-debug-panel__provider-warning";
+
   element.appendChild(title);
   element.appendChild(counts);
   element.appendChild(status);
@@ -88,6 +100,10 @@ export function createFormDebugPanel(
   element.appendChild(workflow);
   element.appendChild(outputSnapshotTitle);
   element.appendChild(outputSnapshot);
+  element.appendChild(resumeClaimTitle);
+  element.appendChild(resumeClaim);
+  element.appendChild(providerWarningTitle);
+  element.appendChild(providerWarning);
 
   const render = () => {
     const snapshot = observer.getSnapshot();
@@ -105,6 +121,16 @@ export function createFormDebugPanel(
     warnings.textContent = JSON.stringify(snapshot.activeTemplateWarnings, null, 2);
     workflow.textContent = JSON.stringify(snapshot.lastWorkflowSnapshot?.detail?.result || null, null, 2);
     outputSnapshot.textContent = JSON.stringify(snapshot.lastOutputSnapshot?.detail?.result || null, null, 2);
+    resumeClaim.textContent = JSON.stringify(
+      snapshot.lastResumeShareCodeClaimState?.detail?.result || null,
+      null,
+      2,
+    );
+    providerWarning.textContent = JSON.stringify(
+      snapshot.lastProviderContractWarning?.detail?.result || null,
+      null,
+      2,
+    );
   };
 
   const observer = attachFormDebugObserver(target, {

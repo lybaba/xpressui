@@ -49,6 +49,14 @@ export type TFormDebugWorkflowSnapshotRecord = TFormDebugEventRecord & {
   type: "form-ui:workflow-step" | "form-ui:workflow-state" | "form-ui:workflow-snapshot";
 };
 
+export type TFormDebugResumeClaimStateRecord = TFormDebugEventRecord & {
+  type: "form-ui:resume-share-code-claim-state";
+};
+
+export type TFormDebugProviderContractWarningRecord = TFormDebugEventRecord & {
+  type: "form-ui:provider-contract-warning";
+};
+
 export type TFormDebugSnapshot = {
   recentAppliedRules: TFormRuleAppliedDetail[];
   lastRuleState: TFormDebugRuleStateRecord | null;
@@ -56,6 +64,8 @@ export type TFormDebugSnapshot = {
   lastTemplateWarningState: TFormDebugTemplateWarningStateRecord | null;
   lastOutputSnapshot: TFormDebugOutputSnapshotRecord | null;
   lastWorkflowSnapshot: TFormDebugWorkflowSnapshotRecord | null;
+  lastResumeShareCodeClaimState: TFormDebugResumeClaimStateRecord | null;
+  lastProviderContractWarning: TFormDebugProviderContractWarningRecord | null;
 };
 
 export type TFormDebugObserver = {
@@ -68,6 +78,8 @@ export type TFormDebugObserver = {
   getLastTemplateWarningState(): TFormDebugTemplateWarningStateRecord | null;
   getLastOutputSnapshot(): TFormDebugOutputSnapshotRecord | null;
   getLastWorkflowSnapshot(): TFormDebugWorkflowSnapshotRecord | null;
+  getLastResumeShareCodeClaimState(): TFormDebugResumeClaimStateRecord | null;
+  getLastProviderContractWarning(): TFormDebugProviderContractWarningRecord | null;
   getSnapshot(): TFormDebugSnapshot;
   clear(): void;
   clearSnapshot(): void;
@@ -79,6 +91,8 @@ export type TFormDebugObserver = {
   clearLastTemplateWarningState(): void;
   clearLastOutputSnapshot(): void;
   clearLastWorkflowSnapshot(): void;
+  clearLastResumeShareCodeClaimState(): void;
+  clearLastProviderContractWarning(): void;
   detach(): void;
 };
 
@@ -149,6 +163,8 @@ export function attachFormDebugObserver(
   let lastTemplateWarningState: TFormDebugTemplateWarningStateRecord | null = null;
   let lastOutputSnapshot: TFormDebugOutputSnapshotRecord | null = null;
   let lastWorkflowSnapshot: TFormDebugWorkflowSnapshotRecord | null = null;
+  let lastResumeShareCodeClaimState: TFormDebugResumeClaimStateRecord | null = null;
+  let lastProviderContractWarning: TFormDebugProviderContractWarningRecord | null = null;
   const listeners = DEFAULT_DEBUG_EVENTS.map((eventName) => {
     const listener = (event: Event) => {
       const customEvent = event as CustomEvent<any>;
@@ -206,6 +222,14 @@ export function attachFormDebugObserver(
         lastWorkflowSnapshot = record as TFormDebugWorkflowSnapshotRecord;
       }
 
+      if (record.type === "form-ui:resume-share-code-claim-state") {
+        lastResumeShareCodeClaimState = record as TFormDebugResumeClaimStateRecord;
+      }
+
+      if (record.type === "form-ui:provider-contract-warning") {
+        lastProviderContractWarning = record as TFormDebugProviderContractWarningRecord;
+      }
+
       options.onEvent?.(record);
     };
 
@@ -244,6 +268,12 @@ export function attachFormDebugObserver(
     getLastWorkflowSnapshot() {
       return lastWorkflowSnapshot ? { ...lastWorkflowSnapshot } : null;
     },
+    getLastResumeShareCodeClaimState() {
+      return lastResumeShareCodeClaimState ? { ...lastResumeShareCodeClaimState } : null;
+    },
+    getLastProviderContractWarning() {
+      return lastProviderContractWarning ? { ...lastProviderContractWarning } : null;
+    },
     getSnapshot() {
       return {
         recentAppliedRules: [...recentAppliedRules],
@@ -252,6 +282,12 @@ export function attachFormDebugObserver(
         lastTemplateWarningState: lastTemplateWarningState ? { ...lastTemplateWarningState } : null,
         lastOutputSnapshot: lastOutputSnapshot ? { ...lastOutputSnapshot } : null,
         lastWorkflowSnapshot: lastWorkflowSnapshot ? { ...lastWorkflowSnapshot } : null,
+        lastResumeShareCodeClaimState: lastResumeShareCodeClaimState
+          ? { ...lastResumeShareCodeClaimState }
+          : null,
+        lastProviderContractWarning: lastProviderContractWarning
+          ? { ...lastProviderContractWarning }
+          : null,
       };
     },
     clear() {
@@ -264,6 +300,8 @@ export function attachFormDebugObserver(
       lastTemplateWarningState = null;
       lastOutputSnapshot = null;
       lastWorkflowSnapshot = null;
+      lastResumeShareCodeClaimState = null;
+      lastProviderContractWarning = null;
     },
     clearSnapshot() {
       recentAppliedRules = [];
@@ -272,6 +310,8 @@ export function attachFormDebugObserver(
       lastTemplateWarningState = null;
       lastOutputSnapshot = null;
       lastWorkflowSnapshot = null;
+      lastResumeShareCodeClaimState = null;
+      lastProviderContractWarning = null;
     },
     clearRuleHistory() {
       ruleEvents.splice(0, ruleEvents.length);
@@ -296,6 +336,12 @@ export function attachFormDebugObserver(
     },
     clearLastWorkflowSnapshot() {
       lastWorkflowSnapshot = null;
+    },
+    clearLastResumeShareCodeClaimState() {
+      lastResumeShareCodeClaimState = null;
+    },
+    clearLastProviderContractWarning() {
+      lastProviderContractWarning = null;
     },
     detach() {
       listeners.forEach(({ eventName, listener }) => {

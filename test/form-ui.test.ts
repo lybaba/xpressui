@@ -3570,6 +3570,78 @@ describe('FormUI', () => {
     observer.detach();
   });
 
+  it('tracks provider contract warnings and share-code claim state in the debug observer snapshot', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'debug-provider-resume-events-form',
+      title: 'Debug Provider Resume Events Form',
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const observer = attachFormDebugObserver(element, { maxEvents: 10 });
+
+    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+      bubbles: true,
+      detail: {
+        result: {
+          code: 'SHARE-42',
+          status: 'claimed',
+          token: 'resume_token_123',
+        },
+      },
+    }));
+    element.dispatchEvent(new CustomEvent('form-ui:provider-contract-warning', {
+      bubbles: true,
+      detail: {
+        result: {
+          expectedContract: 'provider-envelope-v2',
+          mode: 'strict-v2',
+          errors: ['status must be a string'],
+        },
+      },
+    }));
+
+    expect(observer.getLastResumeShareCodeClaimState()).toEqual(
+      expect.objectContaining({
+        type: 'form-ui:resume-share-code-claim-state',
+        detail: expect.objectContaining({
+          result: expect.objectContaining({
+            code: 'SHARE-42',
+            status: 'claimed',
+          }),
+        }),
+      }),
+    );
+    expect(observer.getLastProviderContractWarning()).toEqual(
+      expect.objectContaining({
+        type: 'form-ui:provider-contract-warning',
+        detail: expect.objectContaining({
+          result: expect.objectContaining({
+            expectedContract: 'provider-envelope-v2',
+            mode: 'strict-v2',
+          }),
+        }),
+      }),
+    );
+    expect(observer.getSnapshot()).toEqual(
+      expect.objectContaining({
+        lastResumeShareCodeClaimState: expect.objectContaining({
+          type: 'form-ui:resume-share-code-claim-state',
+        }),
+        lastProviderContractWarning: expect.objectContaining({
+          type: 'form-ui:provider-contract-warning',
+        }),
+      }),
+    );
+
+    observer.clearLastResumeShareCodeClaimState();
+    observer.clearLastProviderContractWarning();
+    expect(observer.getLastResumeShareCodeClaimState()).toBeNull();
+    expect(observer.getLastProviderContractWarning()).toBeNull();
+    observer.detach();
+  });
+
   it('can render a live debug panel from form events', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {
@@ -3604,6 +3676,8 @@ describe('FormUI', () => {
     expect(panel.element.textContent).toContain('Recent Rules');
     expect(panel.element.textContent).toContain('Active Template Warnings');
     expect(panel.element.textContent).toContain('Output Snapshot');
+    expect(panel.element.textContent).toContain('Resume Claim');
+    expect(panel.element.textContent).toContain('Provider Contract Warning');
     expect(panel.element.textContent).toContain('Clear Snapshot');
     expect(panel.element.textContent).toContain('Clear Events');
     expect(panel.element.textContent).toContain('Status: listening');
@@ -3660,6 +3734,52 @@ describe('FormUI', () => {
     expect(outputSnapshot.textContent).toContain('"title"');
     expect(outputSnapshot.textContent).toContain('"rendererType": "text"');
     expect(outputSnapshot.textContent).toContain('"value": "Debug value"');
+
+    panel.detach();
+  });
+
+  it('renders provider warning and resume claim details in the debug panel', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'debug-provider-panel-form',
+      title: 'Debug Provider Panel Form',
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    const panel = createFormDebugPanel(element, { title: 'Provider Debug' });
+    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+      bubbles: true,
+      detail: {
+        result: {
+          code: 'SHARE-99',
+          status: 'claimed',
+          token: 'token_99',
+        },
+      },
+    }));
+    element.dispatchEvent(new CustomEvent('form-ui:provider-contract-warning', {
+      bubbles: true,
+      detail: {
+        result: {
+          expectedContract: 'provider-envelope-v2',
+          errors: ['messages must be an array'],
+        },
+      },
+    }));
+    await flushAsyncWork();
+
+    const resumeClaim = panel.element.querySelector('.xpressui-debug-panel__resume-claim') as HTMLElement;
+    const providerWarning = panel.element.querySelector('.xpressui-debug-panel__provider-warning') as HTMLElement;
+    expect(resumeClaim.textContent).toContain('"code": "SHARE-99"');
+    expect(resumeClaim.textContent).toContain('"status": "claimed"');
+    expect(providerWarning.textContent).toContain('"expectedContract": "provider-envelope-v2"');
+    expect(providerWarning.textContent).toContain('"messages must be an array"');
+
+    panel.clearSnapshot();
+    expect(resumeClaim.textContent).toBe('null');
+    expect(providerWarning.textContent).toBe('null');
 
     panel.detach();
   });

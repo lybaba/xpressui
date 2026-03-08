@@ -66,6 +66,10 @@ import { getRestorableStorageValues } from "./common/form-storage";
 import { FormStepRuntime } from "./common/form-steps";
 import { FormRuntime } from "./common/form-runtime";
 import { FormUploadRuntime, TFormUploadState } from "./common/form-upload";
+import {
+  buildLocalFormIncidentSummary,
+  buildLocalFormOperationalSummary,
+} from "./common/form-admin";
 import { validatePublicFormConfig } from "./common/public-schema";
 import {
   createNormalizedProviderResult,
@@ -218,6 +222,7 @@ export {
 } from "./common/provider-registry";
 export type {
   TLocalFormAdmin,
+  TLocalFormOperationalSummary,
   TLocalFormIncidentSummary,
   TLocalQueueQuery,
 } from "./common/form-admin";
@@ -3608,6 +3613,26 @@ export class FormUI extends HTMLElement {
 
   getStorageHealth = (): TFormStorageHealth => {
     return this.persistence.getStorageHealth();
+  }
+
+  getOperationalSummary = () => {
+    return buildLocalFormOperationalSummary({
+      storageHealth: this.getStorageHealth(),
+      snapshot: this.getStorageSnapshot(),
+      resumeTokens: this.listResumeTokens(),
+      workflow: {
+        currentStepIndex: this.getCurrentStepIndex(),
+        stepProgress: this.getStepProgress(),
+        workflowSnapshot: this.getWorkflowSnapshot(),
+      },
+    });
+  }
+
+  getIncidentSummary = (limit = 5) => {
+    return buildLocalFormIncidentSummary({
+      snapshot: this.getStorageSnapshot(),
+      resumeTokens: this.listResumeTokens(),
+    }, limit);
   }
 
   setValidationI18n = (i18n?: TFormValidationI18nConfig | null): void => {

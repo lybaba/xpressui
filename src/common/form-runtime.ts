@@ -21,6 +21,12 @@ import { FormEngineRuntime, TDocumentDataReadMode, TStoredDocumentData } from ".
 import { FormStepRuntime, TFormStepProgress, TFormWorkflowSnapshot } from "./form-steps";
 import { FormUploadRuntime } from "./form-upload";
 import {
+  buildLocalFormIncidentSummary,
+  buildLocalFormOperationalSummary,
+  TLocalFormIncidentSummary,
+  TLocalFormOperationalSummary,
+} from "./form-admin";
+import {
   FormPersistenceRuntime,
   TFormQueueState,
   TResumeLookupResult,
@@ -101,6 +107,8 @@ export type TFormRuntimePublicApi = Pick<
   | "getQueueState"
   | "getStorageSnapshot"
   | "getStorageHealth"
+  | "getOperationalSummary"
+  | "getIncidentSummary"
   | "getStepNames"
   | "getCurrentStepIndex"
   | "getCurrentStepName"
@@ -326,6 +334,26 @@ export class FormRuntime {
 
   getStorageHealth(): TFormStorageHealth {
     return this.persistence.getStorageHealth();
+  }
+
+  getOperationalSummary(): TLocalFormOperationalSummary {
+    return buildLocalFormOperationalSummary({
+      storageHealth: this.getStorageHealth(),
+      snapshot: this.getStorageSnapshot(),
+      resumeTokens: this.listResumeTokens(),
+      workflow: {
+        currentStepIndex: this.getCurrentStepIndex(),
+        stepProgress: this.getStepProgress(),
+        workflowSnapshot: this.getWorkflowSnapshot(),
+      },
+    });
+  }
+
+  getIncidentSummary(limit = 5): TLocalFormIncidentSummary {
+    return buildLocalFormIncidentSummary({
+      snapshot: this.getStorageSnapshot(),
+      resumeTokens: this.listResumeTokens(),
+    }, limit);
   }
 
   getStepNames(): string[] {

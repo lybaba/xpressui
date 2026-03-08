@@ -6322,6 +6322,29 @@ describe('FormUI', () => {
       },
       fields: { firstName: 'ANNA MARIA' },
     });
+    expect(runtime.getOperationalSummary()).toEqual(
+      expect.objectContaining({
+        snapshot: expect.objectContaining({
+          hasDraft: true,
+          queueLength: 0,
+        }),
+        workflow: expect.objectContaining({
+          currentStepIndex: 0,
+        }),
+      }),
+    );
+    expect(runtime.getIncidentSummary()).toEqual(
+      expect.objectContaining({
+        queue: expect.objectContaining({
+          total: 0,
+          samples: [],
+        }),
+        resume: expect.objectContaining({
+          total: 0,
+          samples: [],
+        }),
+      }),
+    );
 
     values = { amount: '', email: '' };
     expect(Object.keys(runtime.validateValues(values)).length).toBeGreaterThan(0);
@@ -12060,6 +12083,65 @@ describe('FormUI', () => {
         ],
       },
     });
+  });
+
+  it('exposes operational and incident summaries directly on FormUI', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'form-ui-summary-form',
+      title: 'FormUI Summary Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-form-ui-summary',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    window.localStorage.setItem('xpressui:test-form-ui-summary', JSON.stringify({ email: 'ui@example.com' }));
+    window.localStorage.setItem(
+      'xpressui:test-form-ui-summary:queue',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queue_ui_1',
+            values: { email: 'queue@example.com' },
+            attempts: 1,
+            createdAt: 100,
+            updatedAt: 200,
+            nextAttemptAt: 0,
+            lastError: 'temporary issue',
+          },
+        ],
+      }),
+    );
+
+    expect(element.getOperationalSummary()).toEqual(
+      expect.objectContaining({
+        snapshot: {
+          hasDraft: true,
+          queueLength: 1,
+          deadLetterLength: 0,
+        },
+      }),
+    );
+    expect(element.getIncidentSummary(1)).toEqual(
+      expect.objectContaining({
+        queue: expect.objectContaining({
+          total: 1,
+          retrying: 1,
+          samples: [
+            expect.objectContaining({
+              id: 'queue_ui_1',
+              lastError: 'temporary issue',
+            }),
+          ],
+        }),
+      }),
+    );
   });
 
   it('can export and import local admin snapshots', () => {

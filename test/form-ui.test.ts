@@ -4,6 +4,7 @@ import { createStorageAdapter } from '../src/common/form-storage';
 import {
   createLocalFormAdmin,
   createFormConfig,
+  createFormOpsPanel,
   createFormPreset,
   createMountSnippet,
   createTemplateMarkup,
@@ -3833,6 +3834,56 @@ describe('FormUI', () => {
 
     panel.detach();
     expect(panel.element.textContent).toContain('Status: detached');
+    expect(document.body.contains(panel.element)).toBe(false);
+  });
+
+  it('can render a combined ops panel from FormUI and local admin helpers', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'ops-panel-form',
+      title: 'Ops Panel Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-ops-panel',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const admin = createLocalFormAdmin((element as any).formConfig);
+
+    window.localStorage.setItem('xpressui:test-ops-panel', JSON.stringify({ email: 'ops@example.com' }));
+    const panel = createFormOpsPanel(element, admin, {
+      title: 'Ops Console',
+      admin: { incidentLimit: 1, title: 'Admin View' },
+      debug: { title: 'Debug View' },
+    });
+    document.body.appendChild(panel.element);
+
+    expect(panel.element.textContent).toContain('Ops Console');
+    expect(panel.element.textContent).toContain('Debug View');
+    expect(panel.element.textContent).toContain('Admin View');
+    expect(panel.element.textContent).toContain('Operational Summary');
+    expect(panel.element.textContent).toContain('Recent Rules');
+
+    element.dispatchEvent(new CustomEvent('form-ui:provider-contract-warning', {
+      bubbles: true,
+      detail: {
+        result: {
+          expectedContract: 'provider-envelope-v2',
+        },
+      },
+    }));
+    panel.refresh();
+
+    expect(panel.element.textContent).toContain('"expectedContract": "provider-envelope-v2"');
+    expect(panel.element.textContent).toContain('"hasDraft": true');
+
+    panel.clearSnapshot();
+    expect(panel.element.textContent).toContain('Provider Contract Warning');
+
+    panel.detach();
     expect(document.body.contains(panel.element)).toBe(false);
   });
 

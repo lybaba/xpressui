@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as publicApi from "../src/index";
 import {
   createFormAdminPanel,
+  createFormOpsPanel,
   createLocalFormAdmin,
   createFormConfig,
   createFormPreset,
@@ -45,6 +46,7 @@ describe("Public API", () => {
     expect(publicApi.fieldFactory).toBe(fieldFactory);
     expect(publicApi.mountFormUI).toBe(mountFormUI);
     expect(publicApi.createFormAdminPanel).toBe(createFormAdminPanel);
+    expect(publicApi.createFormOpsPanel).toBe(createFormOpsPanel);
     expect(publicApi.createLocalFormAdmin).toBe(createLocalFormAdmin);
     expect(publicApi.validatePublicFormConfig).toBe(validatePublicFormConfig);
     expect(publicApi.PUBLIC_FORM_SCHEMA_VERSION).toBe(PUBLIC_FORM_SCHEMA_VERSION);
@@ -95,6 +97,7 @@ describe("Public API", () => {
         "FormStepRuntime",
         "createFormDebugPanel",
         "createFormAdminPanel",
+        "createFormOpsPanel",
         "attachFormDebugObserver",
         "registerProvider",
         "getProviderDefinition",

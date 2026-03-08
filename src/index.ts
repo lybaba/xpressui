@@ -187,6 +187,7 @@ export { createLocalFormAdmin } from "./common/form-admin";
 export { attachFormDebugObserver } from "./common/form-debug";
 export { createFormDebugPanel } from "./common/form-debug-panel";
 export { createFormAdminPanel } from "./common/form-admin-panel";
+export { createFormOpsPanel } from "./common/form-ops-panel";
 export { getPublicApiManifest } from "./common/public-api-manifest";
 export { FormEngineRuntime } from "./common/form-engine";
 export { FormDynamicRuntime } from "./common/form-dynamic";

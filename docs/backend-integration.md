@@ -477,6 +477,7 @@ For local operations and QA workflows, pair the runtime events with:
 - `createFormAdminPanel(source)` to inspect:
   - operational summary
   - incident summary
+- `createFormOpsPanel(target, source)` to render debug + admin together
 - `createLocalFormAdmin(formConfig)` to inspect persisted state without a mounted UI:
   - `admin.getOperationalSummary()`
   - `admin.getIncidentSummary()`
@@ -488,6 +489,7 @@ import {
   createFormAdminPanel,
   createFormDebugPanel,
   createLocalFormAdmin,
+  createFormOpsPanel,
   mountFormUI,
 } from "@lybaba/xpressui";
 
@@ -495,9 +497,11 @@ const form = mountFormUI(container, formConfig);
 const panel = createFormDebugPanel(form, { title: "Resume Debug" });
 const admin = createLocalFormAdmin(formConfig);
 const adminPanel = createFormAdminPanel(admin, { title: "Resume Admin" });
+const opsPanel = createFormOpsPanel(form, admin, { title: "Resume Ops" });
 
 document.body.append(panel.element);
 document.body.append(adminPanel.element);
+document.body.append(opsPanel.element);
 
 console.log(admin.getOperationalSummary());
 console.log(admin.getIncidentSummary(5));

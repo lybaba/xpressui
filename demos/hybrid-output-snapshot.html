@@ -91,7 +91,7 @@
     <main>
       <a href="./index.html">Retour aux démos</a>
       <h1>Hybrid Output Snapshot</h1>
-      <p>Démo live de l’événement <code>form-ui:output-snapshot</code> et du debug panel avec section Output Snapshot.</p>
+      <p>Démo live de l’événement <code>form-ui:output-snapshot</code> et du panneau ops combiné avec snapshot de rendu.</p>
 
       <div class="layout">
         <aside class="code">
@@ -103,7 +103,7 @@
             <div class="code-tools">
               <button class="copy-btn" type="button" data-copy-code>Copy</button>
             </div>
-            <pre><code>import { createFormDebugPanel, mountFormUI } from "../dist/xpressui.mjs";
+            <pre><code>import { createFormOpsPanel, mountFormUI } from "../dist/xpressui.mjs";
 
 const form = mountFormUI(app, {
   version: 1,
@@ -142,7 +142,11 @@ form.setFieldOutputRenderer("tags", ({ value }) => {
   return list;
 });
 
-const panel = createFormDebugPanel(form);
+const panel = createFormOpsPanel(form, form, {
+  title: "Hybrid Ops",
+  debug: { title: "Runtime Debug" },
+  admin: { title: "Runtime Admin", incidentLimit: 3 },
+});
 debug.appendChild(panel.element);
 
 form.addEventListener("form-ui:output-snapshot", (event) => {
@@ -172,7 +176,7 @@ form.refreshOutputRendering();</code></pre>
     </main>
 
     <script type="module">
-      import { createFormDebugPanel, mountFormUI } from "../dist/xpressui.mjs";
+      import { createFormOpsPanel, mountFormUI } from "../dist/xpressui.mjs";
 
       document.querySelectorAll("[data-toggle-code]").forEach((button) => {
         button.addEventListener("click", () => {
@@ -273,7 +277,11 @@ form.refreshOutputRendering();</code></pre>
         return list;
       });
 
-      const panel = createFormDebugPanel(form, { title: "Runtime Debug" });
+      const panel = createFormOpsPanel(form, form, {
+        title: "Hybrid Ops",
+        debug: { title: "Runtime Debug" },
+        admin: { title: "Runtime Admin", incidentLimit: 3 },
+      });
       debug.appendChild(panel.element);
 
       form.addEventListener("form-ui:output-snapshot", (event) => {

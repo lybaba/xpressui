@@ -40,7 +40,7 @@
     <main>
       <a href="./index.html">Retour aux démos</a>
       <h1>Approval Workflow</h1>
-      <p>Démo d’un flux d’approbation avec debug panel local branché sur les événements.</p>
+      <p>Démo d’un flux d’approbation avec panneau ops combiné branché sur les événements et l’état local.</p>
       <div class="layout">
         <aside class="code">
           <div class="code-head">
@@ -51,7 +51,7 @@
             <div class="code-tools">
               <button class="copy-btn" type="button" data-copy-code>Copy</button>
             </div>
-            <pre><code>import { createFormDebugPanel, mountFormUI } from "../dist/xpressui.mjs";
+            <pre><code>import { createFormOpsPanel, mountFormUI } from "../dist/xpressui.mjs";
 
 const app = document.getElementById("app");
 const debug = document.getElementById("debug");
@@ -91,7 +91,11 @@ const form = mountFormUI(app, {
   },
 });
 
-const panel = createFormDebugPanel(form);
+const panel = createFormOpsPanel(form, form, {
+  title: "Approval Ops",
+  debug: { title: "Approval Debug" },
+  admin: { title: "Approval Admin" },
+});
 debug.appendChild(panel.element);</code></pre>
           </div>
         </aside>
@@ -105,7 +109,7 @@ debug.appendChild(panel.element);</code></pre>
       </div>
     </main>
     <script type="module">
-      import { createFormDebugPanel, mountFormUI } from "../dist/xpressui.mjs";
+      import { createFormOpsPanel, mountFormUI } from "../dist/xpressui.mjs";
 
       document.querySelectorAll("[data-toggle-code]").forEach((button) => {
         button.addEventListener("click", () => {
@@ -269,7 +273,11 @@ debug.appendChild(panel.element);</code></pre>
         );
       });
 
-      const panel = createFormDebugPanel(form);
+      const panel = createFormOpsPanel(form, form, {
+        title: "Approval Ops",
+        debug: { title: "Approval Debug" },
+        admin: { title: "Approval Admin" },
+      });
       debug.appendChild(panel.element);
     </script>
   </body>

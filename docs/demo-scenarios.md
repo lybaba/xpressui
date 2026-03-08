@@ -9,7 +9,7 @@ contracts it demonstrates.
 |---|---|---|---|
 | `demos/booking-wizard.html` | Multi-step booking flow | `nextStep`, `previousStep`, `getStepProgress` | `form-ui:step-change`, `form-ui:step-blocked` |
 | `demos/multi-step-review.html` | Step summary/review patterns | `getWorkflowSnapshot`, step summary sections | `form-ui:step-change` |
-| `demos/approval-workflow.html` | Provider-driven workflow transitions | provider routing, `setWorkflowState` | `form-ui:workflow-state`, `form-ui:approval-state` |
+| `demos/approval-workflow.html` | Provider-driven workflow transitions + combined ops panel | provider routing, `setWorkflowState`, `createFormOpsPanel` | `form-ui:workflow-state`, `form-ui:approval-state` |
 | `demos/approval-one-page.html` | One-page approval lifecycle | submit lifecycle + provider normalization | `form-ui:approval-complete` |
 
 ## Upload, Identity, And Resume
@@ -18,7 +18,7 @@ contracts it demonstrates.
 |---|---|---|---|
 | `demos/file-uploads.html` | Multipart upload + validation UX | `submit.mode: form-data`, `uploadStrategy` | `form-ui:upload-start`, `form-ui:upload-progress`, `form-ui:upload-error` |
 | `demos/identity-check.html` | Document scan + OCR/MRZ mapping | `document*TargetField`, `includeDocumentData` | `form-ui:document-mrz-detected`, `form-ui:document-fields-populated` |
-| `demos/remote-resume-flow.html` | Remote save/resume, share code, debug/admin inspection | `createResumeTokenAsync`, `restoreFromResumeTokenAsync`, `claimResumeShareCodeDetail`, `createFormDebugPanel`, `createLocalFormAdmin` | `form-ui:resume-token-created`, `form-ui:resume-share-code-claim-state`, `form-ui:provider-contract-warning` |
+| `demos/remote-resume-flow.html` | Remote save/resume, share code, combined ops inspection | `createResumeTokenAsync`, `restoreFromResumeTokenAsync`, `claimResumeShareCodeDetail`, `createFormOpsPanel`, `createLocalFormAdmin` | `form-ui:resume-token-created`, `form-ui:resume-share-code-claim-state`, `form-ui:provider-contract-warning` |
 
 ## View / Hybrid / Headless
 
@@ -27,7 +27,7 @@ contracts it demonstrates.
 | `demos/view-photo-gallery.html` | Read-only output rendering | `mode="view"`, output renderer registry | `form-ui:output-snapshot` |
 | `demos/hybrid-ecommerce.html` | Product list + image gallery + checkout | `mode="hybrid"`, `product-list`, `image-gallery` | cart/gallery modal interactions, `form-ui:submit-success` |
 | `demos/quiz-showcase.html` | Quiz field with single/multi/open answers | `quiz`, `minNumOfChoices`, `maxNumOfChoices` | live value updates from quiz card selection |
-| `demos/hybrid-output-snapshot.html` | Inspect output snapshot in hybrid mode | `getOutputSnapshot` | `form-ui:output-snapshot` |
+| `demos/hybrid-output-snapshot.html` | Inspect output snapshot in hybrid mode with ops panel | `getOutputSnapshot`, `createFormOpsPanel` | `form-ui:output-snapshot` |
 | `demos/headless-runtime.html` | Runtime without `FormUI` | `FormRuntime` APIs only | Host-defined event bridge |
 
 ## Provider Transition Sandbox

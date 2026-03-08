@@ -1388,6 +1388,10 @@ Frontend behavior:
   submit values for that field
 - `documentMaskPaths: string[]` masks sensitive document paths (for example
   `mrz.documentNumber`, `fields.firstName`) before submit
+- `getDocumentDataView(fieldName, mode?, applyFieldPrivacy?)` exposes a
+  privacy-aware runtime view of stored document data
+- `getAllDocumentDataView(mode?, applyFieldPrivacy?)` exposes the same view
+  across all stored document fields
 - `submit.includeDocumentData: true` injects the normalized `document` object
   directly into submitted values
 - `submit.documentDataMode` controls redaction: `full`, `summary`,

@@ -12,6 +12,8 @@ export type TStoredDocumentData = {
   normalized?: TDocumentNormalizedContractV2 | null;
 };
 
+export type TDocumentDataReadMode = "full" | "summary" | "fields-only" | "mrz-only" | "none";
+
 function redactDocumentData(
   data: TStoredDocumentData,
   mode: "full" | "summary" | "fields-only" | "mrz-only" | "none",
@@ -139,7 +141,7 @@ function maskDocumentDataByPaths(
     return data;
   }
 
-  const masked = { ...data };
+  const masked = cloneDocumentValue(data);
   fieldPaths.forEach((path) => {
     const normalizedPath = path.trim();
     if (!normalizedPath) {
@@ -159,6 +161,22 @@ function maskDocumentDataByPaths(
   });
 
   return masked;
+}
+
+function cloneDocumentValue<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((entry) => cloneDocumentValue(entry)) as unknown as T;
+  }
+
+  if (value && typeof value === "object") {
+    const result: Record<string, any> = {};
+    Object.entries(value as Record<string, any>).forEach(([key, entry]) => {
+      result[key] = cloneDocumentValue(entry);
+    });
+    return result as T;
+  }
+
+  return value;
 }
 
 function getFileList(value: any): File[] {
@@ -256,6 +274,45 @@ export class FormEngineRuntime {
 
   getAllDocumentData(): Record<string, TStoredDocumentData> {
     return { ...this.documentData };
+  }
+
+  getDocumentDataView(
+    fieldName: string,
+    mode: TDocumentDataReadMode = "summary",
+    applyFieldPrivacy: boolean = true,
+  ): Record<string, any> | null {
+    const data = this.documentData[fieldName];
+    if (!data) {
+      return null;
+    }
+
+    const fieldConfig = this.inputFields[fieldName];
+    if (applyFieldPrivacy && fieldConfig?.documentExcludeFromSubmit) {
+      return null;
+    }
+
+    const redacted = redactDocumentData(data, mode);
+    if (!redacted) {
+      return null;
+    }
+
+    return applyFieldPrivacy
+      ? maskDocumentDataByPaths(redacted, fieldConfig?.documentMaskPaths)
+      : redacted;
+  }
+
+  getAllDocumentDataView(
+    mode: TDocumentDataReadMode = "summary",
+    applyFieldPrivacy: boolean = true,
+  ): Record<string, Record<string, any>> {
+    const result: Record<string, Record<string, any>> = {};
+    Object.keys(this.documentData).forEach((fieldName) => {
+      const view = this.getDocumentDataView(fieldName, mode, applyFieldPrivacy);
+      if (view) {
+        result[fieldName] = view;
+      }
+    });
+    return result;
   }
 
   normalizeValues(values: Record<string, any>): Record<string, any> {

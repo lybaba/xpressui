@@ -6188,6 +6188,20 @@ describe('FormUI', () => {
         fields: { firstName: 'ANNA MARIA' },
       },
     });
+    expect(runtime.getDocumentDataView('passport')).toEqual({
+      mrz: {
+        format: undefined,
+        documentCode: undefined,
+        issuingCountry: undefined,
+        documentNumber: 'L898902C3',
+        nationality: undefined,
+        birthDate: undefined,
+        expiryDate: undefined,
+        sex: undefined,
+        valid: undefined,
+      },
+      fields: { firstName: 'ANNA MARIA' },
+    });
 
     values = { amount: '', email: '' };
     expect(Object.keys(runtime.validateValues(values)).length).toBeGreaterThan(0);
@@ -6366,6 +6380,97 @@ describe('FormUI', () => {
           firstName: '***',
           lastName: 'ERIKSSON',
         },
+      },
+    });
+  });
+
+  it('can expose privacy-aware document views separately from raw stored document data', () => {
+    const formConfig = createFormConfig({
+      name: 'headless-document-view-form',
+      title: 'Headless Document View Form',
+      fields: [
+        {
+          name: 'passport',
+          label: 'Passport',
+          type: 'document-scan',
+          documentMaskPaths: ['mrz.documentNumber', 'fields.firstName'],
+        },
+        {
+          name: 'national_id',
+          label: 'National ID',
+          type: 'document-scan',
+          documentExcludeFromSubmit: true,
+        },
+      ],
+    });
+    const runtime = new FormRuntime(formConfig);
+    (formConfig.sections.main || []).forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+    runtime.engine.setDocumentData('passport', {
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3', valid: true, nationality: 'UTO' },
+      fields: { firstName: 'ANNA MARIA', lastName: 'ERIKSSON' },
+      normalized: {
+        contractVersion: 'ocr-mrz-v2',
+        status: 'mrz_detected',
+        quality: { textLength: 14, estimatedConfidence: 0.22 },
+        mrz: null,
+        fields: null,
+      },
+    });
+    runtime.engine.setDocumentData('national_id', {
+      text: 'SENSITIVE',
+      fields: { firstName: 'HIDDEN' },
+    });
+
+    expect(runtime.getDocumentData('passport')).toEqual(expect.objectContaining({
+      mrz: { documentNumber: 'L898902C3', valid: true, nationality: 'UTO' },
+      fields: { firstName: 'ANNA MARIA', lastName: 'ERIKSSON' },
+    }));
+    expect(runtime.getDocumentDataView('passport', 'summary')).toEqual({
+      normalized: {
+        contractVersion: 'ocr-mrz-v2',
+        status: 'mrz_detected',
+        quality: { textLength: 14, estimatedConfidence: 0.22 },
+      },
+      mrz: {
+        format: undefined,
+        documentCode: undefined,
+        issuingCountry: undefined,
+        documentNumber: '***',
+        nationality: 'UTO',
+        birthDate: undefined,
+        expiryDate: undefined,
+        sex: undefined,
+        valid: true,
+      },
+      fields: { firstName: '***', lastName: 'ERIKSSON' },
+    });
+    expect(runtime.getDocumentDataView('passport', 'full', false)).toEqual(expect.objectContaining({
+      mrz: { documentNumber: 'L898902C3', valid: true, nationality: 'UTO' },
+      fields: { firstName: 'ANNA MARIA', lastName: 'ERIKSSON' },
+    }));
+    expect(runtime.getDocumentDataView('national_id', 'summary')).toBeNull();
+    expect(runtime.getAllDocumentDataView('summary')).toEqual({
+      passport: {
+        normalized: {
+          contractVersion: 'ocr-mrz-v2',
+          status: 'mrz_detected',
+          quality: { textLength: 14, estimatedConfidence: 0.22 },
+        },
+        mrz: {
+          format: undefined,
+          documentCode: undefined,
+          issuingCountry: undefined,
+          documentNumber: '***',
+          nationality: 'UTO',
+          birthDate: undefined,
+          expiryDate: undefined,
+          sex: undefined,
+          valid: true,
+        },
+        fields: { firstName: '***', lastName: 'ERIKSSON' },
       },
     });
   });

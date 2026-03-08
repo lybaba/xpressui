@@ -52,3 +52,6 @@ Notes:
 - `mrz` is `null` when no MRZ was detected
 - `fields` contains normalized extraction keys when available
 - summary payloads may intentionally keep only `contractVersion`, `status`, and `quality`
+- runtime consumers can read privacy-aware views via
+  `getDocumentDataView(...)` / `getAllDocumentDataView(...)` using the same
+  masking and exclusion semantics as submit payload building

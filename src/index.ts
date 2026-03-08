@@ -271,7 +271,7 @@ export type {
   TFormRuntimeSubmitResult,
   TFormRuntimeSubmitValues,
 } from "./common/form-runtime";
-export type { TStoredDocumentData } from "./common/form-engine";
+export type { TDocumentDataReadMode, TStoredDocumentData } from "./common/form-engine";
 export type {
   TDocumentNormalizedContractVersion,
   TDocumentNormalizedFields,
@@ -3754,8 +3754,23 @@ export class FormUI extends HTMLElement {
     return this.engine.getDocumentData(fieldName);
   }
 
+  getDocumentDataView = (
+    fieldName: string,
+    mode: "full" | "summary" | "fields-only" | "mrz-only" | "none" = "summary",
+    applyFieldPrivacy: boolean = true,
+  ) => {
+    return this.engine.getDocumentDataView(fieldName, mode, applyFieldPrivacy);
+  }
+
   getAllDocumentData = () => {
     return this.engine.getAllDocumentData();
+  }
+
+  getAllDocumentDataView = (
+    mode: "full" | "summary" | "fields-only" | "mrz-only" | "none" = "summary",
+    applyFieldPrivacy: boolean = true,
+  ) => {
+    return this.engine.getAllDocumentDataView(mode, applyFieldPrivacy);
   }
 
   getApprovalState = (): TFormApprovalState | null => {

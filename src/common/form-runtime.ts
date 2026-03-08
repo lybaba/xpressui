@@ -17,7 +17,7 @@ import {
   URL_TYPE,
 } from "./field";
 import { FormDynamicRuntime, TFormActiveTemplateWarning } from "./form-dynamic";
-import { FormEngineRuntime, TStoredDocumentData } from "./form-engine";
+import { FormEngineRuntime, TDocumentDataReadMode, TStoredDocumentData } from "./form-engine";
 import { FormStepRuntime, TFormStepProgress, TFormWorkflowSnapshot } from "./form-steps";
 import { FormUploadRuntime } from "./form-upload";
 import {
@@ -141,7 +141,9 @@ export type TFormRuntimePublicApi = Pick<
   | "getRecentAppliedRules"
   | "clearRecentAppliedRules"
   | "getDocumentData"
+  | "getDocumentDataView"
   | "getAllDocumentData"
+  | "getAllDocumentDataView"
 >;
 
 export class FormRuntime {
@@ -640,7 +642,22 @@ export class FormRuntime {
     return this.engine.getDocumentData(fieldName);
   }
 
+  getDocumentDataView(
+    fieldName: string,
+    mode: TDocumentDataReadMode = "summary",
+    applyFieldPrivacy: boolean = true,
+  ): Record<string, any> | null {
+    return this.engine.getDocumentDataView(fieldName, mode, applyFieldPrivacy);
+  }
+
   getAllDocumentData(): Record<string, TStoredDocumentData> {
     return this.engine.getAllDocumentData();
+  }
+
+  getAllDocumentDataView(
+    mode: TDocumentDataReadMode = "summary",
+    applyFieldPrivacy: boolean = true,
+  ): Record<string, Record<string, any>> {
+    return this.engine.getAllDocumentDataView(mode, applyFieldPrivacy);
   }
 }

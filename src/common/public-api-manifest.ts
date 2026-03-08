@@ -39,6 +39,7 @@ const ADVANCED_PUBLIC_API = [
   "createFormDebugPanel",
   "createFormAdminPanel",
   "createFormOpsPanel",
+  "createResumeStatusPanel",
   "attachFormDebugObserver",
   "registerProvider",
   "getProviderDefinition",

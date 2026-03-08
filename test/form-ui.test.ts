@@ -5,6 +5,7 @@ import {
   createLocalFormAdmin,
   createFormConfig,
   createFormOpsPanel,
+  createResumeStatusPanel,
   createFormPreset,
   createMountSnippet,
   createTemplateMarkup,
@@ -3931,6 +3932,48 @@ describe('FormUI', () => {
 
     panel.clearSnapshot();
     expect(panel.element.textContent).toContain('Provider Contract Warning');
+
+    panel.detach();
+    expect(document.body.contains(panel.element)).toBe(false);
+  });
+
+  it('can render a dedicated resume status panel from cross-device events', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'resume-status-panel-form',
+      title: 'Resume Status Panel Form',
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+    const panel = createResumeStatusPanel(element, { title: 'Resume Status' });
+    document.body.appendChild(panel.element);
+
+    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+      bubbles: true,
+      detail: {
+        result: {
+          code: 'SHARE-PANEL',
+          status: 'blocked',
+          retryAfterSeconds: 120,
+        },
+      },
+    }));
+    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-restore-state', {
+      bubbles: true,
+      detail: {
+        result: {
+          code: 'SHARE-PANEL',
+          status: 'claim_failed',
+          message: 'Share-code restore could not continue.',
+        },
+      },
+    }));
+
+    expect(panel.element.textContent).toContain('Resume Status');
+    expect(panel.element.textContent).toContain('Claim: Temporarily blocked');
+    expect(panel.element.textContent).toContain('Restore: Restore blocked');
+    expect(panel.element.textContent).toContain('"retryAfterSeconds": 120');
 
     panel.detach();
     expect(document.body.contains(panel.element)).toBe(false);

@@ -3,6 +3,7 @@ import * as publicApi from "../src/index";
 import {
   createFormAdminPanel,
   createFormOpsPanel,
+  createResumeStatusPanel,
   createLocalFormAdmin,
   createFormConfig,
   createFormPreset,
@@ -48,6 +49,7 @@ describe("Public API", () => {
     expect(publicApi.mountFormUI).toBe(mountFormUI);
     expect(publicApi.createFormAdminPanel).toBe(createFormAdminPanel);
     expect(publicApi.createFormOpsPanel).toBe(createFormOpsPanel);
+    expect(publicApi.createResumeStatusPanel).toBe(createResumeStatusPanel);
     expect(publicApi.createLocalFormAdmin).toBe(createLocalFormAdmin);
     expect(publicApi.validatePublicFormConfig).toBe(validatePublicFormConfig);
     expect(publicApi.PUBLIC_FORM_SCHEMA_VERSION).toBe(PUBLIC_FORM_SCHEMA_VERSION);
@@ -101,6 +103,7 @@ describe("Public API", () => {
         "createFormDebugPanel",
         "createFormAdminPanel",
         "createFormOpsPanel",
+        "createResumeStatusPanel",
         "attachFormDebugObserver",
         "registerProvider",
         "getProviderDefinition",

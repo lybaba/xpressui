@@ -190,7 +190,6 @@
       import {
         createLocalFormAdmin,
         createFormOpsPanel,
-        createResumeStatusPanel,
         mountFormUI,
       } from "../dist/xpressui.mjs";
 
@@ -201,7 +200,6 @@
       const incidentSummary = document.getElementById("incident-summary");
       const tokenValue = document.getElementById("token-value");
       const shareCodeValue = document.getElementById("share-code-value");
-      const resumeStatusSlot = document.getElementById("resume-status-slot");
       const claimScenario = document.getElementById("claim-scenario");
 
       const write = (payload) => {
@@ -493,12 +491,9 @@
         title: "Remote Resume Ops",
         debug: { title: "Remote Resume Debug" },
         admin: { title: "Remote Resume Admin", incidentLimit: 4 },
-      });
-      const resumeStatusPanel = createResumeStatusPanel(form, {
-        title: "Cross-Device Resume Status",
+        resume: { title: "Cross-Device Resume Status" },
       });
       debugPanelSlot.appendChild(opsPanel.element);
-      resumeStatusSlot.appendChild(resumeStatusPanel.element);
       incidentSummary.remove();
 
       const refreshAdminPanels = () => {
@@ -646,7 +641,7 @@
       write({ message: "Ready", knownTokens: form.listResumeTokens() });
       refreshTokenLabel();
       refreshShareCodeLabel();
-      resumeStatusPanel.refresh();
+      opsPanel.refresh();
       refreshAdminPanels();
     </script>
   </body>

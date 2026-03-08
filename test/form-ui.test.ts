@@ -3908,12 +3908,14 @@ describe('FormUI', () => {
       title: 'Ops Console',
       admin: { incidentLimit: 1, title: 'Admin View' },
       debug: { title: 'Debug View' },
+      resume: { title: 'Resume View' },
     });
     document.body.appendChild(panel.element);
 
     expect(panel.element.textContent).toContain('Ops Console');
     expect(panel.element.textContent).toContain('Debug View');
     expect(panel.element.textContent).toContain('Admin View');
+    expect(panel.element.textContent).toContain('Resume View');
     expect(panel.element.textContent).toContain('Operational Summary');
     expect(panel.element.textContent).toContain('Recent Rules');
 
@@ -3925,10 +3927,20 @@ describe('FormUI', () => {
         },
       },
     }));
+    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+      bubbles: true,
+      detail: {
+        result: {
+          code: 'SHARE-OPS',
+          status: 'claimed',
+        },
+      },
+    }));
     panel.refresh();
 
     expect(panel.element.textContent).toContain('"expectedContract": "provider-envelope-v2"');
     expect(panel.element.textContent).toContain('"hasDraft": true');
+    expect(panel.element.textContent).toContain('Claim: Ready to restore');
 
     panel.clearSnapshot();
     expect(panel.element.textContent).toContain('Provider Contract Warning');

@@ -9,11 +9,17 @@ import {
   TFormDebugPanel,
   TFormDebugPanelOptions,
 } from "./form-debug-panel";
+import {
+  createResumeStatusPanel,
+  TFormResumeStatusPanel,
+  TFormResumeStatusPanelOptions,
+} from "./form-resume-status-panel";
 
 export type TFormOpsPanel = {
   element: HTMLElement;
   debugPanel: TFormDebugPanel;
   adminPanel: TFormAdminPanel;
+  resumePanel: TFormResumeStatusPanel | null;
   refresh(): void;
   clearSnapshot(): void;
   detach(): void;
@@ -25,6 +31,7 @@ export type TFormOpsPanelOptions = {
   title?: string;
   debug?: TFormDebugPanelOptions;
   admin?: TFormAdminPanelOptions;
+  resume?: TFormResumeStatusPanelOptions | false;
 };
 
 export function createFormOpsPanel(
@@ -51,9 +58,18 @@ export function createFormOpsPanel(
     className: options.admin?.className,
     incidentLimit: options.admin?.incidentLimit,
   });
+  const resumePanel = options.resume === false
+    ? null
+    : createResumeStatusPanel(target, {
+        title: options.resume?.title || "Resume Status",
+        className: options.resume?.className,
+      });
 
   layout.appendChild(debugPanel.element);
   layout.appendChild(adminPanel.element);
+  if (resumePanel) {
+    layout.appendChild(resumePanel.element);
+  }
   element.appendChild(title);
   element.appendChild(layout);
 
@@ -61,17 +77,21 @@ export function createFormOpsPanel(
     element,
     debugPanel,
     adminPanel,
+    resumePanel,
     refresh() {
       debugPanel.refresh();
       adminPanel.refresh();
+      resumePanel?.refresh();
     },
     clearSnapshot() {
       debugPanel.clearSnapshot();
       adminPanel.refresh();
+      resumePanel?.refresh();
     },
     detach() {
       debugPanel.detach();
       adminPanel.detach();
+      resumePanel?.detach();
       element.remove();
     },
   };

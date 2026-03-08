@@ -481,6 +481,8 @@ For local operations and QA workflows, pair the runtime events with:
   - operational summary
   - incident summary
 - `createFormOpsPanel(target, source)` to render debug + admin together
+- `createFormOpsPanel(target, source, { resume: { ... } })` to include
+  cross-device resume claim/restore status in the same console
 - `createLocalFormAdmin(formConfig)` to inspect persisted state without a mounted UI:
   - `admin.getOperationalSummary()`
   - `admin.getIncidentSummary()`

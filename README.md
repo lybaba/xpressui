@@ -83,6 +83,8 @@ For local persisted state and queue/resume inspection, use
 If you want both in one surface, use `createFormOpsPanel(...)`.
 If you only need cross-device resume claim/restore feedback, use
 `createResumeStatusPanel(...)`.
+`createFormOpsPanel(...)` can also embed that resume status surface via its
+`resume` option.
 
 The public form contract is now versioned.
 Current public schema version:

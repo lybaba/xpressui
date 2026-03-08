@@ -169,13 +169,18 @@
     </main>
 
     <script type="module">
-      import { createFormDebugPanel, createLocalFormAdmin, mountFormUI } from "../dist/xpressui.mjs";
+      import {
+        createFormAdminPanel,
+        createFormDebugPanel,
+        createLocalFormAdmin,
+        mountFormUI,
+      } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
       const result = document.getElementById("result");
       const adminSummary = document.getElementById("admin-summary");
-      const incidentSummary = document.getElementById("incident-summary");
       const debugPanelSlot = document.getElementById("debug-panel-slot");
+      const incidentSummary = document.getElementById("incident-summary");
       const tokenValue = document.getElementById("token-value");
       const shareCodeValue = document.getElementById("share-code-value");
 
@@ -407,11 +412,16 @@
       const admin = createLocalFormAdmin(formConfig);
       const form = mountFormUI(app, formConfig);
       const debugPanel = createFormDebugPanel(form, { title: "Remote Resume Debug" });
+      const adminPanel = createFormAdminPanel(admin, {
+        title: "Remote Resume Admin",
+        incidentLimit: 4,
+      });
       debugPanelSlot.appendChild(debugPanel.element);
+      incidentSummary.replaceWith(adminPanel.element);
 
       const refreshAdminPanels = () => {
         adminSummary.textContent = JSON.stringify(admin.getOperationalSummary(), null, 2);
-        incidentSummary.textContent = JSON.stringify(admin.getIncidentSummary(4), null, 2);
+        adminPanel.refresh();
       };
 
       form.addEventListener("form-ui:resume-token-restored", (event) => {

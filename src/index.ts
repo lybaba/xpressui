@@ -186,6 +186,7 @@ export { createFormPreset, fieldFactory, stepFactory } from "./common/form-prese
 export { createLocalFormAdmin } from "./common/form-admin";
 export { attachFormDebugObserver } from "./common/form-debug";
 export { createFormDebugPanel } from "./common/form-debug-panel";
+export { createFormAdminPanel } from "./common/form-admin-panel";
 export { getPublicApiManifest } from "./common/public-api-manifest";
 export { FormEngineRuntime } from "./common/form-engine";
 export { FormDynamicRuntime } from "./common/form-dynamic";

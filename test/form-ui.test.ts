@@ -9,6 +9,7 @@ import {
   createTemplateMarkup,
   createSubmitRequestFromProvider,
   attachFormDebugObserver,
+  createFormAdminPanel,
   createFormDebugPanel,
   fieldFactory,
   stepFactory,
@@ -3782,6 +3783,57 @@ describe('FormUI', () => {
     expect(providerWarning.textContent).toBe('null');
 
     panel.detach();
+  });
+
+  it('can render an admin panel from FormUI operational helpers', () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'admin-panel-form',
+      title: 'Admin Panel Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-panel',
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    window.localStorage.setItem('xpressui:test-admin-panel', JSON.stringify({ email: 'panel@example.com' }));
+    const panel = createFormAdminPanel(element, { title: 'Ops Panel', incidentLimit: 1 });
+    document.body.appendChild(panel.element);
+
+    expect(panel.element.textContent).toContain('Ops Panel');
+    expect(panel.element.textContent).toContain('Operational Summary');
+    expect(panel.element.textContent).toContain('Incident Summary');
+    expect(panel.element.textContent).toContain('"hasDraft": true');
+    expect(panel.element.textContent).toContain('Status: ready');
+
+    window.localStorage.setItem(
+      'xpressui:test-admin-panel:queue',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queue_panel_1',
+            values: { email: 'queue@example.com' },
+            attempts: 1,
+            createdAt: 100,
+            updatedAt: 200,
+            nextAttemptAt: 0,
+          },
+        ],
+      }),
+    );
+
+    panel.refresh();
+    expect(panel.element.textContent).toContain('"queueLength": 1');
+    expect(panel.element.textContent).toContain('"id": "queue_panel_1"');
+
+    panel.detach();
+    expect(panel.element.textContent).toContain('Status: detached');
+    expect(document.body.contains(panel.element)).toBe(false);
   });
 
   it('can observe applied rules through the debug observer helper', async () => {

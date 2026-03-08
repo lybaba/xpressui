@@ -78,6 +78,8 @@ For lightweight event inspection in the browser, you can also use
 `attachFormDebugObserver(...)`.
 If you want a quick local UI instead of wiring your own console output, use
 `createFormDebugPanel(...)`.
+For local persisted state and queue/resume inspection, use
+`createFormAdminPanel(...)`.
 
 The public form contract is now versioned.
 Current public schema version:

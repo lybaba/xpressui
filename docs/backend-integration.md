@@ -474,6 +474,9 @@ For local operations and QA workflows, pair the runtime events with:
   - output snapshot
   - `resume-share-code-claim-state`
   - `provider-contract-warning`
+- `createFormAdminPanel(source)` to inspect:
+  - operational summary
+  - incident summary
 - `createLocalFormAdmin(formConfig)` to inspect persisted state without a mounted UI:
   - `admin.getOperationalSummary()`
   - `admin.getIncidentSummary()`
@@ -482,6 +485,7 @@ Example:
 
 ```ts
 import {
+  createFormAdminPanel,
   createFormDebugPanel,
   createLocalFormAdmin,
   mountFormUI,
@@ -490,8 +494,10 @@ import {
 const form = mountFormUI(container, formConfig);
 const panel = createFormDebugPanel(form, { title: "Resume Debug" });
 const admin = createLocalFormAdmin(formConfig);
+const adminPanel = createFormAdminPanel(admin, { title: "Resume Admin" });
 
 document.body.append(panel.element);
+document.body.append(adminPanel.element);
 
 console.log(admin.getOperationalSummary());
 console.log(admin.getIncidentSummary(5));

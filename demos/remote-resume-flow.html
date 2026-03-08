@@ -39,7 +39,7 @@
       .layout {
         margin-top: 22px;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 380px;
+        grid-template-columns: minmax(0, 1fr) 380px 380px;
         gap: 20px;
         align-items: start;
       }
@@ -87,6 +87,11 @@
         min-height: 220px;
         font-size: 12px;
         line-height: 1.45;
+      }
+
+      .stack {
+        display: grid;
+        gap: 20px;
       }
 
       .token {
@@ -139,18 +144,38 @@
           <div id="app"></div>
         </section>
 
-        <aside class="panel">
-          <h2>Flow Output</h2>
-          <pre id="result">{}</pre>
+        <aside class="stack">
+          <section class="panel">
+            <h2>Flow Output</h2>
+            <pre id="result">{}</pre>
+          </section>
+          <section class="panel">
+            <h2>Local Admin Summary</h2>
+            <pre id="admin-summary">{}</pre>
+          </section>
+        </aside>
+
+        <aside class="stack">
+          <section class="panel">
+            <h2>Debug Panel</h2>
+            <div id="debug-panel-slot"></div>
+          </section>
+          <section class="panel">
+            <h2>Local Incident Summary</h2>
+            <pre id="incident-summary">{}</pre>
+          </section>
         </aside>
       </div>
     </main>
 
     <script type="module">
-      import { mountFormUI } from "../dist/xpressui.mjs";
+      import { createFormDebugPanel, createLocalFormAdmin, mountFormUI } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
       const result = document.getElementById("result");
+      const adminSummary = document.getElementById("admin-summary");
+      const incidentSummary = document.getElementById("incident-summary");
+      const debugPanelSlot = document.getElementById("debug-panel-slot");
       const tokenValue = document.getElementById("token-value");
       const shareCodeValue = document.getElementById("share-code-value");
 
@@ -355,7 +380,7 @@
         });
       };
 
-      const form = mountFormUI(app, {
+      const formConfig = {
         version: 1,
         id: "remote_resume_demo",
         uid: "remote_resume_demo_uid",
@@ -378,25 +403,40 @@
           { type: "datetime", name: "slot", label: "Preferred Slot", required: true },
           { type: "textarea", name: "notes", label: "Notes" },
         ],
-      });
+      };
+      const admin = createLocalFormAdmin(formConfig);
+      const form = mountFormUI(app, formConfig);
+      const debugPanel = createFormDebugPanel(form, { title: "Remote Resume Debug" });
+      debugPanelSlot.appendChild(debugPanel.element);
+
+      const refreshAdminPanels = () => {
+        adminSummary.textContent = JSON.stringify(admin.getOperationalSummary(), null, 2);
+        incidentSummary.textContent = JSON.stringify(admin.getIncidentSummary(4), null, 2);
+      };
 
       form.addEventListener("form-ui:resume-token-restored", (event) => {
         write({ type: "resume-token-restored", detail: event.detail });
+        refreshAdminPanels();
       });
 
       form.addEventListener("form-ui:draft-restored", (event) => {
         write({ type: "draft-restored", detail: event.detail });
+        refreshAdminPanels();
       });
 
       form.addEventListener("form-ui:resume-token-invalidated", (event) => {
         write({ type: "resume-token-invalidated", detail: event.detail });
+        refreshAdminPanels();
       });
       form.addEventListener("form-ui:resume-token-invalid-signature", (event) => {
         write({ type: "resume-token-invalid-signature", detail: event.detail });
+        refreshAdminPanels();
       });
       form.addEventListener("form-ui:resume-share-code-claim-state", (event) => {
         write({ type: "resume-share-code-claim-state", detail: event.detail });
+        refreshAdminPanels();
       });
+      form.addEventListener("form-ui:draft-saved", refreshAdminPanels);
 
       let activeToken = "";
       let activeShareCode = "";
@@ -412,6 +452,7 @@
           activeToken = await form.createResumeTokenAsync();
           refreshTokenLabel();
           write({ action: "createResumeTokenAsync", token: activeToken, knownTokens: form.listResumeTokens() });
+          refreshAdminPanels();
         } catch (error) {
           write({ action: "createResumeTokenAsync", error: String(error) });
         }
@@ -425,6 +466,7 @@
         try {
           const lookup = await form.lookupResumeToken(activeToken);
           write({ action: "lookupResumeToken", token: activeToken, lookup });
+          refreshAdminPanels();
         } catch (error) {
           write({ action: "lookupResumeToken", token: activeToken, error: String(error) });
         }
@@ -438,6 +480,7 @@
         try {
           const restored = await form.restoreFromResumeTokenAsync(activeToken);
           write({ action: "restoreFromResumeTokenAsync", token: activeToken, restored });
+          refreshAdminPanels();
         } catch (error) {
           write({ action: "restoreFromResumeTokenAsync", token: activeToken, error: String(error) });
         }
@@ -455,6 +498,7 @@
             activeToken = "";
             refreshTokenLabel();
           }
+          refreshAdminPanels();
         } catch (error) {
           write({ action: "invalidateResumeToken", token: activeToken, error: String(error) });
         }
@@ -469,6 +513,7 @@
           activeShareCode = await form.createResumeShareCode(activeToken);
           refreshShareCodeLabel();
           write({ action: "createResumeShareCode", token: activeToken, code: activeShareCode });
+          refreshAdminPanels();
         } catch (error) {
           write({ action: "createResumeShareCode", token: activeToken, error: String(error) });
         }
@@ -482,6 +527,7 @@
         try {
           const claim = await form.claimResumeShareCodeDetail(activeShareCode);
           write({ action: "claimResumeShareCodeDetail", code: activeShareCode, claim });
+          refreshAdminPanels();
         } catch (error) {
           write({ action: "claimResumeShareCodeDetail", code: activeShareCode, error: String(error) });
         }
@@ -495,6 +541,7 @@
         try {
           const restored = await form.restoreFromShareCodeAsync(activeShareCode);
           write({ action: "restoreFromShareCodeAsync", code: activeShareCode, restored });
+          refreshAdminPanels();
         } catch (error) {
           write({ action: "restoreFromShareCodeAsync", code: activeShareCode, error: String(error) });
         }
@@ -503,6 +550,7 @@
       write({ message: "Ready", knownTokens: form.listResumeTokens() });
       refreshTokenLabel();
       refreshShareCodeLabel();
+      refreshAdminPanels();
     </script>
   </body>
 </html>

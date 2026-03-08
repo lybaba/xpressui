@@ -18,7 +18,7 @@ contracts it demonstrates.
 |---|---|---|---|
 | `demos/file-uploads.html` | Multipart upload + validation UX | `submit.mode: form-data`, `uploadStrategy` | `form-ui:upload-start`, `form-ui:upload-progress`, `form-ui:upload-error` |
 | `demos/identity-check.html` | Document scan + OCR/MRZ mapping | `document*TargetField`, `includeDocumentData` | `form-ui:document-mrz-detected`, `form-ui:document-fields-populated` |
-| `demos/remote-resume-flow.html` | Remote save/resume and share code | `createResumeTokenAsync`, `restoreFromResumeTokenAsync`, `claimResumeShareCodeDetail` | `form-ui:resume-token-created`, `form-ui:resume-share-code-claim-state` |
+| `demos/remote-resume-flow.html` | Remote save/resume, share code, debug/admin inspection | `createResumeTokenAsync`, `restoreFromResumeTokenAsync`, `claimResumeShareCodeDetail`, `createFormDebugPanel`, `createLocalFormAdmin` | `form-ui:resume-token-created`, `form-ui:resume-share-code-claim-state`, `form-ui:provider-contract-warning` |
 
 ## View / Hybrid / Headless
 
@@ -41,5 +41,5 @@ contracts it demonstrates.
 - Use [`docs/backend-integration.md`](/home/lyb/projects/xpressui/docs/backend-integration.md) with:
   - `booking-wizard` for reservation contracts
   - `identity-check` for identity/verification contracts
-  - `remote-resume-flow` for resume/share-code contracts
+  - `remote-resume-flow` for resume/share-code contracts and local admin/debug inspection
   - `provider-transition-flow` for normalized provider transition payloads

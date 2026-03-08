@@ -2,6 +2,8 @@ import { TFormProviderRequest, TFormSubmitRequest } from "./TFormConfig";
 import {
   createNormalizedProviderResult,
   TFormProviderTransition,
+  TNormalizedProviderError,
+  TNormalizedProviderNextAction,
   TNormalizedProviderResult,
   TProviderResponseEnvelopeV2,
   PROVIDER_RESPONSE_CONTRACT_VERSION,
@@ -372,6 +374,10 @@ function normalizeProviderMessages(result: any): string[] {
   return [];
 }
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
 function isRecord(value: unknown): value is Record<string, any> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -429,12 +435,12 @@ function toProviderErrorEntry(
 function normalizeProviderErrors(
   action: string | undefined,
   result: any,
-): any[] {
+): TNormalizedProviderError[] {
   if (!result || typeof result !== "object") {
     return [];
   }
 
-  const normalizedErrors: Record<string, any>[] = [];
+  const normalizedErrors: TNormalizedProviderError[] = [];
   const appendError = (value: unknown, fallback: { code?: string; field?: string } = {}) => {
     const entry = toProviderErrorEntry(action, value, fallback);
     if (entry) {
@@ -517,17 +523,24 @@ function normalizeProviderMessagesFromErrors(errors: any[]): string[] {
   return Array.from(new Set(messages));
 }
 
-function normalizeProviderNextActions(result: any): any[] | undefined {
+function normalizeProviderNextActions(result: any): TNormalizedProviderNextAction[] | undefined {
+  const normalizeEntries = (entries: unknown[]): TNormalizedProviderNextAction[] => entries.flatMap((entry) => {
+    if (typeof entry === "string" && entry) {
+      return [{ type: entry }];
+    }
+    if (entry && typeof entry === "object" && !Array.isArray(entry) && typeof (entry as any).type === "string") {
+      return [entry as TNormalizedProviderNextAction];
+    }
+    return [];
+  });
+
   if (!result || typeof result !== "object") {
     return undefined;
   }
 
   const explicitNextActions = (result as Record<string, any>).nextActions;
   if (Array.isArray(explicitNextActions)) {
-    return explicitNextActions;
-  }
-  if (explicitNextActions !== undefined && explicitNextActions !== null) {
-    return [explicitNextActions];
+    return normalizeEntries(explicitNextActions);
   }
 
   const nestedData = (result as Record<string, any>).data;
@@ -536,10 +549,7 @@ function normalizeProviderNextActions(result: any): any[] | undefined {
   }
   const nestedNextActions = (nestedData as Record<string, any>).nextActions;
   if (Array.isArray(nestedNextActions)) {
-    return nestedNextActions;
-  }
-  if (nestedNextActions !== undefined && nestedNextActions !== null) {
-    return [nestedNextActions];
+    return normalizeEntries(nestedNextActions);
   }
 
   return undefined;
@@ -591,11 +601,34 @@ export function validateProviderResponseEnvelopeV2(result: any): string[] {
   if ("messages" in result && !Array.isArray(result.messages)) {
     errors.push("messages must be an array");
   }
+  if (Array.isArray(result.messages) && result.messages.some((entry: unknown) => !isNonEmptyString(entry))) {
+    errors.push("messages entries must be non-empty strings");
+  }
   if ("errors" in result && !Array.isArray(result.errors)) {
     errors.push("errors must be an array");
   }
+  if (
+    Array.isArray(result.errors) &&
+    result.errors.some((entry: unknown) => {
+      if (typeof entry === "string") {
+        return entry.length === 0;
+      }
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        return true;
+      }
+      return "source" in (entry as Record<string, any>) && typeof (entry as Record<string, any>).source !== "string";
+    })
+  ) {
+    errors.push("errors entries must be strings or provider error objects");
+  }
   if ("nextActions" in result && !Array.isArray(result.nextActions)) {
     errors.push("nextActions must be an array");
+  }
+  if (
+    Array.isArray(result.nextActions) &&
+    result.nextActions.some((entry: unknown) => !entry || typeof entry !== "object" || Array.isArray(entry) || typeof (entry as Record<string, any>).type !== "string" || !(entry as Record<string, any>).type)
+  ) {
+    errors.push("nextActions entries must be objects with a non-empty type");
   }
   if ("transition" in result && result.transition !== null && typeof result.transition !== "object") {
     errors.push("transition must be an object");

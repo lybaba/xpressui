@@ -109,12 +109,16 @@ describe("Provider Contract", () => {
 
     expect(validateProviderResponseEnvelopeV2({
       status: 42,
-      messages: "invalid",
+      messages: ["ok", ""],
+      errors: [42],
+      nextActions: [{}],
       transition: { type: "workflow" },
     })).toEqual(
       expect.arrayContaining([
         "status must be a string",
-        "messages must be an array",
+        "messages entries must be non-empty strings",
+        "errors entries must be strings or provider error objects",
+        "nextActions entries must be objects with a non-empty type",
         "transition must match {type:'step'|'workflow'} contract",
       ]),
     );
@@ -123,18 +127,83 @@ describe("Provider Contract", () => {
   it("creates and validates a normalized provider result with stable array fields", () => {
     const result = createNormalizedProviderResult({
       status: "pending_approval",
+      messages: ["Queued", "", 42 as any],
+      errors: [
+        "Approval requested",
+        { source: "approval-request", code: "approval_pending", message: "Waiting for manager approval" },
+        42 as any,
+      ],
+      nextActions: [
+        { type: "open_url", label: "Track status", href: "https://example.test/status/apr_123" },
+        { label: "invalid" } as any,
+      ],
       data: { approvalId: "apr_123" },
     });
 
     expect(result).toEqual({
       status: "pending_approval",
       transition: null,
-      messages: [],
-      errors: [],
+      messages: ["Queued"],
+      errors: [
+        { source: "provider", message: "Approval requested" },
+        {
+          source: "approval-request",
+          code: "approval_pending",
+          message: "Waiting for manager approval",
+        },
+      ],
+      nextActions: [
+        {
+          type: "open_url",
+          label: "Track status",
+          href: "https://example.test/status/apr_123",
+        },
+      ],
       data: { approvalId: "apr_123" },
     });
     expect(isNormalizedProviderResult(result)).toBe(true);
     expect(isNormalizedProviderResult({ status: "ok", messages: [] })).toBe(false);
+    expect(
+      isNormalizedProviderResult({
+        status: "ok",
+        transition: null,
+        messages: ["ok"],
+        errors: [42],
+        data: {},
+      }),
+    ).toBe(false);
     expect(PROVIDER_RESPONSE_CONTRACT_VERSION).toBe("provider-envelope-v2");
+  });
+
+  it("normalizes nextActions and keeps explicit transition precedence in the normalized result", () => {
+    const result = normalizeProviderResult(
+      "webhook",
+      {
+        status: "completed",
+        transition: { type: "step", target: "done_step" },
+        nextActions: [
+          { type: "open_url", href: "https://example.test/result/123", label: "Open result" },
+          "refresh_status",
+          { label: "invalid" },
+        ],
+      },
+      {
+        endpoint: "https://api.example.test/webhook",
+        action: "webhook",
+      },
+    );
+
+    expect(result.transition).toEqual({ type: "step", target: "done_step" });
+    expect(result.nextActions).toEqual([
+      {
+        type: "open_url",
+        href: "https://example.test/result/123",
+        label: "Open result",
+      },
+      {
+        type: "refresh_status",
+      },
+    ]);
+    expect(result.messages).toEqual([]);
   });
 });

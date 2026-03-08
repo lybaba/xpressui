@@ -6935,7 +6935,7 @@ describe('FormUI', () => {
 
   it('supports strict provider response contract mode and raises warnings/errors on invalid envelopes', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ status: 42, messages: 'invalid' }), {
+      new Response(JSON.stringify({ status: 42, messages: 'invalid', nextActions: ['refresh-status'] }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       }),
@@ -6976,6 +6976,7 @@ describe('FormUI', () => {
           errors: expect.arrayContaining([
             'status must be a string',
             'messages must be an array',
+            'nextActions entries must be objects with a non-empty type',
           ]),
         }),
       }),
@@ -8700,7 +8701,7 @@ describe('FormUI', () => {
           transition: null,
           messages: ['Webhook accepted', 'Processing asynchronously'],
           errors: [],
-          nextActions: ['refresh-status', { type: 'poll', delayMs: 2000 }],
+          nextActions: [{ type: 'refresh-status' }, { type: 'poll' }],
           data: {
             webhookId: 'wh_123',
           },
@@ -8709,7 +8710,7 @@ describe('FormUI', () => {
           status: 'accepted',
           source: 'success',
           messages: ['Webhook accepted', 'Processing asynchronously'],
-          nextActions: ['refresh-status', { type: 'poll', delayMs: 2000 }],
+          nextActions: [{ type: 'refresh-status' }, { type: 'poll' }],
         },
       }),
     );

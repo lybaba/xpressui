@@ -522,9 +522,9 @@ contract is a shared envelope that keeps all providers consistent:
 Normalized runtime result guarantees:
 - `status`: `string | null`
 - `transition`: normalized transition or `null`
-- `messages`: always an array
-- `errors`: always an array
-- `nextActions`: optional array when the provider returned next actions
+- `messages`: always an array of non-empty strings
+- `errors`: always an array of normalized provider error objects
+- `nextActions`: optional array of normalized action objects with at least `type`
 - `data`: passthrough provider payload bucket
 
 ```json
@@ -537,7 +537,10 @@ Normalized runtime result guarantees:
   "messages": ["Waiting for manager approval"],
   "errors": [],
   "nextActions": [
-    "check-approval-status"
+    {
+      "type": "check-approval-status",
+      "label": "Refresh approval status"
+    }
   ],
   "data": {
     "approvalId": "apr_123"
@@ -554,6 +557,22 @@ Normalized frontend event detail:
 - `detail.providerResult.nextActions`: normalized next-action list when provided
 - `detail.providerResult.data`: normalized provider data payload
 
+Normalized `errors[]` item shape:
+- `source`: provider identifier or fallback source
+- `code`: optional provider/business error code
+- `field`: optional field/path indicator
+- `message`: optional human-readable message
+- `raw`: optional original backend entry
+
+Normalized `nextActions[]` item shape:
+- `type`: required action identifier
+- `label`: optional display label
+- `href`: optional URL to open
+- `method`: optional HTTP or action method hint
+- `target`: optional local workflow or host target
+- `payload`: optional host payload
+- `meta`: optional provider metadata
+
 Provider-aware error normalization:
 - payment providers map `code`, `message`, and field-level `errors` to normalized `errors[]`
 - approval providers map `reason` to a normalized approval error entry
@@ -563,6 +582,11 @@ Provider-aware error normalization:
 Legacy responses such as `{ "status": "approved", "approvalId": "apr_123" }`
 still work. `xpressui` will normalize them into the same `providerResult`
 shape for event consumers.
+
+Compatibility notes:
+- explicit `transition` wins over status-derived routing
+- when `transition` is omitted, `xpressui` may derive a workflow transition from normalized `status`
+- legacy `nextActions: ["check-status"]` payloads are normalized to `{ type: "check-status" }` in compat mode, but `strict-v2` flags them as contract drift
 
 ## Reservation Provider
 

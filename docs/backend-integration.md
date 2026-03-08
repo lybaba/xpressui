@@ -368,6 +368,11 @@ Share code create response:
 Runtime helpers:
 - `createResumeShareCode(token)` returns the short code string for compatibility
 - `createResumeShareCodeDetail(token)` returns `{ code, token, expiresAt, endpoint }` for richer cross-device UX
+- `claimResumeShareCode(code)` returns the claimed token metadata + snapshot or `null`
+- `claimResumeShareCodeDetail(code)` returns a richer state object with:
+  - `status`: `claimed`, `throttled`, `blocked`, `expired`, `invalid_signature`, `not_found`, `invalid_response`, or `network_error`
+  - `lookup`: present when `status === "claimed"`
+  - `message`, `retryAfterSeconds`, `blockedUntil`, `expiresAt` when available
 
 Recommended `POST` response:
 
@@ -456,6 +461,10 @@ Policy guidance:
 - return `policy.code` for `rate_limited`, `blocked`, `expired`, or `invalid_signature`
 - include retry/backoff metadata when the client should pause before another claim
 - keep backend claim enforcement aligned with the client-side throttle and blocking windows
+
+Client-side events:
+- `form-ui:resume-share-code-claim-state` emits every claim outcome with the normalized lifecycle state
+- `form-ui:resume-share-code-claim-blocked` remains the dedicated blocked/throttled event for existing integrations
 
 `GET` not-found response:
 

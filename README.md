@@ -1558,10 +1558,12 @@ Runtime inspection helpers:
 - `form.createResumeToken()`
 - `form.createResumeTokenAsync()`
 - `form.createResumeShareCode(token)`
+- `form.createResumeShareCodeDetail(token)`
 - `form.listResumeTokens()`
 - `form.deleteResumeToken(token)`
 - `form.invalidateResumeToken(token)`
 - `form.lookupResumeToken(token)`
+- `form.claimResumeShareCodeDetail(code)`
 - `form.claimResumeShareCode(code)`
 - `form.restoreFromResumeToken(token)`
 - `form.restoreFromResumeTokenAsync(token)`
@@ -1586,8 +1588,14 @@ If `resumeEndpoint` is configured:
 
 If `shareCodeEndpoint` is configured (or omitted, fallback to `resumeEndpoint`):
 - `createResumeShareCode(token)` requests a short share code from a token
+- `createResumeShareCodeDetail(token)` returns `{ code, token, expiresAt, endpoint }`
 - `claimResumeShareCode(code)` exchanges a code for token metadata + snapshot
+- `claimResumeShareCodeDetail(code)` returns a richer result with `status` such as `claimed`, `throttled`, `blocked`, `expired`, `invalid_signature`, `not_found`, `invalid_response`, or `network_error`
 - `restoreFromShareCodeAsync(code)` claims and restores snapshot values in one call
+
+Share-code claim lifecycle events:
+- `form-ui:resume-share-code-claim-state`
+- `form-ui:resume-share-code-claim-blocked`
 
 You can harden local share-code abuse behavior with:
 - `shareCodeClaimThrottleMs` (minimum delay between claim attempts for same code)
@@ -1604,6 +1612,8 @@ Standalone local admin helper:
 - `admin.getStorageHealth()`
 - `admin.listResumeTokens()`
 - `admin.createResumeShareCode(token)`
+- `admin.createResumeShareCodeDetail(token)`
+- `admin.claimResumeShareCodeDetail(code)`
 - `admin.claimResumeShareCode(code)`
 - `admin.restoreFromShareCode(code)`
 - `admin.deleteResumeToken(token)`

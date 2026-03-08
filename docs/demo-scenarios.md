@@ -18,7 +18,7 @@ contracts it demonstrates.
 |---|---|---|---|
 | `demos/file-uploads.html` | Multipart upload + validation UX | `submit.mode: form-data`, `uploadStrategy` | `form-ui:upload-start`, `form-ui:upload-progress`, `form-ui:upload-error` |
 | `demos/identity-check.html` | Document scan + OCR/MRZ mapping | `document*TargetField`, `includeDocumentData` | `form-ui:document-mrz-detected`, `form-ui:document-fields-populated` |
-| `demos/remote-resume-flow.html` | Remote save/resume and share code | `createResumeTokenAsync`, `restoreFromResumeTokenAsync`, `claimResumeShareCode` | `form-ui:resume-token-created`, `form-ui:resume-share-code-claimed` |
+| `demos/remote-resume-flow.html` | Remote save/resume and share code | `createResumeTokenAsync`, `restoreFromResumeTokenAsync`, `claimResumeShareCodeDetail` | `form-ui:resume-token-created`, `form-ui:resume-share-code-claim-state` |
 
 ## View / Hybrid / Headless
 

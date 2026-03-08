@@ -128,6 +128,7 @@ const DEFAULT_DEBUG_EVENTS = [
   "form-ui:workflow-state",
   "form-ui:workflow-step",
   "form-ui:workflow-snapshot",
+  "form-ui:resume-share-code-claim-state",
   "form-ui:resume-share-code-claim-blocked",
   "form-ui:provider-contract-warning",
   "form-ui:validation-i18n-updated",

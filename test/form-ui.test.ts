@@ -10802,9 +10802,22 @@ describe('FormUI', () => {
         { name: 'email', label: 'Email', type: 'email' },
       ],
     }) as FormUI;
+    const onClaimState = vi.fn();
+    element.addEventListener('form-ui:resume-share-code-claim-state', (event) => {
+      onClaimState((event as CustomEvent<TFormUISubmitDetail>).detail);
+    });
 
     const code = await element.createResumeShareCode('remote_token_123');
     expect(code).toBe('SHARE-42');
+
+    const claimDetail = await element.claimResumeShareCodeDetail('SHARE-42');
+    expect(claimDetail).toEqual(expect.objectContaining({
+      code: 'SHARE-42',
+      status: 'claimed',
+      token: 'remote_token_claimed',
+      signatureVersion: 'v2',
+      signatureValid: true,
+    }));
 
     const claim = await element.claimResumeShareCode('SHARE-42');
     expect(claim).toEqual(expect.objectContaining({
@@ -10816,6 +10829,15 @@ describe('FormUI', () => {
     const restored = await element.restoreFromShareCodeAsync('SHARE-42');
     expect(restored).toEqual({ email: 'cross-device@example.com' });
     expect((element.querySelector('#email') as HTMLInputElement).value).toBe('cross-device@example.com');
+    expect(onClaimState).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: expect.objectContaining({
+          code: 'SHARE-42',
+          status: 'claimed',
+          token: 'remote_token_claimed',
+        }),
+      }),
+    );
 
     const createShareCall = fetchSpy.mock.calls.find(([url, init]) => {
       const body = JSON.parse(String(init?.body || '{}')) as Record<string, any>;
@@ -10877,6 +10899,15 @@ describe('FormUI', () => {
       onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
+    const claimDetail = await element.claimResumeShareCodeDetail('SHARE-FAIL');
+    expect(claimDetail).toEqual(expect.objectContaining({
+      code: 'SHARE-FAIL',
+      status: 'invalid_signature',
+      token: 'remote_token_claim_invalid',
+      signatureVersion: 'v2',
+      signatureValid: false,
+    }));
+
     await expect(element.claimResumeShareCode('SHARE-FAIL')).resolves.toBeNull();
     expect(onInvalidSignature).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -10919,6 +10950,11 @@ describe('FormUI', () => {
     });
 
     await expect(element.claimResumeShareCode('SHARE-LOCK')).resolves.toBeNull();
+    const throttled = await element.claimResumeShareCodeDetail('SHARE-LOCK');
+    expect(throttled).toEqual(expect.objectContaining({
+      code: 'SHARE-LOCK',
+      status: 'throttled',
+    }));
     await expect(element.claimResumeShareCode('SHARE-LOCK')).resolves.toBeNull();
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);

@@ -1,6 +1,11 @@
 import TFieldConfig from "./TFieldConfig";
 import TFormConfig, { TFormSubmitRequest } from "./TFormConfig";
-import { TResumeLookupResult, TResumeShareCodeInfo, TResumeTokenInfo } from "./form-persistence";
+import {
+  TResumeLookupResult,
+  TResumeShareCodeClaimDetail,
+  TResumeShareCodeInfo,
+  TResumeTokenInfo,
+} from "./form-persistence";
 import { FormStepRuntime, TFormStepProgress, TFormWorkflowSnapshot } from "./form-steps";
 import {
   createStorageAdapter,
@@ -129,6 +134,7 @@ export type TLocalFormAdmin = {
   listResumeTokens(): TResumeTokenInfo[];
   createResumeShareCode(token: string): Promise<string | null>;
   createResumeShareCodeDetail(token: string): Promise<TResumeShareCodeInfo | null>;
+  claimResumeShareCodeDetail(code: string): Promise<TResumeShareCodeClaimDetail | null>;
   claimResumeShareCode(code: string): Promise<TResumeLookupResult | null>;
   restoreFromShareCode(code: string): Promise<Record<string, any> | null>;
   deleteResumeToken(token: string): boolean;
@@ -431,9 +437,18 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       }
     },
     async claimResumeShareCode(code) {
+      const detail = await this.claimResumeShareCodeDetail(code);
+      return detail?.lookup || null;
+    },
+    async claimResumeShareCodeDetail(code) {
       const endpoint = getShareCodeEndpoint();
       if (!endpoint || !code) {
-        return null;
+        return {
+          code,
+          status: "invalid_response",
+          endpoint,
+          message: "Share-code claim is not configured.",
+        };
       }
 
       try {
@@ -452,13 +467,40 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
           ? await response.json()
           : null;
         if (!response.ok || !result || typeof result !== "object") {
-          return null;
+          return {
+            code,
+            status: "network_error",
+            endpoint,
+            backend: true,
+            message: "Share-code claim failed.",
+          };
         }
 
         const parsed = result as Record<string, any>;
+        const remotePolicy = parsed.policy && typeof parsed.policy === "object"
+          ? parsed.policy as Record<string, any>
+          : null;
+        if (remotePolicy && typeof remotePolicy.code === "string") {
+          return {
+            code,
+            status: remotePolicy.code as TResumeShareCodeClaimDetail["status"],
+            endpoint,
+            backend: true,
+            ...(typeof remotePolicy.reason === "string" ? { message: remotePolicy.reason } : {}),
+            ...(typeof remotePolicy.retryAfterSeconds === "number" ? { retryAfterSeconds: remotePolicy.retryAfterSeconds } : {}),
+            ...(typeof remotePolicy.blockedUntil === "number" ? { blockedUntil: remotePolicy.blockedUntil } : {}),
+            ...(typeof remotePolicy.expiresAt === "number" ? { expiresAt: remotePolicy.expiresAt } : {}),
+          };
+        }
         const token = typeof parsed.token === "string" ? parsed.token : "";
         if (!token) {
-          return null;
+          return {
+            code,
+            status: "invalid_response",
+            endpoint,
+            backend: true,
+            message: "Invalid share-code claim response.",
+          };
         }
 
         const savedAt = typeof parsed.savedAt === "number" ? parsed.savedAt : Date.now();
@@ -488,7 +530,21 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
             signatureVersion,
           })
         ) {
-          return null;
+          return {
+            code,
+            status: "invalid_signature",
+            endpoint,
+            token,
+            savedAt,
+            issuedAt,
+            expiresAt,
+            signatureVersion,
+            signatureValid: false,
+            snapshot,
+            remote: true,
+            backend: true,
+            message: "Share-code claim signature verification failed.",
+          };
         }
 
         if (typeof window !== "undefined") {
@@ -508,7 +564,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
           );
         }
 
-        return {
+        const lookup = {
           token,
           savedAt,
           issuedAt,
@@ -520,8 +576,29 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
           signatureValid: true,
           snapshot,
         };
+        return {
+          code,
+          status: "claimed",
+          endpoint,
+          token,
+          savedAt,
+          issuedAt,
+          expiresAt,
+          signatureVersion,
+          signatureValid: true,
+          snapshot,
+          remote: true,
+          backend: true,
+          lookup,
+        };
       } catch {
-        return null;
+        return {
+          code,
+          status: "network_error",
+          endpoint,
+          backend: true,
+          message: "Share-code claim request failed.",
+        };
       }
     },
     async restoreFromShareCode(code) {

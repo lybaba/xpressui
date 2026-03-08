@@ -116,6 +116,35 @@ export type TResumeShareCodeInfo = {
   endpoint?: string;
 };
 
+export type TResumeShareCodeClaimStatus =
+  | "claimed"
+  | "throttled"
+  | "blocked"
+  | "expired"
+  | "invalid_signature"
+  | "not_found"
+  | "invalid_response"
+  | "network_error";
+
+export type TResumeShareCodeClaimDetail = {
+  code: string;
+  status: TResumeShareCodeClaimStatus;
+  endpoint?: string;
+  token?: string;
+  savedAt?: number;
+  issuedAt?: number;
+  expiresAt?: number;
+  signatureVersion?: string;
+  signatureValid?: boolean;
+  snapshot?: TFormStorageSnapshot | null;
+  remote?: boolean;
+  backend?: boolean;
+  message?: string;
+  retryAfterSeconds?: number;
+  blockedUntil?: number;
+  lookup?: TResumeLookupResult | null;
+};
+
 export type TRemoteResumeShareCodeClaimRequest = {
   operation: "claim-share-code";
   code: string;
@@ -634,14 +663,30 @@ export class FormPersistenceRuntime {
     );
   }
 
-  shouldAllowShareCodeClaim(code: string): boolean {
+  emitShareCodeClaimState(result: TResumeShareCodeClaimDetail, response?: Response): void {
+    this.options.emitEvent(
+      "form-ui:resume-share-code-claim-state",
+      this.createEventDetail(this.options.getValues(), result, response),
+    );
+  }
+
+  evaluateShareCodeClaimPermission(code: string): {
+    allowed: boolean;
+    detail?: TResumeShareCodeClaimDetail;
+  } {
     const now = Date.now();
-    const key = this.normalizeShareCodeKey(code);
     const state = this.getShareCodeClaimState(code);
     const maxAttempts = this.getShareCodeClaimMaxAttempts();
-    const blockMs = this.getShareCodeClaimBlockMs();
     const throttleMs = this.getShareCodeClaimThrottleMs();
     if (throttleMs > 0 && state.lastAttemptAt > 0 && now - state.lastAttemptAt < throttleMs) {
+      const detail: TResumeShareCodeClaimDetail = {
+        code,
+        status: "throttled",
+        endpoint: this.getShareCodeEndpoint(),
+        blockedUntil: state.lastAttemptAt + throttleMs,
+        retryAfterSeconds: Math.max(0, Math.ceil((state.lastAttemptAt + throttleMs - now) / 1000)),
+        message: "Share-code claim is temporarily throttled.",
+      };
       this.emitShareCodeClaimBlocked(code, {
         reason: "throttled",
         blockedUntil: state.lastAttemptAt + throttleMs,
@@ -649,36 +694,59 @@ export class FormPersistenceRuntime {
         maxAttempts: this.getShareCodeClaimMaxAttempts(),
         throttleMs,
       });
-      return false;
+      this.emitShareCodeClaimState(detail);
+      return { allowed: false, detail };
     }
 
     if (state.blockedUntil > now) {
+      const detail: TResumeShareCodeClaimDetail = {
+        code,
+        status: "blocked",
+        endpoint: this.getShareCodeEndpoint(),
+        blockedUntil: state.blockedUntil,
+        retryAfterSeconds: Math.max(0, Math.ceil((state.blockedUntil - now) / 1000)),
+        message: "Share-code claim is temporarily blocked.",
+      };
       this.emitShareCodeClaimBlocked(code, {
         reason: "max-attempts",
         blockedUntil: state.blockedUntil,
         attempts: state.attempts,
         maxAttempts,
       });
-      return false;
+      this.emitShareCodeClaimState(detail);
+      return { allowed: false, detail };
     }
 
     if (state.attempts >= maxAttempts) {
+      const blockMs = this.getShareCodeClaimBlockMs();
       if (state.blockedUntil <= now && blockMs > 0) {
         state.blockedUntil = now + blockMs;
       }
-      this.shareCodeClaimPolicyState.set(key, state);
+      this.shareCodeClaimPolicyState.set(this.normalizeShareCodeKey(code), state);
+      const detail: TResumeShareCodeClaimDetail = {
+        code,
+        status: "blocked",
+        endpoint: this.getShareCodeEndpoint(),
+        blockedUntil: state.blockedUntil || undefined,
+        retryAfterSeconds:
+          state.blockedUntil && state.blockedUntil > now
+            ? Math.max(0, Math.ceil((state.blockedUntil - now) / 1000))
+            : undefined,
+        message: "Share-code claim is blocked after too many attempts.",
+      };
       this.emitShareCodeClaimBlocked(code, {
         reason: "max-attempts",
         blockedUntil: state.blockedUntil || undefined,
         attempts: state.attempts,
         maxAttempts,
       });
-      return false;
+      this.emitShareCodeClaimState(detail);
+      return { allowed: false, detail };
     }
 
     state.lastAttemptAt = now;
-    this.shareCodeClaimPolicyState.set(key, state);
-    return true;
+    this.shareCodeClaimPolicyState.set(this.normalizeShareCodeKey(code), state);
+    return { allowed: true };
   }
 
   markShareCodeClaimFailure(code: string): void {
@@ -1269,12 +1337,25 @@ export class FormPersistenceRuntime {
   }
 
   async claimResumeShareCode(code: string): Promise<TResumeLookupResult | null> {
+    const detail = await this.claimResumeShareCodeDetail(code);
+    return detail?.lookup || null;
+  }
+
+  async claimResumeShareCodeDetail(code: string): Promise<TResumeShareCodeClaimDetail | null> {
     const endpoint = this.getShareCodeEndpoint();
     if (!endpoint || !code) {
-      return null;
+      const detail: TResumeShareCodeClaimDetail = {
+        code,
+        status: "invalid_response",
+        endpoint,
+        message: "Share-code claim is not configured.",
+      };
+      this.emitShareCodeClaimState(detail);
+      return detail;
     }
-    if (!this.shouldAllowShareCodeClaim(code)) {
-      return null;
+    const permission = this.evaluateShareCodeClaimPermission(code);
+    if (!permission.allowed) {
+      return permission.detail || null;
     }
 
     try {
@@ -1295,6 +1376,22 @@ export class FormPersistenceRuntime {
       if (!response.ok) {
         const remotePolicy = getRemoteResumePolicy(result);
         if (remotePolicy) {
+          const detail: TResumeShareCodeClaimDetail = {
+            code,
+            status: remotePolicy.code,
+            backend: true,
+            endpoint,
+            ...(remotePolicy.reason ? { message: remotePolicy.reason } : {}),
+            ...(remotePolicy.retryAfterSeconds !== undefined
+              ? { retryAfterSeconds: remotePolicy.retryAfterSeconds }
+              : {}),
+            ...(remotePolicy.blockedUntil !== undefined
+              ? { blockedUntil: remotePolicy.blockedUntil }
+              : {}),
+            ...(remotePolicy.expiresAt !== undefined
+              ? { expiresAt: remotePolicy.expiresAt }
+              : {}),
+          };
           this.options.emitEvent(
             "form-ui:resume-share-code-claim-blocked",
             this.createEventDetail(this.options.getValues(), {
@@ -1314,20 +1411,61 @@ export class FormPersistenceRuntime {
                 : {}),
             }, response),
           );
+          this.emitShareCodeClaimState(detail, response);
         }
         this.markShareCodeClaimFailure(code);
-        return null;
+        return remotePolicy
+          ? {
+              code,
+              status: remotePolicy.code,
+              backend: true,
+              endpoint,
+              ...(remotePolicy.reason ? { message: remotePolicy.reason } : {}),
+              ...(remotePolicy.retryAfterSeconds !== undefined
+                ? { retryAfterSeconds: remotePolicy.retryAfterSeconds }
+                : {}),
+              ...(remotePolicy.blockedUntil !== undefined
+                ? { blockedUntil: remotePolicy.blockedUntil }
+                : {}),
+              ...(remotePolicy.expiresAt !== undefined
+                ? { expiresAt: remotePolicy.expiresAt }
+                : {}),
+            }
+          : {
+              code,
+              status: "network_error",
+              backend: true,
+              endpoint,
+              message: "Share-code claim failed.",
+            };
       }
 
       const parsed = this.parseRemoteShareCodeClaimResponse(result);
       if (!parsed) {
         this.markShareCodeClaimFailure(code);
-        return null;
+        const detail: TResumeShareCodeClaimDetail = {
+          code,
+          status: "invalid_response",
+          backend: true,
+          endpoint,
+          message: "Invalid share-code claim response.",
+        };
+        this.emitShareCodeClaimState(detail, response);
+        return detail;
       }
 
       if (!parsed.snapshot) {
         this.markShareCodeClaimFailure(code);
-        return null;
+        const detail: TResumeShareCodeClaimDetail = {
+          code,
+          status: "invalid_response",
+          backend: true,
+          endpoint,
+          token: parsed.token,
+          message: "Share-code claim response did not include a snapshot.",
+        };
+        this.emitShareCodeClaimState(detail, response);
+        return detail;
       }
 
       const baseState: TResumeTokenState = {
@@ -1354,7 +1492,23 @@ export class FormPersistenceRuntime {
           resumeEndpoint: this.getResumeEndpoint(),
           signatureVersion: state.signatureVersion,
         });
-        return null;
+        const detail: TResumeShareCodeClaimDetail = {
+          code,
+          status: "invalid_signature",
+          endpoint,
+          token: parsed.token,
+          savedAt: parsed.savedAt,
+          issuedAt: state.issuedAt,
+          expiresAt: state.expiresAt,
+          signatureVersion: state.signatureVersion,
+          signatureValid: false,
+          snapshot: parsed.snapshot,
+          remote: true,
+          backend: true,
+          message: "Share-code claim signature verification failed.",
+        };
+        this.emitShareCodeClaimState(detail, response);
+        return detail;
       }
 
       this.persistResumeTokenState(parsed.token, state);
@@ -1384,10 +1538,34 @@ export class FormPersistenceRuntime {
           signatureVersion: state.signatureVersion,
         }, response),
       );
-      return lookup;
+      const detail: TResumeShareCodeClaimDetail = {
+        code: parsed.code,
+        status: "claimed",
+        endpoint,
+        token: parsed.token,
+        savedAt: parsed.savedAt,
+        issuedAt: state.issuedAt,
+        expiresAt: state.expiresAt,
+        signatureVersion: state.signatureVersion,
+        signatureValid: true,
+        snapshot: parsed.snapshot,
+        remote: true,
+        backend: true,
+        lookup,
+      };
+      this.emitShareCodeClaimState(detail, response);
+      return detail;
     } catch {
       this.markShareCodeClaimFailure(code);
-      return null;
+      const detail: TResumeShareCodeClaimDetail = {
+        code,
+        status: "network_error",
+        endpoint,
+        backend: true,
+        message: "Share-code claim request failed.",
+      };
+      this.emitShareCodeClaimState(detail);
+      return detail;
     }
   }
 

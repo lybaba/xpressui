@@ -40,3 +40,12 @@ Supported `policy.code` values:
 Notes:
 - the client still supports legacy resume responses for backward compatibility
 - structured `policy` metadata is the preferred backend shape for blocked or throttled claim attempts
+- `claimResumeShareCodeDetail(code)` normalizes claim outcomes into one lifecycle state surface:
+  - `claimed`
+  - `throttled`
+  - `blocked`
+  - `expired`
+  - `invalid_signature`
+  - `not_found`
+  - `invalid_response`
+  - `network_error`

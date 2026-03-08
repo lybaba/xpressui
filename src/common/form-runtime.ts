@@ -24,6 +24,7 @@ import {
   FormPersistenceRuntime,
   TFormQueueState,
   TResumeLookupResult,
+  TResumeShareCodeClaimDetail,
   TResumeShareCodeInfo,
   TResumeTokenInfo,
   TFormStorageHealth,
@@ -122,6 +123,7 @@ export type TFormRuntimePublicApi = Pick<
   | "deleteResumeToken"
   | "invalidateResumeToken"
   | "lookupResumeToken"
+  | "claimResumeShareCodeDetail"
   | "claimResumeShareCode"
   | "restoreFromResumeToken"
   | "restoreFromResumeTokenAsync"
@@ -568,6 +570,10 @@ export class FormRuntime {
 
   claimResumeShareCode(code: string): Promise<TResumeLookupResult | null> {
     return this.persistence.claimResumeShareCode(code);
+  }
+
+  claimResumeShareCodeDetail(code: string): Promise<TResumeShareCodeClaimDetail | null> {
+    return this.persistence.claimResumeShareCodeDetail(code);
   }
 
   restoreFromResumeTokenAsync(token: string): Promise<Record<string, any> | null> {

@@ -40,6 +40,7 @@ import {
   FormPersistenceRuntime,
   TFormQueueState,
   TResumeLookupResult,
+  TResumeShareCodeClaimDetail,
   TResumeShareCodeInfo,
   TResumeTokenInfo,
   TFormStorageHealth,
@@ -239,6 +240,7 @@ export type {
   TRemoteResumeInvalidateResponse,
   TRemoteResumeLookupResponse,
   TRemoteResumeOperation,
+  TResumeShareCodeClaimDetail,
   TResumeShareCodeInfo,
   TResumeTokenInfo,
   TFormStorageHealth,
@@ -3680,6 +3682,10 @@ export class FormUI extends HTMLElement {
 
   claimResumeShareCode = (code: string): Promise<TResumeLookupResult | null> => {
     return this.persistence.claimResumeShareCode(code);
+  }
+
+  claimResumeShareCodeDetail = (code: string): Promise<TResumeShareCodeClaimDetail | null> => {
+    return this.persistence.claimResumeShareCodeDetail(code);
   }
 
   restoreFromResumeTokenAsync = async (token: string): Promise<Record<string, any> | null> => {

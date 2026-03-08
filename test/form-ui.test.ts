@@ -204,6 +204,34 @@ describe('FormUI', () => {
     });
 
     expect(
+      fieldFactory.quiz(
+        'style_quiz',
+        'Style Quiz',
+        [
+          {
+            value: 'modern',
+            label: 'Modern',
+            image_thumbnail: 'https://cdn.example.test/modern-thumb.jpg',
+          } as any,
+        ],
+        { multiple: true, maxNumOfChoices: 1 },
+      ),
+    ).toEqual({
+      type: 'quiz',
+      name: 'style_quiz',
+      label: 'Style Quiz',
+      choices: [
+        {
+          value: 'modern',
+          label: 'Modern',
+          image_thumbnail: 'https://cdn.example.test/modern-thumb.jpg',
+        },
+      ],
+      multiple: true,
+      maxNumOfChoices: 1,
+    });
+
+    expect(
       fieldFactory.setting('tax_rate', 'Tax Rate', 0.2),
     ).toEqual({
       type: 'setting',
@@ -1245,7 +1273,102 @@ describe('FormUI', () => {
     expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).length).toBe(0);
   });
 
-  it('validates product-list and image-gallery as array selections instead of text fields', () => {
+  it('supports quiz fields with single choice, multi choice limits, and open answers', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'quiz-demo',
+      title: 'Quiz Demo',
+      fields: [
+        {
+          type: 'quiz',
+          name: 'style',
+          label: 'Choose a style',
+          required: true,
+          choices: [
+            {
+              value: 'minimal',
+              label: 'Minimal',
+              image_thumbnail: 'https://cdn.example.test/minimal-thumb.jpg',
+              desc: 'Clean and quiet',
+            },
+            {
+              value: 'bold',
+              label: 'Bold',
+              image_thumbnail: 'https://cdn.example.test/bold-thumb.jpg',
+              desc: 'High contrast',
+            },
+          ] as any,
+        },
+        {
+          type: 'quiz',
+          name: 'materials',
+          label: 'Choose materials',
+          required: true,
+          multiple: true,
+          minNumOfChoices: 2,
+          maxNumOfChoices: 2,
+          choices: [
+            { value: 'wood', label: 'Wood', image_thumbnail: 'https://cdn.example.test/wood.jpg' },
+            { value: 'steel', label: 'Steel', image_thumbnail: 'https://cdn.example.test/steel.jpg' },
+            { value: 'glass', label: 'Glass', image_thumbnail: 'https://cdn.example.test/glass.jpg' },
+          ] as any,
+        },
+        {
+          type: 'quiz',
+          name: 'story',
+          label: 'Tell us more',
+          required: true,
+          placeholder: 'Write your answer',
+        },
+      ],
+    }) as FormUI;
+
+    const firstStyleImage = element.querySelector('[data-quiz-answer-image="minimal"]') as HTMLImageElement;
+    firstStyleImage.click();
+    await flushAsyncWork();
+
+    expect(element.getFieldValue('style')).toEqual([
+      expect.objectContaining({
+        id: 'minimal',
+        name: 'Minimal',
+      }),
+    ]);
+    expect((element.querySelector('[data-quiz-answer-card="minimal"]') as HTMLElement).getAttribute('data-selected')).toBe('true');
+
+    const secondStyleCard = element.querySelector('[data-quiz-answer-card="bold"]') as HTMLElement;
+    secondStyleCard.click();
+    await flushAsyncWork();
+    expect(element.getFieldValue('style')).toEqual([
+      expect.objectContaining({
+        id: 'bold',
+        name: 'Bold',
+      }),
+    ]);
+    expect((element.querySelector('[data-quiz-answer-card="bold"]') as HTMLElement).getAttribute('data-selected')).toBe('true');
+
+    const woodCard = element.querySelector('#materials_selection [data-quiz-answer-card="wood"]') as HTMLElement;
+    woodCard.click();
+    await flushAsyncWork();
+    const steelCard = element.querySelector('#materials_selection [data-quiz-answer-card="steel"]') as HTMLElement;
+    steelCard.click();
+    await flushAsyncWork();
+    const glassCard = element.querySelector('#materials_selection [data-quiz-answer-card="glass"]') as HTMLElement;
+    expect((element.getFieldValue('materials') as Array<Record<string, any>>).map((entry) => entry.id)).toEqual(['wood', 'steel']);
+    expect(glassCard.getAttribute('tabindex')).toBe('-1');
+    expect(glassCard.getAttribute('data-disabled')).toBe('true');
+
+    glassCard.click();
+    await flushAsyncWork();
+    expect((element.getFieldValue('materials') as Array<Record<string, any>>).map((entry) => entry.id)).toEqual(['wood', 'steel']);
+
+    const storyInput = element.querySelector('[data-quiz-open-answer="story"]') as HTMLTextAreaElement;
+    storyInput.value = 'An open-ended answer';
+    storyInput.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushAsyncWork();
+    expect(element.getFieldValue('story')).toBe('An open-ended answer');
+  });
+
+  it('validates product-list, image-gallery, and quiz selections with array and text semantics', () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {
       name: 'ecommerce-array-validation-demo',
@@ -1275,18 +1398,67 @@ describe('FormUI', () => {
             } as any,
           ],
         },
+        {
+          type: 'quiz',
+          name: 'materials',
+          label: 'Materials',
+          required: true,
+          multiple: true,
+          minNumOfChoices: 2,
+          maxNumOfChoices: 2,
+          choices: [
+            {
+              value: 'wood',
+              label: 'Wood',
+            } as any,
+            {
+              value: 'steel',
+              label: 'Steel',
+            } as any,
+            {
+              value: 'glass',
+              label: 'Glass',
+            } as any,
+          ],
+        },
+        {
+          type: 'quiz',
+          name: 'story',
+          label: 'Story',
+          required: true,
+        },
       ],
     }) as FormUI;
 
     expect(element.validateForm({})).toEqual({
       products: expect.objectContaining({ errorMessage: 'This field is required.' }),
       lookbook: expect.objectContaining({ errorMessage: 'This field is required.' }),
+      materials: expect.objectContaining({ errorMessage: 'This field is required.' }),
+      story: expect.objectContaining({ errorMessage: 'This field is required.' }),
     });
+
+    expect(
+      element.validateForm({
+        materials: [{ id: 'wood', name: 'Wood' }],
+      }).materials,
+    ).toEqual(expect.objectContaining({ errorMessage: 'Not enough selections (minimum: 2).' }));
+
+    expect(
+      element.validateForm({
+        materials: [
+          { id: 'wood', name: 'Wood' },
+          { id: 'steel', name: 'Steel' },
+          { id: 'glass', name: 'Glass' },
+        ],
+      }).materials,
+    ).toEqual(expect.objectContaining({ errorMessage: 'Too many selections (maximum: 2).' }));
 
     expect(
       element.validateForm({
         products: [{ id: 'sku_1', name: 'Product 1', quantity: 1 }],
         lookbook: [{ id: 'img_1', name: 'Image 1' }],
+        materials: [{ id: 'wood', name: 'Wood' }, { id: 'steel', name: 'Steel' }],
+        story: 'Open answer',
       }),
     ).toEqual({});
   });

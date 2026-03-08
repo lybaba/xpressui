@@ -1666,6 +1666,7 @@ Useful field capabilities supported by the current builder:
 - `placeholder`
 - `helpText`
 - `choices` for select fields
+- `minNumOfChoices` / `maxNumOfChoices` for bounded multi-answer fields such as `quiz`
 - `visibleWhenField`
 - `visibleWhenEquals`
 - `optionsEndpoint`
@@ -1698,6 +1699,7 @@ Common field types used today:
 - `document-scan`
 - `approval-state`
 - `checkbox`
+- `quiz`
 
 ## Multi-step Forms
 

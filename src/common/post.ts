@@ -11,6 +11,7 @@ import {
     PRICE_TYPE,
     PRODUCT_LIST_TYPE,
     IMAGE_GALLERY_TYPE,
+    QUIZ_TYPE,
     SETTING_TYPE,
     SELECT_ONE_TYPE,
     SLUG_TYPE,
@@ -227,6 +228,32 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
                 type: "object",
                 additionalProperties: true,
             };
+            break;
+
+        case QUIZ_TYPE:
+            if (fieldConfig.choices?.length) {
+                const catalogSize = fieldConfig.choices.length;
+                const maxItems = fieldConfig.multiple
+                    ? (Number.isFinite(Number(fieldConfig.maxNumOfChoices)) && Number(fieldConfig.maxNumOfChoices) > 0
+                        ? Math.min(Math.round(Number(fieldConfig.maxNumOfChoices)), catalogSize)
+                        : catalogSize)
+                    : 1;
+                const minItems = Number.isFinite(Number(fieldConfig.minNumOfChoices)) && Number(fieldConfig.minNumOfChoices) > 0
+                    ? Math.min(Math.round(Number(fieldConfig.minNumOfChoices)), maxItems)
+                    : undefined;
+
+                res.type = "array";
+                res.items = {
+                    type: "object",
+                    additionalProperties: true,
+                };
+                res.maxItems = maxItems;
+                if (typeof minItems === "number" && minItems > 0) {
+                    res.minItems = minItems;
+                }
+            } else {
+                res.type = "string";
+            }
             break;
 
         case SETTING_TYPE:

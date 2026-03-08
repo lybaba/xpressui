@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>xpressui quiz demo</title>
+    <link rel="stylesheet" href="../index.css" />
+    <style>
+      :root {
+        --bg: #f3efe6;
+        --ink: #1f2937;
+        --muted: #5b6472;
+        --line: #d9d1c4;
+        --panel: rgba(255, 252, 246, 0.94);
+        --accent: #9a3412;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Iowan Old Style", "Palatino Linotype", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 10%, rgba(154, 52, 18, 0.12), transparent 28%),
+          radial-gradient(circle at 88% 14%, rgba(20, 83, 45, 0.1), transparent 26%),
+          linear-gradient(180deg, #faf7f2 0%, var(--bg) 100%);
+      }
+
+      main {
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 34px 20px 74px;
+      }
+
+      a { color: #7c2d12; }
+      h1 { margin: 0 0 10px; font-size: clamp(2rem, 4vw, 3.1rem); }
+      p { margin: 0; color: var(--muted); }
+
+      .layout {
+        margin-top: 24px;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: minmax(0, 1.2fr) 360px;
+        align-items: start;
+      }
+
+      .panel,
+      .result {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 20px;
+        box-shadow: 0 14px 34px rgba(17, 24, 39, 0.07);
+        backdrop-filter: blur(8px);
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid rgba(154, 52, 18, 0.22);
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 12px;
+        color: #7c2d12;
+        background: rgba(255, 237, 213, 0.7);
+      }
+
+      .hint-list {
+        margin: 0 0 18px;
+        padding-left: 18px;
+        color: var(--muted);
+      }
+
+      .hint-list li + li {
+        margin-top: 6px;
+      }
+
+      .result h2,
+      .panel h2 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .result pre {
+        margin: 12px 0 0;
+        padding: 14px;
+        border-radius: 14px;
+        background: #111827;
+        color: #e5eefc;
+        font-size: 12px;
+        line-height: 1.5;
+        overflow: auto;
+      }
+
+      .caption {
+        margin-top: 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 1024px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./index.html">Retour aux démos</a>
+      <h1>Quiz Field Showcase</h1>
+      <p>
+        Démo du nouveau type <code>quiz</code> avec sélection unique, sélection multiple bornée et question ouverte.
+      </p>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Interactive Form</h2>
+            <span class="pill">Max answers enforced</span>
+          </div>
+          <ul class="hint-list">
+            <li>La première question accepte une seule réponse.</li>
+            <li>La deuxième accepte plusieurs réponses, mais au maximum 2.</li>
+            <li>Quand le maximum est atteint, les autres cartes deviennent non sélectionnables.</li>
+            <li>La dernière question est ouverte et attend une réponse texte.</li>
+          </ul>
+          <div id="app"></div>
+          <p class="caption">
+            Clique sur les images pour sélectionner une réponse. Le panneau de droite reflète la valeur runtime courante.
+          </p>
+        </section>
+
+        <aside class="result" id="result">
+          <h2>Runtime Values</h2>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module">
+      import { mountFormUI } from "../dist/xpressui.mjs";
+
+      const config = {
+        name: "quiz_showcase_demo",
+        title: "Quiz Showcase Demo",
+        fields: [
+          {
+            type: "quiz",
+            name: "style_direction",
+            label: "Quelle direction visuelle préférez-vous ?",
+            required: true,
+            choices: [
+              {
+                value: "minimal",
+                label: "Minimal",
+                desc: "Palette calme, lignes nettes, peu d'ornement.",
+                image_thumbnail: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=500&q=80",
+                image_medium: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80"
+              },
+              {
+                value: "editorial",
+                label: "Editorial",
+                desc: "Plus contrasté, plus sculptural, plus expressif.",
+                image_thumbnail: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=500&q=80",
+                image_medium: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80"
+              },
+              {
+                value: "warm",
+                label: "Warm",
+                desc: "Matières naturelles et tonalités plus organiques.",
+                image_thumbnail: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=500&q=80",
+                image_medium: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80"
+              }
+            ]
+          },
+          {
+            type: "quiz",
+            name: "materials",
+            label: "Sélectionnez jusqu'à 2 matériaux",
+            required: true,
+            multiple: true,
+            minNumOfChoices: 1,
+            maxNumOfChoices: 2,
+            helpText: "Quand 2 réponses sont choisies, les autres cartes se verrouillent.",
+            choices: [
+              {
+                value: "walnut",
+                label: "Walnut",
+                desc: "Bois sombre et texturé.",
+                image_thumbnail: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=500&q=80",
+                image_medium: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=900&q=80"
+              },
+              {
+                value: "travertine",
+                label: "Travertine",
+                desc: "Pierre claire avec grain minéral.",
+                image_thumbnail: "https://images.unsplash.com/photo-1517705008128-361805f42e86?auto=format&fit=crop&w=500&q=80",
+                image_medium: "https://images.unsplash.com/photo-1517705008128-361805f42e86?auto=format&fit=crop&w=900&q=80"
+              },
+              {
+                value: "steel",
+                label: "Brushed Steel",
+                desc: "Métal technique et régulier.",
+                image_thumbnail: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=500&q=80",
+                image_medium: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=900&q=80"
+              }
+            ]
+          },
+          {
+            type: "quiz",
+            name: "story",
+            label: "Décrivez en quelques lignes l'ambiance recherchée",
+            required: true,
+            placeholder: "Ex: un espace calme, lumineux, très tactile, pensé pour recevoir...",
+            maxLen: 280
+          }
+        ],
+        submit: {
+          endpoint: "/api/mock-quiz-submit",
+          method: "POST"
+        }
+      };
+
+      const result = document.getElementById("result");
+      const readValues = () => ({
+        style_direction: form.getFieldValue("style_direction"),
+        materials: form.getFieldValue("materials"),
+        story: form.getFieldValue("story")
+      });
+
+      const renderState = (values = {}) => {
+        result.innerHTML = `
+          <h2>Runtime Values</h2>
+          <pre>${JSON.stringify(values, null, 2)}</pre>
+        `;
+      };
+
+      const form = mountFormUI(document.getElementById("app"), config);
+      renderState(readValues());
+
+      form.addEventListener("input", () => {
+        renderState(readValues());
+      });
+
+      form.addEventListener("click", () => {
+        requestAnimationFrame(() => renderState(readValues()));
+      });
+    </script>
+  </body>
+</html>

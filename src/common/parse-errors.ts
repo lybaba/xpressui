@@ -11,6 +11,8 @@ const DEFAULT_VALIDATION_MESSAGES: Record<string, Record<string, string>> = {
         required: REQUIRED_FIELD_MSG,
         minLength: "Not enough characters (minimum: {limit}).",
         maxLength: "Too many characters (maximum: {limit}).",
+        minItems: "Not enough selections (minimum: {limit}).",
+        maxItems: "Too many selections (maximum: {limit}).",
         enum: "Please select a valid option.",
         minimum: "Value must be greater than or equal to {limit}.",
         maximum: "Value must be less than or equal to {limit}.",
@@ -33,6 +35,8 @@ const DEFAULT_VALIDATION_MESSAGES: Record<string, Record<string, string>> = {
         required: "Ce champ est obligatoire.",
         minLength: "Pas assez de caracteres (minimum : {limit}).",
         maxLength: "Trop de caracteres (maximum : {limit}).",
+        minItems: "Pas assez de selections (minimum : {limit}).",
+        maxItems: "Trop de selections (maximum : {limit}).",
         enum: "Veuillez selectionner une option valide.",
         minimum: "La valeur doit etre superieure ou egale a {limit}.",
         maximum: "La valeur doit etre inferieure ou egale a {limit}.",
@@ -234,6 +238,24 @@ export default function parseErrors(
                         return resolveValidationMessage(
                             "maxLength",
                             FIELD_VALUE_TOO_LONG,
+                            { limit },
+                            i18n,
+                            resolvedFieldName,
+                            error,
+                        );
+                    case "minItems":
+                        return resolveValidationMessage(
+                            "minItems",
+                            `Not enough selections (minimum: ${limit}).`,
+                            { limit },
+                            i18n,
+                            resolvedFieldName,
+                            error,
+                        );
+                    case "maxItems":
+                        return resolveValidationMessage(
+                            "maxItems",
+                            `Too many selections (maximum: ${limit}).`,
                             { limit },
                             i18n,
                             resolvedFieldName,

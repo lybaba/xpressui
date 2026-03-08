@@ -26,6 +26,7 @@ contracts it demonstrates.
 |---|---|---|---|
 | `demos/view-photo-gallery.html` | Read-only output rendering | `mode="view"`, output renderer registry | `form-ui:output-snapshot` |
 | `demos/hybrid-ecommerce.html` | Product list + image gallery + checkout | `mode="hybrid"`, `product-list`, `image-gallery` | cart/gallery modal interactions, `form-ui:submit-success` |
+| `demos/quiz-showcase.html` | Quiz field with single/multi/open answers | `quiz`, `minNumOfChoices`, `maxNumOfChoices` | live value updates from quiz card selection |
 | `demos/hybrid-output-snapshot.html` | Inspect output snapshot in hybrid mode | `getOutputSnapshot` | `form-ui:output-snapshot` |
 | `demos/headless-runtime.html` | Runtime without `FormUI` | `FormRuntime` APIs only | Host-defined event bridge |
 
@@ -42,4 +43,3 @@ contracts it demonstrates.
   - `identity-check` for identity/verification contracts
   - `remote-resume-flow` for resume/share-code contracts
   - `provider-transition-flow` for normalized provider transition payloads
-

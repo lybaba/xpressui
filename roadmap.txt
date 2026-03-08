@@ -58,6 +58,7 @@ Major capabilities already implemented in the codebase:
 - commerce-oriented field primitives:
   - `product-list` (catalog max 20, cart interactions, full-image modal)
   - `image-gallery` (catalog max 20, select/remove, full-image modal)
+  - `quiz` (single/multi answer selection, open questions, image-backed answers)
   - floating cart trigger with drawer editor
 - product demos published via GitHub Pages
 - CI / release checks

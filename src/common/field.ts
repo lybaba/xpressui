@@ -44,6 +44,7 @@ export const SELECT_MULTIPLE_TYPE = 'select-multiple';
 export const CHECKBOXES_TYPE = 'checkboxes';
 export const PRODUCT_LIST_TYPE = 'product-list';
 export const IMAGE_GALLERY_TYPE = 'image-gallery';
+export const QUIZ_TYPE = 'quiz';
 export const SETTING_TYPE = 'setting';
 
 export const SUBMIT_TYPE = 'submit';
@@ -148,6 +149,7 @@ export const REQUEST_FORM_FIELD_TYPES: Array<TFieldType> = [
     UPLOAD_FILE_TYPE_FIELD,
     { type: PRODUCT_LIST_TYPE, name: 'Product List' },
     { type: IMAGE_GALLERY_TYPE, name: 'Image Gallery' },
+    { type: QUIZ_TYPE, name: 'Quiz' },
     { type: SETTING_TYPE, name: 'Setting' },
 ];
 
@@ -306,6 +308,7 @@ export const getHtmlInputType = (fieldType: string): string => {
 
         case PRODUCT_LIST_TYPE:
         case IMAGE_GALLERY_TYPE:
+        case QUIZ_TYPE:
         case SETTING_TYPE:
             return "text";
 

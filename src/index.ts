@@ -28,6 +28,7 @@ import {
   isFileFieldType,
   IMAGE_GALLERY_TYPE,
   PRODUCT_LIST_TYPE,
+  QUIZ_TYPE,
   QR_SCAN_TYPE,
   SETTING_TYPE,
   UPLOAD_FILE_TYPE,
@@ -90,6 +91,13 @@ import {
   getProductCartTotal as getNormalizedProductCartTotal,
   getProductListCatalog as getProductListCatalogItems,
 } from "./ui/form-ui.commerce";
+import {
+  getNextQuizSelectionItems as getNextNormalizedQuizSelectionItems,
+  getQuizCatalog as getQuizCatalogItems,
+  getQuizSelectionItems as getNormalizedQuizSelectionItems,
+  getQuizSelectionLimit as getNormalizedQuizSelectionLimit,
+  isOpenQuizField as isConfiguredOpenQuizField,
+} from "./ui/form-ui.quiz";
 import {
   collectDomFieldValues,
   getOutputRendererType as getFieldOutputRendererType,
@@ -838,6 +846,7 @@ export class FormUI extends HTMLElement {
     return readFieldInputElementValue(
       (nextFieldConfig) => this.isProductListField(nextFieldConfig),
       (nextFieldConfig) => this.isImageGalleryField(nextFieldConfig),
+      (nextFieldConfig) => this.isQuizField(nextFieldConfig),
       fieldConfig,
       inputElement,
     );
@@ -1821,6 +1830,14 @@ export class FormUI extends HTMLElement {
     return fieldConfig.type === IMAGE_GALLERY_TYPE;
   }
 
+  isQuizField = (fieldConfig: TFieldConfig) => {
+    return fieldConfig.type === QUIZ_TYPE;
+  }
+
+  isOpenQuizField = (fieldConfig: TFieldConfig) => {
+    return isConfiguredOpenQuizField(fieldConfig);
+  }
+
   isSettingField = (fieldConfig: TFieldConfig) => {
     return fieldConfig.type === SETTING_TYPE;
   }
@@ -1856,6 +1873,26 @@ export class FormUI extends HTMLElement {
 
   getImageGallerySelectionItems = (value: any): TImageGalleryItem[] => {
     return getImageGallerySelectionItems(value);
+  }
+
+  getQuizCatalog = (fieldConfig: TFieldConfig) => {
+    return getQuizCatalogItems(fieldConfig);
+  }
+
+  getQuizSelectionItems = (value: any) => {
+    return getNormalizedQuizSelectionItems(value);
+  }
+
+  getQuizSelectionLimit = (fieldConfig: TFieldConfig) => {
+    return getNormalizedQuizSelectionLimit(fieldConfig);
+  }
+
+  getNextQuizSelectionItems = (
+    fieldConfig: TFieldConfig,
+    currentValue: any,
+    answerId: string,
+  ) => {
+    return getNextNormalizedQuizSelectionItems(fieldConfig, currentValue, answerId);
   }
 
   getProductCartTotal = (cartItems: TProductCartItem[]): number => {
@@ -2848,6 +2885,159 @@ export class FormUI extends HTMLElement {
 
       row.appendChild(name);
       row.appendChild(remove);
+      list.appendChild(row);
+    });
+    selectedPanel.appendChild(list);
+    selectionElement.appendChild(selectedPanel);
+  }
+
+  renderQuizSelection = (
+    fieldConfig: TFieldConfig,
+    value: any,
+    selectionElement: HTMLElement | null,
+  ) => {
+    if (!selectionElement) {
+      return;
+    }
+
+    selectionElement.innerHTML = "";
+
+    if (this.isOpenQuizField(fieldConfig)) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "grid gap-2";
+
+      const hint = document.createElement("div");
+      hint.className = "text-xs opacity-70";
+      hint.textContent = "Open question";
+      wrapper.appendChild(hint);
+
+      const textarea = document.createElement("textarea");
+      textarea.className = "textarea textarea-bordered w-full";
+      textarea.rows = 5;
+      textarea.value = typeof value === "string" ? value : "";
+      textarea.placeholder = fieldConfig.placeholder || "Write your answer";
+      textarea.setAttribute("data-quiz-open-answer", fieldConfig.name);
+      const maxLen = Number(fieldConfig.maxLen);
+      if (Number.isFinite(maxLen) && maxLen > 0) {
+        textarea.maxLength = Math.round(maxLen);
+      }
+      wrapper.appendChild(textarea);
+
+      selectionElement.appendChild(wrapper);
+      return;
+    }
+
+    const answers = this.getQuizCatalog(fieldConfig);
+    const selectedItems = this.getQuizSelectionItems(value);
+    const selectedMap = selectedItems.reduce((accumulator, item) => {
+      accumulator[item.id] = true;
+      return accumulator;
+    }, {} as Record<string, boolean>);
+    const selectionLimit = this.getQuizSelectionLimit(fieldConfig);
+    const limitReached = selectionLimit > 0 && selectedItems.length >= selectionLimit;
+
+    const intro = document.createElement("div");
+    intro.className = "mb-3 flex items-center justify-between gap-3 text-xs opacity-70";
+    intro.textContent = fieldConfig.multiple
+      ? `Select up to ${selectionLimit} answer${selectionLimit > 1 ? "s" : ""}`
+      : "Select one answer";
+    selectionElement.appendChild(intro);
+
+    const grid = document.createElement("div");
+    grid.setAttribute("data-quiz-catalog", fieldConfig.name);
+    grid.style.display = "grid";
+    grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
+    grid.style.gap = "10px";
+    grid.style.marginBottom = "14px";
+
+    answers.forEach((answer) => {
+      const selected = Boolean(selectedMap[answer.id]);
+      const disabled = !selected && limitReached && fieldConfig.multiple;
+
+      const card = document.createElement("div");
+      card.setAttribute("data-quiz-answer-card", answer.id);
+      card.setAttribute("data-quiz-answer-action", "toggle");
+      card.setAttribute("data-quiz-answer-id", answer.id);
+      card.setAttribute("data-selected", selected ? "true" : "false");
+      card.setAttribute("data-disabled", disabled ? "true" : "false");
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", disabled ? "-1" : "0");
+      card.setAttribute("aria-pressed", selected ? "true" : "false");
+      card.className = "rounded border p-2 transition-all";
+      card.style.cursor = disabled ? "not-allowed" : "pointer";
+      card.style.opacity = disabled ? "0.55" : "1";
+      card.style.borderColor = selected ? "rgb(59 130 246)" : "";
+      card.style.boxShadow = selected ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "";
+      card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "";
+
+      const previewSrc = answer.image_medium || answer.image_thumbnail;
+      if (previewSrc) {
+        const preview = document.createElement("img");
+        preview.src = previewSrc;
+        preview.alt = answer.name;
+        preview.setAttribute("data-quiz-answer-image", answer.id);
+        preview.style.width = "100%";
+        preview.style.height = "140px";
+        preview.style.objectFit = "cover";
+        preview.style.borderRadius = "8px";
+        preview.style.marginBottom = "8px";
+        card.appendChild(preview);
+      }
+
+      const title = document.createElement("div");
+      title.className = "text-sm font-semibold";
+      title.textContent = answer.name;
+      card.appendChild(title);
+
+      if (answer.desc) {
+        const description = document.createElement("div");
+        description.className = "mt-1 text-xs opacity-80";
+        description.textContent = answer.desc;
+        card.appendChild(description);
+      }
+
+      const footer = document.createElement("div");
+      footer.className = "mt-2 text-xs opacity-70";
+      if (selected) {
+        footer.textContent = "Selected";
+      } else if (disabled) {
+        footer.textContent = "Selection limit reached";
+      } else {
+        footer.textContent = "Click to select";
+      }
+      card.appendChild(footer);
+
+      grid.appendChild(card);
+    });
+
+    selectionElement.appendChild(grid);
+
+    const selectedPanel = document.createElement("div");
+    selectedPanel.setAttribute("data-quiz-selection", fieldConfig.name);
+    selectedPanel.className = "rounded border border-base-300 p-3";
+
+    const heading = document.createElement("div");
+    heading.className = "mb-2 text-sm font-semibold";
+    heading.textContent = `Selected Answers (${selectedItems.length}${selectionLimit ? `/${selectionLimit}` : ""})`;
+    selectedPanel.appendChild(heading);
+
+    if (!selectedItems.length) {
+      const empty = document.createElement("div");
+      empty.className = "text-xs opacity-70";
+      empty.textContent = "No answer selected yet.";
+      selectedPanel.appendChild(empty);
+      selectionElement.appendChild(selectedPanel);
+      return;
+    }
+
+    const list = document.createElement("div");
+    list.style.display = "grid";
+    list.style.gap = "8px";
+    selectedItems.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "rounded border border-base-300 px-2 py-2 text-sm";
+      row.setAttribute("data-quiz-selection-item", item.id);
+      row.textContent = item.name;
       list.appendChild(row);
     });
     selectedPanel.appendChild(list);
@@ -4458,6 +4648,8 @@ export class FormUI extends HTMLElement {
               isFileField: isFileFieldType(fieldConfig.type),
               isProductListField: this.isProductListField(fieldConfig),
               isImageGalleryField: this.isImageGalleryField(fieldConfig),
+              isQuizField: this.isQuizField(fieldConfig),
+              isOpenQuizField: this.isOpenQuizField(fieldConfig),
               getCurrentValue: () => this.getFieldValue(name),
               onChangeValue: (nextValue) => {
                 change(nextValue);
@@ -4471,6 +4663,8 @@ export class FormUI extends HTMLElement {
                 this.getNextProductCartItems(fieldConfig, this.getFieldValue(name), action, productId),
               getNextImageGallerySelectionItems: (action, imageId) =>
                 this.getNextImageGallerySelectionItems(fieldConfig, this.getFieldValue(name), action, imageId),
+              getNextQuizSelectionItems: (answerId) =>
+                this.getNextQuizSelectionItems(fieldConfig, this.getFieldValue(name), answerId),
               openProductGallery: (productId) => {
                 const product = this.getProductListCatalog(fieldConfig).find((entry) => entry.id === productId);
                 if (product) {
@@ -4542,6 +4736,8 @@ export class FormUI extends HTMLElement {
           isQrScanField: this.isQrScanField(fieldConfig),
           isProductListField: this.isProductListField(fieldConfig),
           isImageGalleryField: this.isImageGalleryField(fieldConfig),
+          isQuizField: this.isQuizField(fieldConfig),
+          isOpenQuizField: this.isOpenQuizField(fieldConfig),
           applyFieldViewPresentation: () => {
             this.applyFieldViewPresentation(fieldConfig, inputElement, selectionElement, errorElement, value);
           },
@@ -4554,8 +4750,12 @@ export class FormUI extends HTMLElement {
           renderImageGallerySelection: () => {
             this.renderImageGallerySelection(fieldConfig, value, selectionElement);
           },
+          renderQuizSelection: () => {
+            this.renderQuizSelection(fieldConfig, value, selectionElement);
+          },
           getProductCartItems: () => this.getProductCartItems(value),
           getImageGallerySelectionItems: () => this.getImageGallerySelectionItems(value),
+          getQuizSelectionItems: () => this.getQuizSelectionItems(value),
           isHybridMode: this.getRenderMode() === "hybrid",
           renderHybridView: () => {
             if (!inputElement) {

@@ -539,6 +539,16 @@ export function getFieldConfig(node: Element): TFieldConfig {
         fieldConfig.maxTotalFileSizeMb = Number(maxTotalFileSizeMb);
     }
 
+    const minNumOfChoices = node.getAttribute(HTML_ATTR_MIN_NUM_OF_CHOICES);
+    if (minNumOfChoices) {
+        fieldConfig.minNumOfChoices = Number(minNumOfChoices);
+    }
+
+    const maxNumOfChoices = node.getAttribute(HTML_ATTR_MAX_NUM_OF_CHOICES);
+    if (maxNumOfChoices) {
+        fieldConfig.maxNumOfChoices = Number(maxNumOfChoices);
+    }
+
     const choices = node.getAttribute(HTML_ATTR_CHOICES);
     if (choices) {
         try {

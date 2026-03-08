@@ -114,11 +114,14 @@ export function bindSelectionFieldEvents(options: {
   isFileField: boolean;
   isProductListField: boolean;
   isImageGalleryField: boolean;
+  isQuizField: boolean;
+  isOpenQuizField: boolean;
   getCurrentValue: () => any;
   onChangeValue: (value: any) => void;
   onAfterChange: () => void;
   getNextProductCartItems: (action: "add" | "inc" | "dec" | "remove", productId: string) => any;
   getNextImageGallerySelectionItems: (action: "toggle" | "remove", imageId: string) => any;
+  getNextQuizSelectionItems: (answerId: string) => any;
   openProductGallery: (productId: string) => void;
   openImageGallery: (imageId: string) => void;
   startQrCamera: () => void;
@@ -137,6 +140,21 @@ export function bindSelectionFieldEvents(options: {
 
   selectionElement.addEventListener("click", (event) => {
     const target = event.target as HTMLElement | null;
+
+    const quizAnswerCard = target?.closest("[data-quiz-answer-action]") as HTMLElement | null;
+    if (options.isQuizField && quizAnswerCard) {
+      event.preventDefault();
+      event.stopPropagation();
+      const answerId = quizAnswerCard.getAttribute("data-quiz-answer-id");
+      const disabled =
+        quizAnswerCard.getAttribute("data-disabled") === "true"
+        || quizAnswerCard.getAttribute("tabindex") === "-1";
+      if (answerId && !disabled) {
+        options.onChangeValue(options.getNextQuizSelectionItems(answerId));
+        options.onAfterChange();
+      }
+      return;
+    }
 
     const productActionButton = target?.closest("[data-product-action]") as HTMLElement | null;
     if (options.isProductListField && productActionButton) {
@@ -236,6 +254,32 @@ export function bindSelectionFieldEvents(options: {
     options.removeSelectedFile(fileIndex);
   });
 
+  if (options.isQuizField && options.isOpenQuizField) {
+    selectionElement.addEventListener("input", (event) => {
+      const target = event.target as HTMLElement | null;
+      const answerInput = target?.closest("[data-quiz-open-answer]") as HTMLTextAreaElement | null;
+      if (!answerInput) {
+        return;
+      }
+
+      options.onChangeValue(answerInput.value);
+      options.onAfterChange();
+    });
+  }
+
+  if (options.isQuizField && !options.isOpenQuizField) {
+    selectionElement.addEventListener("keydown", (event) => {
+      const target = event.target as HTMLElement | null;
+      const answerCard = target?.closest("[data-quiz-answer-action]") as HTMLElement | null;
+      if (!answerCard || (event.key !== "Enter" && event.key !== " ")) {
+        return;
+      }
+
+      event.preventDefault();
+      answerCard.click();
+    });
+  }
+
   if (!options.isFileField) {
     return;
   }
@@ -275,12 +319,16 @@ export function applyFieldValuePresentation(options: {
   isQrScanField: boolean;
   isProductListField: boolean;
   isImageGalleryField: boolean;
+  isQuizField: boolean;
+  isOpenQuizField: boolean;
   applyFieldViewPresentation: () => void;
   renderFileSelection: () => void;
   renderProductListSelection: () => void;
   renderImageGallerySelection: () => void;
+  renderQuizSelection: () => void;
   getProductCartItems: () => any[];
   getImageGallerySelectionItems: () => any[];
+  getQuizSelectionItems: () => any[];
   isHybridMode: boolean;
   renderHybridView: () => void;
 }): void {
@@ -313,6 +361,11 @@ export function applyFieldValuePresentation(options: {
   } else if (options.isImageGalleryField) {
     options.renderImageGallerySelection();
     input.value = JSON.stringify(options.getImageGallerySelectionItems());
+  } else if (options.isQuizField) {
+    options.renderQuizSelection();
+    input.value = options.isOpenQuizField
+      ? (typeof value === "string" ? value : "")
+      : JSON.stringify(options.getQuizSelectionItems());
   } else if (input instanceof HTMLSelectElement && input.multiple) {
     const selectedValues = Array.isArray(value)
       ? value.map((entry) => String(entry))

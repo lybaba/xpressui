@@ -9,6 +9,7 @@ import {
   LINK_TYPE,
   MEDIA_TYPE,
   OUTPUT_TYPE,
+  QUIZ_TYPE,
   RICH_EDITOR_TYPE,
   SETTING_TYPE,
   TEXTAREA_TYPE,
@@ -49,6 +50,26 @@ export function collectDomFieldValues(formElem: HTMLFormElement): Record<string,
     if (node instanceof HTMLInputElement) {
       if (node.type === "checkbox") {
         domValues[fieldConfig.name] = node.checked;
+      } else if (
+        node.type === "hidden"
+        && (
+          fieldConfig.type === PRODUCT_LIST_TYPE
+          || fieldConfig.type === IMAGE_GALLERY_TYPE
+          || fieldConfig.type === QUIZ_TYPE
+        )
+      ) {
+        if (!node.value) {
+          domValues[fieldConfig.name] = fieldConfig.type === QUIZ_TYPE && !fieldConfig.choices?.length ? "" : [];
+        } else if (fieldConfig.type === QUIZ_TYPE && !fieldConfig.choices?.length) {
+          domValues[fieldConfig.name] = node.value;
+        } else {
+          try {
+            const parsed = JSON.parse(node.value);
+            domValues[fieldConfig.name] = Array.isArray(parsed) ? parsed : [];
+          } catch {
+            domValues[fieldConfig.name] = [];
+          }
+        }
       } else if (node.type === "radio") {
         if (node.checked) {
           domValues[fieldConfig.name] = node.value;
@@ -149,6 +170,10 @@ export function getOutputRendererType(fieldConfig: TFieldConfig): TOutputRendere
     return "image";
   }
 
+  if (fieldConfig.type === QUIZ_TYPE) {
+    return "text";
+  }
+
   if (fieldConfig.type === SETTING_TYPE) {
     return "text";
   }
@@ -184,6 +209,7 @@ export function isFieldViewMode(
 export function readInputElementValue(
   isProductListField: (fieldConfig: TFieldConfig) => boolean,
   isImageGalleryField: (fieldConfig: TFieldConfig) => boolean,
+  isQuizField: (fieldConfig: TFieldConfig) => boolean,
   fieldConfig: TFieldConfig,
   inputElement: HTMLElement | null,
 ): any {
@@ -198,10 +224,13 @@ export function readInputElementValue(
 
     if (
       inputElement.type === "hidden"
-      && (isProductListField(fieldConfig) || isImageGalleryField(fieldConfig))
+      && (isProductListField(fieldConfig) || isImageGalleryField(fieldConfig) || isQuizField(fieldConfig))
     ) {
       if (!inputElement.value) {
-        return [];
+        return isQuizField(fieldConfig) && !fieldConfig.choices?.length ? "" : [];
+      }
+      if (isQuizField(fieldConfig) && !fieldConfig.choices?.length) {
+        return inputElement.value;
       }
       try {
         const parsed = JSON.parse(inputElement.value);

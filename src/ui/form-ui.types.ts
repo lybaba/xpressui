@@ -119,6 +119,15 @@ export type TImageGalleryItem = {
   photos_full: string[];
 };
 
+export type TQuizAnswerItem = {
+  id: string;
+  name: string;
+  desc: string;
+  image_thumbnail: string;
+  image_medium: string;
+  photos_full: string[];
+};
+
 export type TFormUIDocumentState = Record<string, TDocumentScanInsight>;
 
 export type TFormUIProviderTransition = TFormProviderTransition;

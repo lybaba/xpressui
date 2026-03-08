@@ -386,7 +386,7 @@ function toProviderErrorEntry(
   action: string | undefined,
   value: unknown,
   fallback: { code?: string; field?: string } = {},
-): Record<string, any> | null {
+): TNormalizedProviderError | null {
   if (typeof value === "string") {
     return {
       source: action || "provider",

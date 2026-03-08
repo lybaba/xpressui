@@ -699,6 +699,12 @@ export class FormPersistenceRuntime {
     );
   }
 
+  normalizeRemotePolicyClaimStatus(
+    code: "rate_limited" | "blocked" | "expired" | "invalid_signature" | "not_found",
+  ): TResumeShareCodeClaimStatus {
+    return code === "rate_limited" ? "throttled" : code;
+  }
+
   getResumeStatusSummary(): TResumeStatusSummary {
     const tokens = this.listResumeTokens();
     return {
@@ -1425,7 +1431,7 @@ export class FormPersistenceRuntime {
         if (remotePolicy) {
           const detail: TResumeShareCodeClaimDetail = {
             code,
-            status: remotePolicy.code,
+            status: this.normalizeRemotePolicyClaimStatus(remotePolicy.code),
             backend: true,
             endpoint,
             ...(remotePolicy.reason ? { message: remotePolicy.reason } : {}),
@@ -1464,7 +1470,7 @@ export class FormPersistenceRuntime {
         return remotePolicy
           ? {
               code,
-              status: remotePolicy.code,
+              status: this.normalizeRemotePolicyClaimStatus(remotePolicy.code),
               backend: true,
               endpoint,
               ...(remotePolicy.reason ? { message: remotePolicy.reason } : {}),

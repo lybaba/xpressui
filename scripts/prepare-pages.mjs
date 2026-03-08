@@ -123,7 +123,7 @@ writeFileSync(
     "        </a>",
     "        <a class=\"card\" href=\"./demos/remote-resume-flow.html\">",
     "          <h2>Remote Save / Resume</h2>",
-    "          <p>Cycle complet token distant avec endpoint mocké et panneau ops combiné.</p>",
+    "          <p>Cycle complet token distant avec endpoint mocké, panneau ops combiné et scénarios de claim pilotables.</p>",
     "        </a>",
       "      </div>",
     "      <p class=\"sub\">",

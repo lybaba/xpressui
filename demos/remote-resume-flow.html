@@ -75,6 +75,15 @@
         color: #ffffff;
       }
 
+      select {
+        border: 1px solid #93c5fd;
+        border-radius: 999px;
+        background: #fff;
+        color: #1d4ed8;
+        padding: 7px 12px;
+        font: inherit;
+      }
+
       h2 { margin: 0 0 10px; font-size: 1rem; }
 
       pre {
@@ -154,6 +163,14 @@
             <button id="btn-share" type="button">Create Share Code</button>
             <button id="btn-claim" type="button">Claim Share Code</button>
             <button id="btn-restore-code" type="button">Restore From Code</button>
+            <select id="claim-scenario" aria-label="Claim scenario">
+              <option value="success">Scenario: success</option>
+              <option value="expired">Scenario: expired</option>
+              <option value="blocked">Scenario: blocked</option>
+              <option value="throttled">Scenario: throttled</option>
+              <option value="invalid_signature">Scenario: invalid signature</option>
+              <option value="not_found">Scenario: not found</option>
+            </select>
           </div>
           <div class="token" id="token-value">Current token: none</div>
           <div class="share-code" id="share-code-value">Current share code: none</div>
@@ -201,6 +218,7 @@
       const tokenValue = document.getElementById("token-value");
       const shareCodeValue = document.getElementById("share-code-value");
       const claimStatus = document.getElementById("claim-status");
+      const claimScenario = document.getElementById("claim-scenario");
 
       const write = (payload) => {
         result.textContent = JSON.stringify(payload, null, 2);
@@ -325,6 +343,64 @@
 
         if (payload.operation === "claim-share-code") {
           const code = String(payload.code || "");
+          const scenario = claimScenario.value;
+          if (scenario === "not_found") {
+            return new Response(JSON.stringify({
+              contractVersion: "resume-contract-v1",
+              operation: "claim-share-code",
+              policy: {
+                code: "not_found",
+                reason: "Share code not found",
+              },
+            }), {
+              status: 404,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          if (scenario === "expired") {
+            return new Response(JSON.stringify({
+              contractVersion: "resume-contract-v1",
+              operation: "claim-share-code",
+              policy: {
+                code: "expired",
+                reason: "Share code expired",
+                expiresAt: Date.now() - 60_000,
+              },
+            }), {
+              status: 410,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          if (scenario === "blocked") {
+            return new Response(JSON.stringify({
+              contractVersion: "resume-contract-v1",
+              operation: "claim-share-code",
+              policy: {
+                code: "blocked",
+                reason: "Too many attempts for this code",
+                retryAfterSeconds: 120,
+                blockedUntil: Date.now() + 120_000,
+              },
+            }), {
+              status: 423,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          if (scenario === "throttled") {
+            return new Response(JSON.stringify({
+              contractVersion: "resume-contract-v1",
+              operation: "claim-share-code",
+              policy: {
+                code: "rate_limited",
+                reason: "Try again in a few seconds",
+                retryAfterSeconds: 15,
+                blockedUntil: Date.now() + 15_000,
+              },
+            }), {
+              status: 429,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
           const mapping = fakeShareCodes.get(code);
           if (!mapping) {
             return new Response(JSON.stringify({
@@ -358,7 +434,7 @@
             issuedAt: entry.issuedAt,
             expiresAt: entry.expiresAt,
             signatureVersion,
-            signature: entry.signature,
+            signature: scenario === "invalid_signature" ? "tampered-signature" : entry.signature,
             snapshot: entry.snapshot,
           }), {
             status: 200,

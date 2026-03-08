@@ -3680,6 +3680,7 @@ describe('FormUI', () => {
     expect(panel.element.textContent).toContain('Output Snapshot');
     expect(panel.element.textContent).toContain('Resume Claim');
     expect(panel.element.textContent).toContain('Provider Contract Warning');
+    expect(panel.element.textContent).toContain('Recent Events');
     expect(panel.element.textContent).toContain('Clear Snapshot');
     expect(panel.element.textContent).toContain('Clear Events');
     expect(panel.element.textContent).toContain('Status: listening');
@@ -3782,6 +3783,50 @@ describe('FormUI', () => {
     panel.clearSnapshot();
     expect(resumeClaim.textContent).toBe('null');
     expect(providerWarning.textContent).toBe('null');
+
+    panel.detach();
+  });
+
+  it('renders a filterable recent event timeline in the debug panel', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'debug-timeline-form',
+      title: 'Debug Timeline Form',
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as FormUI;
+
+    const panel = createFormDebugPanel(element, { title: 'Timeline Debug', maxVisibleEvents: 5 });
+    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+      bubbles: true,
+      detail: {
+        result: {
+          code: 'SHARE-TIME',
+          status: 'claimed',
+        },
+      },
+    }));
+    element.dispatchEvent(new CustomEvent('form-ui:provider-contract-warning', {
+      bubbles: true,
+      detail: {
+        result: {
+          expectedContract: 'provider-envelope-v2',
+        },
+      },
+    }));
+    await flushAsyncWork();
+
+    const timeline = panel.element.querySelector('.xpressui-debug-panel__timeline') as HTMLElement;
+    const filter = panel.element.querySelector('.xpressui-debug-panel__event-filter') as HTMLInputElement;
+    expect(timeline.textContent).toContain('"type": "form-ui:resume-share-code-claim-state"');
+    expect(timeline.textContent).toContain('"type": "form-ui:provider-contract-warning"');
+
+    filter.value = 'provider-contract-warning';
+    filter.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(timeline.textContent).toContain('"type": "form-ui:provider-contract-warning"');
+    expect(timeline.textContent).not.toContain('"type": "form-ui:resume-share-code-claim-state"');
 
     panel.detach();
   });

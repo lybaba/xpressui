@@ -15,6 +15,8 @@ export type TFormDebugPanelOptions = {
   maxEvents?: number;
   className?: string;
   title?: string;
+  maxVisibleEvents?: number;
+  eventFilterPlaceholder?: string;
 };
 
 export function createFormDebugPanel(
@@ -38,6 +40,11 @@ export function createFormDebugPanel(
 
   const actions = document.createElement("div");
   actions.className = "xpressui-debug-panel__actions";
+
+  const eventFilter = document.createElement("input");
+  eventFilter.type = "search";
+  eventFilter.className = "xpressui-debug-panel__event-filter";
+  eventFilter.placeholder = options.eventFilterPlaceholder || "Filter events";
 
   const clearButton = document.createElement("button");
   clearButton.type = "button";
@@ -85,10 +92,17 @@ export function createFormDebugPanel(
   const providerWarning = document.createElement("pre");
   providerWarning.className = "xpressui-debug-panel__provider-warning";
 
+  const eventTimelineTitle = document.createElement("strong");
+  eventTimelineTitle.textContent = "Recent Events";
+
+  const eventTimeline = document.createElement("pre");
+  eventTimeline.className = "xpressui-debug-panel__timeline";
+
   element.appendChild(title);
   element.appendChild(counts);
   element.appendChild(status);
   element.appendChild(lastUpdated);
+  element.appendChild(eventFilter);
   actions.appendChild(clearButton);
   actions.appendChild(clearEventsButton);
   element.appendChild(actions);
@@ -104,9 +118,22 @@ export function createFormDebugPanel(
   element.appendChild(resumeClaim);
   element.appendChild(providerWarningTitle);
   element.appendChild(providerWarning);
+  element.appendChild(eventTimelineTitle);
+  element.appendChild(eventTimeline);
 
   const render = () => {
     const snapshot = observer.getSnapshot();
+    const normalizedFilter = eventFilter.value.trim().toLowerCase();
+    const visibleEvents = observer
+      .getEvents()
+      .filter((event) => {
+        if (!normalizedFilter) {
+          return true;
+        }
+        const haystack = `${event.type}\n${JSON.stringify(event.detail || {})}`.toLowerCase();
+        return haystack.includes(normalizedFilter);
+      })
+      .slice(-(options.maxVisibleEvents ?? 10));
     counts.textContent = [
       `events: ${observer.getEvents().length}`,
       `ruleHistory: ${observer.getRuleHistory().length}`,
@@ -131,6 +158,15 @@ export function createFormDebugPanel(
       null,
       2,
     );
+    eventTimeline.textContent = JSON.stringify(
+      visibleEvents.map((event) => ({
+        type: event.type,
+        timestamp: event.timestamp,
+        result: event.detail?.result,
+      })),
+      null,
+      2,
+    );
   };
 
   const observer = attachFormDebugObserver(target, {
@@ -147,6 +183,8 @@ export function createFormDebugPanel(
     observer.clear();
     render();
   });
+
+  eventFilter.addEventListener("input", render);
 
   render();
 

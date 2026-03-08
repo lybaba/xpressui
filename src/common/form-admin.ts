@@ -5,6 +5,7 @@ import {
   TResumeShareCodeClaimDetail,
   TResumeShareCodeRestoreDetail,
   TResumeShareCodeInfo,
+  TResumeStatusSummary,
   TResumeTokenInfo,
 } from "./form-persistence";
 import { FormStepRuntime, TFormStepProgress, TFormWorkflowSnapshot } from "./form-steps";
@@ -346,6 +347,7 @@ export type TLocalFormAdmin = {
     mode?: TLocalFormAdminImportMode,
   ): TLocalFormAdminSnapshot;
   getStorageHealth(): TStorageHealth;
+  getResumeStatusSummary(): TResumeStatusSummary;
   listResumeTokens(): TResumeTokenInfo[];
   createResumeShareCode(token: string): Promise<string | null>;
   createResumeShareCodeDetail(token: string): Promise<TResumeShareCodeInfo | null>;
@@ -672,6 +674,25 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
           },
         }
       );
+    },
+    getResumeStatusSummary() {
+      const resumeTokens = listResumeTokens();
+      return {
+        configured: Boolean(publicConfig.storage?.resumeEndpoint || getShareCodeEndpoint()),
+        ...(publicConfig.storage?.resumeEndpoint
+          ? { resumeEndpoint: publicConfig.storage.resumeEndpoint }
+          : {}),
+        ...(getShareCodeEndpoint() ? { shareCodeEndpoint: getShareCodeEndpoint() } : {}),
+        tokens: {
+          total: resumeTokens.length,
+          remote: resumeTokens.filter((entry) => entry.remote).length,
+          signed: resumeTokens.filter((entry) => Boolean(entry.signatureVersion)).length,
+          invalidSignature: resumeTokens.filter((entry) => entry.signatureValid === false).length,
+          ...(resumeTokens[0]?.savedAt ? { latestSavedAt: resumeTokens[0].savedAt } : {}),
+        },
+        lastClaim: null,
+        lastRestore: null,
+      };
     },
     listResumeTokens,
     async createResumeShareCode(token) {

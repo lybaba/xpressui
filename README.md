@@ -85,6 +85,8 @@ If you only need cross-device resume claim/restore feedback, use
 `createResumeStatusPanel(...)`.
 `createFormOpsPanel(...)` can also embed that resume status surface via its
 `resume` option.
+For headless or custom UI integrations, use `getResumeStatusSummary()` on
+`FormUI` or `FormRuntime`.
 
 The public form contract is now versioned.
 Current public schema version:

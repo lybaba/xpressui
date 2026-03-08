@@ -154,6 +154,21 @@ export type TResumeShareCodeRestoreDetail = {
   message?: string;
 };
 
+export type TResumeStatusSummary = {
+  configured: boolean;
+  resumeEndpoint?: string;
+  shareCodeEndpoint?: string;
+  tokens: {
+    total: number;
+    remote: number;
+    signed: number;
+    invalidSignature: number;
+    latestSavedAt?: number;
+  };
+  lastClaim: TResumeShareCodeClaimDetail | null;
+  lastRestore: TResumeShareCodeRestoreDetail | null;
+};
+
 export type TRemoteResumeShareCodeClaimRequest = {
   operation: "claim-share-code";
   code: string;
@@ -212,6 +227,8 @@ export class FormPersistenceRuntime {
   onlineHandler: (() => void) | null;
   resumeTokenMemory: Map<string, TResumeTokenState>;
   shareCodeClaimPolicyState: Map<string, TShareCodeClaimPolicyState>;
+  lastShareCodeClaimDetail: TResumeShareCodeClaimDetail | null;
+  lastShareCodeRestoreDetail: TResumeShareCodeRestoreDetail | null;
 
   constructor(options: TFormPersistenceRuntimeOptions) {
     this.options = options;
@@ -221,6 +238,8 @@ export class FormPersistenceRuntime {
     this.onlineHandler = null;
     this.resumeTokenMemory = new Map();
     this.shareCodeClaimPolicyState = new Map();
+    this.lastShareCodeClaimDetail = null;
+    this.lastShareCodeRestoreDetail = null;
   }
 
   setFormConfig(formConfig: TFormConfig | null): void {
@@ -673,10 +692,29 @@ export class FormPersistenceRuntime {
   }
 
   emitShareCodeClaimState(result: TResumeShareCodeClaimDetail, response?: Response): void {
+    this.lastShareCodeClaimDetail = result;
     this.options.emitEvent(
       "form-ui:resume-share-code-claim-state",
       this.createEventDetail(this.options.getValues(), result, response),
     );
+  }
+
+  getResumeStatusSummary(): TResumeStatusSummary {
+    const tokens = this.listResumeTokens();
+    return {
+      configured: Boolean(this.getResumeEndpoint() || this.getShareCodeEndpoint()),
+      ...(this.getResumeEndpoint() ? { resumeEndpoint: this.getResumeEndpoint() } : {}),
+      ...(this.getShareCodeEndpoint() ? { shareCodeEndpoint: this.getShareCodeEndpoint() } : {}),
+      tokens: {
+        total: tokens.length,
+        remote: tokens.filter((entry) => entry.remote).length,
+        signed: tokens.filter((entry) => Boolean(entry.signatureVersion)).length,
+        invalidSignature: tokens.filter((entry) => entry.signatureValid === false).length,
+        ...(tokens[0]?.savedAt ? { latestSavedAt: tokens[0].savedAt } : {}),
+      },
+      lastClaim: this.lastShareCodeClaimDetail ? { ...this.lastShareCodeClaimDetail } : null,
+      lastRestore: this.lastShareCodeRestoreDetail ? { ...this.lastShareCodeRestoreDetail } : null,
+    };
   }
 
   evaluateShareCodeClaimPermission(code: string): {
@@ -1592,6 +1630,7 @@ export class FormPersistenceRuntime {
         claim,
         message: claim?.message || "Share-code restore could not continue.",
       };
+      this.lastShareCodeRestoreDetail = detail;
       this.options.emitEvent(
         "form-ui:resume-share-code-restore-state",
         this.createEventDetail(this.options.getValues(), detail),
@@ -1621,6 +1660,7 @@ export class FormPersistenceRuntime {
       restoredValues: restoredDraft,
       token: claim.lookup.token,
     };
+    this.lastShareCodeRestoreDetail = detail;
     this.options.emitEvent(
       "form-ui:resume-share-code-restore-state",
       this.createEventDetail(restoredDraft, detail),

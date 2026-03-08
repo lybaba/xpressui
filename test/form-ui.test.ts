@@ -6552,6 +6552,16 @@ describe('FormUI', () => {
         }),
       }),
     );
+    expect(runtime.getResumeStatusSummary()).toEqual(
+      expect.objectContaining({
+        configured: false,
+        tokens: expect.objectContaining({
+          total: 0,
+        }),
+        lastClaim: null,
+        lastRestore: null,
+      }),
+    );
 
     values = { amount: '', email: '' };
     expect(Object.keys(runtime.validateValues(values)).length).toBeGreaterThan(0);
@@ -11449,6 +11459,23 @@ describe('FormUI', () => {
         }),
       }),
     );
+    expect(element.getResumeStatusSummary()).toEqual(
+      expect.objectContaining({
+        configured: true,
+        tokens: expect.objectContaining({
+          total: 1,
+          remote: 1,
+        }),
+        lastClaim: expect.objectContaining({
+          code: 'SHARE-RESTORE',
+          status: 'claimed',
+        }),
+        lastRestore: expect.objectContaining({
+          code: 'SHARE-RESTORE',
+          status: 'restored',
+        }),
+      }),
+    );
   });
 
   it('returns a failed detailed restore state when claim cannot continue', async () => {
@@ -12251,6 +12278,14 @@ describe('FormUI', () => {
         resume: expect.objectContaining({
           total: 0,
           samples: [],
+        }),
+      }),
+    );
+    expect(admin.getResumeStatusSummary()).toEqual(
+      expect.objectContaining({
+        configured: false,
+        tokens: expect.objectContaining({
+          total: 0,
         }),
       }),
     );

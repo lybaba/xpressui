@@ -467,6 +467,10 @@ Client-side events:
 - `form-ui:resume-share-code-restore-state` emits every restore attempt with:
   - `restored`
   - `claim_failed`
+- `form.getResumeStatusSummary()` exposes the latest cross-device status in one object:
+  - token counters
+  - latest claim detail
+  - latest restore detail
 
 ### Local Admin / Debug Surfaces For Resume Flows
 

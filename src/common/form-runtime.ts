@@ -33,6 +33,7 @@ import {
   TResumeShareCodeClaimDetail,
   TResumeShareCodeRestoreDetail,
   TResumeShareCodeInfo,
+  TResumeStatusSummary,
   TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
@@ -108,6 +109,7 @@ export type TFormRuntimePublicApi = Pick<
   | "getQueueState"
   | "getStorageSnapshot"
   | "getStorageHealth"
+  | "getResumeStatusSummary"
   | "getOperationalSummary"
   | "getIncidentSummary"
   | "getStepNames"
@@ -336,6 +338,10 @@ export class FormRuntime {
 
   getStorageHealth(): TFormStorageHealth {
     return this.persistence.getStorageHealth();
+  }
+
+  getResumeStatusSummary(): TResumeStatusSummary {
+    return this.persistence.getResumeStatusSummary();
   }
 
   getOperationalSummary(): TLocalFormOperationalSummary {

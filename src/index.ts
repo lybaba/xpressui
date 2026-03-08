@@ -43,6 +43,7 @@ import {
   TResumeShareCodeClaimDetail,
   TResumeShareCodeRestoreDetail,
   TResumeShareCodeInfo,
+  TResumeStatusSummary,
   TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
@@ -259,6 +260,7 @@ export type {
   TResumeShareCodeClaimDetail,
   TResumeShareCodeRestoreDetail,
   TResumeShareCodeInfo,
+  TResumeStatusSummary,
   TResumeTokenInfo,
   TFormStorageHealth,
   TFormStorageSnapshot,
@@ -3621,6 +3623,10 @@ export class FormUI extends HTMLElement {
 
   getStorageHealth = (): TFormStorageHealth => {
     return this.persistence.getStorageHealth();
+  }
+
+  getResumeStatusSummary = (): TResumeStatusSummary => {
+    return this.persistence.getResumeStatusSummary();
   }
 
   getOperationalSummary = () => {

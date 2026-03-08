@@ -49,3 +49,7 @@ Notes:
   - `not_found`
   - `invalid_response`
   - `network_error`
+- the browser runtime also emits `form-ui:resume-share-code-claim-state` for every normalized outcome
+- local tooling can inspect persisted resume state with `createLocalFormAdmin(formConfig)` and:
+  - `getOperationalSummary()`
+  - `getIncidentSummary()`

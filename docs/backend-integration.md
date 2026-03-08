@@ -464,6 +464,38 @@ Policy guidance:
 
 Client-side events:
 - `form-ui:resume-share-code-claim-state` emits every claim outcome with the normalized lifecycle state
+
+### Local Admin / Debug Surfaces For Resume Flows
+
+For local operations and QA workflows, pair the runtime events with:
+
+- `createFormDebugPanel(form)` to inspect the latest:
+  - workflow snapshot
+  - output snapshot
+  - `resume-share-code-claim-state`
+  - `provider-contract-warning`
+- `createLocalFormAdmin(formConfig)` to inspect persisted state without a mounted UI:
+  - `admin.getOperationalSummary()`
+  - `admin.getIncidentSummary()`
+
+Example:
+
+```ts
+import {
+  createFormDebugPanel,
+  createLocalFormAdmin,
+  mountFormUI,
+} from "@lybaba/xpressui";
+
+const form = mountFormUI(container, formConfig);
+const panel = createFormDebugPanel(form, { title: "Resume Debug" });
+const admin = createLocalFormAdmin(formConfig);
+
+document.body.append(panel.element);
+
+console.log(admin.getOperationalSummary());
+console.log(admin.getIncidentSummary(5));
+```
 - `form-ui:resume-share-code-claim-blocked` remains the dedicated blocked/throttled event for existing integrations
 
 `GET` not-found response:

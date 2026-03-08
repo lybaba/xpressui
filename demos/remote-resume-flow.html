@@ -394,6 +394,9 @@
       form.addEventListener("form-ui:resume-token-invalid-signature", (event) => {
         write({ type: "resume-token-invalid-signature", detail: event.detail });
       });
+      form.addEventListener("form-ui:resume-share-code-claim-state", (event) => {
+        write({ type: "resume-share-code-claim-state", detail: event.detail });
+      });
 
       let activeToken = "";
       let activeShareCode = "";
@@ -473,14 +476,14 @@
 
       document.getElementById("btn-claim").addEventListener("click", async () => {
         if (!activeShareCode) {
-          write({ action: "claimResumeShareCode", error: "No share code yet" });
+          write({ action: "claimResumeShareCodeDetail", error: "No share code yet" });
           return;
         }
         try {
-          const claim = await form.claimResumeShareCode(activeShareCode);
-          write({ action: "claimResumeShareCode", code: activeShareCode, claim });
+          const claim = await form.claimResumeShareCodeDetail(activeShareCode);
+          write({ action: "claimResumeShareCodeDetail", code: activeShareCode, claim });
         } catch (error) {
-          write({ action: "claimResumeShareCode", code: activeShareCode, error: String(error) });
+          write({ action: "claimResumeShareCodeDetail", code: activeShareCode, error: String(error) });
         }
       });
 

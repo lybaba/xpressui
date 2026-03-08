@@ -84,6 +84,51 @@ export type TLocalFormOperationalSummary = {
   };
 };
 
+export type TLocalFormIncidentEntry = {
+  id: string;
+  attempts: number;
+  createdAt: number;
+  updatedAt: number;
+  nextAttemptAt: number;
+  lastError?: string;
+};
+
+export type TLocalFormResumeIncidentEntry = {
+  token: string;
+  savedAt: number;
+  issuedAt?: number;
+  expiresAt?: number;
+  remote: boolean;
+  signatureVersion?: string;
+  signatureValid?: boolean;
+};
+
+export type TLocalFormIncidentSummary = {
+  queue: {
+    total: number;
+    ready: number;
+    scheduled: number;
+    overdue: number;
+    retrying: number;
+    oldestCreatedAt?: number;
+    nextAttemptAt?: number;
+    samples: TLocalFormIncidentEntry[];
+  };
+  deadLetter: {
+    total: number;
+    oldestCreatedAt?: number;
+    newestUpdatedAt?: number;
+    samples: TLocalFormIncidentEntry[];
+  };
+  resume: {
+    total: number;
+    local: number;
+    remote: number;
+    invalidSignature: number;
+    samples: TLocalFormResumeIncidentEntry[];
+  };
+};
+
 function matchesQuery(entry: TQueuedSubmission, query?: TLocalQueueQuery): boolean {
   if (!query) {
     return true;
@@ -149,6 +194,17 @@ function applyQuery(entries: TQueuedSubmission[], query?: TLocalQueueQuery): TQu
   return sorted;
 }
 
+function mapIncidentEntry(entry: TQueuedSubmission): TLocalFormIncidentEntry {
+  return {
+    id: entry.id,
+    attempts: entry.attempts,
+    createdAt: entry.createdAt,
+    updatedAt: entry.updatedAt,
+    nextAttemptAt: entry.nextAttemptAt,
+    ...(entry.lastError ? { lastError: entry.lastError } : {}),
+  };
+}
+
 export type TLocalFormAdmin = {
   getSnapshot(): TLocalFormAdminSnapshot;
   getSnapshotAsync(): Promise<TLocalFormAdminSnapshot>;
@@ -178,6 +234,7 @@ export type TLocalFormAdmin = {
     workflowSnapshot: TFormWorkflowSnapshot;
   };
   getOperationalSummary(values?: Record<string, any>): TLocalFormOperationalSummary;
+  getIncidentSummary(limit?: number): TLocalFormIncidentSummary;
   clearDraft(): void;
   clearQueue(): void;
   clearDeadLetter(): void;
@@ -242,22 +299,56 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
       }
 
       try {
-        const parsed = JSON.parse(raw) as { savedAt?: number; resumeEndpoint?: string; remote?: boolean };
+        const parsed = JSON.parse(raw) as {
+          savedAt?: number;
+          issuedAt?: number;
+          expiresAt?: number;
+          resumeEndpoint?: string;
+          remote?: boolean;
+          signature?: string;
+          signatureVersion?: string;
+          snapshot?: TResumeLookupResult["snapshot"];
+        };
         const savedAt = typeof parsed.savedAt === "number" ? parsed.savedAt : 0;
         const expired = Boolean(ttlMs && savedAt && Date.now() - savedAt > ttlMs);
         if (expired) {
           window.localStorage.removeItem(key);
           continue;
         }
+        const signatureVersion =
+          typeof parsed.signatureVersion === "string" ? parsed.signatureVersion : undefined;
+        const hasSignatureMetadata = Boolean(signatureVersion || parsed.signature);
         tokens.push({
           token: key.slice(resumePrefix.length),
           savedAt,
+          ...(typeof parsed.issuedAt === "number" ? { issuedAt: parsed.issuedAt } : {}),
+          ...(typeof parsed.expiresAt === "number" ? { expiresAt: parsed.expiresAt } : {}),
           expired: false,
           resumeEndpoint:
             typeof parsed.resumeEndpoint === "string"
               ? parsed.resumeEndpoint
               : publicConfig.storage?.resumeEndpoint,
           remote: Boolean(parsed.remote),
+          ...(signatureVersion ? { signatureVersion } : {}),
+          ...(hasSignatureMetadata
+            ? {
+                signatureValid: verifyTokenSignature({
+                  token: key.slice(resumePrefix.length),
+                  formName: publicConfig.name,
+                  savedAt,
+                  issuedAt: typeof parsed.issuedAt === "number" ? parsed.issuedAt : savedAt,
+                  expiresAt: typeof parsed.expiresAt === "number" ? parsed.expiresAt : undefined,
+                  snapshot: parsed.snapshot ?? null,
+                  resumeEndpoint:
+                    typeof parsed.resumeEndpoint === "string"
+                      ? parsed.resumeEndpoint
+                      : publicConfig.storage?.resumeEndpoint,
+                  remote: Boolean(parsed.remote),
+                  signature: parsed.signature,
+                  signatureVersion,
+                }),
+              }
+            : {}),
         });
       } catch {
         window.localStorage.removeItem(key);
@@ -380,6 +471,88 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
         ...(resumeTokens[0]?.savedAt ? { latestSavedAt: resumeTokens[0].savedAt } : {}),
       },
       workflow: getWorkflowContext(values),
+    };
+  };
+
+  const getIncidentSummary = (limit = 5): TLocalFormIncidentSummary => {
+    const snapshot = getSnapshot();
+    const resumeTokens = listResumeTokens();
+    const queue = snapshot.queue || [];
+    const deadLetter = snapshot.deadLetter || [];
+    const now = Date.now();
+    const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 5;
+    const oldestQueueCreatedAt = queue.reduce<number | undefined>((current, entry) => {
+      if (typeof current !== "number") {
+        return entry.createdAt;
+      }
+      return Math.min(current, entry.createdAt);
+    }, undefined);
+    const nextQueueAttemptAt = queue.reduce<number | undefined>((current, entry) => {
+      if (typeof current !== "number") {
+        return entry.nextAttemptAt;
+      }
+      return Math.min(current, entry.nextAttemptAt);
+    }, undefined);
+    const oldestDeadLetterCreatedAt = deadLetter.reduce<number | undefined>((current, entry) => {
+      if (typeof current !== "number") {
+        return entry.createdAt;
+      }
+      return Math.min(current, entry.createdAt);
+    }, undefined);
+    const newestDeadLetterUpdatedAt = deadLetter.reduce<number | undefined>((current, entry) => {
+      if (typeof current !== "number") {
+        return entry.updatedAt;
+      }
+      return Math.max(current, entry.updatedAt);
+    }, undefined);
+
+    return {
+      queue: {
+        total: queue.length,
+        ready: queue.filter((entry) => entry.nextAttemptAt <= now).length,
+        scheduled: queue.filter((entry) => entry.nextAttemptAt > now).length,
+        overdue: queue.filter((entry) => entry.nextAttemptAt < now).length,
+        retrying: queue.filter((entry) => entry.attempts > 0).length,
+        ...(typeof oldestQueueCreatedAt === "number" ? { oldestCreatedAt: oldestQueueCreatedAt } : {}),
+        ...(typeof nextQueueAttemptAt === "number" ? { nextAttemptAt: nextQueueAttemptAt } : {}),
+        samples: [...queue]
+          .sort((left, right) => right.updatedAt - left.updatedAt)
+          .slice(0, safeLimit)
+          .map(mapIncidentEntry),
+      },
+      deadLetter: {
+        total: deadLetter.length,
+        ...(typeof oldestDeadLetterCreatedAt === "number"
+          ? { oldestCreatedAt: oldestDeadLetterCreatedAt }
+          : {}),
+        ...(typeof newestDeadLetterUpdatedAt === "number"
+          ? { newestUpdatedAt: newestDeadLetterUpdatedAt }
+          : {}),
+        samples: [...deadLetter]
+          .sort((left, right) => right.updatedAt - left.updatedAt)
+          .slice(0, safeLimit)
+          .map(mapIncidentEntry),
+      },
+      resume: {
+        total: resumeTokens.length,
+        local: resumeTokens.filter((entry) => !entry.remote).length,
+        remote: resumeTokens.filter((entry) => entry.remote).length,
+        invalidSignature: resumeTokens.filter((entry) => entry.signatureValid === false).length,
+        samples: [...resumeTokens]
+          .sort((left, right) => right.savedAt - left.savedAt)
+          .slice(0, safeLimit)
+          .map((entry) => ({
+            token: entry.token,
+            savedAt: entry.savedAt,
+            ...(typeof entry.issuedAt === "number" ? { issuedAt: entry.issuedAt } : {}),
+            ...(typeof entry.expiresAt === "number" ? { expiresAt: entry.expiresAt } : {}),
+            remote: Boolean(entry.remote),
+            ...(entry.signatureVersion ? { signatureVersion: entry.signatureVersion } : {}),
+            ...(typeof entry.signatureValid === "boolean"
+              ? { signatureValid: entry.signatureValid }
+              : {}),
+          })),
+      },
     };
   };
 
@@ -751,6 +924,7 @@ export function createLocalFormAdmin(formConfig: TFormConfig): TLocalFormAdmin {
     getStepProgress,
     getWorkflowContext,
     getOperationalSummary,
+    getIncidentSummary,
     clearDraft() {
       storageAdapter?.clearDraft();
     },

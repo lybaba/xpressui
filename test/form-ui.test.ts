@@ -11889,6 +11889,177 @@ describe('FormUI', () => {
         }),
       }),
     );
+    expect(admin.getIncidentSummary()).toEqual(
+      expect.objectContaining({
+        queue: expect.objectContaining({
+          total: 0,
+          samples: [],
+        }),
+        deadLetter: expect.objectContaining({
+          total: 0,
+          samples: [],
+        }),
+        resume: expect.objectContaining({
+          total: 0,
+          samples: [],
+        }),
+      }),
+    );
+  });
+
+  it('exposes an incident summary for queue dead-letter and resume state in the local admin API', () => {
+    const now = 10_000;
+    vi.spyOn(Date, 'now').mockReturnValue(now);
+
+    const formConfig = createFormConfig({
+      name: 'admin-incident-summary-form',
+      title: 'Admin Incident Summary Form',
+      storage: {
+        mode: 'draft-and-queue',
+        adapter: 'local-storage',
+        key: 'xpressui:test-admin-incident-summary',
+        verifyResumeToken: (payload) => payload.signature === 'valid-signature',
+      },
+      fields: [
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+        },
+      ],
+    });
+    const admin = createLocalFormAdmin(formConfig);
+
+    window.localStorage.setItem(
+      'xpressui:test-admin-incident-summary:queue',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'queue_ready',
+            values: { email: 'ready@example.com' },
+            attempts: 0,
+            createdAt: 1000,
+            updatedAt: 8000,
+            nextAttemptAt: 9000,
+          },
+          {
+            id: 'queue_retry',
+            values: { email: 'retry@example.com' },
+            attempts: 2,
+            createdAt: 2000,
+            updatedAt: 9500,
+            nextAttemptAt: 12000,
+            lastError: 'temporary network error',
+          },
+        ],
+      }),
+    );
+    window.localStorage.setItem(
+      'xpressui:test-admin-incident-summary:dead-letter',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            id: 'dead_1',
+            values: { email: 'dead@example.com' },
+            attempts: 4,
+            createdAt: 500,
+            updatedAt: 9700,
+            nextAttemptAt: 0,
+            lastError: 'permanent validation failure',
+          },
+        ],
+      }),
+    );
+    window.localStorage.setItem(
+      'xpressui:resume:admin-incident-summary-form:token_local',
+      JSON.stringify({
+        version: 1,
+        savedAt: 7000,
+        issuedAt: 6900,
+        resumeEndpoint: 'https://api.example.test/resume',
+        remote: false,
+      }),
+    );
+    window.localStorage.setItem(
+      'xpressui:resume:admin-incident-summary-form:token_remote_invalid',
+      JSON.stringify({
+        version: 1,
+        savedAt: 9000,
+        issuedAt: 8900,
+        resumeEndpoint: 'https://api.example.test/resume',
+        remote: true,
+        signatureVersion: 'v2',
+        signature: 'bad-signature',
+      }),
+    );
+
+    expect(admin.getIncidentSummary(2)).toEqual({
+      queue: {
+        total: 2,
+        ready: 1,
+        scheduled: 1,
+        overdue: 1,
+        retrying: 1,
+        oldestCreatedAt: 1000,
+        nextAttemptAt: 9000,
+        samples: [
+          {
+            id: 'queue_retry',
+            attempts: 2,
+            createdAt: 2000,
+            updatedAt: 9500,
+            nextAttemptAt: 12000,
+            lastError: 'temporary network error',
+          },
+          {
+            id: 'queue_ready',
+            attempts: 0,
+            createdAt: 1000,
+            updatedAt: 8000,
+            nextAttemptAt: 9000,
+          },
+        ],
+      },
+      deadLetter: {
+        total: 1,
+        oldestCreatedAt: 500,
+        newestUpdatedAt: 9700,
+        samples: [
+          {
+            id: 'dead_1',
+            attempts: 4,
+            createdAt: 500,
+            updatedAt: 9700,
+            nextAttemptAt: 0,
+            lastError: 'permanent validation failure',
+          },
+        ],
+      },
+      resume: {
+        total: 2,
+        local: 1,
+        remote: 1,
+        invalidSignature: 1,
+        samples: [
+          {
+            token: 'token_remote_invalid',
+            savedAt: 9000,
+            issuedAt: 8900,
+            remote: true,
+            signatureVersion: 'v2',
+            signatureValid: false,
+          },
+          {
+            token: 'token_local',
+            savedAt: 7000,
+            issuedAt: 6900,
+            remote: false,
+          },
+        ],
+      },
+    });
   });
 
   it('can export and import local admin snapshots', () => {

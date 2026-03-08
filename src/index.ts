@@ -216,7 +216,11 @@ export {
   validateProviderResponseEnvelopeV2,
   validateProviderRequest,
 } from "./common/provider-registry";
-export type { TLocalFormAdmin, TLocalQueueQuery } from "./common/form-admin";
+export type {
+  TLocalFormAdmin,
+  TLocalFormIncidentSummary,
+  TLocalQueueQuery,
+} from "./common/form-admin";
 export type {
   TFormDebugEventRecord,
   TFormDebugObserver,

@@ -42,6 +42,8 @@ Use `clearRecentAppliedRules()` to reset that in-memory rule state.
 
 For storage/debug tooling outside the component instance, use
 `createLocalFormAdmin(formConfig)`.
+Use `getOperationalSummary()` for aggregate state and `getIncidentSummary()`
+for queue/dead-letter/resume samples oriented toward ops/debug workflows.
 
 Public API you should treat as stable:
 - `mountFormUI(...)`

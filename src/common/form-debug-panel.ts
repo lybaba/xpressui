@@ -19,6 +19,14 @@ export type TFormDebugPanelOptions = {
   eventFilterPlaceholder?: string;
 };
 
+const DEBUG_FILTER_PRESETS = [
+  { label: "All", value: "" },
+  { label: "Resume", value: "resume" },
+  { label: "Provider", value: "provider" },
+  { label: "Queue", value: "queue" },
+  { label: "Workflow", value: "workflow" },
+];
+
 export function createFormDebugPanel(
   target: EventTarget,
   options: TFormDebugPanelOptions = {},
@@ -45,6 +53,9 @@ export function createFormDebugPanel(
   eventFilter.type = "search";
   eventFilter.className = "xpressui-debug-panel__event-filter";
   eventFilter.placeholder = options.eventFilterPlaceholder || "Filter events";
+
+  const filterPresets = document.createElement("div");
+  filterPresets.className = "xpressui-debug-panel__filter-presets";
 
   const clearButton = document.createElement("button");
   clearButton.type = "button";
@@ -103,6 +114,7 @@ export function createFormDebugPanel(
   element.appendChild(status);
   element.appendChild(lastUpdated);
   element.appendChild(eventFilter);
+  element.appendChild(filterPresets);
   actions.appendChild(clearButton);
   actions.appendChild(clearEventsButton);
   element.appendChild(actions);
@@ -167,6 +179,12 @@ export function createFormDebugPanel(
       null,
       2,
     );
+    Array.from(filterPresets.querySelectorAll("button")).forEach((button) => {
+      button.setAttribute(
+        "data-active",
+        button.getAttribute("data-filter-value") === eventFilter.value ? "true" : "false",
+      );
+    });
   };
 
   const observer = attachFormDebugObserver(target, {
@@ -185,6 +203,19 @@ export function createFormDebugPanel(
   });
 
   eventFilter.addEventListener("input", render);
+
+  DEBUG_FILTER_PRESETS.forEach((preset) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = preset.label;
+    button.className = "xpressui-debug-panel__filter-preset";
+    button.setAttribute("data-filter-value", preset.value);
+    button.addEventListener("click", () => {
+      eventFilter.value = preset.value;
+      render();
+    });
+    filterPresets.appendChild(button);
+  });
 
   render();
 

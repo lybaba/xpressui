@@ -3819,12 +3819,16 @@ describe('FormUI', () => {
 
     const timeline = panel.element.querySelector('.xpressui-debug-panel__timeline') as HTMLElement;
     const filter = panel.element.querySelector('.xpressui-debug-panel__event-filter') as HTMLInputElement;
+    const providerPreset = Array.from(
+      panel.element.querySelectorAll('.xpressui-debug-panel__filter-preset'),
+    ).find((button) => (button as HTMLButtonElement).textContent === 'Provider') as HTMLButtonElement;
     expect(timeline.textContent).toContain('"type": "form-ui:resume-share-code-claim-state"');
     expect(timeline.textContent).toContain('"type": "form-ui:provider-contract-warning"');
 
-    filter.value = 'provider-contract-warning';
-    filter.dispatchEvent(new Event('input', { bubbles: true }));
+    providerPreset.click();
 
+    expect(filter.value).toBe('provider');
+    expect(providerPreset.getAttribute('data-active')).toBe('true');
     expect(timeline.textContent).toContain('"type": "form-ui:provider-contract-warning"');
     expect(timeline.textContent).not.toContain('"type": "form-ui:resume-share-code-claim-state"');
 

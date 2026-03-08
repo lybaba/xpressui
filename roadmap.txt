@@ -90,6 +90,33 @@ Strategic Objectives
 7. Allow `FormUI` to operate as a read-oriented `ViewUI` for resource/data rendering
 
 
+Current Assessment
+------------------
+
+The product has crossed the point where broad new capability is the main need.
+The core runtime surface is now wide enough for real workflow use cases:
+- schema-driven mounting
+- headless + Web Component runtimes
+- workflow rules and multi-step flows
+- persistence and resume primitives
+- binary/document capture flows
+- view/hybrid rendering
+- commerce-oriented and interactive field primitives including `quiz`
+
+What remains is mainly product hardening and operational coherence rather than
+feature breadth:
+- provider contracts still need one clearly enforced narrow result model
+- save/resume is technically strong but not fully productized for cross-device use
+- file/document flows need stronger backend and privacy semantics for production
+- admin/debug building blocks exist, but operator workflows are still thin
+- docs/demos need to mirror the canonical backend and operational scenarios exactly
+
+Planning principle for the next lots:
+- do not add many new primitives before provider/save-resume/file contracts are tighter
+- prioritize leverage over breadth
+- finish contract-heavy runtime work before expanding showcase/demo surface
+
+
 Roadmap Phases
 --------------
 
@@ -429,6 +456,11 @@ Priority Backlog
 ----------------
 
 P0:
+- standardize and enforce the provider result contract end-to-end:
+  - one canonical normalized provider envelope
+  - explicit workflow/step transition semantics
+  - stable message and error payload shape
+  - stronger strict-mode validation and examples
 - backend-enforced signed shareable token exchange contract:
   - rate limits
   - expiration enforcement
@@ -439,6 +471,10 @@ P0:
   - more guided device-to-device continuation
 
 P1:
+- admin/debug workflows built directly on workflow snapshots:
+  - inspect current workflow state
+  - inspect transitions and provider routing decisions
+  - inspect queue/dead-letter/resume state from the same runtime vocabulary
 - stronger OCR / MRZ normalization contracts
 - file/document privacy controls by field
 - backend-compatible resumable binary upload contracts
@@ -446,7 +482,6 @@ P1:
 
 P2:
 - reduce bundle size by trimming non-essential runtime paths
-- broaden admin/debug tooling that consumes workflow snapshots
 - docs that mirror demo scenarios exactly
 - richer backend integration examples for canonical product scenarios
 
@@ -458,6 +493,118 @@ P3:
   - `nextActions`
   - operator-facing provider messages
   - end-to-end approval/identity recipes
+
+
+Next Delivery Lots
+------------------
+
+Lot A: Provider Contract V2 Tightening
+Priority: Highest
+
+Why first:
+- it reduces ambiguity across providers, workflow routing, debug output, and docs
+- it prevents future providers/examples from adding incompatible shapes
+
+Scope:
+- define one canonical normalized provider result shape
+- make transition semantics explicit:
+  - workflow transition
+  - step transition
+  - conflict resolution policy
+- standardize provider messages/errors payloads
+- strengthen strict contract validation and warning behavior
+- update canonical docs/examples to use the same envelope
+
+Exit criteria:
+- every built-in provider emits the same normalized result structure
+- strict mode catches contract drift early
+- workflow routing behavior no longer depends on provider-specific quirks
+
+
+Lot B: Cross-Device Resume Productization
+Priority: High
+
+Why second:
+- runtime mechanics exist already, but the product experience is still incomplete
+- this is one of the highest-value business capabilities already partially shipped
+
+Scope:
+- formalize backend-enforced share-code/token exchange policy:
+  - server rate limits
+  - expiration semantics
+  - claim policy parity with client/runtime safeguards
+- improve resume UX states:
+  - created
+  - claimed
+  - expired
+  - blocked
+  - conflict
+  - invalid signature
+- make device-to-device continuation flows clearer in demos and docs
+
+Exit criteria:
+- a cross-device resume flow can be explained, tested, and debugged as a first-class product path
+- server/client policy mismatches are eliminated from the contract
+
+
+Lot C: Production File/Document Hardening
+Priority: High
+
+Why third:
+- file and identity flows are the most operationally sensitive parts of the runtime
+- privacy semantics need to be clearer before broader enterprise use
+
+Scope:
+- backend-compatible resumable upload contract beyond local chunk markers
+- stronger OCR/MRZ normalized contract:
+  - confidence
+  - status
+  - normalization consistency
+- field-level privacy semantics across:
+  - submit
+  - storage
+  - debug/admin
+- clearer masking/exclusion rules for document data
+
+Exit criteria:
+- file/document flows are operationally predictable under interruption, retry, and privacy constraints
+- operators and integrators can reason about document visibility and normalized status safely
+
+
+Lot D: Snapshot-Driven Admin And Debug UX
+Priority: Medium
+
+Why fourth:
+- much of the runtime data needed for this already exists
+- this lot converts internal capability into operator leverage
+
+Scope:
+- workflow snapshot inspection UX
+- queue/dead-letter/replay inspection surfaces
+- provider transition inspection
+- resume-state inspection using the same runtime concepts and payloads
+
+Exit criteria:
+- support and integration teams can understand workflow state without reading internals or replaying raw events manually
+
+
+Lot E: Canonical Docs And Scenario Mirror
+Priority: Medium
+
+Why fifth:
+- docs and demos become much more stable once Lots A-C stop moving core contracts
+
+Scope:
+- align demos with canonical runtime-backed scenarios only
+- write backend integration examples that mirror shipped contracts exactly
+- expand docs around:
+  - provider envelopes
+  - OCR/MRZ normalization
+  - save/resume/share-code
+  - `quiz` and interactive field primitives
+
+Exit criteria:
+- docs, demos, and contracts describe the same product surface with minimal interpretation gap
 
 
 Next Best Task

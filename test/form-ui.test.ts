@@ -29,6 +29,7 @@ import {
   resolveProviderTransition,
   mountFormUI,
   PUBLIC_FORM_SCHEMA_VERSION,
+  REMOTE_RESUME_CONTRACT_VERSION,
   registerProvider,
   validateProviderResponseEnvelopeV2,
   TFormUISubmitDetail,

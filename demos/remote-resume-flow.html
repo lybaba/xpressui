@@ -52,10 +52,16 @@
         box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
       }
 
+      .primary,
+      .stack {
+        display: grid;
+        gap: 20px;
+        min-width: 0;
+      }
+
       .controls {
         display: grid;
         gap: 8px;
-        margin-bottom: 14px;
       }
 
       .control-row {
@@ -103,13 +109,18 @@
         line-height: 1.45;
       }
 
-      .stack {
-        display: grid;
-        gap: 20px;
+      .shell {
+        padding: 20px;
+      }
+
+      #app,
+      #app form-ui {
+        display: block;
+        width: 100%;
       }
 
       .hint {
-        margin: 0 0 14px;
+        margin: 0;
         padding: 12px 14px;
         border-radius: 12px;
         background: #eff6ff;
@@ -153,7 +164,7 @@
       </p>
 
       <div class="layout">
-        <section class="stack">
+        <section class="primary">
           <section class="panel">
             <p class="hint">
               Charge d’abord des valeurs de démonstration, puis crée un token distant.
@@ -183,6 +194,9 @@
             </div>
             <div class="token" id="token-value">Current token: none</div>
             <div class="share-code" id="share-code-value">Current share code: none</div>
+          </section>
+
+          <section class="panel shell">
             <div id="app"></div>
           </section>
 

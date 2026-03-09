@@ -98,7 +98,7 @@
         sections: {
           main: [
             { type: "text", name: "album_title", label: "Album" },
-            { type: "image", name: "photos", label: "Photos" },
+            { type: "image-gallery", name: "photos", label: "Photos" },
             { type: "textarea", name: "caption", label: "Caption" },
           ],
         },
@@ -109,10 +109,30 @@
         album_title: "Kyoto Spring Collection",
         caption: "A curated stream of travel moments.",
         photos: [
-          "https://picsum.photos/id/1015/1200/800",
-          "https://picsum.photos/id/1025/1200/800",
-          "https://picsum.photos/id/1035/1200/800",
-          "https://picsum.photos/id/1043/1200/800"
+          {
+            value: "kyoto-river",
+            label: "Kyoto River",
+            image_thumbnail: "https://picsum.photos/id/1015/480/320",
+            image_medium: "https://picsum.photos/id/1015/1200/800",
+          },
+          {
+            value: "temple-cat",
+            label: "Temple Cat",
+            image_thumbnail: "https://picsum.photos/id/1025/480/320",
+            image_medium: "https://picsum.photos/id/1025/1200/800",
+          },
+          {
+            value: "garden-walk",
+            label: "Garden Walk",
+            image_thumbnail: "https://picsum.photos/id/1035/480/320",
+            image_medium: "https://picsum.photos/id/1035/1200/800",
+          },
+          {
+            value: "paper-lanterns",
+            label: "Paper Lanterns",
+            image_thumbnail: "https://picsum.photos/id/1043/480/320",
+            image_medium: "https://picsum.photos/id/1043/1200/800",
+          },
         ],
       });
       form.setFieldMediaPolicy("photos", "gallery");

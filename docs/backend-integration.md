@@ -1546,9 +1546,19 @@ Large-file option:
 - `submit.uploadChunkMethod` controls each chunk request method
 - `submit.uploadResumeEnabled` reuses persisted local chunk checkpoints
 - `submit.uploadResumeKey` sets a custom checkpoint namespace
+- presign responses can also return resumable backend session metadata:
+  - `uploadSession.sessionId`
+  - `uploadSession.resumeUrl`
+  - `uploadSession.nextChunkIndex` or `uploadSession.nextByteOffset`
+  - `uploadSession.headers`
 
 Each chunk sends `Content-Range` and binary body. Ensure your signed upload
 endpoint accepts ranged chunk writes when this mode is enabled.
+
+When `uploadSession.resumeUrl` is present, XPressUI queries that URL before
+continuing chunked upload and treats the backend session state as authoritative
+for the next chunk offset. Per-session headers returned by the backend are
+forwarded to subsequent chunk requests.
 
 Optional policy hooks can run before any upload starts:
 - `submit.fileAcceptancePolicy(context)`

@@ -62,6 +62,8 @@ export type TFormSubmitRequest = {
     presignHeaders?: Record<string, string>;
     presignUploadUrlKey?: string;
     presignFileUrlKey?: string;
+    presignResumeUrlKey?: string;
+    presignSessionIdKey?: string;
     uploadMethod?: 'POST' | 'PUT';
     uploadChunkMethod?: 'PUT' | 'PATCH' | 'POST';
     uploadChunkSizeMb?: number;

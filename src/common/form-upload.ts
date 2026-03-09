@@ -7,6 +7,10 @@ import {
 } from "./TFormConfig";
 import { isFileLikeValue } from "./field";
 import { buildFormDataBody, resolveSubmitRequestUrl, submitFormValues } from "./form-submit";
+import {
+  normalizePresignedUploadDescriptor,
+  TPresignedUploadDescriptor,
+} from "./upload-contract";
 
 export type TFormUploadState = {
   phase: "upload";
@@ -138,6 +142,17 @@ type TUploadRetryFailureMeta = {
   reason: string;
 };
 
+type TUploadResumeState = {
+  version: 1;
+  nextChunkIndex: number;
+  updatedAt: number;
+  sessionId?: string;
+  resumeUrl?: string;
+  uploadUrl?: string;
+  fileUrl?: string;
+  headers?: Record<string, string>;
+};
+
 function sleep(ms: number): Promise<void> {
   if (ms <= 0) {
     return Promise.resolve();
@@ -260,34 +275,63 @@ function getUploadResumeKey(
   return `xpressui:upload-resume:${namespace}:${fieldName}:${file.name}:${file.size}:${file.lastModified}`;
 }
 
-function loadUploadResumeChunkIndex(
+function loadUploadResumeState(
   submitConfig: TFormSubmitRequest,
   fieldName: string,
   file: File,
-): number {
+): TUploadResumeState | null {
   if (!shouldUseUploadResume(submitConfig)) {
-    return 0;
+    return null;
   }
   const storage = getUploadResumeStorage();
   if (!storage) {
-    return 0;
+    return null;
   }
   const raw = storage.getItem(getUploadResumeKey(submitConfig, fieldName, file));
   if (!raw) {
-    return 0;
+    return null;
   }
-  const parsed = Number(raw);
-  if (!Number.isInteger(parsed) || parsed < 0) {
-    return 0;
+
+  const parsedNumber = Number(raw);
+  if (Number.isInteger(parsedNumber) && parsedNumber >= 0) {
+    return {
+      version: 1,
+      nextChunkIndex: parsedNumber,
+      updatedAt: 0,
+    };
   }
-  return parsed;
+
+  try {
+    const parsed = JSON.parse(raw) as Record<string, any>;
+    if (
+      parsed.version !== 1
+      || !Number.isInteger(parsed.nextChunkIndex)
+      || parsed.nextChunkIndex < 0
+    ) {
+      return null;
+    }
+    return {
+      version: 1,
+      nextChunkIndex: parsed.nextChunkIndex,
+      updatedAt: typeof parsed.updatedAt === "number" ? parsed.updatedAt : Date.now(),
+      ...(typeof parsed.sessionId === "string" ? { sessionId: parsed.sessionId } : {}),
+      ...(typeof parsed.resumeUrl === "string" ? { resumeUrl: parsed.resumeUrl } : {}),
+      ...(typeof parsed.uploadUrl === "string" ? { uploadUrl: parsed.uploadUrl } : {}),
+      ...(typeof parsed.fileUrl === "string" ? { fileUrl: parsed.fileUrl } : {}),
+      ...(parsed.headers && typeof parsed.headers === "object" && !Array.isArray(parsed.headers)
+        ? { headers: parsed.headers as Record<string, string> }
+        : {}),
+    };
+  } catch {
+    return null;
+  }
 }
 
-function saveUploadResumeChunkIndex(
+function saveUploadResumeState(
   submitConfig: TFormSubmitRequest,
   fieldName: string,
   file: File,
-  chunkIndex: number,
+  state: TUploadResumeState,
 ): void {
   if (!shouldUseUploadResume(submitConfig)) {
     return;
@@ -298,7 +342,16 @@ function saveUploadResumeChunkIndex(
   }
   storage.setItem(
     getUploadResumeKey(submitConfig, fieldName, file),
-    String(Math.max(0, chunkIndex)),
+    JSON.stringify({
+      version: 1,
+      nextChunkIndex: Math.max(0, state.nextChunkIndex),
+      updatedAt: state.updatedAt,
+      ...(state.sessionId ? { sessionId: state.sessionId } : {}),
+      ...(state.resumeUrl ? { resumeUrl: state.resumeUrl } : {}),
+      ...(state.uploadUrl ? { uploadUrl: state.uploadUrl } : {}),
+      ...(state.fileUrl ? { fileUrl: state.fileUrl } : {}),
+      ...(state.headers ? { headers: state.headers } : {}),
+    }),
   );
 }
 
@@ -315,6 +368,25 @@ function clearUploadResumeChunkIndex(
     return;
   }
   storage.removeItem(getUploadResumeKey(submitConfig, fieldName, file));
+}
+
+function getResumeChunkIndexFromDescriptor(
+  descriptor: TPresignedUploadDescriptor,
+  chunkSizeBytes: number,
+): number | null {
+  if (typeof descriptor.nextChunkIndex === "number" && descriptor.nextChunkIndex >= 0) {
+    return Math.floor(descriptor.nextChunkIndex);
+  }
+
+  if (
+    typeof descriptor.nextByteOffset === "number"
+    && descriptor.nextByteOffset >= 0
+    && chunkSizeBytes > 0
+  ) {
+    return Math.floor(descriptor.nextByteOffset / chunkSizeBytes);
+  }
+
+  return null;
 }
 
 export class FormUploadRuntime {
@@ -636,17 +708,27 @@ export class FormUploadRuntime {
         );
         throw error;
       });
-      const uploadUrl = presignResult[submitConfig.presignUploadUrlKey || "uploadUrl"];
-      const fileUrl = presignResult[submitConfig.presignFileUrlKey || "fileUrl"];
+      const uploadDescriptor = normalizePresignedUploadDescriptor(presignResult, {
+        uploadUrlKey: submitConfig.presignUploadUrlKey,
+        fileUrlKey: submitConfig.presignFileUrlKey,
+        resumeUrlKey: submitConfig.presignResumeUrlKey,
+        sessionIdKey: submitConfig.presignSessionIdKey,
+      });
+      const uploadUrl = uploadDescriptor.uploadUrl;
+      const fileUrl = uploadDescriptor.fileUrl;
+      if (!uploadUrl || !fileUrl) {
+        throw new Error("upload_invalid_presign_response");
+      }
       const chunkSizeBytes = getChunkSizeBytes(submitConfig);
       const uploadMethod = submitConfig.uploadMethod || "PUT";
+      const persistedResumeState = loadUploadResumeState(submitConfig, fieldName, file);
 
       const uploadFileInChunks = async (): Promise<void> => {
         if (chunkSizeBytes <= 0 || file.size <= chunkSizeBytes) {
           await uploadWithProgress(
             uploadUrl,
             uploadMethod,
-            {},
+            uploadDescriptor.headers || {},
             file,
             (progress) => {
               const aggregateProgress = Math.round(((completed + progress / 100) / total) * 100);
@@ -664,10 +746,134 @@ export class FormUploadRuntime {
 
         const chunkMethod = submitConfig.uploadChunkMethod || uploadMethod;
         const totalChunks = Math.ceil(file.size / chunkSizeBytes);
-        const storedResumeChunkIndex = Math.max(0, loadUploadResumeChunkIndex(submitConfig, fieldName, file));
-        const resumeChunkIndex = storedResumeChunkIndex >= totalChunks
+        let resumeState: TUploadResumeState = {
+          version: 1,
+          nextChunkIndex: Math.max(0, persistedResumeState?.nextChunkIndex || 0),
+          updatedAt: Date.now(),
+          ...(persistedResumeState?.sessionId || uploadDescriptor.sessionId
+            ? { sessionId: persistedResumeState?.sessionId || uploadDescriptor.sessionId }
+            : {}),
+          ...(persistedResumeState?.resumeUrl || uploadDescriptor.resumeUrl
+            ? { resumeUrl: persistedResumeState?.resumeUrl || uploadDescriptor.resumeUrl }
+            : {}),
+          uploadUrl,
+          fileUrl,
+          ...(persistedResumeState?.headers || uploadDescriptor.headers
+            ? { headers: persistedResumeState?.headers || uploadDescriptor.headers }
+            : {}),
+        };
+        if (resumeState.resumeUrl) {
+          try {
+            const resumeResponse = await fetch(resumeState.resumeUrl, {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+              },
+            });
+            const resumeContentType = resumeResponse.headers.get("content-type") || "";
+            const resumeResult = resumeContentType.includes("application/json")
+              ? await resumeResponse.json()
+              : await resumeResponse.text();
+            if (resumeResponse.ok) {
+              const remoteDescriptor = normalizePresignedUploadDescriptor(resumeResult, {
+                uploadUrlKey: submitConfig.presignUploadUrlKey,
+                fileUrlKey: submitConfig.presignFileUrlKey,
+                resumeUrlKey: submitConfig.presignResumeUrlKey,
+                sessionIdKey: submitConfig.presignSessionIdKey,
+              });
+              const remoteChunkIndex = getResumeChunkIndexFromDescriptor(
+                remoteDescriptor,
+                chunkSizeBytes,
+              );
+              if (typeof remoteChunkIndex === "number") {
+                resumeState.nextChunkIndex = remoteChunkIndex;
+              }
+              if (remoteDescriptor.sessionId) {
+                resumeState.sessionId = remoteDescriptor.sessionId;
+              }
+              if (remoteDescriptor.resumeUrl) {
+                resumeState.resumeUrl = remoteDescriptor.resumeUrl;
+              }
+              if (remoteDescriptor.uploadUrl) {
+                resumeState.uploadUrl = remoteDescriptor.uploadUrl;
+              }
+              if (remoteDescriptor.fileUrl) {
+                resumeState.fileUrl = remoteDescriptor.fileUrl;
+              }
+              if (remoteDescriptor.headers) {
+                resumeState.headers = remoteDescriptor.headers;
+              }
+              resumeState.updatedAt = Date.now();
+              this.emitUploadEvent(
+                "form-ui:upload-resume-state",
+                values,
+                submitConfig,
+                createUploadState(
+                  fileFieldNames,
+                  "uploading",
+                  Math.round(((completed + Math.min(resumeState.nextChunkIndex, totalChunks) / totalChunks) / total) * 100),
+                ),
+                {
+                  strategy: "presigned",
+                  source: "remote",
+                  fieldName,
+                  fileName: file.name,
+                  sessionId: resumeState.sessionId,
+                  resumeUrl: resumeState.resumeUrl,
+                  resumeChunkIndex: resumeState.nextChunkIndex,
+                  chunkCount: totalChunks,
+                  completed: remoteDescriptor.completed === true,
+                },
+              );
+              if (remoteDescriptor.completed === true) {
+                clearUploadResumeChunkIndex(submitConfig, fieldName, file);
+                return;
+              }
+            }
+          } catch {
+            this.emitUploadEvent(
+              "form-ui:upload-resume-state",
+              values,
+              submitConfig,
+              createUploadState(fileFieldNames, "uploading", Math.round((completed / total) * 100)),
+              {
+                strategy: "presigned",
+                source: "remote",
+                fieldName,
+                fileName: file.name,
+                sessionId: resumeState.sessionId,
+                resumeUrl: resumeState.resumeUrl,
+                resumeChunkIndex: resumeState.nextChunkIndex,
+                degradedToLocal: true,
+              },
+            );
+          }
+        }
+        if (!resumeState.resumeUrl && resumeState.nextChunkIndex > 0) {
+          this.emitUploadEvent(
+            "form-ui:upload-resume-state",
+            values,
+            submitConfig,
+            createUploadState(
+              fileFieldNames,
+              "uploading",
+              Math.round(((completed + Math.min(resumeState.nextChunkIndex, totalChunks) / totalChunks) / total) * 100),
+            ),
+            {
+              strategy: "presigned",
+              source: "local",
+              fieldName,
+              fileName: file.name,
+              sessionId: resumeState.sessionId,
+              resumeUrl: resumeState.resumeUrl,
+              resumeChunkIndex: resumeState.nextChunkIndex,
+              chunkCount: totalChunks,
+            },
+          );
+        }
+        const resumeChunkIndex = resumeState.nextChunkIndex >= totalChunks
           ? 0
-          : storedResumeChunkIndex;
+          : resumeState.nextChunkIndex;
         if (resumeChunkIndex > 0) {
           this.emitUploadEvent(
             "form-ui:upload-progress",
@@ -688,9 +894,10 @@ export class FormUploadRuntime {
           const end = Math.min(file.size, start + chunkSizeBytes);
           const chunk = file.slice(start, end);
           await uploadWithProgress(
-            uploadUrl,
+            resumeState.uploadUrl || uploadUrl,
             chunkMethod,
             {
+              ...(resumeState.headers || {}),
               "Content-Type": file.type || "application/octet-stream",
               "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,
             },
@@ -708,11 +915,17 @@ export class FormUploadRuntime {
                   fieldName,
                   chunkIndex,
                   chunkCount: totalChunks,
+                  sessionId: resumeState.sessionId,
                 },
               );
             },
           );
-          saveUploadResumeChunkIndex(submitConfig, fieldName, file, chunkIndex + 1);
+          resumeState = {
+            ...resumeState,
+            nextChunkIndex: chunkIndex + 1,
+            updatedAt: Date.now(),
+          };
+          saveUploadResumeState(submitConfig, fieldName, file, resumeState);
         }
         clearUploadResumeChunkIndex(submitConfig, fieldName, file);
       };

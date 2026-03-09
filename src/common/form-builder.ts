@@ -487,6 +487,12 @@ export function createTemplateMarkup(
         config.submit.presignFileUrlKey
           ? `data-submit-presign-file-url-key="${escapeHtml(config.submit.presignFileUrlKey)}"`
           : '',
+        config.submit.presignResumeUrlKey
+          ? `data-submit-presign-resume-url-key="${escapeHtml(config.submit.presignResumeUrlKey)}"`
+          : '',
+        config.submit.presignSessionIdKey
+          ? `data-submit-presign-session-id-key="${escapeHtml(config.submit.presignSessionIdKey)}"`
+          : '',
         config.submit.uploadMethod
           ? `data-submit-upload-method="${escapeHtml(config.submit.uploadMethod)}"`
           : '',

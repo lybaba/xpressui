@@ -6070,6 +6070,124 @@ describe('FormUI', () => {
     (globalThis as any).XMLHttpRequest = originalXhr;
   });
 
+  it('uses backend resumable upload session state when resumeUrl is provided', async () => {
+    const originalXhr = window.XMLHttpRequest;
+    const emittedResumeStates: any[] = [];
+
+    class MockXhr {
+      static requests: Array<{ headers: Record<string, string>; url: string }> = [];
+      upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      status = 200;
+      responseText = '';
+      headers: Record<string, string> = {};
+      url = '';
+
+      open(_method: string, url: string) {
+        this.url = url;
+      }
+      setRequestHeader(key: string, value: string) {
+        this.headers[key] = value;
+      }
+      getResponseHeader() {
+        return 'text/plain';
+      }
+      send() {
+        MockXhr.requests.push({ headers: { ...this.headers }, url: this.url });
+        this.upload.onprogress?.({
+          lengthComputable: true,
+          loaded: 100,
+          total: 100,
+        } as ProgressEvent);
+        this.onload?.();
+      }
+    }
+
+    (window as any).XMLHttpRequest = MockXhr;
+    (globalThis as any).XMLHttpRequest = MockXhr;
+
+    const fetchMock = vi.spyOn(window, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({
+          uploadUrl: 'https://upload.example.test/resumable',
+          fileUrl: 'https://cdn.example.test/resumable.bin',
+          uploadSession: {
+            sessionId: 'sess_123',
+            resumeUrl: 'https://api.example.test/uploads/sess_123',
+          },
+        }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({
+          sessionId: 'sess_123',
+          nextChunkIndex: 3,
+          headers: {
+            'X-Upload-Session': 'sess_123',
+          },
+        }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ saved: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+
+    const runtime = new FormUploadRuntime({
+      emitEvent(eventName, detail) {
+        if (eventName === 'form-ui:upload-resume-state') {
+          emittedResumeStates.push(detail.result);
+        }
+        return true;
+      },
+    });
+    const file = new File(['abcdefghij'], 'resumable.bin', { type: 'application/octet-stream' });
+
+    await runtime.submit(
+      { attachment: file },
+      {
+        endpoint: 'https://api.example.test/finalize',
+        method: 'POST',
+        mode: 'form-data',
+        uploadStrategy: 'presigned',
+        presignEndpoint: 'https://api.example.test/presign',
+        uploadChunkSizeMb: 0.000002,
+      },
+      {
+        attachment: {
+          name: 'attachment',
+          label: 'Attachment',
+          type: 'file',
+        },
+      },
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[1][0]).toBe('https://api.example.test/uploads/sess_123');
+    expect(MockXhr.requests[0].headers['Content-Range']).toContain('bytes 6-');
+    expect(MockXhr.requests[0].headers['X-Upload-Session']).toBe('sess_123');
+    expect(emittedResumeStates).toContainEqual(
+      expect.objectContaining({
+        source: 'remote',
+        sessionId: 'sess_123',
+        resumeChunkIndex: 3,
+      }),
+    );
+
+    const resumeKey = `xpressui:upload-resume:https://api.example.test/presign:attachment:${file.name}:${file.size}:${file.lastModified}`;
+    expect(window.localStorage.getItem(resumeKey)).toBeNull();
+
+    (window as any).XMLHttpRequest = originalXhr;
+    (globalThis as any).XMLHttpRequest = originalXhr;
+  });
+
   it('retries presigned upload operations and emits retry diagnostics', async () => {
     const originalXhr = window.XMLHttpRequest;
     const emittedRetryDetails: any[] = [];

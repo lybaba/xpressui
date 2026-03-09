@@ -608,6 +608,8 @@ export default function getFormConfig(node: Element): TFormConfig {
             presignMethod: (formConfig as any).submitPresignMethod,
             presignUploadUrlKey: (formConfig as any).submitPresignUploadUrlKey,
             presignFileUrlKey: (formConfig as any).submitPresignFileUrlKey,
+            presignResumeUrlKey: (formConfig as any).submitPresignResumeUrlKey,
+            presignSessionIdKey: (formConfig as any).submitPresignSessionIdKey,
             uploadMethod: (formConfig as any).submitUploadMethod,
             uploadChunkMethod: (formConfig as any).submitUploadChunkMethod,
             uploadChunkSizeMb: (formConfig as any).submitUploadChunkSizeMb
@@ -644,6 +646,8 @@ export default function getFormConfig(node: Element): TFormConfig {
         delete (formConfig as any).submitPresignMethod;
         delete (formConfig as any).submitPresignUploadUrlKey;
         delete (formConfig as any).submitPresignFileUrlKey;
+        delete (formConfig as any).submitPresignResumeUrlKey;
+        delete (formConfig as any).submitPresignSessionIdKey;
         delete (formConfig as any).submitUploadMethod;
         delete (formConfig as any).submitUploadChunkMethod;
         delete (formConfig as any).submitUploadChunkSizeMb;

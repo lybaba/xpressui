@@ -183,7 +183,6 @@
             </div>
             <div class="token" id="token-value">Current token: none</div>
             <div class="share-code" id="share-code-value">Current share code: none</div>
-            <div id="resume-status-slot"></div>
             <div id="app"></div>
           </section>
 
@@ -191,18 +190,10 @@
             <h2>Flow Output</h2>
             <pre id="result">{}</pre>
           </section>
-
-          <section class="panel">
-            <h2>Local Admin Summary</h2>
-            <pre id="admin-summary">{}</pre>
-          </section>
         </section>
 
         <aside class="stack">
-          <section class="panel">
-            <h2>Ops Panel</h2>
-            <div id="debug-panel-slot"></div>
-          </section>
+          <div id="debug-panel-slot"></div>
         </aside>
       </div>
     </main>
@@ -216,7 +207,6 @@
 
       const app = document.getElementById("app");
       const result = document.getElementById("result");
-      const adminSummary = document.getElementById("admin-summary");
       const debugPanelSlot = document.getElementById("debug-panel-slot");
       const tokenValue = document.getElementById("token-value");
       const shareCodeValue = document.getElementById("share-code-value");
@@ -516,7 +506,6 @@
       debugPanelSlot.appendChild(opsPanel.element);
 
       const refreshAdminPanels = () => {
-        adminSummary.textContent = JSON.stringify(admin.getOperationalSummary(), null, 2);
         opsPanel.refresh();
       };
 

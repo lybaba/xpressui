@@ -702,6 +702,11 @@ include a normalized block for downstream integrations:
 - `normalized.status`: `text_only`, `mrz_detected`, `mrz_invalid`
 - `normalized.quality.textLength`
 - `normalized.quality.estimatedConfidence`
+- `normalized.quality.hasMrz`
+- `normalized.quality.hasFields`
+- `normalized.quality.mrzChecksumValid` when checksum data is available
+- `normalized.review.recommendedAction`: `allow`, `review`, `reject`
+- `normalized.review.reasons`: stable machine-readable reasons
 - `normalized.mrz`: normalized MRZ payload or `null`
 - `normalized.fields`: normalized extracted fields or `null`
 
@@ -716,7 +721,14 @@ Suggested normalized payload shape:
   "status": "mrz_detected",
   "quality": {
     "textLength": 88,
-    "estimatedConfidence": 1
+    "estimatedConfidence": 1,
+    "hasMrz": true,
+    "hasFields": true,
+    "mrzChecksumValid": true
+  },
+  "review": {
+    "recommendedAction": "allow",
+    "reasons": []
   },
   "mrz": {
     "format": "TD3",
@@ -743,6 +755,7 @@ Suggested normalized payload shape:
 
 Contract notes:
 - `contractVersion`, `status`, and `quality` are always present
+- `review` is always present and is intended for workflow/routing heuristics
 - `mrz` is `null` when no MRZ was detected
 - `fields` contains normalized extraction keys when available
 - host backends should key off `contractVersion` rather than inferred shape

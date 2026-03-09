@@ -36,11 +36,10 @@
         margin-top: 24px;
         display: grid;
         gap: 20px;
-        grid-template-columns: 360px minmax(0, 1fr) 300px;
+        grid-template-columns: minmax(0, 1fr) 300px;
         align-items: start;
       }
 
-      .code,
       .shell,
       .notes {
         background: var(--panel);
@@ -50,33 +49,8 @@
         box-shadow: 0 12px 34px rgba(15, 23, 42, 0.07);
       }
 
-      .code-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-      .code h2,
       .notes h2,
       .shell h2 { margin: 0; font-size: 1rem; }
-
-      .copy-btn {
-        border: 1px solid #93c5fd;
-        background: #fff;
-        color: #1d4ed8;
-        border-radius: 999px;
-        padding: 6px 11px;
-        font-size: 12px;
-        cursor: pointer;
-      }
-
-      .code-body { margin-top: 12px; }
-      .code-tools { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-      .code pre {
-        margin: 0;
-        padding: 12px;
-        overflow: auto;
-        border-radius: 12px;
-        background: #0f172a;
-        color: #dbeafe;
-        font-size: 12px;
-        line-height: 1.45;
-      }
 
       .notes ul { margin: 10px 0 0; padding-left: 18px; color: var(--muted); }
       .notes li { margin-bottom: 8px; }
@@ -93,50 +67,6 @@
       <p>Démonstration de <code>mode="view"</code> avec policy média <code>gallery</code> et données injectées via API runtime.</p>
 
       <div class="layout">
-        <aside class="code">
-          <div class="code-head">
-            <h2>Code</h2>
-            <button class="copy-btn" type="button" data-toggle-code>Show code</button>
-          </div>
-          <div class="code-body" hidden>
-            <div class="code-tools">
-              <button class="copy-btn" type="button" data-copy-code>Copy</button>
-            </div>
-            <pre><code>import { mountFormUI } from "../dist/xpressui.mjs";
-
-const app = document.getElementById("app");
-const form = mountFormUI(app, {
-  version: 1,
-  id: "view_gallery_demo",
-  uid: "view_gallery_demo_uid",
-  type: "contactform",
-  name: "view-gallery-demo",
-  title: "Travel Memories",
-  sections: {
-    main: [
-      { type: "text", name: "album_title", label: "Album" },
-      { type: "image", name: "photos", label: "Photos" },
-      { type: "textarea", name: "caption", label: "Caption" },
-    ],
-  },
-});
-
-form.setAttribute("mode", "view");
-form.setViewValues({
-  album_title: "Kyoto Spring Collection",
-  caption: "A curated stream of travel moments.",
-  photos: [
-    "https://picsum.photos/id/1015/1200/800",
-    "https://picsum.photos/id/1025/1200/800",
-    "https://picsum.photos/id/1035/1200/800",
-    "https://picsum.photos/id/1043/1200/800"
-  ],
-});
-form.setFieldMediaPolicy("photos", "gallery");
-form.refreshOutputRendering();</code></pre>
-          </div>
-        </aside>
-
         <section class="shell">
           <h2>Live Demo</h2>
           <div id="app"></div>
@@ -156,48 +86,6 @@ form.refreshOutputRendering();</code></pre>
 
     <script type="module">
       import { mountFormUI } from "../dist/xpressui.mjs";
-
-      document.querySelectorAll("[data-toggle-code]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const panel = button.closest(".code");
-          const body = panel?.querySelector(".code-body");
-          const isHidden = body?.hasAttribute("hidden");
-          if (!body) return;
-          if (isHidden) {
-            body.removeAttribute("hidden");
-            button.textContent = "Hide code";
-          } else {
-            body.setAttribute("hidden", "true");
-            button.textContent = "Show code";
-          }
-        });
-      });
-
-      document.querySelectorAll("[data-copy-code]").forEach((button) => {
-        button.addEventListener("click", async () => {
-          const code = button.closest(".code")?.querySelector("code")?.textContent || "";
-          if (!code) return;
-          const previousLabel = button.textContent;
-          try {
-            if (navigator.clipboard?.writeText) {
-              await navigator.clipboard.writeText(code);
-            } else {
-              const textarea = document.createElement("textarea");
-              textarea.value = code;
-              document.body.appendChild(textarea);
-              textarea.select();
-              document.execCommand("copy");
-              textarea.remove();
-            }
-            button.textContent = "Copied";
-          } catch {
-            button.textContent = "Failed";
-          }
-          window.setTimeout(() => {
-            button.textContent = previousLabel;
-          }, 1200);
-        });
-      });
 
       const app = document.getElementById("app");
       const form = mountFormUI(app, {

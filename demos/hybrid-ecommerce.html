@@ -35,13 +35,12 @@
         margin-top: 24px;
         display: grid;
         gap: 20px;
-        grid-template-columns: 360px minmax(0, 1fr) 320px;
+        grid-template-columns: minmax(0, 1fr) 320px;
         align-items: start;
       }
 
       .shell,
-      .result,
-      .code {
+      .result {
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 18px;
@@ -50,31 +49,7 @@
       }
 
       .shell h2,
-      .result h2,
-      .code h2 { margin: 0; font-size: 1rem; }
-
-      .code-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-      .copy-btn {
-        border: 1px solid #93c5fd;
-        background: #fff;
-        color: #1d4ed8;
-        border-radius: 999px;
-        padding: 6px 11px;
-        font-size: 12px;
-        cursor: pointer;
-      }
-      .code-body { margin-top: 12px; }
-      .code-tools { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-      .code pre {
-        margin: 0;
-        padding: 12px;
-        overflow: auto;
-        border-radius: 12px;
-        background: #0f172a;
-        color: #dbeafe;
-        font-size: 12px;
-        line-height: 1.45;
-      }
+      .result h2 { margin: 0; font-size: 1rem; }
 
       .result pre {
         margin: 10px 0 0;
@@ -102,77 +77,6 @@
       </p>
 
       <div class="layout">
-        <aside class="code">
-          <div class="code-head">
-            <h2>Code</h2>
-            <button class="copy-btn" type="button" data-toggle-code>Show code</button>
-          </div>
-          <div class="code-body" hidden>
-            <div class="code-tools">
-              <button class="copy-btn" type="button" data-copy-code>Copy</button>
-            </div>
-            <pre><code>import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
-
-const config = createFormPreset("ecommerce-checkout", {
-  submit: { endpoint: "/api/mock-ecommerce-submit", method: "POST" }
-});
-const productsField = (config.sections.main || []).find((field) => field.name === "products");
-if (productsField) {
-  productsField.choices = products;
-}
-(config.sections.main || []).push({
-  type: "image-gallery",
-  name: "lookbook",
-  label: "Lookbook Gallery",
-  choices: lookbookImages
-});
-(config.sections.main || []).push(
-  { type: "setting", name: "checkout_currency_setting", label: "Currency Setting", value: "EUR", includeInSubmit: true },
-  { type: "setting", name: "checkout_shipping_setting", label: "Shipping Setting", value: 8.9, includeInSubmit: false },
-  { type: "setting", name: "checkout_tax_rate_setting", label: "Tax Rate Setting", value: 0.2, includeInSubmit: false }
-);
-
-const mainFields = config.sections.main || [];
-const stepOneFields = mainFields.filter((field) =>
-  field.name === "products" || field.name === "lookbook"
-);
-const checkoutFields = [
-  { type: "text", name: "order_currency", label: "Currency", viewMode: "view" },
-  { type: "email", name: "billing_email", label: "Email", required: true },
-  { type: "text", name: "payment_card_number", label: "Card Number", required: true },
-  { type: "text", name: "payment_card_expiry", label: "Expiry (MM/YY)", required: true },
-  { type: "text", name: "payment_card_cvc", label: "CVC", required: true }
-];
-config.type = "multistepform";
-config.stepSections = [
-  { type: "section", name: "catalog_step", label: "1. Cart & Details" },
-  { type: "section", name: "checkout_step", label: "2. Checkout & Pay" },
-];
-config.sections = {
-  ...(config.sections || {}),
-  custom: [
-    { type: "section", name: "catalog_step", label: "1. Cart & Details" },
-    { type: "section", name: "checkout_step", label: "2. Checkout & Pay" },
-  ],
-  catalog_step: stepOneFields,
-  checkout_step: checkoutFields,
-};
-config.rules = [
-  {
-    id: "set-checkout-currency",
-    conditions: [{ field: "checkout_currency_setting", operator: "exists" }],
-    actions: [{ type: "set-value", field: "order_currency", sourceField: "checkout_currency_setting" }],
-  },
-];
-config.stepLabels = {
-  next: "Continue to checkout",
-  previous: "Back to cart",
-};
-
-const form = mountFormUI(app, config);</code></pre>
-          </div>
-        </aside>
-
         <section class="shell">
           <h2>Checkout Form</h2>
           <div id="app"></div>
@@ -447,48 +351,6 @@ const form = mountFormUI(app, config);</code></pre>
 
       window.addEventListener("beforeunload", () => {
         window.fetch = originalFetch;
-      });
-
-      document.querySelectorAll("[data-toggle-code]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const panel = button.closest(".code");
-          const body = panel?.querySelector(".code-body");
-          const isHidden = body?.hasAttribute("hidden");
-          if (!body) return;
-          if (isHidden) {
-            body.removeAttribute("hidden");
-            button.textContent = "Hide code";
-          } else {
-            body.setAttribute("hidden", "true");
-            button.textContent = "Show code";
-          }
-        });
-      });
-
-      document.querySelectorAll("[data-copy-code]").forEach((button) => {
-        button.addEventListener("click", async () => {
-          const code = button.closest(".code")?.querySelector("code")?.textContent || "";
-          if (!code) return;
-          const previousLabel = button.textContent;
-          try {
-            if (navigator.clipboard?.writeText) {
-              await navigator.clipboard.writeText(code);
-            } else {
-              const textarea = document.createElement("textarea");
-              textarea.value = code;
-              document.body.appendChild(textarea);
-              textarea.select();
-              document.execCommand("copy");
-              textarea.remove();
-            }
-            button.textContent = "Copied";
-          } catch {
-            button.textContent = "Failed";
-          }
-          window.setTimeout(() => {
-            button.textContent = previousLabel;
-          }, 1200);
-        });
       });
     </script>
   </body>

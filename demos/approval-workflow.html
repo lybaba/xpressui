@@ -10,14 +10,8 @@
       main { max-width: 1400px; margin: 0 auto; padding: 32px 20px 60px; }
       h1 { margin: 0 0 8px; }
       p { color: #475569; }
-      .layout { display: grid; grid-template-columns: 380px minmax(0, 1fr) 320px; gap: 20px; margin-top: 24px; align-items: start; }
-      .code, .shell, .debug, .result { padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; }
-      .code-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-      .code h2 { margin: 0; font-size: 1rem; }
-      .copy-btn { border: 1px solid #cbd5e1; background: #fff; color: #0f172a; border-radius: 999px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
-      .code-body { margin-top: 12px; }
-      .code-tools { display: flex; justify-content: flex-end; margin-bottom: 12px; }
-      .code pre { margin: 0; padding: 12px; overflow: auto; border-radius: 12px; background: #0f172a; color: #e2e8f0; font-size: 12px; line-height: 1.45; }
+      .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; margin-top: 24px; align-items: start; }
+      .shell, .debug, .result { padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; }
       .primary { display: grid; gap: 20px; min-width: 0; }
       .stack { display: grid; gap: 20px; min-width: 0; }
       .result h2 { margin: 0 0 12px; font-size: 1rem; }
@@ -42,63 +36,6 @@
       <h1>Approval Workflow</h1>
       <p>Démo d’un flux d’approbation avec panneau ops combiné branché sur les événements et l’état local.</p>
       <div class="layout">
-        <aside class="code">
-          <div class="code-head">
-            <h2>Code</h2>
-            <button class="copy-btn" type="button" data-toggle-code>Show code</button>
-          </div>
-          <div class="code-body" hidden>
-            <div class="code-tools">
-              <button class="copy-btn" type="button" data-copy-code>Copy</button>
-            </div>
-            <pre><code>import { createFormOpsPanel, mountFormUI } from "../dist/xpressui.mjs";
-
-const app = document.getElementById("app");
-const debug = document.getElementById("debug");
-
-const form = mountFormUI(app, {
-  version: 1,
-  id: "approval_demo",
-  uid: "approval_demo_uid",
-  type: "multistepform",
-  name: "approval-demo",
-  title: "Approval Demo",
-  provider: {
-    type: "approval-request",
-    endpoint: "/api/approvals",
-  },
-  workflowStepTargets: {
-    pending_approval: "review_step",
-    approved: "review_step",
-    completed: "review_step",
-  },
-  stepSections: [
-    { type: "section", name: "request_step", label: "Request" },
-    { type: "section", name: "review_step", label: "Review", stepSummary: true },
-  ],
-  sections: {
-    custom: [
-      { type: "section", name: "request_step", label: "Request" },
-      { type: "section", name: "review_step", label: "Review", stepSummary: true },
-    ],
-    request_step: [
-      { type: "email", name: "requester_email", label: "Requester Email", required: true },
-      { type: "number", name: "amount", label: "Amount", required: true },
-    ],
-    review_step: [
-      { type: "approval-state", name: "approval_state", label: "Approval Status" },
-    ],
-  },
-});
-
-const panel = createFormOpsPanel(form, form, {
-  title: "Approval Ops",
-  debug: { title: "Approval Debug" },
-  admin: { title: "Approval Admin" },
-});
-debug.appendChild(panel.element);</code></pre>
-          </div>
-        </aside>
         <div class="primary">
           <div class="shell" id="app"></div>
           <div class="result" id="result"></div>
@@ -110,48 +47,6 @@ debug.appendChild(panel.element);</code></pre>
     </main>
     <script type="module">
       import { createFormOpsPanel, mountFormUI } from "../dist/xpressui.mjs";
-
-      document.querySelectorAll("[data-toggle-code]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const panel = button.closest(".code");
-          const body = panel?.querySelector(".code-body");
-          const isHidden = body?.hasAttribute("hidden");
-          if (!body) return;
-          if (isHidden) {
-            body.removeAttribute("hidden");
-            button.textContent = "Hide code";
-          } else {
-            body.setAttribute("hidden", "true");
-            button.textContent = "Show code";
-          }
-        });
-      });
-
-      document.querySelectorAll("[data-copy-code]").forEach((button) => {
-        button.addEventListener("click", async () => {
-          const code = button.closest(".code")?.querySelector("code")?.textContent || "";
-          if (!code) return;
-          const previousLabel = button.textContent;
-          try {
-            if (navigator.clipboard?.writeText) {
-              await navigator.clipboard.writeText(code);
-            } else {
-              const textarea = document.createElement("textarea");
-              textarea.value = code;
-              document.body.appendChild(textarea);
-              textarea.select();
-              document.execCommand("copy");
-              textarea.remove();
-            }
-            button.textContent = "Copied";
-          } catch {
-            button.textContent = "Failed";
-          }
-          window.setTimeout(() => {
-            button.textContent = previousLabel;
-          }, 1200);
-        });
-      });
 
       const app = document.getElementById("app");
       const debug = document.getElementById("debug");

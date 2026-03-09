@@ -39,7 +39,7 @@
       .layout {
         margin-top: 22px;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 380px 380px;
+        grid-template-columns: minmax(0, 1fr) 360px;
         gap: 20px;
         align-items: start;
       }
@@ -53,10 +53,15 @@
       }
 
       .controls {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .control-row {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin-bottom: 14px;
       }
 
       button {
@@ -103,6 +108,16 @@
         gap: 20px;
       }
 
+      .hint {
+        margin: 0 0 14px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e3a8a;
+        font-size: 0.92rem;
+      }
+
       .token {
         margin: 0 0 10px;
         padding: 10px 12px;
@@ -138,49 +153,55 @@
       </p>
 
       <div class="layout">
-        <section class="panel">
-          <div class="controls">
-            <button class="primary" id="btn-create" type="button">Create Remote Token</button>
-            <button id="btn-lookup" type="button">Lookup Token</button>
-            <button id="btn-restore" type="button">Restore Token</button>
-            <button id="btn-invalidate" type="button">Invalidate Token</button>
-            <button id="btn-share" type="button">Create Share Code</button>
-            <button id="btn-claim" type="button">Claim Share Code</button>
-            <button id="btn-restore-code" type="button">Restore From Code</button>
-            <select id="claim-scenario" aria-label="Claim scenario">
-              <option value="success">Scenario: success</option>
-              <option value="expired">Scenario: expired</option>
-              <option value="blocked">Scenario: blocked</option>
-              <option value="throttled">Scenario: throttled</option>
-              <option value="invalid_signature">Scenario: invalid signature</option>
-              <option value="not_found">Scenario: not found</option>
-            </select>
-          </div>
-          <div class="token" id="token-value">Current token: none</div>
-          <div class="share-code" id="share-code-value">Current share code: none</div>
-          <div id="resume-status-slot"></div>
-          <div id="app"></div>
-        </section>
+        <section class="stack">
+          <section class="panel">
+            <p class="hint">
+              Charge d’abord des valeurs de démonstration, puis crée un token distant.
+              Les scénarios de claim servent ensuite à tester les cas cross-device.
+            </p>
+            <div class="controls">
+              <div class="control-row">
+                <button class="primary" id="btn-prefill" type="button">Load Sample Values</button>
+                <button class="primary" id="btn-create" type="button">Create Remote Token</button>
+                <button id="btn-lookup" type="button">Lookup Token</button>
+                <button id="btn-restore" type="button">Restore Token</button>
+                <button id="btn-invalidate" type="button">Invalidate Token</button>
+              </div>
+              <div class="control-row">
+                <button id="btn-share" type="button">Create Share Code</button>
+                <button id="btn-claim" type="button">Claim Share Code</button>
+                <button id="btn-restore-code" type="button">Restore From Code</button>
+                <select id="claim-scenario" aria-label="Claim scenario">
+                  <option value="success">Scenario: success</option>
+                  <option value="expired">Scenario: expired</option>
+                  <option value="blocked">Scenario: blocked</option>
+                  <option value="throttled">Scenario: throttled</option>
+                  <option value="invalid_signature">Scenario: invalid signature</option>
+                  <option value="not_found">Scenario: not found</option>
+                </select>
+              </div>
+            </div>
+            <div class="token" id="token-value">Current token: none</div>
+            <div class="share-code" id="share-code-value">Current share code: none</div>
+            <div id="resume-status-slot"></div>
+            <div id="app"></div>
+          </section>
 
-        <aside class="stack">
           <section class="panel">
             <h2>Flow Output</h2>
             <pre id="result">{}</pre>
           </section>
+
           <section class="panel">
             <h2>Local Admin Summary</h2>
             <pre id="admin-summary">{}</pre>
           </section>
-        </aside>
+        </section>
 
         <aside class="stack">
           <section class="panel">
-            <h2>Debug Panel</h2>
+            <h2>Ops Panel</h2>
             <div id="debug-panel-slot"></div>
-          </section>
-          <section class="panel">
-            <h2>Local Incident Summary</h2>
-            <pre id="incident-summary">{}</pre>
           </section>
         </aside>
       </div>
@@ -197,7 +218,6 @@
       const result = document.getElementById("result");
       const adminSummary = document.getElementById("admin-summary");
       const debugPanelSlot = document.getElementById("debug-panel-slot");
-      const incidentSummary = document.getElementById("incident-summary");
       const tokenValue = document.getElementById("token-value");
       const shareCodeValue = document.getElementById("share-code-value");
       const claimScenario = document.getElementById("claim-scenario");
@@ -494,7 +514,6 @@
         resume: { title: "Cross-Device Resume Status" },
       });
       debugPanelSlot.appendChild(opsPanel.element);
-      incidentSummary.remove();
 
       const refreshAdminPanels = () => {
         adminSummary.textContent = JSON.stringify(admin.getOperationalSummary(), null, 2);
@@ -547,6 +566,17 @@
         } catch (error) {
           write({ action: "createResumeTokenAsync", error: String(error) });
         }
+      });
+
+      document.getElementById("btn-prefill").addEventListener("click", () => {
+        form.form?.change("full_name", "Alice Example");
+        form.form?.change("email", "alice@example.test");
+        form.form?.change("slot", "2026-03-16T10:30");
+        form.form?.change("notes", "Cross-device resume flow sample.");
+        write({
+          action: "prefill",
+          values: form.form?.getState().values || {},
+        });
       });
 
       document.getElementById("btn-lookup").addEventListener("click", async () => {

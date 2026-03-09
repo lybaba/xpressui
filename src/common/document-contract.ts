@@ -28,6 +28,14 @@ export type TDocumentNormalizedStatus = "text_only" | "mrz_detected" | "mrz_inva
 export type TDocumentNormalizedQuality = {
   textLength: number;
   estimatedConfidence: number;
+  hasMrz: boolean;
+  hasFields: boolean;
+  mrzChecksumValid?: boolean;
+};
+
+export type TDocumentNormalizedReview = {
+  recommendedAction: "allow" | "review" | "reject";
+  reasons: string[];
 };
 
 export type TDocumentNormalizedFields = {
@@ -44,6 +52,7 @@ export type TDocumentNormalizedContractV2 = {
   contractVersion: TDocumentNormalizedContractVersion;
   status: TDocumentNormalizedStatus;
   quality: TDocumentNormalizedQuality;
+  review: TDocumentNormalizedReview;
   mrz?: TDocumentMrzResult | null;
   fields?: TDocumentNormalizedFields | null;
 };
@@ -65,6 +74,27 @@ export function createNormalizedDocumentContract(
     : mrz.valid === false
       ? "mrz_invalid"
       : "mrz_detected";
+  const reasons: string[] = [];
+
+  if (!mrz) {
+    reasons.push("no_mrz");
+  } else if (mrz.valid === false) {
+    reasons.push("mrz_checksum_failed");
+  }
+
+  if (estimatedConfidence < 0.2) {
+    reasons.push("low_text_confidence");
+  }
+
+  if (!fields || !Object.keys(fields).length) {
+    reasons.push("no_normalized_fields");
+  }
+
+  const recommendedAction: TDocumentNormalizedReview["recommendedAction"] = mrz?.valid === false
+    ? "reject"
+    : reasons.length
+      ? "review"
+      : "allow";
 
   return {
     contractVersion: DOCUMENT_NORMALIZED_CONTRACT_VERSION,
@@ -72,6 +102,13 @@ export function createNormalizedDocumentContract(
     quality: {
       textLength: detectedText.length,
       estimatedConfidence,
+      hasMrz: Boolean(mrz),
+      hasFields: Boolean(fields && Object.keys(fields).length),
+      ...(typeof mrz?.valid === "boolean" ? { mrzChecksumValid: mrz.valid } : {}),
+    },
+    review: {
+      recommendedAction,
+      reasons,
     },
     mrz: mrz || null,
     fields: fields || null,
@@ -100,13 +137,19 @@ export function isDocumentNormalizedContractV2(
 
   return (
     typeof contract.quality.textLength === "number" &&
-    typeof contract.quality.estimatedConfidence === "number"
+    typeof contract.quality.estimatedConfidence === "number" &&
+    typeof contract.quality.hasMrz === "boolean" &&
+    typeof contract.quality.hasFields === "boolean" &&
+    contract.review &&
+    typeof contract.review === "object" &&
+    ["allow", "review", "reject"].includes((contract.review as Record<string, any>).recommendedAction) &&
+    Array.isArray((contract.review as Record<string, any>).reasons)
   );
 }
 
 export function summarizeNormalizedDocumentContract(
   contract: TDocumentNormalizedContractV2 | null | undefined,
-): Pick<TDocumentNormalizedContractV2, "contractVersion" | "status" | "quality"> | null {
+): Pick<TDocumentNormalizedContractV2, "contractVersion" | "status" | "quality" | "review"> | null {
   if (!contract) {
     return null;
   }
@@ -115,5 +158,6 @@ export function summarizeNormalizedDocumentContract(
     contractVersion: contract.contractVersion,
     status: contract.status,
     quality: contract.quality,
+    review: contract.review,
   };
 }

@@ -40,7 +40,14 @@ describe("Document Contract", () => {
         quality: expect.objectContaining({
           textLength: expect.any(Number),
           estimatedConfidence: expect.any(Number),
+          hasMrz: true,
+          hasFields: true,
+          mrzChecksumValid: true,
         }),
+        review: {
+          recommendedAction: "allow",
+          reasons: [],
+        },
         mrz: expect.objectContaining({
           documentNumber: "L898902C3",
           valid: true,
@@ -65,6 +72,10 @@ describe("Document Contract", () => {
       contractVersion: DOCUMENT_NORMALIZED_CONTRACT_VERSION,
       status: "text_only",
       quality: contract.quality,
+      review: {
+        recommendedAction: "review",
+        reasons: ["no_mrz"],
+      },
     });
   });
 

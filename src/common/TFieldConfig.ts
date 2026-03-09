@@ -67,6 +67,8 @@ type TFieldConfig = {
     documentSexTargetField?: string;
     documentExcludeFromSubmit?: boolean;
     documentMaskPaths?: string[];
+    documentExcludeFromDebug?: boolean;
+    documentDebugMaskPaths?: string[];
     fileDropMode?: 'replace' | 'append';
     minFiles?: number;
     maxFiles?: number;

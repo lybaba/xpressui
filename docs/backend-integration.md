@@ -750,11 +750,19 @@ Contract notes:
 Field-level privacy options:
 - `documentExcludeFromSubmit: true` skips document OCR/MRZ data for that field
 - `documentMaskPaths: string[]` masks configured document paths before submit
+- `documentExcludeFromDebug: true` hides that field from privacy-aware debug/admin views
+- `documentDebugMaskPaths: string[]` adds stricter masking for debug/admin than for submit
 - `getDocumentDataView(fieldName, mode?, applyFieldPrivacy?)` exposes the same
   redacted semantics to host runtimes/debug consumers without mutating the raw
   stored document payload
 - `getAllDocumentDataView(mode?, applyFieldPrivacy?)` returns the same
   privacy-aware view across all document fields
+
+Scope-aware reads:
+- `getDocumentDataView(fieldName, mode, { privacyScope: 'submit' | 'debug' })`
+- `getAllDocumentDataView(mode, { privacyScope: 'submit' | 'debug' })`
+- `debug` scope inherits submit exclusions/masks and can be tightened further
+  with `documentExcludeFromDebug` / `documentDebugMaskPaths`
 
 Suggested validation failure response:
 

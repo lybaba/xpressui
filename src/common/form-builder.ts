@@ -139,6 +139,18 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   const documentSexTargetFieldAttr = field.documentSexTargetField
     ? ` data-document-sex-target-field="${escapeHtml(String(field.documentSexTargetField))}"`
     : '';
+  const documentExcludeFromSubmitAttr = field.documentExcludeFromSubmit
+    ? ' data-document-exclude-from-submit="true"'
+    : '';
+  const documentMaskPathsAttr = field.documentMaskPaths?.length
+    ? ` data-document-mask-paths="${escapeHtml(JSON.stringify(field.documentMaskPaths))}"`
+    : '';
+  const documentExcludeFromDebugAttr = field.documentExcludeFromDebug
+    ? ' data-document-exclude-from-debug="true"'
+    : '';
+  const documentDebugMaskPathsAttr = field.documentDebugMaskPaths?.length
+    ? ` data-document-debug-mask-paths="${escapeHtml(JSON.stringify(field.documentDebugMaskPaths))}"`
+    : '';
   const fileDropModeAttr = field.fileDropMode
     ? ` data-file-drop-mode="${escapeHtml(String(field.fileDropMode))}"`
     : '';
@@ -322,7 +334,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
   if (isFileFieldType(field.type)) {
     return `<div class="form-control w-full">
     <div class="label"><label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label></div>
-    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${requireValidDocumentMrzAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}${includeInSubmitAttr}${viewTemplateAttr}${viewTemplateUnsafeAttr}${viewModeAttr}${conditionalAttrs} />
+    <input class="input input-bordered w-full" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="${escapeHtml(getHtmlInputType(field.type))}" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${acceptAttr}${captureAttr}${multipleAttr}${documentScanModeAttr}${documentOcrAttr}${requireValidDocumentMrzAttr}${documentTextTargetFieldAttr}${documentMrzTargetFieldAttr}${documentFirstNameTargetFieldAttr}${documentLastNameTargetFieldAttr}${documentNumberTargetFieldAttr}${documentNationalityTargetFieldAttr}${documentBirthDateTargetFieldAttr}${documentExpiryDateTargetFieldAttr}${documentSexTargetFieldAttr}${documentExcludeFromSubmitAttr}${documentMaskPathsAttr}${documentExcludeFromDebugAttr}${documentDebugMaskPathsAttr}${fileDropModeAttr}${minFilesAttr}${maxFilesAttr}${maxFileSizeAttr}${maxTotalFileSizeAttr}${formDataFieldNameAttr}${fileTypeErrorAttr}${fileSizeErrorAttr}${includeInSubmitAttr}${viewTemplateAttr}${viewTemplateUnsafeAttr}${viewModeAttr}${conditionalAttrs} />
     ${fileSelectionMarkup}
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>

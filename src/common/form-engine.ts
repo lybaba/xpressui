@@ -13,6 +13,11 @@ export type TStoredDocumentData = {
 };
 
 export type TDocumentDataReadMode = "full" | "summary" | "fields-only" | "mrz-only" | "none";
+export type TDocumentDataPrivacyScope = "submit" | "debug";
+export type TDocumentDataViewOptions = {
+  applyFieldPrivacy?: boolean;
+  privacyScope?: TDocumentDataPrivacyScope;
+};
 
 function redactDocumentData(
   data: TStoredDocumentData,
@@ -279,7 +284,7 @@ export class FormEngineRuntime {
   getDocumentDataView(
     fieldName: string,
     mode: TDocumentDataReadMode = "summary",
-    applyFieldPrivacy: boolean = true,
+    options: boolean | TDocumentDataViewOptions = true,
   ): Record<string, any> | null {
     const data = this.documentData[fieldName];
     if (!data) {
@@ -287,7 +292,23 @@ export class FormEngineRuntime {
     }
 
     const fieldConfig = this.inputFields[fieldName];
-    if (applyFieldPrivacy && fieldConfig?.documentExcludeFromSubmit) {
+    const resolvedOptions =
+      typeof options === "boolean"
+        ? { applyFieldPrivacy: options, privacyScope: "submit" as TDocumentDataPrivacyScope }
+        : {
+            applyFieldPrivacy: options.applyFieldPrivacy !== false,
+            privacyScope: options.privacyScope || "submit",
+          };
+    if (
+      resolvedOptions.applyFieldPrivacy &&
+      (
+        (resolvedOptions.privacyScope === "submit" && fieldConfig?.documentExcludeFromSubmit)
+        || (
+          resolvedOptions.privacyScope === "debug" &&
+          (fieldConfig?.documentExcludeFromSubmit || fieldConfig?.documentExcludeFromDebug)
+        )
+      )
+    ) {
       return null;
     }
 
@@ -296,18 +317,26 @@ export class FormEngineRuntime {
       return null;
     }
 
-    return applyFieldPrivacy
-      ? maskDocumentDataByPaths(redacted, fieldConfig?.documentMaskPaths)
+    return resolvedOptions.applyFieldPrivacy
+      ? maskDocumentDataByPaths(
+          redacted,
+          resolvedOptions.privacyScope === "debug"
+            ? [
+                ...(fieldConfig?.documentMaskPaths || []),
+                ...(fieldConfig?.documentDebugMaskPaths || []),
+              ]
+            : fieldConfig?.documentMaskPaths,
+        )
       : redacted;
   }
 
   getAllDocumentDataView(
     mode: TDocumentDataReadMode = "summary",
-    applyFieldPrivacy: boolean = true,
+    options: boolean | TDocumentDataViewOptions = true,
   ): Record<string, Record<string, any>> {
     const result: Record<string, Record<string, any>> = {};
     Object.keys(this.documentData).forEach((fieldName) => {
-      const view = this.getDocumentDataView(fieldName, mode, applyFieldPrivacy);
+      const view = this.getDocumentDataView(fieldName, mode, options);
       if (view) {
         result[fieldName] = view;
       }

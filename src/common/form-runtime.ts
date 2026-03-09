@@ -17,7 +17,12 @@ import {
   URL_TYPE,
 } from "./field";
 import { FormDynamicRuntime, TFormActiveTemplateWarning } from "./form-dynamic";
-import { FormEngineRuntime, TDocumentDataReadMode, TStoredDocumentData } from "./form-engine";
+import {
+  FormEngineRuntime,
+  TDocumentDataReadMode,
+  TDocumentDataViewOptions,
+  TStoredDocumentData,
+} from "./form-engine";
 import { FormStepRuntime, TFormStepProgress, TFormWorkflowSnapshot } from "./form-steps";
 import { FormUploadRuntime } from "./form-upload";
 import {
@@ -685,9 +690,9 @@ export class FormRuntime {
   getDocumentDataView(
     fieldName: string,
     mode: TDocumentDataReadMode = "summary",
-    applyFieldPrivacy: boolean = true,
+    options: boolean | TDocumentDataViewOptions = true,
   ): Record<string, any> | null {
-    return this.engine.getDocumentDataView(fieldName, mode, applyFieldPrivacy);
+    return this.engine.getDocumentDataView(fieldName, mode, options);
   }
 
   getAllDocumentData(): Record<string, TStoredDocumentData> {
@@ -696,8 +701,8 @@ export class FormRuntime {
 
   getAllDocumentDataView(
     mode: TDocumentDataReadMode = "summary",
-    applyFieldPrivacy: boolean = true,
+    options: boolean | TDocumentDataViewOptions = true,
   ): Record<string, Record<string, any>> {
-    return this.engine.getAllDocumentDataView(mode, applyFieldPrivacy);
+    return this.engine.getAllDocumentDataView(mode, options);
   }
 }

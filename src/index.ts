@@ -7,7 +7,7 @@ import TFormConfig, {
 import { TValidator } from "./common/Validator";
 import getFormConfig, { getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
-import { FormEngineRuntime } from "./common/form-engine";
+import { FormEngineRuntime, TDocumentDataViewOptions } from "./common/form-engine";
 import {
   DOCUMENT_NORMALIZED_CONTRACT_VERSION,
   createNormalizedDocumentContract,
@@ -3806,9 +3806,9 @@ export class FormUI extends HTMLElement {
   getDocumentDataView = (
     fieldName: string,
     mode: "full" | "summary" | "fields-only" | "mrz-only" | "none" = "summary",
-    applyFieldPrivacy: boolean = true,
+    options: boolean | TDocumentDataViewOptions = true,
   ) => {
-    return this.engine.getDocumentDataView(fieldName, mode, applyFieldPrivacy);
+    return this.engine.getDocumentDataView(fieldName, mode, options);
   }
 
   getAllDocumentData = () => {
@@ -3817,9 +3817,9 @@ export class FormUI extends HTMLElement {
 
   getAllDocumentDataView = (
     mode: "full" | "summary" | "fields-only" | "mrz-only" | "none" = "summary",
-    applyFieldPrivacy: boolean = true,
+    options: boolean | TDocumentDataViewOptions = true,
   ) => {
-    return this.engine.getAllDocumentDataView(mode, applyFieldPrivacy);
+    return this.engine.getAllDocumentDataView(mode, options);
   }
 
   getApprovalState = (): TFormApprovalState | null => {

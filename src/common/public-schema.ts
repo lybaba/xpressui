@@ -169,7 +169,12 @@ const PUBLIC_FORM_SCHEMA = {
             label: { type: "string", minLength: 1 },
             includeInSubmit: { type: "boolean" },
             documentExcludeFromSubmit: { type: "boolean" },
+            documentExcludeFromDebug: { type: "boolean" },
             documentMaskPaths: {
+              type: "array",
+              items: { type: "string", minLength: 1 },
+            },
+            documentDebugMaskPaths: {
               type: "array",
               items: { type: "string", minLength: 1 },
             },

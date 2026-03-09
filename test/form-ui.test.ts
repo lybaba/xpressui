@@ -6954,6 +6954,101 @@ describe('FormUI', () => {
     });
   });
 
+  it('can apply stricter debug-only document privacy than submit privacy', () => {
+    const formConfig = createFormConfig({
+      name: 'headless-document-debug-privacy-form',
+      title: 'Headless Document Debug Privacy Form',
+      fields: [
+        {
+          name: 'passport',
+          label: 'Passport',
+          type: 'document-scan',
+          documentMaskPaths: ['mrz.documentNumber'],
+          documentDebugMaskPaths: ['fields.firstName'],
+        },
+        {
+          name: 'national_id',
+          label: 'National ID',
+          type: 'document-scan',
+          documentExcludeFromDebug: true,
+        },
+      ],
+    });
+    const runtime = new FormRuntime(formConfig);
+    (formConfig.sections.main || []).forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+    runtime.engine.setDocumentData('passport', {
+      text: 'P<UTOERIKSSON',
+      mrz: { documentNumber: 'L898902C3', valid: true, nationality: 'UTO' },
+      fields: { firstName: 'ANNA MARIA', lastName: 'ERIKSSON' },
+    });
+    runtime.engine.setDocumentData('national_id', {
+      text: 'NATIONAL-ID',
+      fields: { firstName: 'MASK ME' },
+    });
+
+    expect(runtime.getDocumentDataView('passport', 'summary', {
+      privacyScope: 'submit',
+    })).toEqual({
+      mrz: {
+        format: undefined,
+        documentCode: undefined,
+        issuingCountry: undefined,
+        documentNumber: '***',
+        nationality: 'UTO',
+        birthDate: undefined,
+        expiryDate: undefined,
+        sex: undefined,
+        valid: true,
+      },
+      fields: { firstName: 'ANNA MARIA', lastName: 'ERIKSSON' },
+    });
+    expect(runtime.getDocumentDataView('passport', 'summary', {
+      privacyScope: 'debug',
+    })).toEqual({
+      mrz: {
+        format: undefined,
+        documentCode: undefined,
+        issuingCountry: undefined,
+        documentNumber: '***',
+        nationality: 'UTO',
+        birthDate: undefined,
+        expiryDate: undefined,
+        sex: undefined,
+        valid: true,
+      },
+      fields: { firstName: '***', lastName: 'ERIKSSON' },
+    });
+    expect(runtime.getDocumentDataView('national_id', 'summary', {
+      privacyScope: 'submit',
+    })).toEqual({
+      mrz: null,
+      fields: { firstName: 'MASK ME' },
+    });
+    expect(runtime.getDocumentDataView('national_id', 'summary', {
+      privacyScope: 'debug',
+    })).toBeNull();
+    expect(runtime.getAllDocumentDataView('summary', {
+      privacyScope: 'debug',
+    })).toEqual({
+      passport: {
+        mrz: {
+          format: undefined,
+          documentCode: undefined,
+          issuingCountry: undefined,
+          documentNumber: '***',
+          nationality: 'UTO',
+          birthDate: undefined,
+          expiryDate: undefined,
+          sex: undefined,
+          valid: true,
+        },
+        fields: { firstName: '***', lastName: 'ERIKSSON' },
+      },
+    });
+  });
+
   it('exposes active template warnings through the composed headless runtime', () => {
     let values: Record<string, any> = {
       firstName: '',

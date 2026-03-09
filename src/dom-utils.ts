@@ -35,6 +35,10 @@ export const ATTR_DOCUMENT_NATIONALITY_TARGET_FIELD = "documentNationalityTarget
 export const ATTR_DOCUMENT_BIRTH_DATE_TARGET_FIELD = "documentBirthDateTargetField"
 export const ATTR_DOCUMENT_EXPIRY_DATE_TARGET_FIELD = "documentExpiryDateTargetField"
 export const ATTR_DOCUMENT_SEX_TARGET_FIELD = "documentSexTargetField"
+export const ATTR_DOCUMENT_EXCLUDE_FROM_SUBMIT = "documentExcludeFromSubmit"
+export const ATTR_DOCUMENT_MASK_PATHS = "documentMaskPaths"
+export const ATTR_DOCUMENT_EXCLUDE_FROM_DEBUG = "documentExcludeFromDebug"
+export const ATTR_DOCUMENT_DEBUG_MASK_PATHS = "documentDebugMaskPaths"
 export const ATTR_FILE_DROP_MODE = "fileDropMode"
 export const ATTR_MIN_FILES = "minFiles"
 export const ATTR_MAX_FILES = "maxFiles"
@@ -169,6 +173,10 @@ export const HTML_ATTR_DOCUMENT_NATIONALITY_TARGET_FIELD = `${HTML_ATTR_PREFIX}d
 export const HTML_ATTR_DOCUMENT_BIRTH_DATE_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-birth-date-target-field`
 export const HTML_ATTR_DOCUMENT_EXPIRY_DATE_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-expiry-date-target-field`
 export const HTML_ATTR_DOCUMENT_SEX_TARGET_FIELD = `${HTML_ATTR_PREFIX}document-sex-target-field`
+export const HTML_ATTR_DOCUMENT_EXCLUDE_FROM_SUBMIT = `${HTML_ATTR_PREFIX}document-exclude-from-submit`
+export const HTML_ATTR_DOCUMENT_MASK_PATHS = `${HTML_ATTR_PREFIX}document-mask-paths`
+export const HTML_ATTR_DOCUMENT_EXCLUDE_FROM_DEBUG = `${HTML_ATTR_PREFIX}document-exclude-from-debug`
+export const HTML_ATTR_DOCUMENT_DEBUG_MASK_PATHS = `${HTML_ATTR_PREFIX}document-debug-mask-paths`
 export const HTML_ATTR_FILE_DROP_MODE = `${HTML_ATTR_PREFIX}file-drop-mode`
 export const HTML_ATTR_MIN_FILES = `${HTML_ATTR_PREFIX}min-files`
 export const HTML_ATTR_MAX_FILES = `${HTML_ATTR_PREFIX}max-files`
@@ -303,6 +311,10 @@ export const ATTR_MAP = {
     [HTML_ATTR_DOCUMENT_BIRTH_DATE_TARGET_FIELD]: ATTR_DOCUMENT_BIRTH_DATE_TARGET_FIELD,
     [HTML_ATTR_DOCUMENT_EXPIRY_DATE_TARGET_FIELD]: ATTR_DOCUMENT_EXPIRY_DATE_TARGET_FIELD,
     [HTML_ATTR_DOCUMENT_SEX_TARGET_FIELD]: ATTR_DOCUMENT_SEX_TARGET_FIELD,
+    [HTML_ATTR_DOCUMENT_EXCLUDE_FROM_SUBMIT]: ATTR_DOCUMENT_EXCLUDE_FROM_SUBMIT,
+    [HTML_ATTR_DOCUMENT_MASK_PATHS]: ATTR_DOCUMENT_MASK_PATHS,
+    [HTML_ATTR_DOCUMENT_EXCLUDE_FROM_DEBUG]: ATTR_DOCUMENT_EXCLUDE_FROM_DEBUG,
+    [HTML_ATTR_DOCUMENT_DEBUG_MASK_PATHS]: ATTR_DOCUMENT_DEBUG_MASK_PATHS,
     [HTML_ATTR_FILE_DROP_MODE]: ATTR_FILE_DROP_MODE,
     [HTML_ATTR_MIN_FILES]: ATTR_MIN_FILES,
     [HTML_ATTR_MAX_FILES]: ATTR_MAX_FILES,
@@ -461,6 +473,40 @@ export function getFieldConfig(node: Element): TFieldConfig {
     const includeInSubmitAttr = node.getAttribute(HTML_ATTR_INCLUDE_IN_SUBMIT);
     if (includeInSubmitAttr !== null) {
         fieldConfig.includeInSubmit = includeInSubmitAttr === "true";
+    }
+
+    const documentExcludeFromSubmitAttr = node.getAttribute(HTML_ATTR_DOCUMENT_EXCLUDE_FROM_SUBMIT);
+    if (documentExcludeFromSubmitAttr !== null) {
+        fieldConfig.documentExcludeFromSubmit = documentExcludeFromSubmitAttr === "true";
+    }
+
+    const documentExcludeFromDebugAttr = node.getAttribute(HTML_ATTR_DOCUMENT_EXCLUDE_FROM_DEBUG);
+    if (documentExcludeFromDebugAttr !== null) {
+        fieldConfig.documentExcludeFromDebug = documentExcludeFromDebugAttr === "true";
+    }
+
+    const documentMaskPaths = node.getAttribute(HTML_ATTR_DOCUMENT_MASK_PATHS);
+    if (documentMaskPaths) {
+        try {
+            const parsed = JSON.parse(documentMaskPaths);
+            if (Array.isArray(parsed)) {
+                fieldConfig.documentMaskPaths = parsed.map((entry) => String(entry));
+            }
+        } catch {
+            // Ignore invalid JSON.
+        }
+    }
+
+    const documentDebugMaskPaths = node.getAttribute(HTML_ATTR_DOCUMENT_DEBUG_MASK_PATHS);
+    if (documentDebugMaskPaths) {
+        try {
+            const parsed = JSON.parse(documentDebugMaskPaths);
+            if (Array.isArray(parsed)) {
+                fieldConfig.documentDebugMaskPaths = parsed.map((entry) => String(entry));
+            }
+        } catch {
+            // Ignore invalid JSON.
+        }
     }
 
     if (node.hasAttribute(HTML_ATTR_STEP_SKIPPABLE)) {

@@ -502,12 +502,14 @@
           resumeTokenSignatureVersion: signatureVersion,
           verifyResumeToken: (payload) => signPayload(payload) === payload.signature,
         },
-        fields: [
-          { type: "text", name: "full_name", label: "Full Name", required: true },
-          { type: "email", name: "email", label: "Email", required: true },
-          { type: "datetime", name: "slot", label: "Preferred Slot", required: true },
-          { type: "textarea", name: "notes", label: "Notes" },
-        ],
+        sections: {
+          main: [
+            { type: "text", name: "full_name", label: "Full Name", required: true },
+            { type: "email", name: "email", label: "Email", required: true },
+            { type: "datetime", name: "slot", label: "Preferred Slot", required: true },
+            { type: "textarea", name: "notes", label: "Notes" },
+          ],
+        },
       };
       const admin = createLocalFormAdmin(formConfig);
       const form = mountFormUI(app, formConfig);

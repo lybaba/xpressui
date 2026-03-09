@@ -2921,32 +2921,47 @@ export class FormUI extends HTMLElement {
       return;
     }
 
-    selectionElement.innerHTML = "";
-
     if (this.isOpenQuizField(fieldConfig)) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "grid gap-2";
+      let wrapper = selectionElement.querySelector("[data-quiz-open-wrapper]") as HTMLDivElement | null;
+      let textarea = selectionElement.querySelector(
+        `[data-quiz-open-answer="${fieldConfig.name}"]`,
+      ) as HTMLTextAreaElement | null;
 
-      const hint = document.createElement("div");
-      hint.className = "text-xs opacity-70";
-      hint.textContent = "Open question";
-      wrapper.appendChild(hint);
+      if (!wrapper || !textarea) {
+        selectionElement.innerHTML = "";
 
-      const textarea = document.createElement("textarea");
-      textarea.className = "textarea textarea-bordered w-full";
-      textarea.rows = 5;
-      textarea.value = typeof value === "string" ? value : "";
-      textarea.placeholder = fieldConfig.placeholder || "Write your answer";
-      textarea.setAttribute("data-quiz-open-answer", fieldConfig.name);
+        wrapper = document.createElement("div");
+        wrapper.className = "grid gap-2";
+        wrapper.setAttribute("data-quiz-open-wrapper", fieldConfig.name);
+
+        const hint = document.createElement("div");
+        hint.className = "text-xs opacity-70";
+        hint.textContent = "Open question";
+        wrapper.appendChild(hint);
+
+        textarea = document.createElement("textarea");
+        textarea.className = "textarea textarea-bordered w-full";
+        textarea.rows = 5;
+        textarea.placeholder = fieldConfig.placeholder || "Write your answer";
+        textarea.setAttribute("data-quiz-open-answer", fieldConfig.name);
+        wrapper.appendChild(textarea);
+        selectionElement.appendChild(wrapper);
+      }
+
+      const nextValue = typeof value === "string" ? value : "";
+      if (textarea.value !== nextValue && document.activeElement !== textarea) {
+        textarea.value = nextValue;
+      }
       const maxLen = Number(fieldConfig.maxLen);
       if (Number.isFinite(maxLen) && maxLen > 0) {
         textarea.maxLength = Math.round(maxLen);
+      } else {
+        textarea.removeAttribute("maxlength");
       }
-      wrapper.appendChild(textarea);
-
-      selectionElement.appendChild(wrapper);
       return;
     }
+
+    selectionElement.innerHTML = "";
 
     const answers = this.getQuizCatalog(fieldConfig);
     const selectedItems = this.getQuizSelectionItems(value);

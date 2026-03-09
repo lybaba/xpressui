@@ -1366,10 +1366,14 @@ describe('FormUI', () => {
     expect((element.getFieldValue('materials') as Array<Record<string, any>>).map((entry) => entry.id)).toEqual(['wood', 'steel']);
 
     const storyInput = element.querySelector('[data-quiz-open-answer="story"]') as HTMLTextAreaElement;
+    storyInput.focus();
     storyInput.value = 'An open-ended answer';
     storyInput.dispatchEvent(new Event('input', { bubbles: true }));
     await flushAsyncWork();
     expect(element.getFieldValue('story')).toBe('An open-ended answer');
+    const storyInputAfter = element.querySelector('[data-quiz-open-answer="story"]') as HTMLTextAreaElement;
+    expect(storyInputAfter).toBe(storyInput);
+    expect(storyInputAfter.value).toBe('An open-ended answer');
   });
 
   it('validates product-list, image-gallery, and quiz selections with array and text semantics', () => {

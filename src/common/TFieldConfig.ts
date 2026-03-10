@@ -25,16 +25,6 @@ export type TStepTransitionCondition = {
     value?: any;
 };
 
-export const HERO_FIELD_NAME = 'hero';
-export const HERO_FIELD_LABEL = 'Hero Image';
-
-export const LOGO_FIELD_NAME = 'logo';
-export const LOGO_FIELD_LABEL = 'Logo Image';
-
-export const BG_FIELD_NAME = 'background';
-export const BG_FIELD_LABEL = 'Background Image';
-
-
 type TFieldConfig = {
     type: string;
     label: string;
@@ -43,10 +33,8 @@ type TFieldConfig = {
     subType?: string;
     refType?: string;
     desc?: string;
-    canDelete?: boolean;
     canEdit?: boolean;
     required?: boolean;
-    unique?: boolean;
     minLen?: number;
     maxLen?: number;
     placeholder?: string;
@@ -79,9 +67,6 @@ type TFieldConfig = {
     fileSizeErrorMsg?: string;
     pattern?: string;
     mediaId?: string;
-    background?: string;
-    logo?: string;
-    hero?: string;
     min?: any;
     max?: any;
     step?: any;
@@ -99,22 +84,8 @@ type TFieldConfig = {
     viewTemplateUnsafe?: boolean;
     choices?: Array<TChoice>;
     mediaInfo?: TMediaInfo;
-    mediaInfoList?: TMediaInfo[];
-    isAdminField?: boolean;
-    parent?: TFieldConfig;
     linkType?: string;
     linkPath?: string;
-    width?: string;
-    layout?: string;
-    justifyContent?: string;
-    alignItems?: string;
-    spacing?: number;
-    gap?: number;
-    bgcolor?: string;
-    textcolor?: string;
-    maxWidth?: string;
-    maxHeight?: string;
-    subfields?: TChoice[];
     visibleWhenField?: string;
     visibleWhenEquals?: string;
     optionsEndpoint?: string;

@@ -1,4 +1,3 @@
-import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
 import { CUSTOM_SECTION } from "./Constants";
 import { generateRuntimeId } from "./id";
@@ -25,16 +24,6 @@ export const CHOICE_FORM_TYPE = 'choiceform';
 
 export type TFormSettings = {
     title: string;
-    subforms?: TChoice[];
-    background?: string;
-    bgcolor?: string;
-    textcolor?: string;
-    justifyContent?: string;
-    alignItems?: string;
-    spacing?: number;
-    gap?: number;
-    maxWidth?: string;
-    maxHeight?: string;
 };
 
 export enum RenderingMode {
@@ -296,26 +285,13 @@ type TFormConfig = {
     sections: Record<string, TFieldConfig[]>;
     stepSections?: TFormStepSection[];
     workflowStepTargets?: TFormWorkflowStepTargets;
-    subforms?: TChoice[];
-    choices?: TChoice[];
-    background?: string;
     renderingMode?: RenderingMode;
     mode?: TFormRenderMode;
-    justifyContent?: string;
-    alignItems?: string;
-    spacing?: number;
-    gap?: number;
-    maxWidth?: string;
-    maxHeight?: string;
-    bgcolor?: string;
-    textcolor?: string;
     submit?: TFormSubmitRequest;
     provider?: TFormProviderRequest;
     storage?: TFormStorageConfig;
     rules?: TFormRule[];
     validation?: TFormValidationConfig;
-    successMsg?: string;
-    errorMsg?: string;
     navigationLabels?: TFormNavigationLabels;
     stepUi?: TFormStepUiConfig;
 }

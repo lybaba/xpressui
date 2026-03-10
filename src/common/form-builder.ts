@@ -54,8 +54,6 @@ export type TSimpleFormInput = {
   validation?: TFormValidationConfig;
   sectionName?: string;
   sectionLabel?: string;
-  successMsg?: string;
-  errorMsg?: string;
 };
 
 export type TFormSnippetOptions = {
@@ -397,8 +395,6 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
     navigationLabels: input.navigationLabels,
     stepUi: input.stepUi,
     rules: input.rules,
-    successMsg: input.successMsg,
-    errorMsg: input.errorMsg,
   });
 }
 

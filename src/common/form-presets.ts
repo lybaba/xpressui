@@ -25,8 +25,6 @@ export type TCreateFormPresetOptions = {
   fields?: TSimpleFieldInput[];
   sectionName?: string;
   sectionLabel?: string;
-  successMsg?: string;
-  errorMsg?: string;
 };
 
 function buildField(
@@ -474,8 +472,6 @@ export function createFormPreset(
       submit: options.submit || base.submit,
       storage: options.storage || base.storage,
       rules: options.rules || base.rules,
-      successMsg: options.successMsg || base.successMsg,
-      errorMsg: options.errorMsg || base.errorMsg,
     };
   }
 
@@ -490,8 +486,6 @@ export function createFormPreset(
     rules: options.rules || base.rules,
     sectionName: options.sectionName || base.sectionName,
     sectionLabel: options.sectionLabel || base.sectionLabel,
-    successMsg: options.successMsg || base.successMsg,
-    errorMsg: options.errorMsg || base.errorMsg,
     fields: [...base.fields, ...(options.fields || [])],
   });
 }

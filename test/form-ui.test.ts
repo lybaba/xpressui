@@ -331,6 +331,7 @@ describe('FormUI', () => {
       id: 'multi_step_markup',
       uid: 'multi_step_markup_uid',
       type: 'multistepform',
+      mode: 'form-multi-step',
       name: 'multi-step-markup',
       title: 'Multi Step Markup',
       stepSections: [
@@ -1577,7 +1578,7 @@ describe('FormUI', () => {
           <span id="last_name_error"></span>
         </form>
       </template>
-      <form-ui name="wizard"></form-ui>
+      <form-ui name="wizard" mode="form-multi-step"></form-ui>
     `);
     const onStepChange = vi.fn();
 
@@ -1642,7 +1643,7 @@ describe('FormUI', () => {
           <span id="last_name_error"></span>
         </form>
       </template>
-      <form-ui name="wizard"></form-ui>
+      <form-ui name="wizard" mode="form-multi-step"></form-ui>
     `);
 
     const firstName = element.querySelector('#first_name') as HTMLInputElement;
@@ -1695,7 +1696,7 @@ describe('FormUI', () => {
           <button id="submit_button" type="submit">Submit</button>
         </form>
       </template>
-      <form-ui name="wizard"></form-ui>
+      <form-ui name="wizard" mode="form-multi-step"></form-ui>
     `);
     const submitSuccess = vi.fn();
 
@@ -1774,7 +1775,7 @@ describe('FormUI', () => {
           <span id="notes_error"></span>
         </form>
       </template>
-      <form-ui name="wizard"></form-ui>
+      <form-ui name="wizard" mode="form-multi-step"></form-ui>
     `);
 
     const progress = element.querySelector('[data-form-step-progress]') as HTMLElement;
@@ -1836,7 +1837,7 @@ describe('FormUI', () => {
           <button id="submit_button" type="submit">Submit</button>
         </form>
       </template>
-      <form-ui name="wizard"></form-ui>
+      <form-ui name="wizard" mode="form-multi-step"></form-ui>
     `;
 
     const element = renderFixture(markup);
@@ -2061,7 +2062,7 @@ describe('FormUI', () => {
           <span id="final_notes_error"></span>
         </form>
       </template>
-      <form-ui name="wizard"></form-ui>
+      <form-ui name="wizard" mode="form-multi-step"></form-ui>
     `);
 
     const firstName = element.querySelector('#first_name') as HTMLInputElement;
@@ -2389,7 +2390,7 @@ describe('FormUI', () => {
           <span id="path_error"></span>
         </form>
       </template>
-      <form-ui name="wizard"></form-ui>
+      <form-ui name="wizard" mode="form-multi-step"></form-ui>
     `);
 
     const blocked = vi.fn();
@@ -2449,7 +2450,7 @@ describe('FormUI', () => {
           <span id="required_name_error"></span>
         </form>
       </template>
-      <form-ui name="workflow_debug"></form-ui>
+      <form-ui name="workflow_debug" mode="form-multi-step"></form-ui>
     `);
 
     const panel = createFormDebugPanel(element);
@@ -9608,7 +9609,7 @@ describe('FormUI', () => {
           <button id="submit_button" type="submit">Submit</button>
         </form>
       </template>
-      <form-ui name="calendar-transition-form"></form-ui>
+      <form-ui name="calendar-transition-form" mode="form-multi-step"></form-ui>
     `);
     const bookingId = element.querySelector('#booking_id') as HTMLInputElement;
     const form = element.querySelector('#calendar-transition-form_form') as HTMLFormElement;
@@ -9688,7 +9689,7 @@ describe('FormUI', () => {
           <button id="submit_button" type="submit">Submit</button>
         </form>
       </template>
-      <form-ui name="approval-routing-form"></form-ui>
+      <form-ui name="approval-routing-form" mode="form-multi-step"></form-ui>
     `);
     const requesterEmail = element.querySelector('#requester_email') as HTMLInputElement;
     const form = element.querySelector('#approval-routing-form_form') as HTMLFormElement;
@@ -9781,7 +9782,7 @@ describe('FormUI', () => {
           <button id="submit_button" type="submit">Submit</button>
         </form>
       </template>
-      <form-ui name="approval-routing-policy-form"></form-ui>
+      <form-ui name="approval-routing-policy-form" mode="form-multi-step"></form-ui>
     `);
     const input = element.querySelector('#request_email_policy') as HTMLInputElement;
     const form = element.querySelector('#approval-routing-policy-form_form') as HTMLFormElement;
@@ -9854,7 +9855,7 @@ describe('FormUI', () => {
           <button id="submit_button" type="submit">Submit</button>
         </form>
       </template>
-      <form-ui name="approval-status-derived-form"></form-ui>
+      <form-ui name="approval-status-derived-form" mode="form-multi-step"></form-ui>
     `);
     const input = element.querySelector('#request_email_derived') as HTMLInputElement;
     const form = element.querySelector('#approval-status-derived-form_form') as HTMLFormElement;

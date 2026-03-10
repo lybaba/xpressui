@@ -53,11 +53,12 @@
         id: "multi_step_review_demo",
         uid: "multi_step_review_demo_uid",
         type: "multistepform",
+        mode: "form-multi-step",
         name: "multi-step-review-demo",
         title: "Project Intake Wizard",
-        stepLabels: {
-          previous: "Back",
-          next: "Continue",
+        navigationLabels: {
+          prevLabel: "Back",
+          nextLabel: "Continue",
         },
         stepSections: [
           { type: "section", name: "contact_step", label: "Contact" },

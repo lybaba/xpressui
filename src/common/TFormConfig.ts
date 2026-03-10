@@ -2,6 +2,7 @@ import TChoice from "./TChoice";
 import TFieldConfig from "./TFieldConfig";
 import { CUSTOM_SECTION } from "./Constants";
 import { generateRuntimeId } from "./id";
+import type { TFormRenderMode } from "../ui/form-ui.types";
 
 
 export const BODY_SECTION_NAME = 'body';
@@ -293,6 +294,7 @@ type TFormConfig = {
     choices?: TChoice[];
     background?: string;
     renderingMode?: RenderingMode;
+    mode?: TFormRenderMode;
     justifyContent?: string;
     alignItems?: string;
     spacing?: number;

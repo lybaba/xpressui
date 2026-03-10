@@ -260,6 +260,7 @@ function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput | TFormCo
         name: "booking-wizard-form",
         title: "Booking Wizard",
         type: "multistepform",
+        mode: "form-multi-step",
         navigationLabels: {
           prevLabel: "Previous",
           nextLabel: "Continue",
@@ -365,6 +366,7 @@ function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput | TFormCo
         name: "identity-onboarding-form",
         title: "Identity Onboarding",
         type: "multistepform",
+        mode: "form-multi-step",
         stepSections: [
           { type: 'section', name: 'identity_step', label: 'Identity' },
           { type: 'section', name: 'document_step', label: 'Document' },

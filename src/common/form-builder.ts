@@ -10,6 +10,7 @@ import TFormConfig, {
   TFormSubmitRequest,
 } from './TFormConfig';
 import { generateRuntimeId } from './id';
+import type { TFormRenderMode } from '../ui/form-ui.types';
 import { createSubmitRequestFromProvider } from './provider-registry';
 import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-schema';
 import {
@@ -40,6 +41,7 @@ export type TSimpleFormInput = {
   name: string;
   title?: string;
   type?: string;
+  mode?: TFormRenderMode;
   fields: TSimpleFieldInput[];
   submit?: TFormSubmitRequest;
   provider?: TFormProviderRequest;
@@ -365,6 +367,7 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
     uid: generateRuntimeId(),
     timestamp: Math.floor(Date.now() / 1000),
     type: input.type || CONTACTFORM_TYPE,
+    mode: input.mode,
     name: input.name,
     title: input.title || input.name,
     sections: {
@@ -404,6 +407,7 @@ export function createTemplateMarkup(
   const templateSections: any[] = stepSections?.length
     ? stepSections
     : [{ name: 'main', label: 'Main' }];
+  const isMultiStepMode = config.mode === 'form-multi-step' || config.mode === 'view-multi-step';
   const sectionsMarkup = templateSections
     .map((section) => {
       const sectionName = section?.name || 'main';
@@ -443,10 +447,13 @@ export function createTemplateMarkup(
 
       return `    <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}"${sectionStepAttrs} class="flex flex-col gap-4">
       ${fieldMarkup}
-      <button type="submit" class="btn btn-primary">${escapeHtml(config.navigationLabels?.submitLabel || 'Submit')}</button>
+      ${isMultiStepMode ? `<button type="submit" class="btn btn-primary">${escapeHtml(config.navigationLabels?.submitLabel || 'Submit')}</button>` : ''}
     </div>`;
     })
     .join('\n');
+  const submitButtonMarkup = !isMultiStepMode
+    ? `  <button type="submit" class="btn btn-primary">${escapeHtml(config.navigationLabels?.submitLabel || 'Submit')}</button>`
+    : '';
 
   const submitAttrs = config.submit
     ? [
@@ -613,12 +620,17 @@ export function createTemplateMarkup(
         .join(' ')
     : '';
 
+  const formUIModeAttr = config.mode
+    ? ` mode="${escapeHtml(config.mode)}"`
+    : '';
+
   return `<template id="${escapeHtml(templateName)}">
   <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs} ${rulesAttr} ${stepLabelAttrs} ${workflowStepTargetsAttr}>
 ${sectionsMarkup}
+${submitButtonMarkup}
   </form>
 </template>
-<form-ui name="${escapeHtml(templateName)}"></form-ui>`;
+<form-ui name="${escapeHtml(templateName)}"${formUIModeAttr}></form-ui>`;
 }
 
 export function mountFormUI(

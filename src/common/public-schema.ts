@@ -16,6 +16,10 @@ const PUBLIC_FORM_SCHEMA = {
     name: { type: "string", minLength: 1 },
     title: { type: "string", minLength: 1 },
     timestamp: { type: "integer" },
+    mode: {
+      type: "string",
+      enum: ["form", "view", "hybrid", "form-multi-step", "view-multi-step"],
+    },
     submit: {
       type: "object",
       additionalProperties: true,

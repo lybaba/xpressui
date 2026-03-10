@@ -231,6 +231,7 @@
         { type: "text", name: "payment_card_cvc", label: "CVC", required: true }
       ];
       config.type = "multistepform";
+      config.mode = "form-multi-step";
       config.stepSections = [
         { type: "section", name: "catalog_step", label: "1. Cart & Details" },
         { type: "section", name: "checkout_step", label: "2. Checkout & Pay" },
@@ -251,9 +252,9 @@
           actions: [{ type: "set-value", field: "order_currency", sourceField: "checkout_currency_setting" }],
         },
       ];
-      config.stepLabels = {
-        next: "Continue to checkout",
-        previous: "Back to cart",
+      config.navigationLabels = {
+        nextLabel: "Continue to checkout",
+        prevLabel: "Back to cart",
       };
 
       const form = mountFormUI(app, config);

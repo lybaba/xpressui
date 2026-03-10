@@ -479,7 +479,9 @@ export class FormUI extends HTMLElement {
       getFormConfig: () => this.formConfig,
       getValues: () => this.form?.getState().values || {},
       getCurrentStepIndex: () =>
-        (this.steps.getStepNames().length > 1 ? this.steps.getCurrentStepIndex() : null),
+        (this.isMultiStepMode() && this.steps.getStepNames().length > 1
+          ? this.steps.getCurrentStepIndex()
+          : null),
       setCurrentStepIndex: (index) => this.setCurrentStepIndex(index),
       emitEvent: (eventName, detail) =>
         this.emitFormEvent(eventName, detail as TFormUISubmitDetail),
@@ -605,23 +607,44 @@ export class FormUI extends HTMLElement {
 
   getRenderMode = (): TFormRenderMode => {
     const mode = (this.getAttribute("mode") || "").trim().toLowerCase();
-    if (mode === "view" || mode === "hybrid") {
+    if (
+      mode === "view"
+      || mode === "hybrid"
+      || mode === "form-multi-step"
+      || mode === "view-multi-step"
+    ) {
       return mode;
     }
 
     return "form";
   }
 
+  isMultiStepMode = (): boolean => {
+    const mode = this.getRenderMode();
+    return mode === "form-multi-step" || mode === "view-multi-step";
+  }
+
+  getBaseRenderMode = (): "form" | "view" | "hybrid" => {
+    const mode = this.getRenderMode();
+    if (mode === "view" || mode === "view-multi-step") {
+      return "view";
+    }
+    if (mode === "hybrid") {
+      return "hybrid";
+    }
+    return "form";
+  }
+
   setViewValues = (values: Record<string, any>) => {
     this.viewValues = values && typeof values === "object" ? { ...values } : {};
-    if (this.initialized && this.getRenderMode() === "view") {
+    if (this.initialized && this.getBaseRenderMode() === "view") {
       const formElement = this.querySelector("form") as HTMLFormElement | null;
       if (formElement) {
         this.applyViewMode(formElement);
       }
     }
 
-    if (this.initialized && this.getRenderMode() === "hybrid" && this.form) {
+    if (this.initialized && this.getBaseRenderMode() === "hybrid" && this.form) {
       Object.entries(this.viewValues).forEach(([fieldName, fieldValue]) => {
         this.form?.change(fieldName, fieldValue);
       });
@@ -765,7 +788,7 @@ export class FormUI extends HTMLElement {
       return {};
     }
 
-    const mode = this.getRenderMode();
+    const mode = this.getBaseRenderMode();
     const fallbackValues = mode === "hybrid"
       ? (this.form?.getState().values || this.getInitialViewValues(formElem))
       : this.getInitialViewValues(formElem);
@@ -818,7 +841,7 @@ export class FormUI extends HTMLElement {
       return;
     }
 
-    const mode = this.getRenderMode();
+    const mode = this.getBaseRenderMode();
     if (mode === "view") {
       this.applyViewMode(formElem);
       this.emitOutputSnapshot(this.getInitialViewValues(formElem));
@@ -3489,10 +3512,11 @@ export class FormUI extends HTMLElement {
       this.engine.setFormConfig(this.formConfig);
       this.steps.setFormConfig(this.formConfig);
       this.persistence.setFormConfig(this.formConfig);
-      this.stepNames = this.steps.getStepNames();
-      this.currentStepIndex = this.steps.getCurrentStepIndex();
+      this.stepNames = this.isMultiStepMode() ? this.steps.getStepNames() : [];
+      this.currentStepIndex = this.isMultiStepMode() ? this.steps.getCurrentStepIndex() : 0;
       const savedStepIndex = this.persistence.loadCurrentStepIndex();
       if (
+        this.isMultiStepMode() &&
         typeof savedStepIndex === "number" &&
         savedStepIndex >= 0 &&
         savedStepIndex < this.stepNames.length
@@ -3501,7 +3525,7 @@ export class FormUI extends HTMLElement {
         this.currentStepIndex = this.steps.getCurrentStepIndex();
       }
       const draftValues = this.persistence.loadDraftValues();
-      const renderMode = this.getRenderMode();
+      const renderMode = this.getBaseRenderMode();
       const hybridInitialValues =
         renderMode === "hybrid"
           ? this.getInitialViewValues(formElem)
@@ -3523,7 +3547,7 @@ export class FormUI extends HTMLElement {
 
       formElem.addEventListener("submit", (event) => {
         event.preventDefault();
-        if (!this.isLastStep()) {
+        if (this.isMultiStepMode() && !this.isLastStep()) {
           this.nextStep();
           return;
         }
@@ -3846,18 +3870,26 @@ export class FormUI extends HTMLElement {
   }
 
   getStepNames = (): string[] => {
-    return this.steps.getStepNames();
+    return this.isMultiStepMode() ? this.steps.getStepNames() : [];
   }
 
   getCurrentStepIndex = (): number => {
-    return this.steps.getCurrentStepIndex();
+    return this.isMultiStepMode() ? this.steps.getCurrentStepIndex() : 0;
   }
 
   getCurrentStepName = (): string | null => {
-    return this.steps.getCurrentStepName();
+    return this.isMultiStepMode() ? this.steps.getCurrentStepName() : null;
   }
 
   getStepProgress = () => {
+    if (!this.isMultiStepMode()) {
+      return {
+        stepIndex: 0,
+        stepNumber: 1,
+        stepCount: 1,
+        percent: 100,
+      };
+    }
     return this.steps.getStepProgress();
   }
 
@@ -3892,6 +3924,9 @@ export class FormUI extends HTMLElement {
   }
 
   goToWorkflowStep = (state?: string): boolean => {
+    if (!this.isMultiStepMode()) {
+      return false;
+    }
     if (!this.steps.goToWorkflowStep(state)) {
       return false;
     }
@@ -3920,6 +3955,9 @@ export class FormUI extends HTMLElement {
   }
 
   isLastStep = (): boolean => {
+    if (!this.isMultiStepMode()) {
+      return true;
+    }
     return this.steps.isLastStep();
   }
 
@@ -3961,6 +3999,9 @@ export class FormUI extends HTMLElement {
   }
 
   setCurrentStepIndex = (index: number): boolean => {
+    if (!this.isMultiStepMode()) {
+      return false;
+    }
     if (!this.steps.setCurrentStepIndex(index)) {
       return false;
     }
@@ -3981,7 +4022,7 @@ export class FormUI extends HTMLElement {
   }
 
   validateCurrentStep = (): boolean => {
-    if (!this.form || this.stepNames.length <= 1) {
+    if (!this.form || !this.isMultiStepMode() || this.stepNames.length <= 1) {
       return true;
     }
 
@@ -4004,6 +4045,15 @@ export class FormUI extends HTMLElement {
   }
 
   ensureStepControls = (formElem: HTMLFormElement) => {
+    if (!this.isMultiStepMode()) {
+      this.stepControlContainer?.remove();
+      this.stepControlContainer = null;
+      this.stepProgressElement = null;
+      this.stepSummaryElement = null;
+      this.stepBackButton = null;
+      this.stepNextButton = null;
+      return;
+    }
     const controls = ensureConfiguredStepControls({
       formElem,
       stepCount: this.stepNames.length,
@@ -4023,6 +4073,17 @@ export class FormUI extends HTMLElement {
   }
 
   syncStepVisibility = () => {
+    if (!this.isMultiStepMode()) {
+      this.steps.getStepNames().forEach((sectionName) => {
+        this.getStepElements(sectionName).forEach((element) => {
+          if (element.getAttribute("data-step-hidden") === "true") {
+            element.removeAttribute("data-step-hidden");
+            element.style.display = "";
+          }
+        });
+      });
+      return;
+    }
     syncConfiguredStepVisibility({
       stepNames: this.stepNames,
       currentStepIndex: this.currentStepIndex,
@@ -4032,6 +4093,32 @@ export class FormUI extends HTMLElement {
 
   syncStepControls = () => {
     const formElement = this.querySelector("form");
+    if (!this.isMultiStepMode()) {
+      syncConfiguredStepControls({
+        formElement,
+        stepCount: 1,
+        currentStepIndex: 0,
+        isLastStep: true,
+        progress: {
+          stepIndex: 0,
+          stepNumber: 1,
+          stepCount: 1,
+          percent: 100,
+        },
+        isCurrentStepSkippable: false,
+        summary: [],
+        submitLockedByRules: this.submitLockedByRules,
+        submitLockMessage: this.submitLockMessage,
+        controls: {
+          container: this.stepControlContainer,
+          progress: this.stepProgressElement,
+          summary: this.stepSummaryElement,
+          backButton: this.stepBackButton,
+          nextButton: this.stepNextButton,
+        },
+      });
+      return;
+    }
     syncConfiguredStepControls({
       formElement,
       stepCount: this.stepNames.length,
@@ -4053,7 +4140,7 @@ export class FormUI extends HTMLElement {
   }
 
   emitStepChange = () => {
-    if (this.stepNames.length <= 1) {
+    if (!this.isMultiStepMode() || this.stepNames.length <= 1) {
       return;
     }
 
@@ -4077,6 +4164,9 @@ export class FormUI extends HTMLElement {
   }
 
   goToStep = (index: number): boolean => {
+    if (!this.isMultiStepMode()) {
+      return false;
+    }
     if (!this.steps.canGoToStep(index)) {
       return false;
     }
@@ -4093,6 +4183,9 @@ export class FormUI extends HTMLElement {
   }
 
   nextStep = (): boolean => {
+    if (!this.isMultiStepMode()) {
+      return false;
+    }
     const values = this.form?.getState().values || {};
     const wasSkippable = this.steps.isCurrentStepSkippable();
     const conditionalTarget = this.steps.getConditionalNextStepName(values);
@@ -4147,6 +4240,9 @@ export class FormUI extends HTMLElement {
   }
 
   previousStep = (): boolean => {
+    if (!this.isMultiStepMode()) {
+      return false;
+    }
     if (!this.steps.previousStep()) {
       return false;
     }
@@ -4841,7 +4937,7 @@ export class FormUI extends HTMLElement {
           getProductCartItems: () => this.getProductCartItems(value),
           getImageGallerySelectionItems: () => this.getImageGallerySelectionItems(value),
           getQuizSelectionItems: () => this.getQuizSelectionItems(value),
-          isHybridMode: this.getRenderMode() === "hybrid",
+          isHybridMode: this.getBaseRenderMode() === "hybrid",
           renderHybridView: () => {
             if (!inputElement) {
               return;

@@ -46,7 +46,12 @@ export type TProviderTransitionRouteResult = {
   stepName: string | null;
 };
 
-export type TFormRenderMode = "form" | "view" | "hybrid";
+export type TFormRenderMode =
+  | "form"
+  | "view"
+  | "hybrid"
+  | "form-multi-step"
+  | "view-multi-step";
 
 export type TMediaDisplayPolicy = "thumbnail" | "large" | "link" | "gallery" | "embed";
 

@@ -52,14 +52,23 @@ Major capabilities already implemented in the codebase:
   - OCR / MRZ extraction
 - render modes and read rendering:
   - `form` / `view` / `hybrid`
+  - explicit multi-step activation through `form-multi-step` / `view-multi-step`
   - output renderer registry (`text`, `html`, `image`, `file`, `video`, `link`)
   - media display policies (`thumbnail`, `large`, `link`, `gallery`)
   - output snapshot API + events
+- configurable multi-step step UI:
+  - progress placement
+  - navigation placement
+  - back-button behavior
+- navigation labels now rely on `navigationLabels` as the canonical contract
 - commerce-oriented field primitives:
   - `product-list` (catalog max 20, cart interactions, full-image modal)
   - `image-gallery` (catalog max 20, select/remove, full-image modal)
   - `quiz` (single/multi answer selection, open questions, image-backed answers)
   - floating cart trigger with drawer editor
+- catalog and quiz choice limits now support:
+  - field-level min/max choice constraints
+  - per-item max quantity / max selection limits where applicable
 - product demos published via GitHub Pages
 - CI / release checks
 - structural refactor progress:
@@ -69,6 +78,10 @@ Major capabilities already implemented in the codebase:
   - submit/provider event helpers extracted
   - field DOM/event/presentation helpers extracted
   - `src/index.ts` materially reduced and more orchestral
+- public type cleanup progress:
+  - unused `TFieldConfig` options removed
+  - unused `TFormConfig` options removed
+  - dead form-builder / preset wiring for removed config attributes cleaned up
 
 Current built-in provider families:
 - booking / reservation
@@ -619,6 +632,7 @@ Why:
 - the remaining gap is now product UX rather than runtime capability
 - this is one of the most visible differentiators for real interrupted workflows
 - it unlocks a clearer integrator story for same-device and cross-device continuation
+- recent multi-step and type-surface cleanup reduce ambiguity, so the next leverage point is again resume/productization rather than more config breadth
 
 Suggested first scope:
 - add explicit share-code lifecycle states:

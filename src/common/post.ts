@@ -223,11 +223,34 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
 
         case PRODUCT_LIST_TYPE:
         case IMAGE_GALLERY_TYPE:
+            const catalogSize = fieldConfig.choices?.length || 0;
+            const requestedMaxItems = Number.isFinite(Number(fieldConfig.maxNumOfChoices)) && Number(fieldConfig.maxNumOfChoices) > 0
+                ? Math.round(Number(fieldConfig.maxNumOfChoices))
+                : undefined;
+            const effectiveMaxCap = catalogSize > 0 ? catalogSize : requestedMaxItems;
+            const maxItems = typeof requestedMaxItems === "number" && typeof effectiveMaxCap === "number"
+                ? Math.min(requestedMaxItems, effectiveMaxCap)
+                : undefined;
+            const requestedMinItems = Number.isFinite(Number(fieldConfig.minNumOfChoices)) && Number(fieldConfig.minNumOfChoices) > 0
+                ? Math.round(Number(fieldConfig.minNumOfChoices))
+                : undefined;
+            const effectiveMinCap = typeof maxItems === "number"
+                ? maxItems
+                : (catalogSize > 0 ? catalogSize : requestedMinItems);
+            const minItems = typeof requestedMinItems === "number" && typeof effectiveMinCap === "number"
+                ? Math.min(requestedMinItems, effectiveMinCap)
+                : undefined;
             res.type = "array";
             res.items = {
                 type: "object",
                 additionalProperties: true,
             };
+            if (typeof maxItems === "number" && maxItems > 0) {
+                res.maxItems = maxItems;
+            }
+            if (typeof minItems === "number" && minItems > 0) {
+                res.minItems = minItems;
+            }
             break;
 
         case QUIZ_TYPE:

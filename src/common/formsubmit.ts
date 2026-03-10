@@ -4,7 +4,7 @@ import {
     SUBMIT_TYPE,
 } from "./field";
 import TFieldConfig from "./TFieldConfig";
-import TFormConfig from "./TFormConfig";
+import TFormConfig, { TFormNavigationLabels } from "./TFormConfig";
 import { getFieldConfigByName, getSectionByName } from "./post";
 
 // ========================================================
@@ -34,6 +34,24 @@ export type TFormButtons = {
     submitbtn: TFieldConfig;
     nextbtn: TFieldConfig;
     prevbtn: TFieldConfig;
+}
+
+function getLegacyNavigationLabels(formConfig: TFormConfig) : TFormNavigationLabels {
+    return {
+        submitLabel: getFieldConfigByName(formConfig, BTNGROUP_NAME, SUBMITBTN_FIELD.name)?.label,
+        nextLabel: getFieldConfigByName(formConfig, BTNGROUP_NAME, NEXTBTN_FIELD.name)?.label,
+        prevLabel: getFieldConfigByName(formConfig, BTNGROUP_NAME, PREVBTN_FIELD.name)?.label,
+    };
+}
+
+export function getFormNavigationLabels(formConfig: TFormConfig) : TFormNavigationLabels {
+    const legacyLabels = getLegacyNavigationLabels(formConfig);
+
+    return {
+        submitLabel: formConfig.navigationLabels?.submitLabel || legacyLabels.submitLabel || SUBMIT_BTN_LABEL,
+        nextLabel: formConfig.navigationLabels?.nextLabel || legacyLabels.nextLabel || NEXT_BTN_LABEL,
+        prevLabel: formConfig.navigationLabels?.prevLabel || legacyLabels.prevLabel || PREV_BTN_LABEL,
+    };
 }
 
 // ==========================================================
@@ -77,13 +95,12 @@ const SUBMITBTN_FIELD: TFieldConfig = {
 };
 
 export function getSubmitBtnConfig(formConfig: TFormConfig) : TFieldConfig {
-    
-    const res = getFieldConfigByName(formConfig, BTNGROUP_NAME, SUBMITBTN_FIELD.name);
-
-    if (res)
-        return res;
-
-    return SUBMITBTN_FIELD;
+    const labels = getFormNavigationLabels(formConfig);
+    return {
+        ...SUBMITBTN_FIELD,
+        label: labels.submitLabel || SUBMIT_BTN_LABEL,
+        adminLabel: labels.submitLabel || SUBMIT_BTN_LABEL,
+    };
 }
 
 
@@ -94,13 +111,12 @@ const NEXTBTN_FIELD: TFieldConfig = {
     label: NEXT_BTN_LABEL,
 };
 export function getNextBtnConfig(formConfig: TFormConfig) : TFieldConfig {
-    
-    const res = getFieldConfigByName(formConfig, BTNGROUP_NAME, NEXTBTN_FIELD.name);
-
-    if (res)
-        return res;
-
-    return NEXTBTN_FIELD;
+    const labels = getFormNavigationLabels(formConfig);
+    return {
+        ...NEXTBTN_FIELD,
+        label: labels.nextLabel || NEXT_BTN_LABEL,
+        adminLabel: labels.nextLabel || NEXT_BTN_LABEL,
+    };
 }
 
 
@@ -111,13 +127,12 @@ const PREVBTN_FIELD: TFieldConfig = {
     label: PREV_BTN_LABEL,
 };
 export function getPrevBtnConfig(formConfig: TFormConfig) : TFieldConfig {
-    
-    const res = getFieldConfigByName(formConfig, BTNGROUP_NAME, PREVBTN_FIELD.name);
-
-    if (res)
-        return res;
-
-    return PREVBTN_FIELD;
+    const labels = getFormNavigationLabels(formConfig);
+    return {
+        ...PREVBTN_FIELD,
+        label: labels.prevLabel || PREV_BTN_LABEL,
+        adminLabel: labels.prevLabel || PREV_BTN_LABEL,
+    };
 }
 
 

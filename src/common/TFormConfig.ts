@@ -277,6 +277,12 @@ export type TFormRule = {
     actions: TFormRuleAction[];
 };
 
+export type TFormNavigationLabels = {
+    submitLabel?: string;
+    nextLabel?: string;
+    prevLabel?: string;
+};
+
 type TFormConfig = {
     version: number;
     id: string;
@@ -308,6 +314,7 @@ type TFormConfig = {
     validation?: TFormValidationConfig;
     successMsg?: string;
     errorMsg?: string;
+    navigationLabels?: TFormNavigationLabels;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {

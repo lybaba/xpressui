@@ -1799,6 +1799,67 @@ describe('FormUI', () => {
     expect(element.nextStep()).toBe(false);
   });
 
+  it('supports configurable step ui placement and forward-only back behavior', () => {
+    const element = renderFixture(`
+      <template id="wizard">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+          data-step-progress-placement="bottom"
+          data-step-navigation-placement="top"
+          data-step-back-behavior="hide-after-advance"
+        >
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-required="true"
+            data-section-name="step_one"
+          />
+          <span id="first_name_error"></span>
+          <input
+            id="last_name"
+            name="last_name"
+            type="text"
+            data-type="text"
+            data-name="last_name"
+            data-label="Last Name"
+            data-section-name="step_two"
+          />
+          <span id="last_name_error"></span>
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </template>
+      <form-ui name="wizard" mode="form-multi-step"></form-ui>
+    `);
+
+    const progressContainer = element.querySelector('[data-form-step-progress-container]') as HTMLElement;
+    const actionsContainer = element.querySelector('[data-form-step-actions]') as HTMLElement;
+    const firstName = element.querySelector('#first_name') as HTMLInputElement;
+    const backButton = element.querySelector('[data-step-action="back"]') as HTMLButtonElement;
+    const progressBar = element.querySelector('[data-form-step-progress-bar]') as HTMLElement;
+
+    expect(actionsContainer).not.toBeNull();
+    expect(progressContainer).not.toBeNull();
+    expect(backButton.style.display).toBe('none');
+
+    firstName.value = 'Alice';
+    firstName.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(element.nextStep()).toBe(true);
+    expect(element.getCurrentStepIndex()).toBe(1);
+    expect(backButton.style.display).toBe('none');
+    expect(element.previousStep()).toBe(false);
+    expect(progressBar.style.width).toBe('100%');
+  });
+
   it('restores the saved current step from draft storage and supports custom step labels', () => {
     const markup = `
       <template id="wizard">

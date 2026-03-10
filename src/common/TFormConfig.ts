@@ -279,6 +279,12 @@ export type TFormNavigationLabels = {
     prevLabel?: string;
 };
 
+export type TFormStepUiConfig = {
+    progressPlacement?: 'top' | 'bottom' | 'hidden';
+    navigationPlacement?: 'top' | 'bottom';
+    backBehavior?: 'always' | 'never' | 'hide-after-advance';
+};
+
 type TFormConfig = {
     version: number;
     id: string;
@@ -311,6 +317,7 @@ type TFormConfig = {
     successMsg?: string;
     errorMsg?: string;
     navigationLabels?: TFormNavigationLabels;
+    stepUi?: TFormStepUiConfig;
 }
 
 export const DEFAULT_FORM_CONFIG: TFormConfig = {

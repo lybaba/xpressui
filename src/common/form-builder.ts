@@ -5,6 +5,7 @@ import TFormConfig, {
   TFormNavigationLabels,
   TFormProviderRequest,
   TFormRule,
+  TFormStepUiConfig,
   TFormValidationConfig,
   TFormStorageConfig,
   TFormSubmitRequest,
@@ -48,6 +49,7 @@ export type TSimpleFormInput = {
   storage?: TFormStorageConfig;
   workflowStepTargets?: Record<string, string>;
   navigationLabels?: TFormNavigationLabels;
+  stepUi?: TFormStepUiConfig;
   rules?: TFormRule[];
   validation?: TFormValidationConfig;
   sectionName?: string;
@@ -393,6 +395,7 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
     storage: input.storage,
     validation: input.validation,
     navigationLabels: input.navigationLabels,
+    stepUi: input.stepUi,
     rules: input.rules,
     successMsg: input.successMsg,
     errorMsg: input.errorMsg,
@@ -619,13 +622,28 @@ export function createTemplateMarkup(
         .filter(Boolean)
         .join(' ')
     : '';
+  const stepUiAttrs = config.stepUi
+    ? [
+        config.stepUi.progressPlacement
+          ? `data-step-progress-placement="${escapeHtml(config.stepUi.progressPlacement)}"`
+          : '',
+        config.stepUi.navigationPlacement
+          ? `data-step-navigation-placement="${escapeHtml(config.stepUi.navigationPlacement)}"`
+          : '',
+        config.stepUi.backBehavior
+          ? `data-step-back-behavior="${escapeHtml(config.stepUi.backBehavior)}"`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : '';
 
   const formUIModeAttr = config.mode
     ? ` mode="${escapeHtml(config.mode)}"`
     : '';
 
   return `<template id="${escapeHtml(templateName)}">
-  <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs} ${rulesAttr} ${stepLabelAttrs} ${workflowStepTargetsAttr}>
+  <form id="${escapeHtml(templateName)}_form" data-version="${escapeHtml(String(config.version || PUBLIC_FORM_SCHEMA_VERSION))}" data-type="${escapeHtml(config.type)}" data-name="${escapeHtml(config.name)}" data-label="${escapeHtml(config.title)}" ${submitAttrs} ${storageAttrs} ${rulesAttr} ${stepLabelAttrs} ${stepUiAttrs} ${workflowStepTargetsAttr}>
 ${sectionsMarkup}
 ${submitButtonMarkup}
   </form>

@@ -73,6 +73,15 @@ const PUBLIC_FORM_SCHEMA = {
         resumeTokenSignatureVersion: { type: "string", minLength: 1 },
       },
     },
+    stepUi: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        progressPlacement: { type: "string", enum: ["top", "bottom", "hidden"] },
+        navigationPlacement: { type: "string", enum: ["top", "bottom"] },
+        backBehavior: { type: "string", enum: ["always", "never", "hide-after-advance"] },
+      },
+    },
     rules: {
       type: "array",
       items: {

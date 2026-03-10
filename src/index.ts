@@ -118,6 +118,7 @@ import {
   ensureStepControls as ensureConfiguredStepControls,
   getCurrentStepFieldElements as getConfiguredCurrentStepFieldElements,
   getStepButtonLabels as getConfiguredStepButtonLabels,
+  getStepUiConfig as getConfiguredStepUiConfig,
   getStepElements as getConfiguredStepElements,
   syncStepControls as syncConfiguredStepControls,
   syncStepVisibility as syncConfiguredStepVisibility,
@@ -344,8 +345,10 @@ export class FormUI extends HTMLElement {
   workflowState: TFormWorkflowState;
   stepNames: string[];
   currentStepIndex: number;
-  stepControlContainer: HTMLElement | null;
+  stepProgressContainer: HTMLElement | null;
+  stepActionsContainer: HTMLElement | null;
   stepProgressElement: HTMLElement | null;
+  stepProgressBar: HTMLElement | null;
   stepSummaryElement: HTMLElement | null;
   stepBackButton: HTMLButtonElement | null;
   stepNextButton: HTMLButtonElement | null;
@@ -389,8 +392,10 @@ export class FormUI extends HTMLElement {
     this.workflowState = "draft";
     this.stepNames = [];
     this.currentStepIndex = 0;
-    this.stepControlContainer = null;
+    this.stepProgressContainer = null;
+    this.stepActionsContainer = null;
     this.stepProgressElement = null;
+    this.stepProgressBar = null;
     this.stepSummaryElement = null;
     this.stepBackButton = null;
     this.stepNextButton = null;
@@ -3897,6 +3902,10 @@ export class FormUI extends HTMLElement {
     return getConfiguredStepButtonLabels(this.formConfig);
   }
 
+  getStepUiConfig = () => {
+    return getConfiguredStepUiConfig(this.formConfig);
+  }
+
   getWorkflowSnapshot = () => {
     const values = this.form?.getState().values || {};
     return this.steps.getWorkflowSnapshot(values);
@@ -4046,9 +4055,12 @@ export class FormUI extends HTMLElement {
 
   ensureStepControls = (formElem: HTMLFormElement) => {
     if (!this.isMultiStepMode()) {
-      this.stepControlContainer?.remove();
-      this.stepControlContainer = null;
+      this.stepProgressContainer?.remove();
+      this.stepActionsContainer?.remove();
+      this.stepProgressContainer = null;
+      this.stepActionsContainer = null;
       this.stepProgressElement = null;
+      this.stepProgressBar = null;
       this.stepSummaryElement = null;
       this.stepBackButton = null;
       this.stepNextButton = null;
@@ -4058,6 +4070,7 @@ export class FormUI extends HTMLElement {
       formElem,
       stepCount: this.stepNames.length,
       buttonLabels: this.getStepButtonLabels(),
+      stepUi: this.getStepUiConfig(),
       onPrevious: () => {
         this.previousStep();
       },
@@ -4065,8 +4078,10 @@ export class FormUI extends HTMLElement {
         this.nextStep();
       },
     });
-    this.stepControlContainer = controls.container;
+    this.stepProgressContainer = controls.progressContainer;
+    this.stepActionsContainer = controls.actionsContainer;
     this.stepProgressElement = controls.progress;
+    this.stepProgressBar = controls.progressBar;
     this.stepSummaryElement = controls.summary;
     this.stepBackButton = controls.backButton;
     this.stepNextButton = controls.nextButton;
@@ -4109,10 +4124,13 @@ export class FormUI extends HTMLElement {
         summary: [],
         submitLockedByRules: this.submitLockedByRules,
         submitLockMessage: this.submitLockMessage,
+        stepUi: this.getStepUiConfig(),
         controls: {
-          container: this.stepControlContainer,
+          progressContainer: this.stepProgressContainer,
           progress: this.stepProgressElement,
+          progressBar: this.stepProgressBar,
           summary: this.stepSummaryElement,
+          actionsContainer: this.stepActionsContainer,
           backButton: this.stepBackButton,
           nextButton: this.stepNextButton,
         },
@@ -4129,10 +4147,13 @@ export class FormUI extends HTMLElement {
       summary: this.getStepSummary(),
       submitLockedByRules: this.submitLockedByRules,
       submitLockMessage: this.submitLockMessage,
+      stepUi: this.getStepUiConfig(),
       controls: {
-        container: this.stepControlContainer,
+        progressContainer: this.stepProgressContainer,
         progress: this.stepProgressElement,
+        progressBar: this.stepProgressBar,
         summary: this.stepSummaryElement,
+        actionsContainer: this.stepActionsContainer,
         backButton: this.stepBackButton,
         nextButton: this.stepNextButton,
       },
@@ -4241,6 +4262,10 @@ export class FormUI extends HTMLElement {
 
   previousStep = (): boolean => {
     if (!this.isMultiStepMode()) {
+      return false;
+    }
+    const stepUi = this.getStepUiConfig();
+    if (stepUi.backBehavior !== "always") {
       return false;
     }
     if (!this.steps.previousStep()) {

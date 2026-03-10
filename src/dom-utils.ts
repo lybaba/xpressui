@@ -139,6 +139,9 @@ export const ATTR_STORAGE_SHARE_CODE_CLAIM_WINDOW_MS = "storageShareCodeClaimWin
 export const ATTR_STORAGE_SHARE_CODE_CLAIM_BLOCK_MS = "storageShareCodeClaimBlockMs"
 export const ATTR_STEP_PREVIOUS_LABEL = "stepPreviousLabel"
 export const ATTR_STEP_NEXT_LABEL = "stepNextLabel"
+export const ATTR_STEP_PROGRESS_PLACEMENT = "stepProgressPlacement"
+export const ATTR_STEP_NAVIGATION_PLACEMENT = "stepNavigationPlacement"
+export const ATTR_STEP_BACK_BEHAVIOR = "stepBackBehavior"
 export const ATTR_WORKFLOW_STEP_TARGETS = "workflowStepTargets"
 export const ATTR_VERSION = "version"
 export const ATTR_RULES = "rules"
@@ -277,6 +280,9 @@ export const HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_WINDOW_MS = `${HTML_ATTR_PREFIX}
 export const HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_BLOCK_MS = `${HTML_ATTR_PREFIX}storage-share-code-claim-block-ms`
 export const HTML_ATTR_STEP_PREVIOUS_LABEL = `${HTML_ATTR_PREFIX}step-previous-label`
 export const HTML_ATTR_STEP_NEXT_LABEL = `${HTML_ATTR_PREFIX}step-next-label`
+export const HTML_ATTR_STEP_PROGRESS_PLACEMENT = `${HTML_ATTR_PREFIX}step-progress-placement`
+export const HTML_ATTR_STEP_NAVIGATION_PLACEMENT = `${HTML_ATTR_PREFIX}step-navigation-placement`
+export const HTML_ATTR_STEP_BACK_BEHAVIOR = `${HTML_ATTR_PREFIX}step-back-behavior`
 export const HTML_ATTR_WORKFLOW_STEP_TARGETS = `${HTML_ATTR_PREFIX}workflow-step-targets`
 export const HTML_ATTR_VERSION = `${HTML_ATTR_PREFIX}version`
 export const HTML_ATTR_RULES = `${HTML_ATTR_PREFIX}rules`
@@ -415,6 +421,9 @@ export const ATTR_MAP = {
     [HTML_ATTR_STORAGE_SHARE_CODE_CLAIM_BLOCK_MS]: ATTR_STORAGE_SHARE_CODE_CLAIM_BLOCK_MS,
     [HTML_ATTR_STEP_PREVIOUS_LABEL]: ATTR_STEP_PREVIOUS_LABEL,
     [HTML_ATTR_STEP_NEXT_LABEL]: ATTR_STEP_NEXT_LABEL,
+    [HTML_ATTR_STEP_PROGRESS_PLACEMENT]: ATTR_STEP_PROGRESS_PLACEMENT,
+    [HTML_ATTR_STEP_NAVIGATION_PLACEMENT]: ATTR_STEP_NAVIGATION_PLACEMENT,
+    [HTML_ATTR_STEP_BACK_BEHAVIOR]: ATTR_STEP_BACK_BEHAVIOR,
     [HTML_ATTR_WORKFLOW_STEP_TARGETS]: ATTR_WORKFLOW_STEP_TARGETS,
     [HTML_ATTR_VERSION]: ATTR_VERSION,
     [HTML_ATTR_RULES]: ATTR_RULES,
@@ -776,6 +785,21 @@ export default function getFormConfig(node: Element): TFormConfig {
         };
         delete (formConfig as any).stepPreviousLabel;
         delete (formConfig as any).stepNextLabel;
+    }
+
+    if (
+        (formConfig as any).stepProgressPlacement
+        || (formConfig as any).stepNavigationPlacement
+        || (formConfig as any).stepBackBehavior
+    ) {
+        (formConfig as any).stepUi = {
+            progressPlacement: (formConfig as any).stepProgressPlacement,
+            navigationPlacement: (formConfig as any).stepNavigationPlacement,
+            backBehavior: (formConfig as any).stepBackBehavior,
+        };
+        delete (formConfig as any).stepProgressPlacement;
+        delete (formConfig as any).stepNavigationPlacement;
+        delete (formConfig as any).stepBackBehavior;
     }
 
     if ((formConfig as any).workflowStepTargets) {

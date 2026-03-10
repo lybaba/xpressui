@@ -3,12 +3,22 @@ import type TFormConfig from "../common/TFormConfig";
 import type { TFormStepProgress } from "../common/form-steps";
 
 export type TStepControlElements = {
-  container: HTMLElement | null;
+  progressContainer: HTMLElement | null;
   progress: HTMLElement | null;
+  progressBar: HTMLElement | null;
   summary: HTMLElement | null;
+  actionsContainer: HTMLElement | null;
   backButton: HTMLButtonElement | null;
   nextButton: HTMLButtonElement | null;
 };
+
+export function getStepUiConfig(formConfig: TFormConfig | null) {
+  return {
+    progressPlacement: formConfig?.stepUi?.progressPlacement || "top",
+    navigationPlacement: formConfig?.stepUi?.navigationPlacement || "bottom",
+    backBehavior: formConfig?.stepUi?.backBehavior || "always",
+  } as const;
+}
 
 export function getStepButtonLabels(
   formConfig: TFormConfig | null,
@@ -49,52 +59,108 @@ export function ensureStepControls(options: {
   formElem: HTMLFormElement;
   stepCount: number;
   buttonLabels: { previous: string; next: string };
+  stepUi: ReturnType<typeof getStepUiConfig>;
   existing?: TStepControlElements;
   onPrevious: () => void;
   onNext: () => void;
 }): TStepControlElements {
   if (options.stepCount <= 1) {
     return {
-      container: null,
+      progressContainer: null,
       progress: null,
+      progressBar: null,
       summary: null,
+      actionsContainer: null,
       backButton: null,
       nextButton: null,
     };
   }
 
-  const existingContainer = options.formElem.querySelector("[data-form-step-controls]") as HTMLElement | null;
-  if (existingContainer) {
+  const existingProgressContainer = options.formElem.querySelector("[data-form-step-progress-container]") as HTMLElement | null;
+  const existingActionsContainer = options.formElem.querySelector("[data-form-step-actions]") as HTMLElement | null;
+  if (existingProgressContainer || existingActionsContainer) {
     return {
-      container: existingContainer,
-      progress: existingContainer.querySelector("[data-form-step-progress]") as HTMLElement | null,
-      summary: existingContainer.querySelector("[data-form-step-summary]") as HTMLElement | null,
-      backButton: existingContainer.querySelector('[data-step-action="back"]') as HTMLButtonElement | null,
-      nextButton: existingContainer.querySelector('[data-step-action="next"]') as HTMLButtonElement | null,
+      progressContainer: existingProgressContainer,
+      progress: options.formElem.querySelector("[data-form-step-progress]") as HTMLElement | null,
+      progressBar: options.formElem.querySelector("[data-form-step-progress-bar]") as HTMLElement | null,
+      summary: options.formElem.querySelector("[data-form-step-summary]") as HTMLElement | null,
+      actionsContainer: existingActionsContainer,
+      backButton: options.formElem.querySelector('[data-step-action="back"]') as HTMLButtonElement | null,
+      nextButton: options.formElem.querySelector('[data-step-action="next"]') as HTMLButtonElement | null,
     };
   }
 
-  const controlsContainer = document.createElement("div");
-  controlsContainer.setAttribute("data-form-step-controls", "true");
-  controlsContainer.className = "mt-4 flex flex-wrap items-center gap-2";
-  controlsContainer.style.marginTop = "16px";
-  controlsContainer.style.display = "flex";
-  controlsContainer.style.flexWrap = "wrap";
-  controlsContainer.style.alignItems = "center";
-  controlsContainer.style.gap = "8px";
+  const progressContainer = document.createElement("div");
+  progressContainer.setAttribute("data-form-step-progress-container", "true");
+  progressContainer.style.display = "grid";
+  progressContainer.style.gap = "8px";
+  progressContainer.style.margin = "16px 0";
+  progressContainer.style.padding = "14px 16px";
+  progressContainer.style.border = "1px solid rgba(148, 163, 184, 0.2)";
+  progressContainer.style.borderRadius = "18px";
+  progressContainer.style.background = "rgba(248, 250, 252, 0.92)";
+  progressContainer.style.boxShadow = "0 16px 36px -30px rgba(15, 23, 42, 0.18)";
 
   const progressElement = document.createElement("div");
   progressElement.setAttribute("data-form-step-progress", "true");
   progressElement.className = "text-sm font-medium";
   progressElement.style.fontSize = "14px";
   progressElement.style.fontWeight = "600";
+  progressElement.style.color = "rgb(15, 23, 42)";
+
+  const progressTrack = document.createElement("div");
+  progressTrack.setAttribute("data-form-step-progress-track", "true");
+  progressTrack.style.width = "100%";
+  progressTrack.style.height = "8px";
+  progressTrack.style.borderRadius = "999px";
+  progressTrack.style.background = "rgba(148, 163, 184, 0.2)";
+  progressTrack.style.overflow = "hidden";
+
+  const progressBar = document.createElement("div");
+  progressBar.setAttribute("data-form-step-progress-bar", "true");
+  progressBar.style.width = "0%";
+  progressBar.style.height = "100%";
+  progressBar.style.borderRadius = "999px";
+  progressBar.style.background = "linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%)";
+  progressBar.style.transition = "width 180ms ease";
+  progressTrack.appendChild(progressBar);
 
   const summaryElement = document.createElement("div");
   summaryElement.setAttribute("data-form-step-summary", "true");
   summaryElement.className = "text-xs opacity-80";
   summaryElement.style.fontSize = "12px";
   summaryElement.style.opacity = "0.8";
-  summaryElement.style.flexBasis = "100%";
+  summaryElement.style.color = "rgb(71, 85, 105)";
+
+  progressContainer.appendChild(progressElement);
+  progressContainer.appendChild(progressTrack);
+  progressContainer.appendChild(summaryElement);
+
+  const actionsContainer = document.createElement("div");
+  actionsContainer.setAttribute("data-form-step-actions", "true");
+  actionsContainer.style.display = "flex";
+  actionsContainer.style.flexWrap = "wrap";
+  actionsContainer.style.alignItems = "center";
+  actionsContainer.style.justifyContent = "space-between";
+  actionsContainer.style.gap = "8px";
+  actionsContainer.style.margin = "16px 0";
+  actionsContainer.style.padding = "12px 16px";
+  actionsContainer.style.border = "1px solid rgba(148, 163, 184, 0.2)";
+  actionsContainer.style.borderRadius = "18px";
+  actionsContainer.style.background = "rgba(255, 255, 255, 0.96)";
+  actionsContainer.style.boxShadow = "0 16px 36px -30px rgba(15, 23, 42, 0.16)";
+
+  const leadingActions = document.createElement("div");
+  leadingActions.style.display = "flex";
+  leadingActions.style.flexWrap = "wrap";
+  leadingActions.style.alignItems = "center";
+  leadingActions.style.gap = "8px";
+
+  const trailingActions = document.createElement("div");
+  trailingActions.style.display = "flex";
+  trailingActions.style.flexWrap = "wrap";
+  trailingActions.style.alignItems = "center";
+  trailingActions.style.gap = "8px";
 
   const backButton = document.createElement("button");
   backButton.type = "button";
@@ -102,6 +168,7 @@ export function ensureStepControls(options: {
   backButton.setAttribute("data-step-action", "back");
   backButton.className = "btn btn-outline btn-sm";
   backButton.addEventListener("click", options.onPrevious);
+  backButton.style.minWidth = "120px";
 
   const nextButton = document.createElement("button");
   nextButton.type = "button";
@@ -109,17 +176,32 @@ export function ensureStepControls(options: {
   nextButton.setAttribute("data-step-action", "next");
   nextButton.className = "btn btn-primary btn-sm";
   nextButton.addEventListener("click", options.onNext);
+  nextButton.style.minWidth = "120px";
 
-  controlsContainer.appendChild(progressElement);
-  controlsContainer.appendChild(summaryElement);
-  controlsContainer.appendChild(backButton);
-  controlsContainer.appendChild(nextButton);
-  options.formElem.appendChild(controlsContainer);
+  leadingActions.appendChild(backButton);
+  trailingActions.appendChild(nextButton);
+  actionsContainer.appendChild(leadingActions);
+  actionsContainer.appendChild(trailingActions);
+
+  const firstAnchor = options.formElem.querySelector('[data-type="section"], [data-section-name]') as HTMLElement | null;
+  if (options.stepUi.progressPlacement === "top" && firstAnchor) {
+    options.formElem.insertBefore(progressContainer, firstAnchor);
+  } else {
+    options.formElem.appendChild(progressContainer);
+  }
+
+  if (options.stepUi.navigationPlacement === "top" && firstAnchor) {
+    options.formElem.insertBefore(actionsContainer, firstAnchor);
+  } else {
+    options.formElem.appendChild(actionsContainer);
+  }
 
   return {
-    container: controlsContainer,
+    progressContainer,
     progress: progressElement,
+    progressBar,
     summary: summaryElement,
+    actionsContainer,
     backButton,
     nextButton,
   };
@@ -170,6 +252,7 @@ export function syncStepControls(options: {
   summary: Array<{ field: string; label: string; value: any }>;
   submitLockedByRules: boolean;
   submitLockMessage: string | null;
+  stepUi: ReturnType<typeof getStepUiConfig>;
   controls: TStepControlElements;
 }): void {
   if (!options.formElement) {
@@ -183,6 +266,12 @@ export function syncStepControls(options: {
   );
 
   if (options.stepCount <= 1) {
+    if (options.controls.progressContainer) {
+      options.controls.progressContainer.style.display = "none";
+    }
+    if (options.controls.actionsContainer) {
+      options.controls.actionsContainer.style.display = "none";
+    }
     submitButtons.forEach((button) => {
       button.disabled = options.submitLockedByRules;
       (button as HTMLElement).style.display = "";
@@ -195,10 +284,20 @@ export function syncStepControls(options: {
     return;
   }
 
+  if (options.controls.progressContainer) {
+    options.controls.progressContainer.style.display = options.stepUi.progressPlacement === "hidden" ? "none" : "";
+  }
+  if (options.controls.actionsContainer) {
+    options.controls.actionsContainer.style.display = "";
+  }
+
   if (options.controls.progress) {
     const suffix = options.isCurrentStepSkippable ? " (Optional)" : "";
     options.controls.progress.textContent =
       `Step ${options.progress.stepNumber} of ${options.progress.stepCount} (${options.progress.percent}%)${suffix}`;
+  }
+  if (options.controls.progressBar) {
+    options.controls.progressBar.style.width = `${options.progress.percent}%`;
   }
   if (options.controls.summary) {
     if (!options.summary.length) {
@@ -210,8 +309,9 @@ export function syncStepControls(options: {
     }
   }
   if (options.controls.backButton) {
-    options.controls.backButton.disabled = options.currentStepIndex === 0;
-    options.controls.backButton.style.display = options.currentStepIndex === 0 ? "none" : "";
+    const canGoBack = options.stepUi.backBehavior === "always" && options.currentStepIndex > 0;
+    options.controls.backButton.disabled = !canGoBack;
+    options.controls.backButton.style.display = canGoBack ? "" : "none";
   }
   if (options.controls.nextButton) {
     options.controls.nextButton.disabled = options.isLastStep;

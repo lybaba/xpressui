@@ -14,8 +14,8 @@ export function getStepButtonLabels(
   formConfig: TFormConfig | null,
 ): { previous: string; next: string } {
   return {
-    previous: formConfig?.stepLabels?.previous || "Back",
-    next: formConfig?.stepLabels?.next || "Next",
+    previous: formConfig?.navigationLabels?.prevLabel || "Back",
+    next: formConfig?.navigationLabels?.nextLabel || "Next",
   };
 }
 

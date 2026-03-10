@@ -770,9 +770,9 @@ export default function getFormConfig(node: Element): TFormConfig {
     }
 
     if ((formConfig as any).stepPreviousLabel || (formConfig as any).stepNextLabel) {
-        (formConfig as any).stepLabels = {
-            previous: (formConfig as any).stepPreviousLabel,
-            next: (formConfig as any).stepNextLabel,
+        (formConfig as any).navigationLabels = {
+            prevLabel: (formConfig as any).stepPreviousLabel,
+            nextLabel: (formConfig as any).stepNextLabel,
         };
         delete (formConfig as any).stepPreviousLabel;
         delete (formConfig as any).stepNextLabel;

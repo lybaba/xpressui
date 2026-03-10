@@ -2,10 +2,10 @@ import { CUSTOM_SECTION } from './Constants';
 import TFieldConfig from './TFieldConfig';
 import TFormConfig, {
   CONTACTFORM_TYPE,
+  TFormNavigationLabels,
   TFormProviderRequest,
   TFormRule,
   TFormValidationConfig,
-  TFormStepLabels,
   TFormStorageConfig,
   TFormSubmitRequest,
 } from './TFormConfig';
@@ -45,7 +45,7 @@ export type TSimpleFormInput = {
   provider?: TFormProviderRequest;
   storage?: TFormStorageConfig;
   workflowStepTargets?: Record<string, string>;
-  stepLabels?: TFormStepLabels;
+  navigationLabels?: TFormNavigationLabels;
   rules?: TFormRule[];
   validation?: TFormValidationConfig;
   sectionName?: string;
@@ -389,7 +389,7 @@ export function createFormConfig(input: TSimpleFormInput): TFormConfig {
     provider,
     storage: input.storage,
     validation: input.validation,
-    stepLabels: input.stepLabels,
+    navigationLabels: input.navigationLabels,
     rules: input.rules,
     successMsg: input.successMsg,
     errorMsg: input.errorMsg,
@@ -443,7 +443,7 @@ export function createTemplateMarkup(
 
       return `    <div data-name="${escapeHtml(sectionName)}" data-type="section" data-label="${escapeHtml(sectionLabel)}"${sectionStepAttrs} class="flex flex-col gap-4">
       ${fieldMarkup}
-      <button type="submit" class="btn btn-primary">Submit</button>
+      <button type="submit" class="btn btn-primary">${escapeHtml(config.navigationLabels?.submitLabel || 'Submit')}</button>
     </div>`;
     })
     .join('\n');
@@ -600,13 +600,13 @@ export function createTemplateMarkup(
   const workflowStepTargetsAttr = config.workflowStepTargets
     ? `data-workflow-step-targets="${escapeHtml(JSON.stringify(config.workflowStepTargets))}"`
     : '';
-  const stepLabelAttrs = config.stepLabels
+  const stepLabelAttrs = config.navigationLabels
     ? [
-        config.stepLabels.previous
-          ? `data-step-previous-label="${escapeHtml(config.stepLabels.previous)}"`
+        config.navigationLabels.prevLabel
+          ? `data-step-previous-label="${escapeHtml(config.navigationLabels.prevLabel)}"`
           : '',
-        config.stepLabels.next
-          ? `data-step-next-label="${escapeHtml(config.stepLabels.next)}"`
+        config.navigationLabels.nextLabel
+          ? `data-step-next-label="${escapeHtml(config.navigationLabels.nextLabel)}"`
           : '',
       ]
         .filter(Boolean)

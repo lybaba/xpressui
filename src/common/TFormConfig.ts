@@ -246,11 +246,6 @@ export type TFormStorageConfig = {
     }) => boolean;
 };
 
-export type TFormStepLabels = {
-    previous?: string;
-    next?: string;
-};
-
 export type TFormStepSection = TFieldConfig;
 export type TFormWorkflowStepTargets = Record<string, string>;
 
@@ -309,7 +304,6 @@ type TFormConfig = {
     submit?: TFormSubmitRequest;
     provider?: TFormProviderRequest;
     storage?: TFormStorageConfig;
-    stepLabels?: TFormStepLabels;
     rules?: TFormRule[];
     validation?: TFormValidationConfig;
     successMsg?: string;

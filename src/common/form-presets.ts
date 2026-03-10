@@ -260,9 +260,9 @@ function getBasePresetInput(preset: TFormPresetName): TSimpleFormInput | TFormCo
         name: "booking-wizard-form",
         title: "Booking Wizard",
         type: "multistepform",
-        stepLabels: {
-          previous: "Previous",
-          next: "Continue",
+        navigationLabels: {
+          prevLabel: "Previous",
+          nextLabel: "Continue",
         },
         stepSections: [
           stepFactory.section('details_step', 'Details'),

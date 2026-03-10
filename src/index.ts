@@ -2419,7 +2419,9 @@ export class FormUI extends HTMLElement {
       const meta = document.createElement("div");
       meta.className = "text-xs opacity-70";
       const unitPrice = item.discount_price ?? item.sale_price ?? 0;
-      meta.textContent = `Qty: ${item.quantity} · Unit: ${unitPrice.toFixed(2)}€`;
+      meta.textContent = typeof item.maxNumOfChoices === "number"
+        ? `Qty: ${item.quantity}/${item.maxNumOfChoices} · Unit: ${unitPrice.toFixed(2)}€`
+        : `Qty: ${item.quantity} · Unit: ${unitPrice.toFixed(2)}€`;
       details.appendChild(meta);
       const subtotal = document.createElement("div");
       subtotal.className = "text-xs font-semibold";
@@ -2438,6 +2440,9 @@ export class FormUI extends HTMLElement {
         button.setAttribute("data-product-cart-action", action);
         button.setAttribute("data-product-field", fieldName);
         button.setAttribute("data-product-id", item.id);
+        if (action === "inc" && typeof item.maxNumOfChoices === "number" && item.quantity >= item.maxNumOfChoices) {
+          button.disabled = true;
+        }
         return button;
       };
 
@@ -2665,6 +2670,10 @@ export class FormUI extends HTMLElement {
       }
 
       if (existingIndex >= 0) {
+        const maxQuantity = product.maxNumOfChoices;
+        if (typeof maxQuantity === "number" && nextItems[existingIndex].quantity >= maxQuantity) {
+          return nextItems;
+        }
         nextItems[existingIndex] = {
           ...nextItems[existingIndex],
           quantity: nextItems[existingIndex].quantity + 1,
@@ -2686,6 +2695,10 @@ export class FormUI extends HTMLElement {
     }
 
     if (action === "inc") {
+      const maxQuantity = nextItems[existingIndex].maxNumOfChoices;
+      if (typeof maxQuantity === "number" && nextItems[existingIndex].quantity >= maxQuantity) {
+        return nextItems;
+      }
       nextItems[existingIndex] = {
         ...nextItems[existingIndex],
         quantity: nextItems[existingIndex].quantity + 1,
@@ -2801,14 +2814,19 @@ export class FormUI extends HTMLElement {
 
       const quantityTag = document.createElement("span");
       quantityTag.className = "text-xs opacity-70";
-      quantityTag.textContent = `In cart: ${cartMap[product.id] || 0}`;
+      const currentQuantity = cartMap[product.id] || 0;
+      quantityTag.textContent = typeof product.maxNumOfChoices === "number"
+        ? `In cart: ${currentQuantity}/${product.maxNumOfChoices}`
+        : `In cart: ${currentQuantity}`;
 
       const addButton = document.createElement("button");
       addButton.type = "button";
       addButton.className = "btn btn-xs btn-primary";
-      addButton.textContent = "Add";
+      const maxReached = typeof product.maxNumOfChoices === "number" && currentQuantity >= product.maxNumOfChoices;
+      addButton.textContent = maxReached ? "Max reached" : "Add";
       addButton.setAttribute("data-product-action", "add");
       addButton.setAttribute("data-product-id", product.id);
+      addButton.disabled = maxReached;
 
       buttonRow.appendChild(quantityTag);
       buttonRow.appendChild(addButton);

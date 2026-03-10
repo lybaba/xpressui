@@ -6,6 +6,7 @@ type TChoice = {
     id?: string;
     name?: string;
     desc?: string;
+    maxNumOfChoices?: number;
     mediaId?: string;
     mediaInfo?: TMediaInfo;
     mediaInfoList?: TMediaInfo[];

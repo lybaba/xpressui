@@ -21,6 +21,7 @@ export function getProductListCatalog(fieldConfig: TFieldConfig): TProductListIt
       const photos_full = Array.isArray(photosSource)
         ? photosSource.map((entry: any) => String(entry)).filter(Boolean)
         : [];
+      const maxNumOfChoicesRaw = Number((choice as any).maxNumOfChoices);
 
       return {
         id,
@@ -30,6 +31,9 @@ export function getProductListCatalog(fieldConfig: TFieldConfig): TProductListIt
         image_thumbnail,
         image_medium,
         photos_full,
+        maxNumOfChoices: Number.isFinite(maxNumOfChoicesRaw) && maxNumOfChoicesRaw > 0
+          ? Math.round(maxNumOfChoicesRaw)
+          : undefined,
       };
     });
 }
@@ -49,6 +53,7 @@ export function getImageGalleryCatalog(fieldConfig: TFieldConfig): TImageGallery
       const photos_full = Array.isArray(photosSource)
         ? photosSource.map((entry: any) => String(entry)).filter(Boolean)
         : [];
+      const maxNumOfChoicesRaw = Number((choice as any).maxNumOfChoices);
 
       return {
         id,
@@ -56,6 +61,9 @@ export function getImageGalleryCatalog(fieldConfig: TFieldConfig): TImageGallery
         image_thumbnail,
         image_medium,
         photos_full,
+        maxNumOfChoices: Number.isFinite(maxNumOfChoicesRaw) && maxNumOfChoicesRaw > 0
+          ? Math.round(maxNumOfChoicesRaw)
+          : undefined,
       };
     });
 }
@@ -85,6 +93,9 @@ export function getProductCartItems(value: any): TProductCartItem[] {
         photos_full: Array.isArray((entry as any).photos_full)
           ? (entry as any).photos_full.map((photo: any) => String(photo)).filter(Boolean)
           : [],
+        maxNumOfChoices: Number.isFinite(Number((entry as any).maxNumOfChoices)) && Number((entry as any).maxNumOfChoices) > 0
+          ? Math.round(Number((entry as any).maxNumOfChoices))
+          : undefined,
         quantity: Number.isFinite(quantityRaw) && quantityRaw > 0 ? Math.round(quantityRaw) : 1,
       };
     })
@@ -106,6 +117,9 @@ export function getImageGallerySelectionItems(value: any): TImageGalleryItem[] {
       photos_full: Array.isArray((entry as any).photos_full)
         ? (entry as any).photos_full.map((photo: any) => String(photo)).filter(Boolean)
         : [],
+      maxNumOfChoices: Number.isFinite(Number((entry as any).maxNumOfChoices)) && Number((entry as any).maxNumOfChoices) > 0
+        ? Math.round(Number((entry as any).maxNumOfChoices))
+        : undefined,
     }))
     .filter((entry) => Boolean(entry.id));
 }

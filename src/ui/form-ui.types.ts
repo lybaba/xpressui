@@ -110,6 +110,7 @@ export type TProductListItem = {
   image_thumbnail: string;
   image_medium: string;
   photos_full: string[];
+  maxNumOfChoices?: number;
 };
 
 export type TProductCartItem = TProductListItem & {
@@ -122,6 +123,7 @@ export type TImageGalleryItem = {
   image_thumbnail: string;
   image_medium: string;
   photos_full: string[];
+  maxNumOfChoices?: number;
 };
 
 export type TQuizAnswerItem = {
@@ -131,6 +133,7 @@ export type TQuizAnswerItem = {
   image_thumbnail: string;
   image_medium: string;
   photos_full: string[];
+  maxNumOfChoices?: number;
 };
 
 export type TFormUIDocumentState = Record<string, TDocumentScanInsight>;

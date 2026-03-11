@@ -5311,6 +5311,55 @@ describe('FormUI', () => {
     playSpy.mockRestore();
   });
 
+  it('preserves qr-scan shell nodes while updating the dynamic body', async () => {
+    const originalBarcodeDetector = (globalThis as any).BarcodeDetector;
+
+    class MockBarcodeDetector {
+      detect = vi.fn().mockResolvedValue([{ rawValue: 'QR-SHELL-001' }]);
+    }
+
+    (globalThis as any).BarcodeDetector = MockBarcodeDetector;
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'qr-shell-form',
+      title: 'QR Shell Form',
+      fields: [
+        {
+          name: 'scan_code',
+          label: 'Scan Code',
+          type: 'qr-scan',
+        },
+      ],
+    }) as FormUI;
+    const selection = element.querySelector('#scan_code_selection') as HTMLElement;
+    const title = selection.querySelector('[data-upload-selection-title="scan_code"]') as HTMLElement;
+    const message = selection.querySelector('[data-upload-selection-message="scan_code"]') as HTMLElement;
+    const body = selection.querySelector('[data-upload-selection-body="scan_code"]') as HTMLElement;
+    const input = element.querySelector('#scan_code') as HTMLInputElement;
+    const imageFile = new File(['image'], 'qr-shell.png', { type: 'image/png' });
+
+    expect(title.textContent).toBe('Awaiting QR scan');
+    expect(message.textContent).toContain('upload an image containing a QR code');
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [imageFile],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-upload-selection-title="scan_code"]')).toBe(title);
+    expect(selection.querySelector('[data-upload-selection-message="scan_code"]')).toBe(message);
+    expect(selection.querySelector('[data-upload-selection-body="scan_code"]')).toBe(body);
+    expect(title.textContent).toBe('QR code scanned');
+    expect(message.textContent).toContain('QR-SHELL-001');
+    expect(body.textContent).toContain('Scanned code: QR-SHELL-001');
+
+    (globalThis as any).BarcodeDetector = originalBarcodeDetector;
+  });
+
   it('supports document-scan front and back slots with framed previews', async () => {
     const createObjectUrlSpy = vi
       .spyOn(URL, 'createObjectURL')
@@ -5366,6 +5415,57 @@ describe('FormUI', () => {
     expect(
       (element.querySelectorAll('#identity_card_selection img') as NodeListOf<HTMLImageElement>).length,
     ).toBe(2);
+
+    createObjectUrlSpy.mockRestore();
+    revokeObjectUrlSpy.mockRestore();
+  });
+
+  it('preserves document-scan shell nodes while updating slot content', async () => {
+    const createObjectUrlSpy = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockImplementation((file: Blob) => `blob:${(file as File).name}`);
+    const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'document-shell-form',
+      title: 'Document Shell Form',
+      fields: [
+        {
+          name: 'identity_card',
+          label: 'Identity Card',
+          type: 'document-scan',
+        },
+      ],
+    }) as FormUI;
+    const selection = element.querySelector('#identity_card_selection') as HTMLElement;
+    const title = selection.querySelector('[data-upload-selection-title="identity_card"]') as HTMLElement;
+    const message = selection.querySelector('[data-upload-selection-message="identity_card"]') as HTMLElement;
+    const body = selection.querySelector('[data-upload-selection-body="identity_card"]') as HTMLElement;
+    const input = element.querySelector('#identity_card') as HTMLInputElement;
+    const backFile = new File(['back'], 'back.png', { type: 'image/png' });
+
+    expect(title.textContent).toBe('Awaiting document scan');
+    expect(message.textContent).toContain('front and back of your document');
+
+    const slotButtons = Array.from(
+      element.querySelectorAll('#identity_card_selection [data-document-scan-slot]'),
+    ) as HTMLButtonElement[];
+    slotButtons[1].click();
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [backFile],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-upload-selection-title="identity_card"]')).toBe(title);
+    expect(selection.querySelector('[data-upload-selection-message="identity_card"]')).toBe(message);
+    expect(selection.querySelector('[data-upload-selection-body="identity_card"]')).toBe(body);
+    expect(title.textContent).toBe('1/2 scans captured');
+    expect(message.textContent).toBe('1 of 2 document sides captured.');
+    expect(body.textContent).toContain('Back');
 
     createObjectUrlSpy.mockRestore();
     revokeObjectUrlSpy.mockRestore();

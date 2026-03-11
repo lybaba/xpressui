@@ -3636,8 +3636,15 @@ export class FormUI extends HTMLElement {
     const slotCount = this.getDocumentScanSlotCount(fieldConfig);
     const activeSlot = this.activeDocumentScanSlot[fieldConfig.name] || 0;
     const insight = this.getDocumentScanInsight(fieldConfig);
-    const controls = document.createElement("div");
-    controls.className = "mb-3 flex flex-wrap gap-2";
+    const controls = this.ensureSelectionChild(
+      selectionElement,
+      `[data-document-scan-controls="${fieldConfig.name}"]`,
+      "div",
+      "mb-3 flex flex-wrap gap-2",
+      "data-document-scan-controls",
+      fieldConfig.name,
+    );
+    controls.innerHTML = "";
 
     Array.from({ length: slotCount }, (_, index) => index).forEach((slotIndex) => {
       const button = document.createElement("button");
@@ -3649,10 +3656,15 @@ export class FormUI extends HTMLElement {
       controls.appendChild(button);
     });
 
-    selectionElement.appendChild(controls);
-
-    const slotGrid = document.createElement("div");
-    slotGrid.className = "grid gap-3 md:grid-cols-2";
+    const slotGrid = this.ensureSelectionChild(
+      selectionElement,
+      `[data-document-scan-grid="${fieldConfig.name}"]`,
+      "div",
+      "grid gap-3 md:grid-cols-2",
+      "data-document-scan-grid",
+      fieldConfig.name,
+    );
+    slotGrid.innerHTML = "";
 
     Array.from({ length: slotCount }, (_, index) => index).forEach((slotIndex) => {
       const file = selectedFiles[slotIndex];
@@ -3723,26 +3735,39 @@ export class FormUI extends HTMLElement {
       slotGrid.appendChild(card);
     });
 
-    selectionElement.appendChild(slotGrid);
-
-    const helper = document.createElement("div");
-    helper.className = "mt-2 text-xs opacity-70";
+    const helper = this.ensureSelectionChild(
+      selectionElement,
+      `[data-document-scan-helper="${fieldConfig.name}"]`,
+      "div",
+      "mt-2 text-xs opacity-70",
+      "data-document-scan-helper",
+      fieldConfig.name,
+    );
     helper.textContent = "Scans are center-cropped to an ID card frame before submit.";
-    selectionElement.appendChild(helper);
   }
 
   renderQrSelection = (fieldConfig: TFieldConfig, value: any, selectionElement: HTMLElement) => {
     const qrState = this.qrScannerState[fieldConfig.name] || { status: "idle" as const };
+    const result = this.ensureSelectionChild(
+      selectionElement,
+      `[data-qr-result="${fieldConfig.name}"]`,
+      "div",
+      "text-sm",
+      "data-qr-result",
+      fieldConfig.name,
+    );
+    result.textContent = typeof value === "string" && value.length ? `Scanned code: ${value}` : "";
+    result.style.display = result.textContent ? "" : "none";
 
-    if (typeof value === "string" && value.length) {
-      const result = document.createElement("div");
-      result.className = "text-sm";
-      result.textContent = `Scanned code: ${value}`;
-      selectionElement.appendChild(result);
-    }
-
-    const controls = document.createElement("div");
-    controls.className = "mt-2 flex flex-wrap gap-2";
+    const controls = this.ensureSelectionChild(
+      selectionElement,
+      `[data-qr-controls="${fieldConfig.name}"]`,
+      "div",
+      "mt-2 flex flex-wrap gap-2",
+      "data-qr-controls",
+      fieldConfig.name,
+    );
+    controls.innerHTML = "";
 
     const startButton = document.createElement("button");
     startButton.type = "button";
@@ -3769,30 +3794,47 @@ export class FormUI extends HTMLElement {
       controls.appendChild(stopButton);
     }
 
-    selectionElement.appendChild(controls);
-
-    if (qrState.message) {
-      const message = document.createElement("div");
-      message.className = "mt-2 text-xs";
-      message.textContent = qrState.message;
-      selectionElement.appendChild(message);
-    }
+    const message = this.ensureSelectionChild(
+      selectionElement,
+      `[data-qr-status-message="${fieldConfig.name}"]`,
+      "div",
+      "mt-2 text-xs",
+      "data-qr-status-message",
+      fieldConfig.name,
+    );
+    message.textContent = qrState.message || "";
+    message.style.display = qrState.message ? "" : "none";
 
     if (qrState.status === "live") {
-      const video = document.createElement("video");
-      video.className = "mt-3 h-40 w-full rounded border border-base-300 bg-black object-cover";
+      const video = this.ensureSelectionChild(
+        selectionElement,
+        `[data-qr-video="${fieldConfig.name}"]`,
+        "video",
+        "mt-3 h-40 w-full rounded border border-base-300 bg-black object-cover",
+        "data-qr-video",
+        fieldConfig.name,
+      ) as HTMLVideoElement;
       video.setAttribute("playsinline", "true");
       video.setAttribute("muted", "true");
       video.setAttribute("autoplay", "true");
-      video.setAttribute("data-qr-video", fieldConfig.name);
-      selectionElement.appendChild(video);
+      video.style.display = "";
       this.assignQrVideoStream(fieldConfig.name);
+    } else {
+      const existingVideo = selectionElement.querySelector(
+        `[data-qr-video="${fieldConfig.name}"]`,
+      ) as HTMLVideoElement | null;
+      existingVideo?.remove();
     }
 
-    const hint = document.createElement("div");
-    hint.className = "mt-2 text-xs opacity-70";
+    const hint = this.ensureSelectionChild(
+      selectionElement,
+      `[data-qr-hint="${fieldConfig.name}"]`,
+      "div",
+      "mt-2 text-xs opacity-70",
+      "data-qr-hint",
+      fieldConfig.name,
+    );
     hint.textContent = "You can also upload or capture an image with the file picker.";
-    selectionElement.appendChild(hint);
   }
 
   renderFileSelection = (
@@ -3807,6 +3849,8 @@ export class FormUI extends HTMLElement {
     const selectedFiles = this.getFileValueList(value);
     const isDragActive = Boolean(this.fileDragActive[fieldConfig.name]);
     const uploadState = this.fileUploadState[fieldConfig.name];
+    const isDocumentScan = this.isDocumentScanField(fieldConfig);
+    const isQrScan = this.isQrScanField(fieldConfig);
     const titleElement = this.ensureUploadSelectionTextNode(
       selectionElement,
       fieldConfig.name,
@@ -3823,20 +3867,17 @@ export class FormUI extends HTMLElement {
     );
     const bodyElement = this.ensureUploadSelectionBody(selectionElement, fieldConfig.name);
     const fileCountLabel = selectedFiles.length === 1 ? "1 file selected" : `${selectedFiles.length} files selected`;
+    const qrValue = isQrScan && typeof value === "string" && value.length ? value : "";
 
     this.clearFilePreviewUrls(fieldConfig.name);
-    bodyElement.innerHTML = "";
+    if (!isDocumentScan && !isQrScan) {
+      bodyElement.innerHTML = "";
+    }
 
     selectionElement.classList.toggle("border-primary", isDragActive);
     selectionElement.classList.toggle("bg-base-200", isDragActive);
-    titleElement.textContent = !selectedFiles.length
-      ? "Awaiting file"
-      : selectedFiles.length === 1
-        ? selectedFiles[0]?.name || "1 file selected"
-        : fileCountLabel;
-    messageElement.textContent = !selectedFiles.length
-      ? this.getUploadSelectionIdleMessage(fieldConfig)
-      : "Ready for upload.";
+    titleElement.textContent = this.getUploadSelectionTitle(fieldConfig, selectedFiles, qrValue, fileCountLabel);
+    messageElement.textContent = this.getUploadSelectionMessage(fieldConfig, selectedFiles, qrValue);
 
     if (uploadState) {
       const status = document.createElement("div");
@@ -3856,12 +3897,12 @@ export class FormUI extends HTMLElement {
             : "Upload failed. Please try again.";
     }
 
-    if (this.isDocumentScanField(fieldConfig)) {
+    if (isDocumentScan) {
       this.renderDocumentScanSelection(fieldConfig, selectedFiles, bodyElement);
       return;
     }
 
-    if (this.isQrScanField(fieldConfig)) {
+    if (isQrScan) {
       this.renderQrSelection(fieldConfig, value, bodyElement);
       if (!selectedFiles.length) {
         return;
@@ -3969,8 +4010,83 @@ export class FormUI extends HTMLElement {
     return bodyElement;
   }
 
+  ensureSelectionChild = (
+    selectionElement: HTMLElement,
+    selector: string,
+    tagName: keyof HTMLElementTagNameMap,
+    className: string,
+    attributeName: string,
+    fieldName: string,
+  ) => {
+    let element = selectionElement.querySelector(selector) as HTMLElement | null;
+    if (element) {
+      return element;
+    }
+
+    element = document.createElement(tagName);
+    element.className = className;
+    element.setAttribute(attributeName, fieldName);
+    selectionElement.appendChild(element);
+    return element;
+  }
+
+  getUploadSelectionTitle = (
+    fieldConfig: TFieldConfig,
+    selectedFiles: any[],
+    qrValue: string,
+    fileCountLabel: string,
+  ) => {
+    if (this.isDocumentScanField(fieldConfig)) {
+      const slotCount = this.getDocumentScanSlotCount(fieldConfig);
+      const capturedCount = selectedFiles.filter((file) => file instanceof File).length;
+      return capturedCount ? `${capturedCount}/${slotCount} scans captured` : "Awaiting document scan";
+    }
+
+    if (this.isQrScanField(fieldConfig)) {
+      const qrState = this.qrScannerState[fieldConfig.name] || { status: "idle" as const };
+      if (qrValue) {
+        return "QR code scanned";
+      }
+      if (qrState.status === "live") {
+        return "Camera live";
+      }
+      if (qrState.status === "starting") {
+        return "Starting camera";
+      }
+      return "Awaiting QR scan";
+    }
+
+    return !selectedFiles.length
+      ? "Awaiting file"
+      : selectedFiles.length === 1
+        ? selectedFiles[0]?.name || "1 file selected"
+        : fileCountLabel;
+  }
+
+  getUploadSelectionMessage = (fieldConfig: TFieldConfig, selectedFiles: any[], qrValue: string) => {
+    if (this.isDocumentScanField(fieldConfig)) {
+      const slotCount = this.getDocumentScanSlotCount(fieldConfig);
+      const capturedCount = selectedFiles.filter((file) => file instanceof File).length;
+      return capturedCount
+        ? `${capturedCount} of ${slotCount} document side${slotCount > 1 ? "s" : ""} captured.`
+        : this.getUploadSelectionIdleMessage(fieldConfig);
+    }
+
+    if (this.isQrScanField(fieldConfig)) {
+      return qrValue ? `Latest result: ${qrValue}` : this.getUploadSelectionIdleMessage(fieldConfig);
+    }
+
+    return !selectedFiles.length
+      ? this.getUploadSelectionIdleMessage(fieldConfig)
+      : "Ready for upload.";
+  }
+
   getUploadSelectionIdleMessage = (fieldConfig: TFieldConfig) =>
-    fieldConfig.type === "upload-image"
+    this.isDocumentScanField(fieldConfig)
+      ? "Capture or upload the front and back of your document."
+      : this.isQrScanField(fieldConfig)
+        ? "Use the camera or upload an image containing a QR code."
+        : fieldConfig.type === "upload-image"
       ? "Drop an image here or use the file picker."
       : "Drop files here or use the file picker."
 

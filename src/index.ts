@@ -3370,7 +3370,6 @@ export class FormUI extends HTMLElement {
       "data-image-gallery-heading",
       fieldConfig.name,
     );
-    heading.innerHTML = "";
     heading.className = "mb-2 text-sm font-semibold";
     heading.textContent = `Selected Images (${selectedItems.length}${selectionLimit ? `/${selectionLimit}` : ""})`;
     const selectedBody = this.ensureSelectionChild(
@@ -3381,59 +3380,116 @@ export class FormUI extends HTMLElement {
       "data-image-gallery-selection-body",
       fieldConfig.name,
     ) as HTMLDivElement;
-    selectedBody.innerHTML = "";
+    const emptyState = this.ensureSelectionChild(
+      selectedBody,
+      `[data-image-gallery-empty="${fieldConfig.name}"]`,
+      "div",
+      "grid gap-1 rounded border border-base-300 px-3 py-3 text-xs",
+      "data-image-gallery-empty",
+      fieldConfig.name,
+    ) as HTMLDivElement;
+    emptyState.style.background = "rgba(248, 250, 252, 0.82)";
+    const emptyTitle = this.ensureSelectionChild(
+      emptyState,
+      `[data-image-gallery-empty-title="${fieldConfig.name}"]`,
+      "div",
+      "font-semibold",
+      "data-image-gallery-empty-title",
+      fieldConfig.name,
+    );
+    emptyTitle.textContent = "No image selected";
+    const emptyHint = this.ensureSelectionChild(
+      emptyState,
+      `[data-image-gallery-empty-hint="${fieldConfig.name}"]`,
+      "div",
+      "",
+      "data-image-gallery-empty-hint",
+      fieldConfig.name,
+    );
+    emptyHint.style.opacity = "0.72";
+    emptyHint.textContent = "Use the gallery cards above to build the selection.";
+    const list = this.ensureSelectionChild(
+      selectedBody,
+      `[data-image-gallery-list="${fieldConfig.name}"]`,
+      "div",
+      "",
+      "data-image-gallery-list",
+      fieldConfig.name,
+    ) as HTMLDivElement;
+    list.style.display = "grid";
+    list.style.gap = "8px";
 
     if (!selectedItems.length) {
-      const empty = document.createElement("div");
-      empty.className = "grid gap-1 rounded border border-base-300 px-3 py-3 text-xs";
-      empty.style.background = "rgba(248, 250, 252, 0.82)";
-      const emptyTitle = document.createElement("div");
-      emptyTitle.className = "font-semibold";
-      emptyTitle.textContent = "No image selected";
-      const emptyHint = document.createElement("div");
-      emptyHint.style.opacity = "0.72";
-      emptyHint.textContent = "Use the gallery cards above to build the selection.";
-      empty.appendChild(emptyTitle);
-      empty.appendChild(emptyHint);
-      selectedBody.appendChild(empty);
+      emptyState.style.display = "";
+      list.style.display = "none";
+      Array.from(list.querySelectorAll("[data-image-gallery-item]")).forEach((node) => node.remove());
       return;
     }
 
-    const list = document.createElement("div");
+    emptyState.style.display = "none";
     list.style.display = "grid";
-    list.style.gap = "8px";
     selectedItems.forEach((item) => {
-      const row = document.createElement("div");
+      let row = list.querySelector(`[data-image-gallery-item="${item.id}"]`) as HTMLDivElement | null;
+      if (!row) {
+        row = document.createElement("div");
+        row.setAttribute("data-image-gallery-item", item.id);
+        list.appendChild(row);
+      }
       row.className = "flex items-center justify-between gap-2 rounded border border-base-300 px-2 py-2";
-      row.setAttribute("data-image-gallery-item", item.id);
       row.style.background = "rgba(248, 250, 252, 0.82)";
 
-      const nameWrap = document.createElement("div");
+      let nameWrap = row.querySelector("[data-image-gallery-name-wrap]") as HTMLDivElement | null;
+      if (!nameWrap) {
+        nameWrap = document.createElement("div");
+        nameWrap.setAttribute("data-image-gallery-name-wrap", item.id);
+        row.appendChild(nameWrap);
+      }
       nameWrap.className = "flex min-w-0 items-center gap-2";
-      if (item.image_thumbnail || item.image_medium) {
-        const thumb = document.createElement("img");
-        thumb.src = item.image_thumbnail || item.image_medium;
-        thumb.alt = item.name;
+
+      let thumb = nameWrap.querySelector("[data-image-gallery-thumb]") as HTMLImageElement | null;
+      if (!thumb && (item.image_thumbnail || item.image_medium)) {
+        thumb = document.createElement("img");
+        thumb.setAttribute("data-image-gallery-thumb", item.id);
+        nameWrap.appendChild(thumb);
+      }
+      if (thumb) {
+        if (item.image_thumbnail || item.image_medium) {
+          thumb.src = item.image_thumbnail || item.image_medium || "";
+          thumb.alt = item.name;
+          thumb.style.display = "";
+        } else {
+          thumb.remove();
+          thumb = null;
+        }
+      }
+      if (thumb) {
         thumb.style.width = "40px";
         thumb.style.height = "40px";
         thumb.style.objectFit = "cover";
         thumb.style.borderRadius = "8px";
         thumb.style.flexShrink = "0";
-        nameWrap.appendChild(thumb);
       }
 
-      const name = document.createElement("div");
+      let name = nameWrap.querySelector("[data-image-gallery-name]") as HTMLDivElement | null;
+      if (!name) {
+        name = document.createElement("div");
+        name.setAttribute("data-image-gallery-name", item.id);
+        nameWrap.appendChild(name);
+      }
       name.className = "text-sm";
       name.style.overflowWrap = "anywhere";
       name.style.wordBreak = "break-word";
       name.textContent = item.name;
-      nameWrap.appendChild(name);
 
-      const remove = document.createElement("button");
+      let remove = row.querySelector('[data-image-gallery-action="remove"]') as HTMLButtonElement | null;
+      if (!remove) {
+        remove = document.createElement("button");
+        remove.setAttribute("data-image-gallery-action", "remove");
+        row.appendChild(remove);
+      }
       remove.type = "button";
       remove.className = "btn";
       remove.textContent = "×";
-      remove.setAttribute("data-image-gallery-action", "remove");
       remove.setAttribute("data-image-id", item.id);
       remove.setAttribute("aria-label", `Remove ${item.name}`);
       remove.style.width = "32px";
@@ -3449,12 +3505,13 @@ export class FormUI extends HTMLElement {
       remove.style.border = "1px solid transparent";
       remove.style.background = "transparent";
       remove.style.color = "#0f172a";
-
-      row.appendChild(nameWrap);
-      row.appendChild(remove);
-      list.appendChild(row);
     });
-    selectedBody.appendChild(list);
+    Array.from(list.querySelectorAll("[data-image-gallery-item]")).forEach((node) => {
+      const imageId = (node as HTMLElement).getAttribute("data-image-gallery-item");
+      if (imageId && !selectedItems.some((item) => item.id === imageId)) {
+        node.remove();
+      }
+    });
   }
 
   renderQuizSelection = (
@@ -3654,7 +3711,6 @@ export class FormUI extends HTMLElement {
       "data-quiz-selection-heading",
       fieldConfig.name,
     );
-    heading.innerHTML = "";
     heading.className = "mb-2 text-sm font-semibold";
     heading.textContent = `Selected Answers (${selectedItems.length}${selectionLimit ? `/${selectionLimit}` : ""})`;
     const selectedBody = this.ensureSelectionChild(
@@ -3665,67 +3721,127 @@ export class FormUI extends HTMLElement {
       "data-quiz-selection-body",
       fieldConfig.name,
     ) as HTMLDivElement;
-    selectedBody.innerHTML = "";
+    const emptyState = this.ensureSelectionChild(
+      selectedBody,
+      `[data-quiz-selection-empty="${fieldConfig.name}"]`,
+      "div",
+      "grid gap-1 rounded border border-base-300 px-3 py-3 text-xs",
+      "data-quiz-selection-empty",
+      fieldConfig.name,
+    ) as HTMLDivElement;
+    emptyState.style.background = "rgba(248, 250, 252, 0.82)";
+    const emptyTitle = this.ensureSelectionChild(
+      emptyState,
+      `[data-quiz-selection-empty-title="${fieldConfig.name}"]`,
+      "div",
+      "font-semibold",
+      "data-quiz-selection-empty-title",
+      fieldConfig.name,
+    );
+    emptyTitle.textContent = "No answer selected";
+    const emptyHint = this.ensureSelectionChild(
+      emptyState,
+      `[data-quiz-selection-empty-hint="${fieldConfig.name}"]`,
+      "div",
+      "",
+      "data-quiz-selection-empty-hint",
+      fieldConfig.name,
+    );
+    emptyHint.style.opacity = "0.72";
+    emptyHint.textContent = "Pick one or more answers from the cards above.";
+    const list = this.ensureSelectionChild(
+      selectedBody,
+      `[data-quiz-selection-list="${fieldConfig.name}"]`,
+      "div",
+      "",
+      "data-quiz-selection-list",
+      fieldConfig.name,
+    ) as HTMLDivElement;
+    list.style.display = "grid";
+    list.style.gap = "8px";
 
     if (!selectedItems.length) {
-      const empty = document.createElement("div");
-      empty.className = "grid gap-1 rounded border border-base-300 px-3 py-3 text-xs";
-      empty.style.background = "rgba(248, 250, 252, 0.82)";
-      const emptyTitle = document.createElement("div");
-      emptyTitle.className = "font-semibold";
-      emptyTitle.textContent = "No answer selected";
-      const emptyHint = document.createElement("div");
-      emptyHint.style.opacity = "0.72";
-      emptyHint.textContent = "Pick one or more answers from the cards above.";
-      empty.appendChild(emptyTitle);
-      empty.appendChild(emptyHint);
-      selectedBody.appendChild(empty);
+      emptyState.style.display = "";
+      list.style.display = "none";
+      Array.from(list.querySelectorAll("[data-quiz-selection-item]")).forEach((node) => node.remove());
       return;
     }
 
-    const list = document.createElement("div");
+    emptyState.style.display = "none";
     list.style.display = "grid";
-    list.style.gap = "8px";
     selectedItems.forEach((item) => {
-      const row = document.createElement("div");
+      let row = list.querySelector(`[data-quiz-selection-item="${item.id}"]`) as HTMLDivElement | null;
+      if (!row) {
+        row = document.createElement("div");
+        row.setAttribute("data-quiz-selection-item", item.id);
+        list.appendChild(row);
+      }
       row.className = "flex items-center gap-2 rounded border border-base-300 px-2 py-2";
-      row.setAttribute("data-quiz-selection-item", item.id);
       row.style.background = "rgba(248, 250, 252, 0.82)";
 
-      if (item.image_thumbnail || item.image_medium) {
-        const thumb = document.createElement("img");
-        thumb.src = item.image_thumbnail || item.image_medium;
-        thumb.alt = item.name;
+      let thumb = row.querySelector("[data-quiz-selection-thumb]") as HTMLImageElement | null;
+      if (!thumb && (item.image_thumbnail || item.image_medium)) {
+        thumb = document.createElement("img");
+        thumb.setAttribute("data-quiz-selection-thumb", item.id);
+        row.appendChild(thumb);
+      }
+      if (thumb) {
+        if (item.image_thumbnail || item.image_medium) {
+          thumb.src = item.image_thumbnail || item.image_medium || "";
+          thumb.alt = item.name;
+          thumb.style.display = "";
+        } else {
+          thumb.remove();
+          thumb = null;
+        }
+      }
+      if (thumb) {
         thumb.style.width = "40px";
         thumb.style.height = "40px";
         thumb.style.objectFit = "cover";
         thumb.style.borderRadius = "8px";
         thumb.style.flexShrink = "0";
-        row.appendChild(thumb);
       }
 
-      const content = document.createElement("div");
+      let content = row.querySelector("[data-quiz-selection-content]") as HTMLDivElement | null;
+      if (!content) {
+        content = document.createElement("div");
+        content.setAttribute("data-quiz-selection-content", item.id);
+        row.appendChild(content);
+      }
       content.className = "min-w-0";
 
-      const name = document.createElement("div");
+      let name = content.querySelector("[data-quiz-selection-name]") as HTMLDivElement | null;
+      if (!name) {
+        name = document.createElement("div");
+        name.setAttribute("data-quiz-selection-name", item.id);
+        content.appendChild(name);
+      }
       name.className = "text-sm font-medium";
       name.style.overflowWrap = "anywhere";
       name.style.wordBreak = "break-word";
       name.textContent = item.name;
-      content.appendChild(name);
 
+      let desc = content.querySelector("[data-quiz-selection-desc]") as HTMLDivElement | null;
       if (item.desc) {
-        const desc = document.createElement("div");
+        if (!desc) {
+          desc = document.createElement("div");
+          desc.setAttribute("data-quiz-selection-desc", item.id);
+          content.appendChild(desc);
+        }
         desc.className = "text-xs opacity-70";
         desc.style.overflowWrap = "anywhere";
         desc.textContent = item.desc;
-        content.appendChild(desc);
+      } else {
+        desc?.remove();
       }
-
-      row.appendChild(content);
-      list.appendChild(row);
     });
-    selectedBody.appendChild(list);
+    Array.from(list.querySelectorAll("[data-quiz-selection-item]")).forEach((node) => {
+      const answerId = (node as HTMLElement).getAttribute("data-quiz-selection-item");
+      if (answerId && !selectedItems.some((item) => item.id === answerId)) {
+        node.remove();
+      }
+    });
   }
 
   renderChoiceListSelection = (

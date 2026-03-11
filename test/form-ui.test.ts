@@ -1384,6 +1384,16 @@ describe('FormUI', () => {
     expect(selection.querySelector('[data-image-gallery-selection-body="lookbook"]')).toBe(body);
     expect(heading.textContent).toBe('Selected Images (1/2)');
     expect(body.textContent).toContain('Image 1');
+
+    const selectedRow = selection.querySelector('[data-image-gallery-item="img_1"]') as HTMLElement;
+    const secondToggle = selection.querySelector('[data-image-gallery-action="toggle"][data-image-id="img_2"]') as HTMLButtonElement;
+
+    secondToggle.click();
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-image-gallery-item="img_1"]')).toBe(selectedRow);
+    expect(heading.textContent).toBe('Selected Images (2/2)');
+    expect(body.textContent).toContain('Image 2');
   });
 
   it('supports quiz fields with single choice, multi choice limits, and open answers', async () => {
@@ -1512,6 +1522,7 @@ describe('FormUI', () => {
     const heading = selection.querySelector('[data-quiz-selection-heading="materials"]') as HTMLElement;
     const body = selection.querySelector('[data-quiz-selection-body="materials"]') as HTMLElement;
     const woodCard = selection.querySelector('[data-quiz-answer-card="wood"]') as HTMLElement;
+    const steelCard = selection.querySelector('[data-quiz-answer-card="steel"]') as HTMLElement;
 
     expect(heading.textContent).toBe('Selected Answers (0/2)');
     expect(body.textContent).toContain('No answer selected');
@@ -1525,6 +1536,15 @@ describe('FormUI', () => {
     expect(selection.querySelector('[data-quiz-selection-body="materials"]')).toBe(body);
     expect(heading.textContent).toBe('Selected Answers (1/2)');
     expect(body.textContent).toContain('Wood');
+
+    const selectedRow = selection.querySelector('[data-quiz-selection-item="wood"]') as HTMLElement;
+
+    steelCard.click();
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-quiz-selection-item="wood"]')).toBe(selectedRow);
+    expect(heading.textContent).toBe('Selected Answers (2/2)');
+    expect(body.textContent).toContain('Steel');
   });
 
   it('validates product-list, image-gallery, and quiz selections with array and text semantics', () => {

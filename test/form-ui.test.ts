@@ -6046,6 +6046,67 @@ describe('FormUI', () => {
     (globalThis as any).BarcodeDetector = originalBarcodeDetector;
   });
 
+  it('reuses the same qr video node across live camera restarts', async () => {
+    const originalMediaDevices = navigator.mediaDevices;
+    const originalBarcodeDetector = (globalThis as any).BarcodeDetector;
+    const playSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockResolvedValue(undefined as unknown as void);
+
+    class MockBarcodeDetector {
+      detect = vi.fn().mockResolvedValue([{ rawValue: 'QR-REUSE-001' }]);
+    }
+
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: vi.fn().mockResolvedValue({
+          getTracks: () => [{ stop: vi.fn() }],
+        }),
+      },
+    });
+    (globalThis as any).BarcodeDetector = MockBarcodeDetector;
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'qr-video-reuse-form',
+      title: 'QR Video Reuse Form',
+      fields: [
+        {
+          name: 'scan_code',
+          label: 'Scan Code',
+          type: 'qr-scan',
+        },
+      ],
+    }) as FormUI;
+
+    const startButton = element.querySelector('[data-qr-action="start"]') as HTMLButtonElement;
+    startButton.click();
+    await flushAsyncWork();
+
+    const video = element.querySelector('[data-qr-video="scan_code"]') as HTMLVideoElement;
+    const stopButton = element.querySelector('[data-qr-action="stop"]') as HTMLButtonElement;
+    stopButton.click();
+    await flushAsyncWork();
+
+    expect(element.querySelector('[data-qr-video="scan_code"]')).toBe(video);
+    expect(video.style.display).toBe('none');
+
+    const restartButton = element.querySelector('[data-qr-action="start"]') as HTMLButtonElement;
+    restartButton.click();
+    await flushAsyncWork();
+
+    expect(element.querySelector('[data-qr-video="scan_code"]')).toBe(video);
+    expect(video.style.display).toBe('');
+
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: originalMediaDevices,
+    });
+    (globalThis as any).BarcodeDetector = originalBarcodeDetector;
+    playSpy.mockRestore();
+  });
+
   it('supports document-scan front and back slots with framed previews', async () => {
     const createObjectUrlSpy = vi
       .spyOn(URL, 'createObjectURL')

@@ -4342,7 +4342,9 @@ export class FormUI extends HTMLElement {
       const existingVideo = selectionElement.querySelector(
         `[data-qr-video="${fieldConfig.name}"]`,
       ) as HTMLVideoElement | null;
-      existingVideo?.remove();
+      if (existingVideo) {
+        existingVideo.style.display = "none";
+      }
     }
 
     const hint = this.ensureSelectionChild(

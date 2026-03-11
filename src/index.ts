@@ -3340,8 +3340,6 @@ export class FormUI extends HTMLElement {
       return;
     }
 
-    selectionElement.innerHTML = "";
-
     const answers = this.getQuizCatalog(fieldConfig);
     const selectedItems = this.getQuizSelectionItems(value);
     const selectedMap = selectedItems.reduce((accumulator, item) => {
@@ -3351,15 +3349,15 @@ export class FormUI extends HTMLElement {
     const selectionLimit = this.getQuizSelectionLimit(fieldConfig);
     const limitReached = selectionLimit > 0 && selectedItems.length >= selectionLimit;
 
-    const intro = document.createElement("div");
-    intro.className = "mb-3 flex items-center justify-between gap-3 text-xs opacity-70";
-    intro.textContent = fieldConfig.multiple
-      ? `Select up to ${selectionLimit} answer${selectionLimit > 1 ? "s" : ""}`
-      : "Select one answer";
-    selectionElement.appendChild(intro);
-
-    const grid = document.createElement("div");
-    grid.setAttribute("data-quiz-catalog", fieldConfig.name);
+    let grid = selectionElement.querySelector(
+      `[data-quiz-catalog="${fieldConfig.name}"]`,
+    ) as HTMLDivElement | null;
+    if (!grid) {
+      grid = document.createElement("div");
+      grid.setAttribute("data-quiz-catalog", fieldConfig.name);
+      selectionElement.innerHTML = "";
+      selectionElement.appendChild(grid);
+    }
     grid.style.display = "grid";
     grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
     grid.style.gap = "10px";
@@ -3369,8 +3367,12 @@ export class FormUI extends HTMLElement {
       const selected = Boolean(selectedMap[answer.id]);
       const disabled = !selected && limitReached && fieldConfig.multiple;
 
-      const card = document.createElement("div");
-      card.setAttribute("data-quiz-answer-card", answer.id);
+      let card = grid.querySelector(`[data-quiz-answer-card="${answer.id}"]`) as HTMLDivElement | null;
+      if (!card) {
+        card = document.createElement("div");
+        card.setAttribute("data-quiz-answer-card", answer.id);
+        grid.appendChild(card);
+      }
       card.setAttribute("data-quiz-answer-action", "toggle");
       card.setAttribute("data-quiz-answer-id", answer.id);
       card.setAttribute("data-selected", selected ? "true" : "false");
@@ -3386,38 +3388,59 @@ export class FormUI extends HTMLElement {
       card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "rgba(248, 250, 252, 0.82)";
 
       const previewSrc = answer.image_medium || answer.image_thumbnail;
-      if (previewSrc) {
-        const preview = document.createElement("img");
-        preview.src = previewSrc;
-        preview.alt = answer.name;
+      let preview = card.querySelector("[data-quiz-answer-image]") as HTMLImageElement | null;
+      if (!preview && previewSrc) {
+        preview = document.createElement("img");
         preview.setAttribute("data-quiz-answer-image", answer.id);
+        card.appendChild(preview);
+      }
+      if (preview) {
+        preview.src = previewSrc || "";
+        preview.alt = answer.name;
         preview.style.width = "100%";
         preview.style.height = "140px";
         preview.style.objectFit = "cover";
         preview.style.borderRadius = "8px";
         preview.style.marginBottom = "8px";
-        card.appendChild(preview);
       }
 
-      const title = document.createElement("div");
+      let title = card.querySelector("[data-quiz-answer-title]") as HTMLDivElement | null;
+      if (!title) {
+        title = document.createElement("div");
+        title.setAttribute("data-quiz-answer-title", answer.id);
+        card.appendChild(title);
+      }
       title.className = "text-sm font-semibold";
       title.style.overflowWrap = "anywhere";
       title.style.wordBreak = "break-word";
       title.textContent = answer.name;
-      card.appendChild(title);
 
-      const stateRow = document.createElement("div");
+      let stateRow = card.querySelector("[data-quiz-answer-state]") as HTMLDivElement | null;
+      if (!stateRow) {
+        stateRow = document.createElement("div");
+        stateRow.setAttribute("data-quiz-answer-state", answer.id);
+        card.appendChild(stateRow);
+      }
       stateRow.className = "mt-2 flex items-center justify-between gap-2";
 
-      const modeBadge = document.createElement("span");
+      let modeBadge = stateRow.querySelector("[data-quiz-mode]") as HTMLSpanElement | null;
+      if (!modeBadge) {
+        modeBadge = document.createElement("span");
+        modeBadge.setAttribute("data-quiz-mode", answer.id);
+        stateRow.appendChild(modeBadge);
+      }
       modeBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
       modeBadge.style.opacity = "0.68";
       modeBadge.style.overflowWrap = "anywhere";
       modeBadge.textContent = fieldConfig.multiple ? "Multi select" : "Single select";
-      stateRow.appendChild(modeBadge);
 
+      let selectedBadge = stateRow.querySelector("[data-quiz-selected-state]") as HTMLSpanElement | null;
+      if (!selectedBadge) {
+        selectedBadge = document.createElement("span");
+        selectedBadge.setAttribute("data-quiz-selected-state", answer.id);
+        stateRow.appendChild(selectedBadge);
+      }
       if (selected) {
-        const selectedBadge = document.createElement("span");
         selectedBadge.className = "text-[11px] font-semibold";
         selectedBadge.style.padding = "4px 8px";
         selectedBadge.style.borderRadius = "999px";
@@ -3425,36 +3448,40 @@ export class FormUI extends HTMLElement {
         selectedBadge.style.color = "rgb(29, 78, 216)";
         selectedBadge.style.whiteSpace = "nowrap";
         selectedBadge.textContent = "Selected";
-        stateRow.appendChild(selectedBadge);
-      }
-      card.appendChild(stateRow);
-
-      if (answer.desc) {
-        const description = document.createElement("div");
-        description.className = "mt-1 text-xs opacity-80";
-        description.style.overflowWrap = "anywhere";
-        description.textContent = answer.desc;
-        card.appendChild(description);
-      }
-
-      const footer = document.createElement("div");
-      footer.className = "mt-2 text-xs opacity-70";
-      if (selected) {
-        footer.textContent = "Selected";
       } else if (disabled) {
-        footer.textContent = "Selection limit reached";
+        selectedBadge.className = "text-[11px] font-semibold";
+        selectedBadge.style.padding = "4px 8px";
+        selectedBadge.style.borderRadius = "999px";
+        selectedBadge.style.background = "rgba(148, 163, 184, 0.12)";
+        selectedBadge.style.color = "#475569";
+        selectedBadge.style.whiteSpace = "nowrap";
+        selectedBadge.textContent = "Limit reached";
       } else {
-        footer.textContent = "Click to select";
+        selectedBadge.className = "text-[11px] opacity-70";
+        selectedBadge.style.padding = "0";
+        selectedBadge.style.background = "transparent";
+        selectedBadge.style.color = "";
+        selectedBadge.style.whiteSpace = "nowrap";
+        selectedBadge.textContent = "Available";
       }
-      card.appendChild(footer);
-
-      grid.appendChild(card);
     });
 
-    selectionElement.appendChild(grid);
+    Array.from(grid.querySelectorAll("[data-quiz-answer-card]")).forEach((node) => {
+      const answerId = (node as HTMLElement).getAttribute("data-quiz-answer-card");
+      if (answerId && !answers.some((answer) => answer.id === answerId)) {
+        node.remove();
+      }
+    });
 
-    const selectedPanel = document.createElement("div");
-    selectedPanel.setAttribute("data-quiz-selection", fieldConfig.name);
+    let selectedPanel = selectionElement.querySelector(
+      `[data-quiz-selection="${fieldConfig.name}"]`,
+    ) as HTMLDivElement | null;
+    if (!selectedPanel) {
+      selectedPanel = document.createElement("div");
+      selectedPanel.setAttribute("data-quiz-selection", fieldConfig.name);
+      selectionElement.appendChild(selectedPanel);
+    }
+    selectedPanel.innerHTML = "";
     selectedPanel.className = "rounded border border-base-300 p-3";
 
     const heading = document.createElement("div");

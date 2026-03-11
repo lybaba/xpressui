@@ -1916,6 +1916,17 @@ export class FormUI extends HTMLElement {
     return getImageGalleryCatalogItems(fieldConfig);
   }
 
+  getImageGallerySelectionLimit = (fieldConfig: TFieldConfig) => {
+    const catalogSize = this.getImageGalleryCatalog(fieldConfig).length;
+    const requestedMax = Number(fieldConfig.maxNumOfChoices);
+    if (!Number.isFinite(requestedMax) || requestedMax <= 0) {
+      return catalogSize || 0;
+    }
+
+    const normalizedMax = Math.round(requestedMax);
+    return catalogSize > 0 ? Math.min(normalizedMax, catalogSize) : normalizedMax;
+  }
+
   getProductCartItems = (value: any): TProductCartItem[] => {
     return getNormalizedProductCartItems(value);
   }
@@ -2742,6 +2753,11 @@ export class FormUI extends HTMLElement {
         return nextItems;
       }
 
+      const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
+      if (selectionLimit > 0 && nextItems.length >= selectionLimit) {
+        return nextItems;
+      }
+
       return [...nextItems, image];
     }
 
@@ -2854,6 +2870,15 @@ export class FormUI extends HTMLElement {
       accumulator[item.id] = true;
       return accumulator;
     }, {} as Record<string, boolean>);
+    const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
+    const limitReached = selectionLimit > 0 && selectedItems.length >= selectionLimit;
+
+    const intro = document.createElement("div");
+    intro.className = "mb-3 flex items-center justify-between gap-3 text-xs opacity-70";
+    intro.textContent = selectionLimit > 0
+      ? `Select up to ${selectionLimit} image${selectionLimit > 1 ? "s" : ""}`
+      : "Select images";
+    selectionElement.appendChild(intro);
 
     const gallery = document.createElement("div");
     gallery.setAttribute("data-image-gallery-catalog", fieldConfig.name);
@@ -2863,11 +2888,18 @@ export class FormUI extends HTMLElement {
     gallery.style.marginBottom = "14px";
 
     images.forEach((imageItem) => {
+      const selected = Boolean(selectedMap[imageItem.id]);
+      const disabled = !selected && limitReached;
+
       const card = document.createElement("div");
       card.setAttribute("data-image-open-gallery", imageItem.id);
       card.setAttribute("data-image-card", imageItem.id);
-      card.className = "rounded border border-base-300 p-2";
-      card.style.cursor = "pointer";
+      card.className = "rounded border border-base-300 p-2 transition-all";
+      card.style.cursor = disabled ? "not-allowed" : "pointer";
+      card.style.opacity = disabled ? "0.55" : "1";
+      card.style.borderColor = selected ? "rgb(59 130 246)" : "";
+      card.style.boxShadow = selected ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "";
+      card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "";
 
       const previewSrc = imageItem.image_medium || imageItem.image_thumbnail;
       if (previewSrc) {
@@ -2888,7 +2920,8 @@ export class FormUI extends HTMLElement {
 
       const meta = document.createElement("div");
       meta.className = "text-xs opacity-70";
-      meta.textContent = imageItem.photos_full.length ? `${imageItem.photos_full.length} full photos` : "No full gallery";
+      const photoCount = imageItem.photos_full.length;
+      meta.textContent = photoCount ? `${photoCount} full photos` : "No full gallery";
       card.appendChild(meta);
 
       const buttonRow = document.createElement("div");
@@ -2896,14 +2929,21 @@ export class FormUI extends HTMLElement {
 
       const statusTag = document.createElement("span");
       statusTag.className = "text-xs opacity-70";
-      statusTag.textContent = selectedMap[imageItem.id] ? "Selected" : "Not selected";
+      if (selected) {
+        statusTag.textContent = "Selected";
+      } else if (disabled) {
+        statusTag.textContent = "Limit reached";
+      } else {
+        statusTag.textContent = "Ready to add";
+      }
 
       const toggleButton = document.createElement("button");
       toggleButton.type = "button";
-      toggleButton.className = selectedMap[imageItem.id] ? "btn btn-xs btn-outline" : "btn btn-xs btn-primary";
-      toggleButton.textContent = selectedMap[imageItem.id] ? "Remove" : "Select";
+      toggleButton.className = selected ? "btn btn-xs btn-outline" : "btn btn-xs btn-primary";
+      toggleButton.textContent = selected ? "Remove" : (disabled ? "Max reached" : "Select");
       toggleButton.setAttribute("data-image-gallery-action", "toggle");
       toggleButton.setAttribute("data-image-id", imageItem.id);
+      toggleButton.disabled = disabled;
 
       buttonRow.appendChild(statusTag);
       buttonRow.appendChild(toggleButton);
@@ -2919,7 +2959,7 @@ export class FormUI extends HTMLElement {
 
     const heading = document.createElement("div");
     heading.className = "mb-2 text-sm font-semibold";
-    heading.textContent = `Selected Images (${selectedItems.length})`;
+    heading.textContent = `Selected Images (${selectedItems.length}${selectionLimit ? `/${selectionLimit}` : ""})`;
     selectedPanel.appendChild(heading);
 
     if (!selectedItems.length) {
@@ -2939,9 +2979,24 @@ export class FormUI extends HTMLElement {
       row.className = "flex items-center justify-between gap-2 rounded border border-base-300 px-2 py-2";
       row.setAttribute("data-image-gallery-item", item.id);
 
+      const nameWrap = document.createElement("div");
+      nameWrap.className = "flex min-w-0 items-center gap-2";
+      if (item.image_thumbnail || item.image_medium) {
+        const thumb = document.createElement("img");
+        thumb.src = item.image_thumbnail || item.image_medium;
+        thumb.alt = item.name;
+        thumb.style.width = "40px";
+        thumb.style.height = "40px";
+        thumb.style.objectFit = "cover";
+        thumb.style.borderRadius = "8px";
+        thumb.style.flexShrink = "0";
+        nameWrap.appendChild(thumb);
+      }
+
       const name = document.createElement("div");
       name.className = "text-sm";
       name.textContent = item.name;
+      nameWrap.appendChild(name);
 
       const remove = document.createElement("button");
       remove.type = "button";
@@ -2950,7 +3005,7 @@ export class FormUI extends HTMLElement {
       remove.setAttribute("data-image-gallery-action", "remove");
       remove.setAttribute("data-image-id", item.id);
 
-      row.appendChild(name);
+      row.appendChild(nameWrap);
       row.appendChild(remove);
       list.appendChild(row);
     });

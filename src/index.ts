@@ -3338,14 +3338,15 @@ export class FormUI extends HTMLElement {
     const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
     const limitReached = selectionLimit > 0 && selectedItems.length >= selectionLimit;
 
-    const gallery = this.ensureSelectionChild(
-      selectionElement,
-      `[data-image-gallery-catalog="${fieldConfig.name}"]`,
-      "div",
-      "",
-      "data-image-gallery-catalog",
-      fieldConfig.name,
-    ) as HTMLDivElement;
+    const gallery =
+      (selectionElement.querySelector(
+        `[data-image-gallery-catalog="${fieldConfig.name}"]`,
+      ) as HTMLDivElement | null)
+      ?? (selectionElement as HTMLDivElement);
+
+    if (gallery === selectionElement) {
+      gallery.setAttribute("data-image-gallery-catalog", fieldConfig.name);
+    }
 
     gallery.style.display = "grid";
     gallery.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
@@ -3480,6 +3481,7 @@ export class FormUI extends HTMLElement {
         controls.setAttribute("data-image-controls", imageItem.id);
         card.appendChild(controls);
       }
+      controls.setAttribute("data-image-gallery-control-row", imageItem.id);
       controls.className = "mt-2 flex items-center justify-center";
       const existingToggle = controls.querySelector(
         '[data-image-gallery-action="toggle"]',

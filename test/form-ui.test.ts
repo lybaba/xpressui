@@ -1523,6 +1523,67 @@ describe('FormUI', () => {
     expect(body.textContent).toContain('Image 2');
   });
 
+  it('reuses backend image-gallery catalog shells instead of creating an extra catalog wrapper', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <form id="hydrated_image_gallery_form" data-type="contactform" data-name="hydrated_image_gallery" data-label="Hydrated Image Gallery">
+        <div data-type="section" data-name="main" data-label="Main">
+          <input id="lookbook" name="lookbook" type="hidden" data-type="image-gallery" data-name="lookbook" data-label="Lookbook" data-section-name="main" />
+          <div id="lookbook_selection" data-image-gallery-zone="lookbook">
+            <article class="template-gallery-card" data-image-card="img_1">
+              <div class="template-gallery-media">
+                <img data-image-preview="img_1" />
+              </div>
+              <div class="template-choice-title" data-image-title="img_1">Image 1</div>
+              <div class="template-gallery-caption" data-image-meta-row="img_1">
+                <span data-image-gallery-badge="img_1">Ready</span>
+                <span data-image-gallery-state="img_1">Available</span>
+              </div>
+              <div class="template-product-actions" data-image-controls="img_1"></div>
+            </article>
+          </div>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(container);
+
+    const element = hydrateFormUI(container, createFormConfig({
+      name: 'hydrated_image_gallery',
+      title: 'Hydrated Image Gallery',
+      fields: [
+        {
+          type: 'image-gallery',
+          name: 'lookbook',
+          label: 'Lookbook',
+          choices: [
+            {
+              value: 'img_1',
+              label: 'Image 1',
+              image_thumbnail: 'https://cdn.example.test/thumb_1.jpg',
+              image_medium: 'https://cdn.example.test/medium_1.jpg',
+              photos_full: ['https://cdn.example.test/full_1.jpg'],
+            },
+          ] as any,
+        },
+      ],
+    })) as FormUI;
+
+    const selection = element.querySelector('#lookbook_selection') as HTMLElement;
+    const card = element.querySelector('[data-image-card="img_1"]') as HTMLElement;
+    const controls = element.querySelector('[data-image-controls="img_1"]') as HTMLElement;
+
+    const toggle = element.querySelector('[data-image-gallery-action="toggle"][data-image-id="img_1"]') as HTMLButtonElement;
+    toggle.click();
+    await flushAsyncWork();
+
+    expect(element.querySelector('#lookbook_selection')).toBe(selection);
+    expect(element.querySelector('[data-image-gallery-catalog="lookbook"]')).toBe(selection);
+    expect(element.querySelectorAll('[data-image-gallery-catalog="lookbook"]')).toHaveLength(1);
+    expect(element.querySelector('[data-image-card="img_1"]')).toBe(card);
+    expect(element.querySelector('[data-image-controls="img_1"]')).toBe(controls);
+    expect(controls.getAttribute('data-image-gallery-control-row')).toBe('img_1');
+  });
+
   it('supports quiz fields with single choice, multi choice limits, and open answers', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

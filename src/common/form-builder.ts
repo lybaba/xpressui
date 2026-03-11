@@ -309,10 +309,13 @@ function renderField(field: TFieldConfig, sectionName: string): string {
       ? 'mt-2 rounded border border-base-300 p-3'
       : 'mt-2';
     const openQuizZoneAttr = !field.choices?.length ? ' data-quiz-open-zone="true"' : '';
+    const openQuizMarkup = !field.choices?.length
+      ? `<div class="grid gap-2" data-quiz-open-wrapper="${escapeHtml(field.name)}" style="gap:6px;"><textarea class="textarea textarea-bordered w-full" rows="2" placeholder="${escapeHtml(String(field.placeholder || 'Write your answer'))}" data-quiz-open-answer="${escapeHtml(field.name)}" style="background:#ffffff;min-height:72px;"></textarea></div>`
+      : '';
     return `<div class="form-control w-full">
     <div class="label"><label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label></div>
     <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${includeInSubmitAttr}${viewTemplateAttr}${viewTemplateUnsafeAttr}${viewModeAttr}${choicesAttr}${openQuizAttr}${multipleAttr}${minNumOfChoicesAttr}${maxNumOfChoicesAttr}${placeholderAttr}${conditionalAttrs} />
-    <div class="${quizZoneClass}" id="${escapeHtml(field.name)}_selection" data-quiz-zone="${escapeHtml(field.name)}"${openQuizZoneAttr}></div>
+    <div class="${quizZoneClass}" id="${escapeHtml(field.name)}_selection" data-quiz-zone="${escapeHtml(field.name)}"${openQuizZoneAttr}>${openQuizMarkup}</div>
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </div>`;

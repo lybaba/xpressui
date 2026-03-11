@@ -3524,29 +3524,27 @@ export class FormUI extends HTMLElement {
     }
 
     if (this.isOpenQuizField(fieldConfig)) {
-      let wrapper = selectionElement.querySelector("[data-quiz-open-wrapper]") as HTMLDivElement | null;
-      let textarea = selectionElement.querySelector(
+      const wrapper = this.ensureSelectionChild(
+        selectionElement,
+        `[data-quiz-open-wrapper="${fieldConfig.name}"]`,
+        "div",
+        "grid gap-2",
+        "data-quiz-open-wrapper",
+        fieldConfig.name,
+      ) as HTMLDivElement;
+      wrapper.style.gap = "6px";
+      const textarea = this.ensureSelectionChild(
+        wrapper,
         `[data-quiz-open-answer="${fieldConfig.name}"]`,
-      ) as HTMLTextAreaElement | null;
-
-      if (!wrapper || !textarea) {
-        selectionElement.innerHTML = "";
-
-        wrapper = document.createElement("div");
-        wrapper.className = "grid gap-2";
-        wrapper.setAttribute("data-quiz-open-wrapper", fieldConfig.name);
-        wrapper.style.gap = "6px";
-
-        textarea = document.createElement("textarea");
-        textarea.className = "textarea textarea-bordered w-full";
-        textarea.rows = 2;
-        textarea.placeholder = fieldConfig.placeholder || "Write your answer";
-        textarea.setAttribute("data-quiz-open-answer", fieldConfig.name);
-        textarea.style.background = "#ffffff";
-        textarea.style.minHeight = "72px";
-        wrapper.appendChild(textarea);
-        selectionElement.appendChild(wrapper);
-      }
+        "textarea",
+        "textarea textarea-bordered w-full",
+        "data-quiz-open-answer",
+        fieldConfig.name,
+      ) as HTMLTextAreaElement;
+      textarea.rows = 2;
+      textarea.placeholder = fieldConfig.placeholder || "Write your answer";
+      textarea.style.background = "#ffffff";
+      textarea.style.minHeight = "72px";
 
       const nextValue = typeof value === "string" ? value : "";
       if (textarea.value !== nextValue && document.activeElement !== textarea) {

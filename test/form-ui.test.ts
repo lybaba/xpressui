@@ -1495,6 +1495,27 @@ describe('FormUI', () => {
     expect(storyInputAfter.value).toBe('An open-ended answer');
   });
 
+  it('renders an open-quiz shell directly in template markup', () => {
+    const markup = createTemplateMarkup(
+      createFormConfig({
+        name: 'open-quiz-template-demo',
+        title: 'Open Quiz Template Demo',
+        fields: [
+          {
+            type: 'quiz',
+            name: 'story',
+            label: 'Tell us more',
+            placeholder: 'Write your answer',
+          },
+        ],
+      }),
+    );
+
+    expect(markup).toContain('data-quiz-open-wrapper="story"');
+    expect(markup).toContain('data-quiz-open-answer="story"');
+    expect(markup).toContain('placeholder="Write your answer"');
+  });
+
   it('preserves quiz shell nodes while updating selected answers', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

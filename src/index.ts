@@ -1987,7 +1987,14 @@ export class FormUI extends HTMLElement {
 
     const cartItems = this.getProductCartItems(value);
     const totalAmount = this.getProductCartTotal(cartItems);
-    totalNode.textContent = totalAmount > 0 ? `${totalAmount.toFixed(2)}€` : "";
+    if (totalAmount > 0) {
+      totalNode.style.display = "inline-flex";
+      totalNode.innerHTML = `<span aria-hidden="true" style="display:inline-flex;align-items:center;margin-right:6px;">🛒</span><span>${totalAmount.toFixed(2)}€</span>`;
+      return;
+    }
+
+    totalNode.innerHTML = "";
+    totalNode.style.display = "none";
   }
 
   getProductCartEntries = (): Array<{ fieldName: string; item: TProductCartItem }> => {
@@ -2729,7 +2736,7 @@ export class FormUI extends HTMLElement {
       const card = document.createElement("div");
       card.setAttribute("data-product-open-gallery", product.id);
       card.setAttribute("data-product-card", product.id);
-      card.className = "rounded border border-base-300 p-2 transition-all";
+      card.className = "rounded border border-base-300 p-2";
       card.style.cursor = "pointer";
       card.style.borderColor = currentQuantity > 0 ? "rgb(59 130 246)" : "";
       card.style.boxShadow = currentQuantity > 0 ? "0 0 0 2px rgba(59, 130, 246, 0.12)" : "";
@@ -2887,14 +2894,11 @@ export class FormUI extends HTMLElement {
         const decButton = buildAction("dec", "−");
         styleProductActionButton(decButton);
         controls.appendChild(decButton);
-        const incButton = buildAction("inc", "+", maxReached);
-        styleProductActionButton(incButton, { emphasized: true });
-        controls.appendChild(incButton);
-      } else {
-        const addButton = buildAction("add", "+", maxReached);
-        styleProductActionButton(addButton, { emphasized: true });
-        controls.appendChild(addButton);
       }
+
+      const incButton = buildAction(currentQuantity > 0 ? "inc" : "add", "+", maxReached);
+      styleProductActionButton(incButton, { emphasized: true });
+      controls.appendChild(incButton);
 
       controlsWrap.appendChild(controls);
       metaRow.appendChild(controlsWrap);

@@ -3209,40 +3209,24 @@ export class FormUI extends HTMLElement {
       title.style.textAlign = "center";
       title.textContent = product.name;
 
-      let metaRow = card.querySelector("[data-product-meta-row]") as HTMLDivElement | null;
-      if (!metaRow) {
-        metaRow = document.createElement("div");
-        metaRow.setAttribute("data-product-meta-row", product.id);
-        card.appendChild(metaRow);
+      let pricing = card.querySelector("[data-product-pricing]") as HTMLDivElement | null;
+      if (!pricing) {
+        pricing =
+          (card.querySelector(".template-product-meta") as HTMLDivElement | null)
+          || (card.querySelector("[data-product-meta-row]") as HTMLDivElement | null);
       }
-      metaRow.className = "mt-1 flex flex-col items-center gap-2";
-      metaRow.style.width = "100%";
-      metaRow.style.alignItems = "center";
-      metaRow.style.justifyItems = "center";
-
-      let metaText = metaRow.querySelector("[data-product-meta-text]") as HTMLDivElement | null;
-      if (!metaText) {
-        metaText = document.createElement("div");
-        metaText.setAttribute("data-product-meta-text", product.id);
-        metaRow.appendChild(metaText);
-      }
-      metaText.className = "min-w-0 text-xs";
-      metaText.style.display = "grid";
-      metaText.style.gap = "1px";
-      metaText.style.textAlign = "center";
-      metaText.style.justifyItems = "center";
-
-      let pricing = metaText.querySelector("[data-product-pricing]") as HTMLDivElement | null;
       if (!pricing) {
         pricing = document.createElement("div");
         pricing.setAttribute("data-product-pricing", product.id);
-        metaText.appendChild(pricing);
+        card.appendChild(pricing);
       }
-      pricing.className = "text-xs";
+      pricing.className = "mt-1 text-xs";
+      pricing.style.width = "100%";
       pricing.style.display = "flex";
       pricing.style.alignItems = "baseline";
       pricing.style.justifyContent = "center";
       pricing.style.gap = "4px";
+      pricing.style.textAlign = "center";
 
       let primaryPrice = pricing.querySelector("[data-product-price]") as HTMLSpanElement | null;
       if (!primaryPrice) {
@@ -3270,12 +3254,8 @@ export class FormUI extends HTMLElement {
       existingControls.style.display = "grid";
       existingControls.style.placeItems = "center";
 
-      let controls = existingControls.querySelector("[data-product-control-row]") as HTMLDivElement | null;
-      if (!controls) {
-        controls = document.createElement("div");
-        controls.setAttribute("data-product-control-row", product.id);
-        existingControls.appendChild(controls);
-      }
+      const controls = existingControls;
+      controls.setAttribute("data-product-control-row", product.id);
       controls.className = "flex items-center gap-1";
       controls.style.display = "flex";
       controls.style.alignItems = "center";

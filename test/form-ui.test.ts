@@ -25,6 +25,7 @@ import {
   getProviderDefinition,
   isProviderResponseEnvelopeV2,
   getPublicApiManifest,
+  hydrateFormUI,
   normalizeProviderResult,
   resolveProviderTransition,
   mountFormUI,
@@ -1301,7 +1302,6 @@ describe('FormUI', () => {
     const catalog = selection.querySelector('[data-product-list-catalog="products"]') as HTMLElement;
     const card = selection.querySelector('[data-product-card="sku_1"]') as HTMLElement;
     const controls = selection.querySelector('[data-product-controls="sku_1"]') as HTMLElement;
-    const controlRow = selection.querySelector('[data-product-control-row="sku_1"]') as HTMLElement;
     const add = selection.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
 
     add.click();
@@ -1319,7 +1319,7 @@ describe('FormUI', () => {
     expect(selection.querySelector('[data-product-list-catalog="products"]')).toBe(catalog);
     expect(selection.querySelector('[data-product-card="sku_1"]')).toBe(card);
     expect(selection.querySelector('[data-product-controls="sku_1"]')).toBe(controls);
-    expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controlRow);
+    expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controls);
     expect(element.querySelector('[data-product-list-total="products"]')).toBe(inlineTotal);
     expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(1);
 
@@ -1330,7 +1330,7 @@ describe('FormUI', () => {
     expect(selection.querySelector('[data-product-list-catalog="products"]')).toBe(catalog);
     expect(selection.querySelector('[data-product-card="sku_1"]')).toBe(card);
     expect(selection.querySelector('[data-product-controls="sku_1"]')).toBe(controls);
-    expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controlRow);
+    expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controls);
     expect(element.querySelector('[data-product-list-total="products"]')).toBe(inlineTotal);
     expect(element.querySelector('[data-product-cart-panel="true"]')).toBe(cartPanel);
     expect(cartPanel.querySelector('[data-product-cart-header="true"]')).toBe(cartHeader);
@@ -1344,6 +1344,69 @@ describe('FormUI', () => {
     expect((inlineTotal.querySelector('[data-product-list-total-amount="products"]') as HTMLElement).textContent).toBe('180.00€');
     expect(cartQty.textContent).toBe('x2');
     expect(cartSubtotal.textContent).toBe('180.00€');
+  });
+
+  it('reuses backend product-list shells instead of creating extra runtime wrappers', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <form id="hydrated_product_list_form" data-type="contactform" data-name="hydrated_product_list" data-label="Hydrated Product List">
+        <div data-type="section" data-name="main" data-label="Main">
+          <input id="products" name="products" type="hidden" data-type="product-list" data-name="products" data-label="Products" data-section-name="main" />
+          <div id="products_selection" data-product-list-zone="products">
+            <article class="template-product-card" data-product-card="sku_1">
+              <div class="template-product-media">
+                <img data-product-image="sku_1" />
+              </div>
+              <div class="template-product-title" data-product-title="sku_1">Product 1</div>
+              <div class="template-product-meta">
+                <span data-product-price="sku_1">90.00€</span>
+              </div>
+              <div class="template-product-actions" data-product-controls="sku_1"></div>
+            </article>
+          </div>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(container);
+
+    const element = hydrateFormUI(container, createFormConfig({
+      name: 'hydrated_product_list',
+      title: 'Hydrated Product List',
+      fields: [
+        {
+          type: 'product-list',
+          name: 'products',
+          label: 'Products',
+          choices: [
+            {
+              value: 'sku_1',
+              name: 'Product 1',
+              label: 'Product 1',
+              sale_price: 100,
+              discount_price: 90,
+              image_thumbnail: 'https://cdn.example.test/thumb_1.jpg',
+              image_medium: 'https://cdn.example.test/medium_1.jpg',
+              photos_full: ['https://cdn.example.test/full_1.jpg'],
+            },
+          ] as any,
+        },
+      ],
+    })) as FormUI;
+
+    const card = element.querySelector('[data-product-card="sku_1"]') as HTMLElement;
+    const meta = (element.querySelector('[data-product-price="sku_1"]') as HTMLElement).parentElement as HTMLElement;
+    const controls = element.querySelector('[data-product-controls="sku_1"]') as HTMLElement;
+
+    const add = element.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
+    add.click();
+    await flushAsyncWork();
+
+    expect((element.querySelector('[data-product-price="sku_1"]') as HTMLElement).parentElement).toBe(meta);
+    expect(element.querySelector('[data-product-controls="sku_1"]')).toBe(controls);
+    expect(element.querySelector('[data-product-card="sku_1"]')).toBe(card);
+    expect(controls.getAttribute('data-product-control-row')).toBe('sku_1');
+    expect(card.querySelector('[data-product-meta-row]')).toBeNull();
+    expect(card.querySelector('[data-product-meta-text]')).toBeNull();
   });
 
   it('supports image-gallery fields with a 20-image max catalog and selection modal interactions', async () => {

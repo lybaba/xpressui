@@ -4,14 +4,29 @@ export function getFieldElement(
   host: ParentNode,
   fieldName: string,
 ): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null {
-  const nodes = Array.from(host.querySelectorAll("[id]"));
-  for (const node of nodes) {
-    if ((node as HTMLElement).id === fieldName) {
-      return node as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-    }
+  const directId = host.querySelector(`#${CSS.escape(fieldName)}`) as
+    | HTMLInputElement
+    | HTMLSelectElement
+    | HTMLTextAreaElement
+    | null;
+  if (directId) {
+    return directId;
   }
 
-  return null;
+  const prefixedId = host.querySelector(`#${CSS.escape(`field-${fieldName}`)}`) as
+    | HTMLInputElement
+    | HTMLSelectElement
+    | HTMLTextAreaElement
+    | null;
+  if (prefixedId) {
+    return prefixedId;
+  }
+
+  return host.querySelector(`[name="${CSS.escape(fieldName)}"]`) as
+    | HTMLInputElement
+    | HTMLSelectElement
+    | HTMLTextAreaElement
+    | null;
 }
 
 export function getFieldContainer(host: ParentNode, fieldName: string): HTMLElement | null {

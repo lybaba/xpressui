@@ -184,6 +184,7 @@ export {
   createFormConfig,
   createMountSnippet,
   createTemplateMarkup,
+  hydrateFormUI,
   mountFormUI,
 } from "./common/form-builder";
 export { createFormPreset, fieldFactory, stepFactory } from "./common/form-presets";
@@ -3749,8 +3750,12 @@ export class FormUI extends HTMLElement {
 
   initialize = () => {
     let formElem: HTMLFormElement | null = null;
+    const hydrationConfig = (this as any).__xpressuiHydrationConfig as TFormConfig | null | undefined;
+    const useHydration = this.hasAttribute("hydrate-existing");
 
-    if ("content" in document.createElement("template")) {
+    if (useHydration) {
+      formElem = this.querySelector("form") as HTMLFormElement | null;
+    } else if ("content" in document.createElement("template")) {
       const name = this.getAttribute("name");
       if (name) {
         const root = this.getRootNode();
@@ -3772,7 +3777,9 @@ export class FormUI extends HTMLElement {
     this.initialized = true;
 
     if (formElem) {
-      this.formConfig = validatePublicFormConfig(getFormConfig(formElem) as unknown as Record<string, any>);
+      this.formConfig = hydrationConfig
+        ? validatePublicFormConfig(hydrationConfig)
+        : validatePublicFormConfig(getFormConfig(formElem) as unknown as Record<string, any>);
       this.engine.setFormConfig(this.formConfig);
       this.steps.setFormConfig(this.formConfig);
       this.persistence.setFormConfig(this.formConfig);
@@ -3836,12 +3843,22 @@ export class FormUI extends HTMLElement {
         this.form?.submit();
       });
 
-      Array.from(formElem.elements).forEach(input => {
-        const fieldConfig = getFieldConfig(input);
-        if (fieldConfig.type !== UNKNOWN_TYPE) {
-          this.registerField(fieldConfig, input);
-        }
-      });
+      if (useHydration && this.formConfig) {
+        Object.values(this.engine.getFields()).forEach((fieldConfig) => {
+          const input = this.getFieldElement(fieldConfig.name);
+          const selectionElement = this.querySelector(`#${fieldConfig.name}_selection`) as HTMLElement | null;
+          if (input || selectionElement) {
+            this.registerField(fieldConfig, input);
+          }
+        });
+      } else {
+        Array.from(formElem.elements).forEach(input => {
+          const fieldConfig = getFieldConfig(input);
+          if (fieldConfig.type !== UNKNOWN_TYPE) {
+            this.registerField(fieldConfig, input);
+          }
+        });
+      }
       this.bindProductListGlobalCartEvents();
 
       this.ensureStepControls(formElem);

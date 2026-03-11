@@ -2726,7 +2726,6 @@ export class FormUI extends HTMLElement {
       return;
     }
 
-    selectionElement.innerHTML = "";
     const products = this.getProductListCatalog(fieldConfig);
     const cartItems = this.getProductCartItems(value);
     const cartMap = cartItems.reduce((accumulator, item) => {
@@ -2734,8 +2733,17 @@ export class FormUI extends HTMLElement {
       return accumulator;
     }, {} as Record<string, number>);
 
-    const productList = document.createElement("div");
-    productList.setAttribute("data-product-list-catalog", fieldConfig.name);
+    const productList =
+      (selectionElement.querySelector(
+        `[data-product-list-catalog="${fieldConfig.name}"]`,
+      ) as HTMLDivElement | null)
+      ?? (selectionElement as HTMLDivElement);
+
+    if (productList === selectionElement) {
+      productList.setAttribute("data-product-list-catalog", fieldConfig.name);
+      productList.innerHTML = "";
+    }
+
     productList.style.display = "grid";
     productList.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
     productList.style.gap = "10px";
@@ -2770,9 +2778,14 @@ export class FormUI extends HTMLElement {
       const unitPrice = product.discount_price ?? product.sale_price ?? 0;
       const subtotalAmount = unitPrice * currentQuantity;
 
-      const card = document.createElement("div");
+      let card = productList.querySelector(`[data-product-card="${product.id}"]`) as HTMLDivElement | null;
+      if (!card) {
+        card = document.createElement("div");
+        card.setAttribute("data-product-card", product.id);
+        productList.appendChild(card);
+      }
+
       card.setAttribute("data-product-open-gallery", product.id);
-      card.setAttribute("data-product-card", product.id);
       card.className = "rounded border border-base-300 p-2";
       card.style.cursor = "pointer";
       card.style.borderColor = currentQuantity > 0 ? "rgb(59 130 246)" : "";
@@ -2785,8 +2798,16 @@ export class FormUI extends HTMLElement {
       card.style.borderRadius = "16px";
 
       const previewSource = product.image_medium || product.image_thumbnail;
-      if (previewSource) {
-        const thumbFrame = document.createElement("div");
+      let thumbFrame = card.querySelector("[data-product-media]") as HTMLDivElement | null;
+      if (!thumbFrame) {
+        thumbFrame = card.querySelector(".template-product-media") as HTMLDivElement | null;
+      }
+      if (!thumbFrame && previewSource) {
+        thumbFrame = document.createElement("div");
+        thumbFrame.setAttribute("data-product-media", product.id);
+        card.appendChild(thumbFrame);
+      }
+      if (thumbFrame) {
         thumbFrame.style.width = "100%";
         thumbFrame.style.aspectRatio = "4 / 3";
         thumbFrame.style.maxHeight = "164px";
@@ -2798,59 +2819,85 @@ export class FormUI extends HTMLElement {
         thumbFrame.style.background = "rgba(255,255,255,0.72)";
         thumbFrame.style.overflow = "hidden";
 
-        const thumb = document.createElement("img");
-        thumb.src = previewSource;
-        thumb.alt = product.name;
-        thumb.style.width = "100%";
-        thumb.style.height = "100%";
-        thumb.style.objectFit = "cover";
-        thumb.style.objectPosition = "center center";
-        thumbFrame.appendChild(thumb);
+        let thumb = thumbFrame.querySelector("img") as HTMLImageElement | null;
+        if (!thumb && previewSource) {
+          thumb = document.createElement("img");
+          thumb.setAttribute("data-product-image", product.id);
+          thumbFrame.appendChild(thumb);
+        }
+        if (thumb) {
+          thumb.src = previewSource || "";
+          thumb.alt = product.name;
+          thumb.style.width = "100%";
+          thumb.style.height = "100%";
+          thumb.style.objectFit = "cover";
+          thumb.style.objectPosition = "center center";
+          thumb.style.display = previewSource ? "block" : "none";
+        }
 
-        if (currentQuantity > 0) {
-          const imageOverlay = document.createElement("div");
-          imageOverlay.style.position = "absolute";
-          imageOverlay.style.left = "0";
-          imageOverlay.style.right = "0";
-          imageOverlay.style.bottom = "0";
-          imageOverlay.style.display = "flex";
-          imageOverlay.style.justifyContent = "space-between";
-          imageOverlay.style.alignItems = "center";
-          imageOverlay.style.gap = "8px";
-          imageOverlay.style.padding = "10px";
-          imageOverlay.style.background = "linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0.74) 100%)";
-
-          const quantityPill = document.createElement("span");
-          quantityPill.style.display = "inline-flex";
-          quantityPill.style.alignItems = "center";
-          quantityPill.style.gap = "4px";
-          quantityPill.style.padding = "4px 8px";
-          quantityPill.style.borderRadius = "999px";
-          quantityPill.style.background = "rgba(255,255,255,0.16)";
-          quantityPill.style.color = "#ffffff";
-          quantityPill.style.fontSize = "11px";
-          quantityPill.style.fontWeight = "700";
-          quantityPill.innerHTML = `<span aria-hidden="true">🛒</span><span>${currentQuantity}</span>`;
-
-          const subtotalPill = document.createElement("span");
-          subtotalPill.style.display = "inline-flex";
-          subtotalPill.style.alignItems = "center";
-          subtotalPill.style.padding = "4px 8px";
-          subtotalPill.style.borderRadius = "999px";
-          subtotalPill.style.background = "rgba(15,23,42,0.42)";
-          subtotalPill.style.color = "#ffffff";
-          subtotalPill.style.fontSize = "11px";
-          subtotalPill.style.fontWeight = "700";
-          subtotalPill.textContent = `${subtotalAmount.toFixed(2)}€`;
-
-          imageOverlay.appendChild(quantityPill);
-          imageOverlay.appendChild(subtotalPill);
+        let imageOverlay = thumbFrame.querySelector("[data-product-overlay]") as HTMLDivElement | null;
+        if (!imageOverlay && currentQuantity > 0) {
+          imageOverlay = document.createElement("div");
+          imageOverlay.setAttribute("data-product-overlay", product.id);
           thumbFrame.appendChild(imageOverlay);
         }
-        card.appendChild(thumbFrame);
+        if (imageOverlay) {
+          if (currentQuantity > 0) {
+            imageOverlay.style.position = "absolute";
+            imageOverlay.style.left = "0";
+            imageOverlay.style.right = "0";
+            imageOverlay.style.bottom = "0";
+            imageOverlay.style.display = "flex";
+            imageOverlay.style.justifyContent = "space-between";
+            imageOverlay.style.alignItems = "center";
+            imageOverlay.style.gap = "8px";
+            imageOverlay.style.padding = "10px";
+            imageOverlay.style.background = "linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0.74) 100%)";
+
+            let quantityPill = imageOverlay.querySelector("[data-product-quantity-pill]") as HTMLSpanElement | null;
+            if (!quantityPill) {
+              quantityPill = document.createElement("span");
+              quantityPill.setAttribute("data-product-quantity-pill", product.id);
+              imageOverlay.appendChild(quantityPill);
+            }
+            quantityPill.style.display = "inline-flex";
+            quantityPill.style.alignItems = "center";
+            quantityPill.style.gap = "4px";
+            quantityPill.style.padding = "4px 8px";
+            quantityPill.style.borderRadius = "999px";
+            quantityPill.style.background = "rgba(255,255,255,0.16)";
+            quantityPill.style.color = "#ffffff";
+            quantityPill.style.fontSize = "11px";
+            quantityPill.style.fontWeight = "700";
+            quantityPill.innerHTML = `<span aria-hidden="true">🛒</span><span>${currentQuantity}</span>`;
+
+            let subtotalPill = imageOverlay.querySelector("[data-product-subtotal-pill]") as HTMLSpanElement | null;
+            if (!subtotalPill) {
+              subtotalPill = document.createElement("span");
+              subtotalPill.setAttribute("data-product-subtotal-pill", product.id);
+              imageOverlay.appendChild(subtotalPill);
+            }
+            subtotalPill.style.display = "inline-flex";
+            subtotalPill.style.alignItems = "center";
+            subtotalPill.style.padding = "4px 8px";
+            subtotalPill.style.borderRadius = "999px";
+            subtotalPill.style.background = "rgba(15,23,42,0.42)";
+            subtotalPill.style.color = "#ffffff";
+            subtotalPill.style.fontSize = "11px";
+            subtotalPill.style.fontWeight = "700";
+            subtotalPill.textContent = `${subtotalAmount.toFixed(2)}€`;
+          } else {
+            imageOverlay.remove();
+          }
+        }
       }
 
-      const title = document.createElement("div");
+      let title = card.querySelector("[data-product-title]") as HTMLDivElement | null;
+      if (!title) {
+        title = document.createElement("div");
+        title.setAttribute("data-product-title", product.id);
+        card.appendChild(title);
+      }
       title.className = "mt-2 text-sm font-semibold";
       title.style.width = "100%";
       title.style.overflow = "hidden";
@@ -2859,28 +2906,48 @@ export class FormUI extends HTMLElement {
       title.style.lineHeight = "1.2";
       title.style.textAlign = "center";
       title.textContent = product.name;
-      card.appendChild(title);
 
-      const metaRow = document.createElement("div");
+      let metaRow = card.querySelector("[data-product-meta-row]") as HTMLDivElement | null;
+      if (!metaRow) {
+        metaRow = document.createElement("div");
+        metaRow.setAttribute("data-product-meta-row", product.id);
+        card.appendChild(metaRow);
+      }
       metaRow.className = "mt-1 flex flex-col items-center gap-2";
       metaRow.style.width = "100%";
       metaRow.style.alignItems = "center";
       metaRow.style.justifyItems = "center";
 
-      const metaText = document.createElement("div");
+      let metaText = metaRow.querySelector("[data-product-meta-text]") as HTMLDivElement | null;
+      if (!metaText) {
+        metaText = document.createElement("div");
+        metaText.setAttribute("data-product-meta-text", product.id);
+        metaRow.appendChild(metaText);
+      }
       metaText.className = "min-w-0 text-xs";
       metaText.style.display = "grid";
       metaText.style.gap = "1px";
       metaText.style.textAlign = "center";
       metaText.style.justifyItems = "center";
 
-      const pricing = document.createElement("div");
+      let pricing = metaText.querySelector("[data-product-pricing]") as HTMLDivElement | null;
+      if (!pricing) {
+        pricing = document.createElement("div");
+        pricing.setAttribute("data-product-pricing", product.id);
+        metaText.appendChild(pricing);
+      }
       pricing.className = "text-xs";
       pricing.style.display = "flex";
       pricing.style.alignItems = "baseline";
       pricing.style.justifyContent = "center";
       pricing.style.gap = "4px";
-      const primaryPrice = document.createElement("span");
+
+      let primaryPrice = pricing.querySelector("[data-product-price]") as HTMLSpanElement | null;
+      if (!primaryPrice) {
+        primaryPrice = document.createElement("span");
+        primaryPrice.setAttribute("data-product-price", product.id);
+        pricing.appendChild(primaryPrice);
+      }
       primaryPrice.className = "font-semibold";
       primaryPrice.style.fontSize = "13px";
       primaryPrice.style.overflowWrap = "anywhere";
@@ -2890,9 +2957,6 @@ export class FormUI extends HTMLElement {
           : product.sale_price !== null
             ? `${product.sale_price.toFixed(2)}€`
             : "Price on request";
-      pricing.appendChild(primaryPrice);
-      metaText.appendChild(pricing);
-      metaRow.appendChild(metaText);
 
       const controlsWrap = document.createElement("div");
       controlsWrap.style.width = "100%";
@@ -2938,9 +3002,25 @@ export class FormUI extends HTMLElement {
       controls.appendChild(incButton);
 
       controlsWrap.appendChild(controls);
-      metaRow.appendChild(controlsWrap);
-      card.appendChild(metaRow);
-      productList.appendChild(card);
+
+      let existingControls = card.querySelector("[data-product-controls]") as HTMLDivElement | null;
+      if (!existingControls) {
+        existingControls = document.createElement("div");
+        existingControls.setAttribute("data-product-controls", product.id);
+        card.appendChild(existingControls);
+      }
+      existingControls.innerHTML = "";
+      existingControls.style.width = "100%";
+      existingControls.style.display = "grid";
+      existingControls.style.placeItems = "center";
+      existingControls.appendChild(controls);
+    });
+
+    Array.from(productList.querySelectorAll("[data-product-card]")).forEach((node) => {
+      const productId = (node as HTMLElement).getAttribute("data-product-card");
+      if (productId && !products.some((product) => product.id === productId)) {
+        node.remove();
+      }
     });
 
     selectionElement.appendChild(productList);

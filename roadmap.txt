@@ -140,6 +140,7 @@ feature breadth:
 - file/document flows need stronger backend and privacy semantics for production
 - admin/debug building blocks exist, but operator workflows are still thin
 - docs/demos need to mirror the canonical backend and operational scenarios exactly
+- FormUI demos should embed the HTML shell they need and prefer `hydrateFormUI(...)` over `mountFormUI(...)` so showcase pages exercise the same ownership model as `iakpress-console`
 
 Planning principle for the next lots:
 - do not add many new primitives before provider/save-resume/file contracts are tighter
@@ -147,6 +148,25 @@ Planning principle for the next lots:
 - finish contract-heavy runtime work before expanding showcase/demo surface
 - treat backend/console-rendered HTML as the preferred presentation source whenever a hydration contract exists
 - keep runtime-created HTML as a fallback path for standalone usage, not the default ownership model for field shells
+- keep demos aligned with that rule by shipping inline field shells in `demos/*.html` and using hydration as the default demo contract
+
+
+Demo Hydration Status
+---------------------
+
+Current direction:
+- `iakpress-console` owns the canonical field HTML
+- `xpressui` should hydrate that HTML instead of generating it at runtime whenever a shell contract exists
+- demo pages should mirror that backend-first ownership model so bundle size pressure is visible during local development too
+
+Completed:
+- every `FormUI` demo page under `demos/` now embeds its required form shell directly in HTML
+- demo pages now use `hydrateFormUI(...)` instead of `mountFormUI(...)`
+- `headless-runtime.html` remains the intentional exception because it demonstrates `FormRuntime` without `FormUI`
+
+Follow-up:
+- keep new demos on the same contract by default
+- only use runtime HTML generation in demos when a page is explicitly meant to showcase standalone mounting behavior
 
 
 Roadmap Phases

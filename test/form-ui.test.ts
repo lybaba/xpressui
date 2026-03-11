@@ -5152,6 +5152,47 @@ describe('FormUI', () => {
     expect(element.form?.getState().values.full_name).toBe('Alice');
   });
 
+  it('mountFormUI hydrates an existing backend form instead of replacing it', () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <form id="hydrated_mount_form" data-type="contactform" data-name="hydrated_mount" data-label="Hydrated Mount">
+        <div data-type="section" data-name="main" data-label="Main">
+          <input
+            id="full_name"
+            name="full_name"
+            type="text"
+            value="Alice"
+            data-type="text"
+            data-name="full_name"
+            data-label="Full Name"
+            data-section-name="main"
+          />
+        </div>
+      </form>
+    `;
+    const existingForm = container.querySelector('form') as HTMLFormElement;
+
+    const element = mountFormUI(container, {
+      name: 'hydrated_mount',
+      title: 'Hydrated Mount',
+      fields: [
+        {
+          name: 'full_name',
+          label: 'Full Name',
+          type: 'text',
+        },
+      ],
+    }) as FormUI;
+
+    expect(element.querySelector('form')).toBe(existingForm);
+    expect(container.querySelector('template')).toBeNull();
+
+    const input = element.querySelector('#full_name') as HTMLInputElement;
+    input.value = 'Bob';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(element.form?.getState().values.full_name).toBe('Bob');
+  });
+
   it('supports select-multiple fields in mounted forms', async () => {
     const container = document.createElement('div');
     const onSubmitSuccess = vi.fn();

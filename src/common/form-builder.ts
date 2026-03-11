@@ -693,6 +693,12 @@ export function mountFormUI(
   templateName?: string
 ): HTMLElement | null {
   const config = 'fields' in input ? createFormConfig(input) : validatePublicFormConfig(input);
+  const existingForm = container.querySelector('form') as HTMLFormElement | null;
+  const existingTemplate = container.querySelector('template');
+  if (existingForm && !existingTemplate) {
+    return hydrateFormUI(container, config);
+  }
+
   container.innerHTML = createTemplateMarkup(config, templateName);
   const element = container.querySelector('form-ui') as HTMLElement | null;
 

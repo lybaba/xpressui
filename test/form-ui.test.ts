@@ -1264,10 +1264,20 @@ describe('FormUI', () => {
     add.click();
     await flushAsyncWork();
 
+    const inlineTotal = element.querySelector('[data-product-list-total="products"]') as HTMLElement;
+    const cartPanel = element.querySelector('[data-product-cart-panel="true"]') as HTMLElement;
+    const cartHeader = cartPanel.querySelector('[data-product-cart-header="true"]') as HTMLElement;
+    const cartTotal = cartPanel.querySelector('[data-product-cart-total="true"]') as HTMLElement;
+    const cartList = cartPanel.querySelector('[data-product-cart-list="true"]') as HTMLElement;
+    const cartItem = cartPanel.querySelector('[data-product-cart-item="products:sku_1"]') as HTMLElement;
+    const cartQty = cartPanel.querySelector('[data-product-cart-qty="products:sku_1"]') as HTMLElement;
+    const cartSubtotal = cartPanel.querySelector('[data-product-cart-subtotal="products:sku_1"]') as HTMLElement;
+
     expect(selection.querySelector('[data-product-list-catalog="products"]')).toBe(catalog);
     expect(selection.querySelector('[data-product-card="sku_1"]')).toBe(card);
     expect(selection.querySelector('[data-product-controls="sku_1"]')).toBe(controls);
     expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controlRow);
+    expect(element.querySelector('[data-product-list-total="products"]')).toBe(inlineTotal);
     expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(1);
 
     const inc = selection.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
@@ -1278,8 +1288,19 @@ describe('FormUI', () => {
     expect(selection.querySelector('[data-product-card="sku_1"]')).toBe(card);
     expect(selection.querySelector('[data-product-controls="sku_1"]')).toBe(controls);
     expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controlRow);
+    expect(element.querySelector('[data-product-list-total="products"]')).toBe(inlineTotal);
+    expect(element.querySelector('[data-product-cart-panel="true"]')).toBe(cartPanel);
+    expect(cartPanel.querySelector('[data-product-cart-header="true"]')).toBe(cartHeader);
+    expect(cartPanel.querySelector('[data-product-cart-total="true"]')).toBe(cartTotal);
+    expect(cartPanel.querySelector('[data-product-cart-list="true"]')).toBe(cartList);
+    expect(cartPanel.querySelector('[data-product-cart-item="products:sku_1"]')).toBe(cartItem);
+    expect(cartPanel.querySelector('[data-product-cart-qty="products:sku_1"]')).toBe(cartQty);
+    expect(cartPanel.querySelector('[data-product-cart-subtotal="products:sku_1"]')).toBe(cartSubtotal);
     expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(2);
     expect((selection.querySelector('[data-product-quantity-pill="sku_1"]') as HTMLElement).textContent).toContain('2');
+    expect((inlineTotal.querySelector('[data-product-list-total-amount="products"]') as HTMLElement).textContent).toBe('180.00€');
+    expect(cartQty.textContent).toBe('x2');
+    expect(cartSubtotal.textContent).toBe('180.00€');
   });
 
   it('supports image-gallery fields with a 20-image max catalog and selection modal interactions', async () => {

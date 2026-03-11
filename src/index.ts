@@ -2024,13 +2024,31 @@ export class FormUI extends HTMLElement {
 
     const cartItems = this.getProductCartItems(value);
     const totalAmount = this.getProductCartTotal(cartItems);
+    let icon = totalNode.querySelector("[data-product-list-total-icon]") as HTMLSpanElement | null;
+    let amount = totalNode.querySelector("[data-product-list-total-amount]") as HTMLSpanElement | null;
     if (totalAmount > 0) {
       totalNode.style.display = "inline-flex";
-      totalNode.innerHTML = `<span aria-hidden="true" style="display:inline-flex;align-items:center;margin-right:6px;">🛒</span><span>${totalAmount.toFixed(2)}€</span>`;
+      if (!icon) {
+        icon = document.createElement("span");
+        icon.setAttribute("data-product-list-total-icon", fieldConfig.name);
+        icon.setAttribute("aria-hidden", "true");
+        icon.style.display = "inline-flex";
+        icon.style.alignItems = "center";
+        icon.style.marginRight = "6px";
+        icon.textContent = "🛒";
+        totalNode.appendChild(icon);
+      }
+      if (!amount) {
+        amount = document.createElement("span");
+        amount.setAttribute("data-product-list-total-amount", fieldConfig.name);
+        totalNode.appendChild(amount);
+      }
+      amount.textContent = `${totalAmount.toFixed(2)}€`;
       return;
     }
 
-    totalNode.innerHTML = "";
+    icon?.remove();
+    amount?.remove();
     totalNode.style.display = "none";
   }
 
@@ -2450,75 +2468,138 @@ export class FormUI extends HTMLElement {
       }
     }
 
-    panel.innerHTML = "";
-
-    const header = document.createElement("div");
+    const header = this.ensureSelectionChild(
+      panel,
+      "[data-product-cart-header]",
+      "div",
+      "",
+      "data-product-cart-header",
+      "true",
+    );
     header.style.display = "flex";
     header.style.alignItems = "center";
     header.style.justifyContent = "space-between";
     header.style.gap = "10px";
 
-    const heading = document.createElement("div");
-    heading.className = "text-sm font-semibold";
+    let heading = header.querySelector("[data-product-cart-heading]") as HTMLDivElement | null;
+    if (!heading) {
+      heading = document.createElement("div");
+      heading.className = "text-sm font-semibold";
+      heading.setAttribute("data-product-cart-heading", "true");
+      header.appendChild(heading);
+    }
     heading.textContent = `Cart (${itemCount})`;
-    header.appendChild(heading);
 
-    const closeButton = document.createElement("button");
-    closeButton.type = "button";
-    closeButton.className = "btn btn-ghost btn-sm";
-    closeButton.textContent = "Close";
-    closeButton.setAttribute("data-product-cart-close", "true");
-    header.appendChild(closeButton);
-    panel.appendChild(header);
+    let closeButton = header.querySelector("[data-product-cart-close]") as HTMLButtonElement | null;
+    if (!closeButton) {
+      closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.className = "btn btn-ghost btn-sm";
+      closeButton.textContent = "Close";
+      closeButton.setAttribute("data-product-cart-close", "true");
+      header.appendChild(closeButton);
+    }
 
-    const totalRow = document.createElement("div");
-    totalRow.className = "text-xs";
+    const totalRow = this.ensureSelectionChild(
+      panel,
+      "[data-product-cart-total]",
+      "div",
+      "text-xs",
+      "data-product-cart-total",
+      "true",
+    );
     totalRow.style.opacity = "0.75";
     totalRow.textContent = `Total: ${totalAmount.toFixed(2)}€`;
-    panel.appendChild(totalRow);
 
-    const list = document.createElement("div");
+    const list = this.ensureSelectionChild(
+      panel,
+      "[data-product-cart-list]",
+      "div",
+      "",
+      "data-product-cart-list",
+      "true",
+    );
     list.style.display = "grid";
     list.style.gap = "8px";
 
     entries.forEach(({ fieldName, item }) => {
-      const row = document.createElement("div");
-      row.setAttribute("data-product-cart-item", item.id);
-      row.className = "rounded border border-base-300 p-2";
+      const rowRef = `${fieldName}:${item.id}`;
+      const row = this.ensureSelectionChild(
+        list,
+        `[data-product-cart-item="${rowRef}"]`,
+        "div",
+        "rounded border border-base-300 p-2",
+        "data-product-cart-item",
+        rowRef,
+      );
+      row.setAttribute("data-product-cart-entry-id", item.id);
+      row.setAttribute("data-product-cart-field", fieldName);
       row.style.display = "grid";
       row.style.gap = "8px";
 
-      const meta = document.createElement("div");
+      const meta = this.ensureSelectionChild(
+        row,
+        `[data-product-cart-meta="${rowRef}"]`,
+        "div",
+        "",
+        "data-product-cart-meta",
+        rowRef,
+      );
       meta.style.display = "flex";
       meta.style.alignItems = "center";
       meta.style.justifyContent = "space-between";
       meta.style.gap = "10px";
 
-      const name = document.createElement("div");
-      name.className = "text-sm font-medium";
-      name.style.overflowWrap = "anywhere";
+      let name = meta.querySelector(`[data-product-cart-name="${rowRef}"]`) as HTMLDivElement | null;
+      if (!name) {
+        name = document.createElement("div");
+        name.className = "text-sm font-medium";
+        name.style.overflowWrap = "anywhere";
+        name.setAttribute("data-product-cart-name", rowRef);
+        meta.appendChild(name);
+      }
       name.textContent = item.name;
-      meta.appendChild(name);
 
-      const qty = document.createElement("div");
-      qty.className = "text-xs";
-      qty.style.opacity = "0.75";
+      let qty = meta.querySelector(`[data-product-cart-qty="${rowRef}"]`) as HTMLDivElement | null;
+      if (!qty) {
+        qty = document.createElement("div");
+        qty.className = "text-xs";
+        qty.style.opacity = "0.75";
+        qty.setAttribute("data-product-cart-qty", rowRef);
+        meta.appendChild(qty);
+      }
       qty.textContent = `x${item.quantity}`;
-      meta.appendChild(qty);
-      row.appendChild(meta);
 
-      const actions = document.createElement("div");
+      const actions = this.ensureSelectionChild(
+        row,
+        `[data-product-cart-row-actions="${rowRef}"]`,
+        "div",
+        "",
+        "data-product-cart-row-actions",
+        rowRef,
+      );
       actions.style.display = "flex";
       actions.style.alignItems = "center";
       actions.style.justifyContent = "space-between";
       actions.style.gap = "8px";
 
-      const subtotal = document.createElement("div");
-      subtotal.className = "text-xs font-semibold";
+      let subtotal = actions.querySelector(`[data-product-cart-subtotal="${rowRef}"]`) as HTMLDivElement | null;
+      if (!subtotal) {
+        subtotal = document.createElement("div");
+        subtotal.className = "text-xs font-semibold";
+        subtotal.setAttribute("data-product-cart-subtotal", rowRef);
+        actions.appendChild(subtotal);
+      }
       subtotal.textContent = `${(((item.discount_price ?? item.sale_price) || 0) * item.quantity).toFixed(2)}€`;
-      actions.appendChild(subtotal);
 
-      const buttons = document.createElement("div");
+      const buttons = this.ensureSelectionChild(
+        actions,
+        `[data-product-cart-buttons="${rowRef}"]`,
+        "div",
+        "",
+        "data-product-cart-buttons",
+        rowRef,
+      );
       buttons.style.display = "flex";
       buttons.style.gap = "6px";
 
@@ -2527,23 +2608,34 @@ export class FormUI extends HTMLElement {
         { action: "inc", label: "+" },
         { action: "remove", label: "×" },
       ] as const).forEach(({ action, label }) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "btn btn-xs";
+        let button = buttons.querySelector(
+          `[data-product-cart-action="${action}"][data-product-id="${item.id}"]`,
+        ) as HTMLButtonElement | null;
+        if (!button) {
+          button = document.createElement("button");
+          button.type = "button";
+          button.className = "btn btn-xs";
+          buttons.appendChild(button);
+        }
         button.textContent = label;
         button.setAttribute("data-product-cart-action", action);
         button.setAttribute("data-product-field", fieldName);
         button.setAttribute("data-product-id", item.id);
         button.setAttribute("aria-label", `${action} ${item.name}`);
-        buttons.appendChild(button);
       });
-
-      actions.appendChild(buttons);
-      row.appendChild(actions);
-      list.appendChild(row);
+      Array.from(buttons.querySelectorAll("[data-product-cart-action]")).forEach((node) => {
+        const action = (node as HTMLElement).getAttribute("data-product-cart-action");
+        if (!action || !["dec", "inc", "remove"].includes(action)) {
+          node.remove();
+        }
+      });
     });
-
-    panel.appendChild(list);
+    Array.from(list.querySelectorAll("[data-product-cart-item]")).forEach((node) => {
+      const rowRef = (node as HTMLElement).getAttribute("data-product-cart-item");
+      if (rowRef && !entries.some((entry) => `${entry.fieldName}:${entry.item.id}` === rowRef)) {
+        node.remove();
+      }
+    });
   }
 
   bindProductListGlobalCartEvents = () => {

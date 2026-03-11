@@ -132,7 +132,61 @@
             <li>Quand le maximum est atteint, les autres cartes deviennent non sélectionnables.</li>
             <li>La dernière question est ouverte et attend une réponse texte.</li>
           </ul>
-          <div id="app"></div>
+          <div id="app">
+            <form id="quiz_showcase_demo_form" data-version="1" data-type="contactform" data-name="quiz_showcase_demo" data-label="Quiz Showcase Demo">
+              <div data-type="section" data-name="main" data-label="Main">
+                <input id="style_direction" name="style_direction" type="hidden" data-type="quiz" data-name="style_direction" data-label="Quelle direction visuelle preferez-vous ?" />
+                <div id="style_direction_selection" data-quiz-zone="style_direction">
+                  <div data-quiz-catalog="style_direction">
+                    <article data-quiz-answer-card="minimal" data-quiz-answer-action="toggle" data-quiz-answer-id="minimal">
+                      <img data-quiz-answer-image="minimal" alt="Minimal" />
+                      <div data-quiz-answer-title="minimal">Minimal</div>
+                      <div data-quiz-answer-desc="minimal">Palette calme, lignes nettes, peu d'ornement.</div>
+                      <div data-quiz-answer-state="minimal"><span data-quiz-mode="minimal">Answer</span><span data-quiz-selected-state="minimal">Available</span></div>
+                    </article>
+                    <article data-quiz-answer-card="editorial" data-quiz-answer-action="toggle" data-quiz-answer-id="editorial">
+                      <img data-quiz-answer-image="editorial" alt="Editorial" />
+                      <div data-quiz-answer-title="editorial">Editorial</div>
+                      <div data-quiz-answer-desc="editorial">Plus contraste, plus sculptural, plus expressif.</div>
+                      <div data-quiz-answer-state="editorial"><span data-quiz-mode="editorial">Answer</span><span data-quiz-selected-state="editorial">Available</span></div>
+                    </article>
+                    <article data-quiz-answer-card="warm" data-quiz-answer-action="toggle" data-quiz-answer-id="warm">
+                      <img data-quiz-answer-image="warm" alt="Warm" />
+                      <div data-quiz-answer-title="warm">Warm</div>
+                      <div data-quiz-answer-desc="warm">Matieres naturelles et tonalites organiques.</div>
+                      <div data-quiz-answer-state="warm"><span data-quiz-mode="warm">Answer</span><span data-quiz-selected-state="warm">Available</span></div>
+                    </article>
+                  </div>
+                </div>
+
+                <input id="materials" name="materials" type="hidden" data-type="quiz" data-name="materials" data-label="Selectionnez jusqu'a 2 materiaux" />
+                <div id="materials_selection" data-quiz-zone="materials">
+                  <div data-quiz-catalog="materials">
+                    <article data-quiz-answer-card="walnut" data-quiz-answer-action="toggle" data-quiz-answer-id="walnut">
+                      <img data-quiz-answer-image="walnut" alt="Walnut" />
+                      <div data-quiz-answer-title="walnut">Walnut</div>
+                      <div data-quiz-answer-desc="walnut">Bois sombre et texture.</div>
+                      <div data-quiz-answer-state="walnut"><span data-quiz-mode="walnut">Answer</span><span data-quiz-selected-state="walnut">Available</span></div>
+                    </article>
+                    <article data-quiz-answer-card="travertine" data-quiz-answer-action="toggle" data-quiz-answer-id="travertine">
+                      <img data-quiz-answer-image="travertine" alt="Travertine" />
+                      <div data-quiz-answer-title="travertine">Travertine</div>
+                      <div data-quiz-answer-desc="travertine">Pierre claire avec grain mineral.</div>
+                      <div data-quiz-answer-state="travertine"><span data-quiz-mode="travertine">Answer</span><span data-quiz-selected-state="travertine">Available</span></div>
+                    </article>
+                    <article data-quiz-answer-card="steel" data-quiz-answer-action="toggle" data-quiz-answer-id="steel">
+                      <img data-quiz-answer-image="steel" alt="Brushed Steel" />
+                      <div data-quiz-answer-title="steel">Brushed Steel</div>
+                      <div data-quiz-answer-desc="steel">Metal technique et regulier.</div>
+                      <div data-quiz-answer-state="steel"><span data-quiz-mode="steel">Answer</span><span data-quiz-selected-state="steel">Available</span></div>
+                    </article>
+                  </div>
+                </div>
+
+                <textarea id="story" name="story" data-type="quiz" data-name="story" data-label="Decrivez en quelques lignes l'ambiance recherchee" placeholder="Ex: un espace calme, lumineux, tres tactile, pense pour recevoir..."></textarea>
+              </div>
+            </form>
+          </div>
           <p class="caption">
             Clique sur les images pour sélectionner une réponse. Le panneau de droite reflète la valeur runtime courante.
           </p>
@@ -145,7 +199,7 @@
     </main>
 
     <script type="module">
-      import { mountFormUI } from "../dist/xpressui.mjs";
+      import { hydrateFormUI } from "../dist/xpressui.mjs";
 
       const config = {
         name: "quiz_showcase_demo",
@@ -242,7 +296,7 @@
         `;
       };
 
-      const form = mountFormUI(document.getElementById("app"), config);
+      const form = hydrateFormUI(document.getElementById("app"), config);
       renderState(readValues());
 
       form.addEventListener("input", () => {

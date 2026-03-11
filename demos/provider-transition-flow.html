@@ -27,7 +27,31 @@
 
       <div class="layout">
         <section class="panel">
-          <div id="app"></div>
+          <div id="app">
+            <form id="provider_transition_flow_demo_form" data-version="1" data-type="multistepform" data-name="provider-transition-flow" data-label="Provider Transition Flow" data-step-next-label="Continue" data-step-prev-label="Back">
+              <div data-type="section" data-name="request_step" data-label="Request">
+                <label class="w-full">
+                  <span>Requester Email</span>
+                  <input id="requester_email" name="requester_email" type="email" data-type="email" data-name="requester_email" data-label="Requester Email" data-required="true" data-section-name="request_step" />
+                </label>
+                <label class="w-full">
+                  <span>Provider Route</span>
+                  <select id="route" name="route" data-type="select" data-name="route" data-label="Provider Route" data-required="true" data-section-name="request_step">
+                    <option value=""></option>
+                    <option value="step_review">Step transition -> review_step</option>
+                    <option value="workflow_pending">Workflow transition -> pending_approval</option>
+                    <option value="workflow_completed">Workflow transition -> completed</option>
+                  </select>
+                </label>
+              </div>
+              <div data-type="section" data-name="review_step" data-label="Review">
+                <input id="review_output" name="review_output" type="hidden" value="<p>Review step reached.</p>" data-type="output" data-name="review_output" data-label="Review Output" data-sub-type="html" data-section-name="review_step" />
+              </div>
+              <div data-type="section" data-name="done_step" data-label="Done">
+                <input id="done_output" name="done_output" type="hidden" value="<p>Done step reached.</p>" data-type="output" data-name="done_output" data-label="Done Output" data-sub-type="html" data-section-name="done_step" />
+              </div>
+            </form>
+          </div>
         </section>
         <aside class="panel">
           <h2>Transition Trace</h2>
@@ -38,7 +62,7 @@
     </main>
 
     <script type="module">
-      import { mountFormUI } from "../dist/xpressui.mjs";
+      import { hydrateFormUI } from "../dist/xpressui.mjs";
 
       const trace = document.getElementById("trace");
       const state = document.getElementById("state");
@@ -91,7 +115,7 @@
         });
       };
 
-      const form = mountFormUI(document.getElementById("app"), {
+      const form = hydrateFormUI(document.getElementById("app"), {
         version: 1,
         id: "provider_transition_flow_demo",
         uid: "provider_transition_flow_demo_uid",

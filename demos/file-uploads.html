@@ -22,14 +22,49 @@
       <h1>File Uploads</h1>
       <p>Champ fichier multiple avec drag-and-drop, validation et previews.</p>
       <div class="layout">
-        <div class="shell" id="app"></div>
+        <div class="shell" id="app">
+          <form id="upload_demo_form" data-version="1" data-type="contactform" data-name="upload-demo" data-label="Upload Demo">
+            <div data-type="section" data-name="main" data-label="Main">
+              <label class="w-full">
+                <span>Full Name</span>
+                <input id="full_name" name="full_name" type="text" data-type="text" data-name="full_name" data-label="Full Name" data-required="true" data-section-name="main" />
+              </label>
+              <label class="w-full">
+                <span>Attachments</span>
+                <input
+                  id="attachments"
+                  name="attachments"
+                  type="file"
+                  multiple
+                  accept=".pdf,image/*"
+                  data-type="file"
+                  data-name="attachments"
+                  data-label="Attachments"
+                  data-section-name="main"
+                  data-min-files="1"
+                  data-max-files="4"
+                  data-max-file-size="5242880"
+                  data-max-total-file-size="12582912"
+                  data-file-drop-mode="append"
+                  data-form-data-field-name="attachments[]"
+                  data-file-drop-zone="attachments"
+                />
+                <div id="attachments_selection" data-upload-selection-zone="attachments">
+                  <div data-upload-selection-title="attachments">Awaiting file</div>
+                  <div data-upload-selection-message="attachments">Drop files here or use the file picker.</div>
+                  <div data-upload-selection-body="attachments"></div>
+                </div>
+              </label>
+            </div>
+          </form>
+        </div>
       </div>
     </main>
     <script type="module">
-      import { mountFormUI } from "../dist/xpressui.mjs";
+      import { hydrateFormUI } from "../dist/xpressui.mjs";
 
       const container = document.getElementById("app");
-      mountFormUI(container, {
+      hydrateFormUI(container, {
         version: 1,
         id: "upload_demo",
         uid: "upload_demo_uid",

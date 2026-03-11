@@ -69,7 +69,62 @@
       <div class="layout">
         <section class="shell">
           <h2>Live Demo</h2>
-          <div id="app"></div>
+          <div id="app">
+            <form id="view_gallery_demo_form" data-version="1" data-type="contactform" data-name="view-gallery-demo" data-label="Travel Memories">
+              <div data-type="section" data-name="main" data-label="Main">
+                <label class="w-full">
+                  <span>Album</span>
+                  <input id="album_title" name="album_title" type="text" data-type="text" data-name="album_title" data-label="Album" data-section-name="main" />
+                </label>
+                <label class="w-full">
+                  <span>Photos</span>
+                  <input id="photos" name="photos" type="hidden" data-type="image-gallery" data-name="photos" data-label="Photos" data-section-name="main" />
+                  <div id="photos_selection" data-image-gallery-zone="photos">
+                    <article data-image-card="kyoto-river">
+                      <img data-image-preview="kyoto-river" alt="Kyoto River" />
+                      <div data-image-title="kyoto-river">Kyoto River</div>
+                      <div data-image-meta-row="kyoto-river">
+                        <span data-image-gallery-badge="kyoto-river">Ready</span>
+                        <span data-image-gallery-state="kyoto-river">Available</span>
+                      </div>
+                      <div data-image-controls="kyoto-river"></div>
+                    </article>
+                    <article data-image-card="temple-cat">
+                      <img data-image-preview="temple-cat" alt="Temple Cat" />
+                      <div data-image-title="temple-cat">Temple Cat</div>
+                      <div data-image-meta-row="temple-cat">
+                        <span data-image-gallery-badge="temple-cat">Ready</span>
+                        <span data-image-gallery-state="temple-cat">Available</span>
+                      </div>
+                      <div data-image-controls="temple-cat"></div>
+                    </article>
+                    <article data-image-card="garden-walk">
+                      <img data-image-preview="garden-walk" alt="Garden Walk" />
+                      <div data-image-title="garden-walk">Garden Walk</div>
+                      <div data-image-meta-row="garden-walk">
+                        <span data-image-gallery-badge="garden-walk">Ready</span>
+                        <span data-image-gallery-state="garden-walk">Available</span>
+                      </div>
+                      <div data-image-controls="garden-walk"></div>
+                    </article>
+                    <article data-image-card="paper-lanterns">
+                      <img data-image-preview="paper-lanterns" alt="Paper Lanterns" />
+                      <div data-image-title="paper-lanterns">Paper Lanterns</div>
+                      <div data-image-meta-row="paper-lanterns">
+                        <span data-image-gallery-badge="paper-lanterns">Ready</span>
+                        <span data-image-gallery-state="paper-lanterns">Available</span>
+                      </div>
+                      <div data-image-controls="paper-lanterns"></div>
+                    </article>
+                  </div>
+                </label>
+                <label class="w-full">
+                  <span>Caption</span>
+                  <textarea id="caption" name="caption" data-type="textarea" data-name="caption" data-label="Caption" data-section-name="main"></textarea>
+                </label>
+              </div>
+            </form>
+          </div>
         </section>
 
         <aside class="notes">
@@ -85,10 +140,10 @@
     </main>
 
     <script type="module">
-      import { mountFormUI } from "../dist/xpressui.mjs";
+      import { hydrateFormUI } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
-      const form = mountFormUI(app, {
+      const form = hydrateFormUI(app, {
         version: 1,
         id: "view_gallery_demo",
         uid: "view_gallery_demo_uid",

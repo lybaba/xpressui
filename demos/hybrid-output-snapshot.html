@@ -80,7 +80,44 @@
       <div class="layout">
         <section class="shell">
           <h2>Live Form</h2>
-          <div id="app"></div>
+          <div id="app">
+            <form id="hybrid_output_snapshot_demo_form" data-version="1" data-type="contactform" data-name="hybrid-output-snapshot-demo" data-label="Hybrid Snapshot Demo">
+              <div data-type="section" data-name="main" data-label="Main">
+                <label class="w-full">
+                  <span>Title</span>
+                  <input id="title" name="title" type="text" data-type="text" data-name="title" data-label="Title" data-required="true" data-section-name="main" />
+                  <div id="title_view" data-view-field="title">
+                    <div data-view-field-body="title"></div>
+                  </div>
+                </label>
+                <label class="w-full">
+                  <span>Description</span>
+                  <textarea id="description" name="description" data-type="textarea" data-name="description" data-label="Description" data-section-name="main"></textarea>
+                  <div id="description_view" data-view-field="description">
+                    <div data-view-field-body="description"></div>
+                  </div>
+                </label>
+                <label class="w-full">
+                  <span>Tags</span>
+                  <select id="tags" name="tags" multiple data-type="select-multiple" data-name="tags" data-label="Tags" data-section-name="main">
+                    <option value="priority">Priority</option>
+                    <option value="customer">Customer</option>
+                    <option value="internal">Internal</option>
+                  </select>
+                  <div id="tags_view" data-view-field="tags">
+                    <div data-view-field-body="tags"></div>
+                  </div>
+                </label>
+                <label class="w-full">
+                  <span>Resource URL</span>
+                  <input id="resource_url" name="resource_url" type="url" data-type="url" data-name="resource_url" data-label="Resource URL" data-section-name="main" />
+                  <div id="resource_url_view" data-view-field="resource_url">
+                    <div data-view-field-body="resource_url"></div>
+                  </div>
+                </label>
+              </div>
+            </form>
+          </div>
         </section>
 
         <section class="stack">
@@ -97,13 +134,13 @@
     </main>
 
     <script type="module">
-      import { createFormOpsPanel, mountFormUI } from "../dist/xpressui.mjs";
+      import { createFormOpsPanel, hydrateFormUI } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
       const debug = document.getElementById("debug");
       const latestSnapshot = document.getElementById("snapshot-json");
 
-      const form = mountFormUI(app, {
+      const form = hydrateFormUI(app, {
         version: 1,
         id: "hybrid_output_snapshot_demo",
         uid: "hybrid_output_snapshot_demo_uid",

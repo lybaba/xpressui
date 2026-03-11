@@ -1781,6 +1781,54 @@ describe('FormUI', () => {
     expect(body.textContent).toContain('Steel');
   });
 
+  it('reuses backend quiz catalog shells instead of creating an extra catalog wrapper', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <form id="hydrated_quiz_form" data-type="contactform" data-name="hydrated_quiz" data-label="Hydrated Quiz">
+        <div data-type="section" data-name="main" data-label="Main">
+          <input id="materials" name="materials" type="hidden" data-type="quiz" data-name="materials" data-label="Materials" data-section-name="main" />
+          <div id="materials_selection" data-quiz-zone="materials">
+            <article class="template-choice-card" data-quiz-answer-card="wood" data-quiz-answer-action="toggle" data-quiz-answer-id="wood">
+              <div class="template-choice-title" data-quiz-answer-title="wood">Wood</div>
+              <div class="template-gallery-caption" data-quiz-answer-state="wood">
+                <span data-quiz-mode="wood">Answer</span>
+                <span data-quiz-selected-state="wood">Available</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(container);
+
+    const element = hydrateFormUI(container, createFormConfig({
+      name: 'hydrated_quiz',
+      title: 'Hydrated Quiz',
+      fields: [
+        {
+          type: 'quiz',
+          name: 'materials',
+          label: 'Materials',
+          choices: [
+            { value: 'wood', label: 'Wood' },
+          ] as any,
+        },
+      ],
+    })) as FormUI;
+
+    const selection = element.querySelector('#materials_selection') as HTMLElement;
+    const card = element.querySelector('[data-quiz-answer-card="wood"]') as HTMLElement;
+
+    card.click();
+    await flushAsyncWork();
+
+    expect(element.querySelector('#materials_selection')).toBe(selection);
+    expect(element.querySelector('[data-quiz-catalog="materials"]')).toBe(selection);
+    expect(element.querySelectorAll('[data-quiz-catalog="materials"]')).toHaveLength(1);
+    expect(element.querySelector('[data-quiz-answer-card="wood"]')).toBe(card);
+    expect(card.getAttribute('data-selected')).toBe('true');
+  });
+
   it('preserves choice-list shell nodes while updating selected options', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

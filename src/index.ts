@@ -3719,9 +3719,8 @@ export class FormUI extends HTMLElement {
       `[data-quiz-catalog="${fieldConfig.name}"]`,
     ) as HTMLDivElement | null;
     if (!grid) {
-      grid = document.createElement("div");
+      grid = selectionElement as HTMLDivElement;
       grid.setAttribute("data-quiz-catalog", fieldConfig.name);
-      selectionElement.appendChild(grid);
     }
     grid.style.display = "grid";
     grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";

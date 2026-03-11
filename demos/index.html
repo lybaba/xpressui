@@ -98,7 +98,9 @@
       <p class="lead">
         Ces pages sont des démos statiques du produit. Elles chargent le bundle
         <code>../dist/xpressui.mjs</code>, donc pour GitHub Pages il faut publier
-        <code>demos/</code> avec <code>dist/</code>.
+        <code>demos/</code> avec <code>dist/</code>. Sauf la démo headless, elles
+        embarquent maintenant leur shell HTML directement dans la page et laissent
+        <code>FormUI</code> hydrater ce markup au lieu de le générer.
       </p>
 
       <div class="grid">

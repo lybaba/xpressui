@@ -82,6 +82,11 @@ Major capabilities already implemented in the codebase:
   - unused `TFieldConfig` options removed
   - unused `TFormConfig` options removed
   - dead form-builder / preset wiring for removed config attributes cleaned up
+- UI shell preservation progress:
+  - standard file uploads now keep a persistent selection shell and only replace a focused dynamic body region
+  - QR scan and document scan now keep their upload shell and mutate dedicated result/control regions instead of rebuilding the whole selection area
+  - image-gallery and quiz now preserve their catalog and selected-state panels while replacing only the dynamic list content
+  - product-list now keeps card/control shells stable and updates cart state in place while retaining the global cart drawer contract
 
 Current built-in provider families:
 - booking / reservation
@@ -623,29 +628,25 @@ Exit criteria:
 Next Best Task
 --------------
 
-The most immediately profitable next feature is:
+The most immediately profitable next feature set is:
 
-- cross-device resume UX hardening
+- finish shrinking runtime-owned HTML on the remaining secondary field renderers
 
 Why:
-- the save/resume contract is already largely in place
-- the remaining gap is now product UX rather than runtime capability
-- this is one of the most visible differentiators for real interrupted workflows
-- it unlocks a clearer integrator story for same-device and cross-device continuation
-- recent multi-step and type-surface cleanup reduce ambiguity, so the next leverage point is again resume/productization rather than more config breadth
+- the biggest runtime-heavy shells have now been cleaned across uploads, QR/document scan, image-gallery, quiz, and product-list
+- that makes the remaining DOM-rebuild paths smaller, easier to reason about, and more extractable
+- reducing markup ownership inside `FormUI` directly supports the parallel `iakpress-console` hydration work
+- this is now a higher-leverage cleanup step than introducing more UI breadth
 
 Suggested first scope:
-- add explicit share-code lifecycle states:
-  - created
-  - claimed
-  - expired
-  - blocked
-  - invalid
-- improve UI/runtime events for cross-device continuation outcomes
-- align demos/docs around one canonical remote resume/share-code journey
-- document required/optional normalized fields
-- align provider-facing and submission-facing document contracts
+- audit the remaining renderer paths that still call broad `innerHTML = ""` on selection containers, especially:
+  - `choice-list`
+  - open-answer/editor-adjacent surfaces
+  - any secondary catalog/detail helpers
+- keep moving from "rebuild subtree" to "preserve shell + update state/body"
+- only after that cleanup, reassess whether some shell/state helpers can be extracted further out of `src/index.ts`
 
-Follow-up scope (after current P0):
+Follow-up scope (after current P0 shell cleanup):
+- cross-device resume UX hardening
 - harden signed shareable token exchange contract (policy/rate limits)
 - backend-compatible resumable binary uploads

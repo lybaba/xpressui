@@ -2443,23 +2443,41 @@ export class FormUI extends HTMLElement {
       const controls = document.createElement("div");
       controls.className = "flex items-center gap-1";
 
-      const createControl = (action: "inc" | "dec" | "remove", label: string, buttonClass: string) => {
+      const createControl = (action: "inc" | "dec" | "remove", label: string) => {
         const button = document.createElement("button");
         button.type = "button";
-        button.className = buttonClass;
+        button.className = "btn";
         button.textContent = label;
         button.setAttribute("data-product-cart-action", action);
         button.setAttribute("data-product-field", fieldName);
         button.setAttribute("data-product-id", item.id);
+        button.setAttribute("aria-label", `${action} ${item.name}`);
+        button.style.width = action === "remove" ? "32px" : "34px";
+        button.style.minWidth = action === "remove" ? "32px" : "34px";
+        button.style.height = "34px";
+        button.style.padding = "0";
+        button.style.display = "inline-flex";
+        button.style.alignItems = "center";
+        button.style.justifyContent = "center";
+        button.style.borderRadius = "999px";
+        button.style.fontSize = action === "remove" ? "16px" : "14px";
+        button.style.fontWeight = "700";
+        button.style.lineHeight = "1";
+        button.style.boxShadow = "none";
+        button.style.border = action === "remove"
+          ? "1px solid transparent"
+          : "1px solid rgba(148, 163, 184, 0.4)";
+        button.style.background = action === "inc" ? "#0f172a" : (action === "remove" ? "transparent" : "#ffffff");
+        button.style.color = action === "inc" ? "#ffffff" : "#0f172a";
         if (action === "inc" && typeof item.maxNumOfChoices === "number" && item.quantity >= item.maxNumOfChoices) {
           button.disabled = true;
         }
         return button;
       };
 
-      controls.appendChild(createControl("dec", "-", "btn btn-xs btn-outline"));
-      controls.appendChild(createControl("inc", "+", "btn btn-xs btn-outline"));
-      controls.appendChild(createControl("remove", "Remove", "btn btn-xs btn-ghost"));
+      controls.appendChild(createControl("dec", "−"));
+      controls.appendChild(createControl("inc", "+"));
+      controls.appendChild(createControl("remove", "×"));
 
       row.appendChild(top);
       row.appendChild(controls);
@@ -2807,6 +2825,28 @@ export class FormUI extends HTMLElement {
     productList.style.gap = "10px";
     productList.style.marginBottom = "14px";
 
+    const styleProductActionButton = (
+      button: HTMLButtonElement,
+      options: { emphasized?: boolean; ghost?: boolean } = {},
+    ) => {
+      const { emphasized = false, ghost = false } = options;
+      button.style.width = "36px";
+      button.style.minWidth = "36px";
+      button.style.height = "36px";
+      button.style.padding = "0";
+      button.style.display = "inline-flex";
+      button.style.alignItems = "center";
+      button.style.justifyContent = "center";
+      button.style.borderRadius = "999px";
+      button.style.fontSize = "14px";
+      button.style.fontWeight = "700";
+      button.style.lineHeight = "1";
+      button.style.boxShadow = "none";
+      button.style.border = ghost ? "1px solid transparent" : "1px solid rgba(148, 163, 184, 0.4)";
+      button.style.background = emphasized ? "#0f172a" : (ghost ? "transparent" : "#ffffff");
+      button.style.color = emphasized ? "#ffffff" : "#0f172a";
+    };
+
     products.forEach((product) => {
       const currentQuantity = cartMap[product.id] || 0;
       const maxReached = typeof product.maxNumOfChoices === "number" && currentQuantity >= product.maxNumOfChoices;
@@ -2882,32 +2922,41 @@ export class FormUI extends HTMLElement {
 
       const controls = document.createElement("div");
       controls.className = "flex items-center gap-1";
+      controls.style.flexShrink = "0";
 
       const buildAction = (
         action: "add" | "inc" | "dec" | "remove",
         label: string,
-        className: string,
         disabled = false,
       ) => {
         const button = document.createElement("button");
         button.type = "button";
-        button.className = className;
+        button.className = "btn";
         button.textContent = label;
         button.setAttribute("data-product-action", action);
         button.setAttribute("data-product-id", product.id);
+        button.setAttribute("aria-label", action === "add" ? `Add ${product.name}` : `${action} ${product.name}`);
         button.disabled = disabled;
         return button;
       };
 
       if (currentQuantity > 0) {
-        controls.appendChild(buildAction("dec", "-", "btn btn-xs btn-outline"));
+        const decButton = buildAction("dec", "−");
+        styleProductActionButton(decButton);
+        controls.appendChild(decButton);
         const qty = document.createElement("span");
         qty.className = "text-xs font-semibold";
+        qty.style.minWidth = "18px";
+        qty.style.textAlign = "center";
         qty.textContent = String(currentQuantity);
         controls.appendChild(qty);
-        controls.appendChild(buildAction("inc", "+", "btn btn-xs btn-outline", maxReached));
+        const incButton = buildAction("inc", "+", maxReached);
+        styleProductActionButton(incButton, { emphasized: true });
+        controls.appendChild(incButton);
       } else {
-        controls.appendChild(buildAction("add", maxReached ? "Max reached" : "Add", "btn btn-xs btn-primary", maxReached));
+        const addButton = buildAction("add", "+", maxReached);
+        styleProductActionButton(addButton, { emphasized: true });
+        controls.appendChild(addButton);
       }
 
       card.appendChild(buttonRow);

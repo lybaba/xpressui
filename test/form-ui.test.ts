@@ -5499,6 +5499,52 @@ describe('FormUI', () => {
     expect(list.querySelector('[data-upload-file-row="attachments:1"]')).not.toBeNull();
   });
 
+  it('reuses a hydrated upload body shell when the selection root already is the body container', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <form id="hydrated_upload_form" data-type="contactform" data-name="hydrated_upload" data-label="Hydrated Upload">
+        <div data-type="section" data-name="main" data-label="Main">
+          <input id="attachments" name="attachments" type="file" data-type="file" data-name="attachments" data-label="Attachments" data-section-name="main" multiple />
+          <div
+            id="attachments_selection"
+            data-upload-selection-zone="attachments"
+            data-upload-selection-body="attachments"
+          ></div>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(container);
+
+    const element = hydrateFormUI(container, createFormConfig({
+      name: 'hydrated_upload',
+      title: 'Hydrated Upload',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+        },
+      ],
+    })) as FormUI;
+
+    const selection = element.querySelector('#attachments_selection') as HTMLElement;
+    const input = element.querySelector('#attachments') as HTMLInputElement;
+    const file = new File(['upload'], 'proof.txt', { type: 'text/plain' });
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [file],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(element.querySelector('#attachments_selection')).toBe(selection);
+    expect(element.querySelector('[data-upload-selection-body="attachments"]')).toBe(selection);
+    expect(element.querySelectorAll('[data-upload-selection-body="attachments"]')).toHaveLength(1);
+    expect(selection.querySelector('[data-upload-file-list="attachments"]')).not.toBeNull();
+  });
+
   it('rejects invalid dropped files before updating the field value', async () => {
     const container = document.createElement('div');
     const onFileValidationError = vi.fn();

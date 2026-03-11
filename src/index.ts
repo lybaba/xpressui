@@ -4562,6 +4562,10 @@ export class FormUI extends HTMLElement {
   }
 
   ensureUploadSelectionBody = (selectionElement: HTMLElement, fieldName: string) => {
+    if (selectionElement.getAttribute("data-upload-selection-body") === fieldName) {
+      return selectionElement as HTMLDivElement;
+    }
+
     let bodyElement = selectionElement.querySelector(
       `[data-upload-selection-body="${fieldName}"]`,
     ) as HTMLDivElement | null;

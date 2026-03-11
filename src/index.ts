@@ -2599,10 +2599,23 @@ export class FormUI extends HTMLElement {
 
     const closeButton = document.createElement("button");
     closeButton.type = "button";
-    closeButton.className = "btn btn-sm btn-ghost";
-    closeButton.textContent = "Close";
+    closeButton.className = "btn";
+    closeButton.textContent = "×";
     closeButton.setAttribute("data-product-gallery-close", "true");
     closeButton.style.float = "right";
+    closeButton.style.width = "36px";
+    closeButton.style.minWidth = "36px";
+    closeButton.style.height = "36px";
+    closeButton.style.padding = "0";
+    closeButton.style.display = "inline-flex";
+    closeButton.style.alignItems = "center";
+    closeButton.style.justifyContent = "center";
+    closeButton.style.borderRadius = "999px";
+    closeButton.style.border = "1px solid rgba(148, 163, 184, 0.4)";
+    closeButton.style.background = "#ffffff";
+    closeButton.style.color = "#0f172a";
+    closeButton.style.boxShadow = "none";
+    closeButton.setAttribute("aria-label", "Close gallery");
     const closeGallery = () => {
       overlay.remove();
       this.productGalleryOverlay = null;
@@ -2877,10 +2890,32 @@ export class FormUI extends HTMLElement {
       title.textContent = product.name;
       card.appendChild(title);
 
+      const stateRow = document.createElement("div");
+      stateRow.className = "mt-2 flex items-center justify-between gap-2";
+
+      const galleryBadge = document.createElement("span");
+      galleryBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
+      galleryBadge.style.opacity = "0.68";
+      galleryBadge.textContent = product.photos_full.length ? `${product.photos_full.length} photos` : "single image";
+      stateRow.appendChild(galleryBadge);
+
+      if (currentQuantity > 0) {
+        const selectedBadge = document.createElement("span");
+        selectedBadge.className = "text-[11px] font-semibold";
+        selectedBadge.style.padding = "4px 8px";
+        selectedBadge.style.borderRadius = "999px";
+        selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
+        selectedBadge.style.color = "rgb(29, 78, 216)";
+        selectedBadge.textContent = `${currentQuantity} in cart`;
+        stateRow.appendChild(selectedBadge);
+      }
+      card.appendChild(stateRow);
+
       const pricing = document.createElement("div");
       pricing.className = "mt-1 flex items-center gap-2 text-xs";
       const primaryPrice = document.createElement("span");
       primaryPrice.className = "font-semibold";
+      primaryPrice.style.fontSize = "15px";
       primaryPrice.textContent =
         product.discount_price !== null
           ? `${product.discount_price.toFixed(2)}€`
@@ -2899,13 +2934,10 @@ export class FormUI extends HTMLElement {
 
       const galleryHint = document.createElement("div");
       galleryHint.className = "mt-1 text-xs opacity-70";
-      const photoCount = product.photos_full.length;
       if (typeof product.maxNumOfChoices === "number") {
-        galleryHint.textContent = photoCount > 0
-          ? `${photoCount} full photos · max ${product.maxNumOfChoices}`
-          : `No full gallery · max ${product.maxNumOfChoices}`;
+        galleryHint.textContent = `Max quantity ${product.maxNumOfChoices}`;
       } else {
-        galleryHint.textContent = photoCount > 0 ? `${photoCount} full photos` : "No full gallery";
+        galleryHint.textContent = "Tap card to open gallery";
       }
       card.appendChild(galleryHint);
 
@@ -3053,11 +3085,26 @@ export class FormUI extends HTMLElement {
 
       const toggleButton = document.createElement("button");
       toggleButton.type = "button";
-      toggleButton.className = selected ? "btn btn-xs btn-outline" : "btn btn-xs btn-primary";
-      toggleButton.textContent = selected ? "Remove" : (disabled ? "Max reached" : "Select");
+      toggleButton.className = "btn";
+      toggleButton.textContent = selected ? "×" : "+";
       toggleButton.setAttribute("data-image-gallery-action", "toggle");
       toggleButton.setAttribute("data-image-id", imageItem.id);
+      toggleButton.setAttribute("aria-label", selected ? `Remove ${imageItem.name}` : `Select ${imageItem.name}`);
       toggleButton.disabled = disabled;
+      toggleButton.style.width = "36px";
+      toggleButton.style.minWidth = "36px";
+      toggleButton.style.height = "36px";
+      toggleButton.style.padding = "0";
+      toggleButton.style.display = "inline-flex";
+      toggleButton.style.alignItems = "center";
+      toggleButton.style.justifyContent = "center";
+      toggleButton.style.borderRadius = "999px";
+      toggleButton.style.fontSize = "14px";
+      toggleButton.style.fontWeight = "700";
+      toggleButton.style.boxShadow = "none";
+      toggleButton.style.border = selected ? "1px solid transparent" : "1px solid rgba(148, 163, 184, 0.4)";
+      toggleButton.style.background = selected ? "transparent" : "#0f172a";
+      toggleButton.style.color = selected ? "#0f172a" : "#ffffff";
 
       buttonRow.appendChild(statusTag);
       buttonRow.appendChild(toggleButton);
@@ -3114,10 +3161,24 @@ export class FormUI extends HTMLElement {
 
       const remove = document.createElement("button");
       remove.type = "button";
-      remove.className = "btn btn-xs btn-ghost";
-      remove.textContent = "Remove";
+      remove.className = "btn";
+      remove.textContent = "×";
       remove.setAttribute("data-image-gallery-action", "remove");
       remove.setAttribute("data-image-id", item.id);
+      remove.setAttribute("aria-label", `Remove ${item.name}`);
+      remove.style.width = "32px";
+      remove.style.minWidth = "32px";
+      remove.style.height = "32px";
+      remove.style.padding = "0";
+      remove.style.display = "inline-flex";
+      remove.style.alignItems = "center";
+      remove.style.justifyContent = "center";
+      remove.style.borderRadius = "999px";
+      remove.style.fontSize = "16px";
+      remove.style.boxShadow = "none";
+      remove.style.border = "1px solid transparent";
+      remove.style.background = "transparent";
+      remove.style.color = "#0f172a";
 
       row.appendChild(nameWrap);
       row.appendChild(remove);

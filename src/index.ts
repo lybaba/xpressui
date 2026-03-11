@@ -2743,7 +2743,7 @@ export class FormUI extends HTMLElement {
       card.style.background = currentQuantity > 0 ? "rgba(59, 130, 246, 0.05)" : "rgba(248, 250, 252, 0.84)";
       card.style.display = "grid";
       card.style.gridTemplateRows = "auto auto auto";
-      card.style.padding = "10px";
+      card.style.padding = "16px";
       card.style.justifyItems = "center";
       card.style.borderRadius = "16px";
 

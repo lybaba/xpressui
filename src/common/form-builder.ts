@@ -279,7 +279,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
       <span class="label-text-alt" data-product-list-total="${escapeHtml(field.name)}" style="display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:4px 10px;border-radius:999px;background:rgba(15,23,42,0.06);border:1px solid rgba(15,23,42,0.08);font-weight:700;"></span>
     </div>
     <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${includeInSubmitAttr}${viewTemplateAttr}${viewTemplateUnsafeAttr}${viewModeAttr}${choicesAttr}${conditionalAttrs} />
-    <div class="mt-2 rounded border border-base-300 p-3" id="${escapeHtml(field.name)}_selection" data-product-list-zone="${escapeHtml(field.name)}"></div>
+    <div class="mt-2 rounded border border-base-300 p-3" style="padding:12px;" id="${escapeHtml(field.name)}_selection" data-product-list-zone="${escapeHtml(field.name)}"></div>
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </div>`;

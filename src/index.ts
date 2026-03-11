@@ -2903,29 +2903,6 @@ export class FormUI extends HTMLElement {
       title.textContent = product.name;
       card.appendChild(title);
 
-      const stateRow = document.createElement("div");
-      stateRow.className = "mt-2 flex items-center justify-between gap-2";
-
-      const galleryBadge = document.createElement("span");
-      galleryBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
-      galleryBadge.style.opacity = "0.68";
-      galleryBadge.style.overflowWrap = "anywhere";
-      galleryBadge.textContent = product.photos_full.length ? `${product.photos_full.length} photos` : "single image";
-      stateRow.appendChild(galleryBadge);
-
-      if (currentQuantity > 0) {
-        const selectedBadge = document.createElement("span");
-        selectedBadge.className = "text-[11px] font-semibold";
-        selectedBadge.style.padding = "4px 8px";
-        selectedBadge.style.borderRadius = "999px";
-        selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
-        selectedBadge.style.color = "rgb(29, 78, 216)";
-        selectedBadge.style.whiteSpace = "nowrap";
-        selectedBadge.textContent = `${currentQuantity} in cart`;
-        stateRow.appendChild(selectedBadge);
-      }
-      card.appendChild(stateRow);
-
       const pricing = document.createElement("div");
       pricing.className = "mt-1 flex items-center gap-2 text-xs";
       const primaryPrice = document.createElement("span");
@@ -2949,15 +2926,6 @@ export class FormUI extends HTMLElement {
       }
       card.appendChild(pricing);
 
-      const galleryHint = document.createElement("div");
-      galleryHint.className = "mt-1 text-xs opacity-70";
-      if (typeof product.maxNumOfChoices === "number") {
-        galleryHint.textContent = `Max quantity ${product.maxNumOfChoices}`;
-      } else {
-        galleryHint.textContent = "Tap card to open gallery";
-      }
-      card.appendChild(galleryHint);
-
       const buttonRow = document.createElement("div");
       buttonRow.className = "mt-2 flex items-center justify-between";
 
@@ -2967,7 +2935,6 @@ export class FormUI extends HTMLElement {
       quantityTag.textContent = typeof product.maxNumOfChoices === "number"
         ? `In cart: ${currentQuantity}/${product.maxNumOfChoices}`
         : `In cart: ${currentQuantity}`;
-
       buttonRow.appendChild(quantityTag);
 
       const controls = document.createElement("div");
@@ -2993,6 +2960,9 @@ export class FormUI extends HTMLElement {
       if (currentQuantity > 0) {
         const decButton = buildAction("dec", "−");
         styleProductActionButton(decButton);
+        decButton.style.width = "32px";
+        decButton.style.minWidth = "32px";
+        decButton.style.height = "32px";
         controls.appendChild(decButton);
         const qty = document.createElement("span");
         qty.className = "text-xs font-semibold";
@@ -3002,10 +2972,16 @@ export class FormUI extends HTMLElement {
         controls.appendChild(qty);
         const incButton = buildAction("inc", "+", maxReached);
         styleProductActionButton(incButton, { emphasized: true });
+        incButton.style.width = "32px";
+        incButton.style.minWidth = "32px";
+        incButton.style.height = "32px";
         controls.appendChild(incButton);
       } else {
         const addButton = buildAction("add", "+", maxReached);
         styleProductActionButton(addButton, { emphasized: true });
+        addButton.style.width = "32px";
+        addButton.style.minWidth = "32px";
+        addButton.style.height = "32px";
         controls.appendChild(addButton);
       }
 
@@ -3262,11 +3238,14 @@ export class FormUI extends HTMLElement {
         selectionElement.innerHTML = "";
 
         wrapper = document.createElement("div");
-        wrapper.className = "grid gap-2";
+        wrapper.className = "grid gap-2 rounded border border-base-300 p-3";
         wrapper.setAttribute("data-quiz-open-wrapper", fieldConfig.name);
+        wrapper.style.background = "rgba(248, 250, 252, 0.82)";
 
         const hint = document.createElement("div");
-        hint.className = "text-xs opacity-70";
+        hint.className = "text-xs font-semibold";
+        hint.style.opacity = "0.78";
+        hint.style.overflowWrap = "anywhere";
         hint.textContent = "Open question";
         wrapper.appendChild(hint);
 

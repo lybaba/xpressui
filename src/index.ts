@@ -2405,6 +2405,7 @@ export class FormUI extends HTMLElement {
       const row = document.createElement("div");
       row.className = "grid gap-2 rounded border border-base-300 px-2 py-2";
       row.setAttribute("data-product-cart-item", `${fieldName}:${item.id}`);
+      row.style.background = "rgba(248, 250, 252, 0.82)";
 
       const top = document.createElement("div");
       top.className = "flex items-center gap-2";
@@ -2424,6 +2425,8 @@ export class FormUI extends HTMLElement {
       details.className = "min-w-0 flex-1";
       const name = document.createElement("div");
       name.className = "text-sm font-medium";
+      name.style.overflowWrap = "anywhere";
+      name.style.wordBreak = "break-word";
       name.textContent = item.name;
       details.appendChild(name);
 
@@ -2467,7 +2470,7 @@ export class FormUI extends HTMLElement {
         button.style.border = action === "remove"
           ? "1px solid transparent"
           : "1px solid rgba(148, 163, 184, 0.4)";
-        button.style.background = action === "inc" ? "#0f172a" : (action === "remove" ? "transparent" : "#ffffff");
+        button.style.background = action === "inc" ? "#0f172a" : (action === "remove" ? "transparent" : "#f8fafc");
         button.style.color = action === "inc" ? "#ffffff" : "#0f172a";
         if (action === "inc" && typeof item.maxNumOfChoices === "number" && item.quantity >= item.maxNumOfChoices) {
           button.disabled = true;
@@ -2856,7 +2859,7 @@ export class FormUI extends HTMLElement {
       button.style.lineHeight = "1";
       button.style.boxShadow = "none";
       button.style.border = ghost ? "1px solid transparent" : "1px solid rgba(148, 163, 184, 0.4)";
-      button.style.background = emphasized ? "#0f172a" : (ghost ? "transparent" : "#ffffff");
+      button.style.background = emphasized ? "#0f172a" : (ghost ? "transparent" : "#f8fafc");
       button.style.color = emphasized ? "#ffffff" : "#0f172a";
     };
 
@@ -2871,7 +2874,7 @@ export class FormUI extends HTMLElement {
       card.style.cursor = "pointer";
       card.style.borderColor = currentQuantity > 0 ? "rgb(59 130 246)" : "";
       card.style.boxShadow = currentQuantity > 0 ? "0 0 0 2px rgba(59, 130, 246, 0.12)" : "";
-      card.style.background = currentQuantity > 0 ? "rgba(59, 130, 246, 0.04)" : "";
+      card.style.background = currentQuantity > 0 ? "rgba(59, 130, 246, 0.04)" : "rgba(248, 250, 252, 0.82)";
 
       const previewSource = product.image_medium || product.image_thumbnail;
       if (previewSource) {
@@ -2887,6 +2890,8 @@ export class FormUI extends HTMLElement {
 
       const title = document.createElement("div");
       title.className = "mt-2 text-sm font-semibold";
+      title.style.overflowWrap = "anywhere";
+      title.style.wordBreak = "break-word";
       title.textContent = product.name;
       card.appendChild(title);
 
@@ -2896,6 +2901,7 @@ export class FormUI extends HTMLElement {
       const galleryBadge = document.createElement("span");
       galleryBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
       galleryBadge.style.opacity = "0.68";
+      galleryBadge.style.overflowWrap = "anywhere";
       galleryBadge.textContent = product.photos_full.length ? `${product.photos_full.length} photos` : "single image";
       stateRow.appendChild(galleryBadge);
 
@@ -2906,6 +2912,7 @@ export class FormUI extends HTMLElement {
         selectedBadge.style.borderRadius = "999px";
         selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
         selectedBadge.style.color = "rgb(29, 78, 216)";
+        selectedBadge.style.whiteSpace = "nowrap";
         selectedBadge.textContent = `${currentQuantity} in cart`;
         stateRow.appendChild(selectedBadge);
       }
@@ -2916,6 +2923,7 @@ export class FormUI extends HTMLElement {
       const primaryPrice = document.createElement("span");
       primaryPrice.className = "font-semibold";
       primaryPrice.style.fontSize = "15px";
+      primaryPrice.style.overflowWrap = "anywhere";
       primaryPrice.textContent =
         product.discount_price !== null
           ? `${product.discount_price.toFixed(2)}€`
@@ -2927,6 +2935,7 @@ export class FormUI extends HTMLElement {
         const compareAt = document.createElement("span");
         compareAt.style.textDecoration = "line-through";
         compareAt.style.opacity = "0.7";
+        compareAt.style.whiteSpace = "nowrap";
         compareAt.textContent = `${product.sale_price.toFixed(2)}€`;
         pricing.appendChild(compareAt);
       }
@@ -2946,6 +2955,7 @@ export class FormUI extends HTMLElement {
 
       const quantityTag = document.createElement("span");
       quantityTag.className = "text-xs opacity-70";
+      quantityTag.style.overflowWrap = "anywhere";
       quantityTag.textContent = typeof product.maxNumOfChoices === "number"
         ? `In cart: ${currentQuantity}/${product.maxNumOfChoices}`
         : `In cart: ${currentQuantity}`;
@@ -3045,7 +3055,7 @@ export class FormUI extends HTMLElement {
       card.style.opacity = disabled ? "0.55" : "1";
       card.style.borderColor = selected ? "rgb(59 130 246)" : "";
       card.style.boxShadow = selected ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "";
-      card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "";
+      card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "rgba(248, 250, 252, 0.82)";
 
       const previewSrc = imageItem.image_medium || imageItem.image_thumbnail;
       if (previewSrc) {
@@ -3061,6 +3071,8 @@ export class FormUI extends HTMLElement {
 
       const title = document.createElement("div");
       title.className = "mt-2 text-sm font-semibold";
+      title.style.overflowWrap = "anywhere";
+      title.style.wordBreak = "break-word";
       title.textContent = imageItem.name;
       card.appendChild(title);
 
@@ -3071,6 +3083,7 @@ export class FormUI extends HTMLElement {
       const galleryBadge = document.createElement("span");
       galleryBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
       galleryBadge.style.opacity = "0.68";
+      galleryBadge.style.overflowWrap = "anywhere";
       galleryBadge.textContent = photoCount ? `${photoCount} photos` : "single image";
       stateRow.appendChild(galleryBadge);
 
@@ -3081,6 +3094,7 @@ export class FormUI extends HTMLElement {
         selectedBadge.style.borderRadius = "999px";
         selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
         selectedBadge.style.color = "rgb(29, 78, 216)";
+        selectedBadge.style.whiteSpace = "nowrap";
         selectedBadge.textContent = "Selected";
         stateRow.appendChild(selectedBadge);
       }
@@ -3088,6 +3102,7 @@ export class FormUI extends HTMLElement {
 
       const meta = document.createElement("div");
       meta.className = "text-xs opacity-70";
+      meta.style.overflowWrap = "anywhere";
       meta.textContent = photoCount ? `${photoCount} full photos` : "No full gallery";
       card.appendChild(meta);
 
@@ -3160,6 +3175,7 @@ export class FormUI extends HTMLElement {
       const row = document.createElement("div");
       row.className = "flex items-center justify-between gap-2 rounded border border-base-300 px-2 py-2";
       row.setAttribute("data-image-gallery-item", item.id);
+      row.style.background = "rgba(248, 250, 252, 0.82)";
 
       const nameWrap = document.createElement("div");
       nameWrap.className = "flex min-w-0 items-center gap-2";
@@ -3177,6 +3193,8 @@ export class FormUI extends HTMLElement {
 
       const name = document.createElement("div");
       name.className = "text-sm";
+      name.style.overflowWrap = "anywhere";
+      name.style.wordBreak = "break-word";
       name.textContent = item.name;
       nameWrap.appendChild(name);
 
@@ -3301,7 +3319,7 @@ export class FormUI extends HTMLElement {
       card.style.opacity = disabled ? "0.55" : "1";
       card.style.borderColor = selected ? "rgb(59 130 246)" : "";
       card.style.boxShadow = selected ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "";
-      card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "";
+      card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "rgba(248, 250, 252, 0.82)";
 
       const previewSrc = answer.image_medium || answer.image_thumbnail;
       if (previewSrc) {
@@ -3319,6 +3337,8 @@ export class FormUI extends HTMLElement {
 
       const title = document.createElement("div");
       title.className = "text-sm font-semibold";
+      title.style.overflowWrap = "anywhere";
+      title.style.wordBreak = "break-word";
       title.textContent = answer.name;
       card.appendChild(title);
 
@@ -3328,6 +3348,7 @@ export class FormUI extends HTMLElement {
       const modeBadge = document.createElement("span");
       modeBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
       modeBadge.style.opacity = "0.68";
+      modeBadge.style.overflowWrap = "anywhere";
       modeBadge.textContent = fieldConfig.multiple ? "Multi select" : "Single select";
       stateRow.appendChild(modeBadge);
 
@@ -3338,6 +3359,7 @@ export class FormUI extends HTMLElement {
         selectedBadge.style.borderRadius = "999px";
         selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
         selectedBadge.style.color = "rgb(29, 78, 216)";
+        selectedBadge.style.whiteSpace = "nowrap";
         selectedBadge.textContent = "Selected";
         stateRow.appendChild(selectedBadge);
       }
@@ -3346,6 +3368,7 @@ export class FormUI extends HTMLElement {
       if (answer.desc) {
         const description = document.createElement("div");
         description.className = "mt-1 text-xs opacity-80";
+        description.style.overflowWrap = "anywhere";
         description.textContent = answer.desc;
         card.appendChild(description);
       }
@@ -3391,6 +3414,7 @@ export class FormUI extends HTMLElement {
       const row = document.createElement("div");
       row.className = "flex items-center gap-2 rounded border border-base-300 px-2 py-2";
       row.setAttribute("data-quiz-selection-item", item.id);
+      row.style.background = "rgba(248, 250, 252, 0.82)";
 
       if (item.image_thumbnail || item.image_medium) {
         const thumb = document.createElement("img");
@@ -3409,12 +3433,15 @@ export class FormUI extends HTMLElement {
 
       const name = document.createElement("div");
       name.className = "text-sm font-medium";
+      name.style.overflowWrap = "anywhere";
+      name.style.wordBreak = "break-word";
       name.textContent = item.name;
       content.appendChild(name);
 
       if (item.desc) {
         const desc = document.createElement("div");
         desc.className = "text-xs opacity-70";
+        desc.style.overflowWrap = "anywhere";
         desc.textContent = item.desc;
         content.appendChild(desc);
       }

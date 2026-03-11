@@ -2599,6 +2599,10 @@ export class FormUI extends HTMLElement {
     title.textContent = name;
     modal.appendChild(title);
 
+    const meta = document.createElement("div");
+    meta.className = "mb-3 text-xs opacity-70";
+    modal.appendChild(meta);
+
     const mainImage = document.createElement("img");
     mainImage.setAttribute("data-product-gallery-main", "true");
     mainImage.src = photos[0];
@@ -2615,6 +2619,19 @@ export class FormUI extends HTMLElement {
     thumbs.style.gap = "8px";
     thumbs.style.marginTop = "10px";
     thumbs.style.overflowX = "auto";
+    const thumbButtons: HTMLImageElement[] = [];
+    const setActivePhoto = (photo: string) => {
+      const photoIndex = photos.findIndex((entry) => entry === photo);
+      mainImage.src = photo;
+      meta.textContent = photoIndex >= 0 ? `${photoIndex + 1} of ${photos.length}` : `${photos.length} photos`;
+      thumbButtons.forEach((thumb) => {
+        const selected = thumb.getAttribute("data-product-gallery-thumb") === photo;
+        thumb.style.outline = selected ? "2px solid rgb(59 130 246)" : "1px solid rgba(148, 163, 184, 0.35)";
+        thumb.style.outlineOffset = "1px";
+        thumb.style.opacity = selected ? "1" : "0.78";
+      });
+    };
+
     photos.forEach((photo) => {
       const thumb = document.createElement("img");
       thumb.setAttribute("data-product-gallery-thumb", photo);
@@ -2626,11 +2643,13 @@ export class FormUI extends HTMLElement {
       thumb.style.borderRadius = "8px";
       thumb.style.cursor = "pointer";
       thumb.addEventListener("click", () => {
-        mainImage.src = photo;
+        setActivePhoto(photo);
       });
+      thumbButtons.push(thumb);
       thumbs.appendChild(thumb);
     });
     modal.appendChild(thumbs);
+    setActivePhoto(photos[0]);
 
     overlay.appendChild(modal);
     overlay.addEventListener("click", (event) => {

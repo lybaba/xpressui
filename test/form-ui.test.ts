@@ -5597,6 +5597,8 @@ describe('FormUI', () => {
     const title = selection.querySelector('[data-upload-selection-title="scan_code"]') as HTMLElement;
     const message = selection.querySelector('[data-upload-selection-message="scan_code"]') as HTMLElement;
     const body = selection.querySelector('[data-upload-selection-body="scan_code"]') as HTMLElement;
+    const controls = selection.querySelector('[data-qr-controls="scan_code"]') as HTMLElement;
+    const startButton = controls.querySelector('[data-qr-action="start"]') as HTMLButtonElement;
     const input = element.querySelector('#scan_code') as HTMLInputElement;
     const imageFile = new File(['image'], 'qr-shell.png', { type: 'image/png' });
 
@@ -5614,6 +5616,8 @@ describe('FormUI', () => {
     expect(selection.querySelector('[data-upload-selection-title="scan_code"]')).toBe(title);
     expect(selection.querySelector('[data-upload-selection-message="scan_code"]')).toBe(message);
     expect(selection.querySelector('[data-upload-selection-body="scan_code"]')).toBe(body);
+    expect(selection.querySelector('[data-qr-controls="scan_code"]')).toBe(controls);
+    expect(controls.querySelector('[data-qr-action="start"]')).toBe(startButton);
     expect(title.textContent).toBe('QR code scanned');
     expect(message.textContent).toContain('QR-SHELL-001');
     expect(body.textContent).toContain('Scanned code: QR-SHELL-001');
@@ -5702,6 +5706,8 @@ describe('FormUI', () => {
     const title = selection.querySelector('[data-upload-selection-title="identity_card"]') as HTMLElement;
     const message = selection.querySelector('[data-upload-selection-message="identity_card"]') as HTMLElement;
     const body = selection.querySelector('[data-upload-selection-body="identity_card"]') as HTMLElement;
+    const controls = selection.querySelector('[data-document-scan-controls="identity_card"]') as HTMLElement;
+    const backButton = controls.querySelector('[data-document-scan-slot="1"]') as HTMLButtonElement;
     const frontCard = selection.querySelector('[data-document-scan-slot-card="identity_card:0"]') as HTMLElement;
     const frontPreview = selection.querySelector('[data-document-scan-preview="identity_card:0"]') as HTMLElement;
     const frontName = selection.querySelector('[data-document-scan-file-name="identity_card:0"]') as HTMLElement;
@@ -5729,6 +5735,8 @@ describe('FormUI', () => {
     expect(selection.querySelector('[data-upload-selection-title="identity_card"]')).toBe(title);
     expect(selection.querySelector('[data-upload-selection-message="identity_card"]')).toBe(message);
     expect(selection.querySelector('[data-upload-selection-body="identity_card"]')).toBe(body);
+    expect(selection.querySelector('[data-document-scan-controls="identity_card"]')).toBe(controls);
+    expect(controls.querySelector('[data-document-scan-slot="1"]')).toBe(backButton);
     expect(selection.querySelector('[data-document-scan-slot-card="identity_card:0"]')).toBe(frontCard);
     expect(selection.querySelector('[data-document-scan-preview="identity_card:0"]')).toBe(frontPreview);
     expect(selection.querySelector('[data-document-scan-file-name="identity_card:0"]')).toBe(frontName);

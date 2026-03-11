@@ -3963,16 +3963,25 @@ export class FormUI extends HTMLElement {
       "data-document-scan-controls",
       fieldConfig.name,
     );
-    controls.innerHTML = "";
 
     Array.from({ length: slotCount }, (_, index) => index).forEach((slotIndex) => {
-      const button = document.createElement("button");
-      button.type = "button";
+      let button = controls.querySelector(`[data-document-scan-slot="${slotIndex}"]`) as HTMLButtonElement | null;
+      if (!button) {
+        button = document.createElement("button");
+        button.type = "button";
+        button.setAttribute("data-document-scan-slot", String(slotIndex));
+        controls.appendChild(button);
+      }
       button.className = "btn btn-xs btn-outline";
       button.textContent = slotIndex === 0 ? "Capture Front" : "Capture Back";
-      button.setAttribute("data-document-scan-slot", String(slotIndex));
       button.classList.toggle("btn-primary", activeSlot === slotIndex);
-      controls.appendChild(button);
+      button.classList.toggle("btn-outline", activeSlot !== slotIndex);
+    });
+    Array.from(controls.querySelectorAll("[data-document-scan-slot]")).forEach((node) => {
+      const slotIndex = Number((node as HTMLElement).getAttribute("data-document-scan-slot"));
+      if (!Number.isFinite(slotIndex) || slotIndex < 0 || slotIndex >= slotCount) {
+        node.remove();
+      }
     });
 
     const slotGrid = this.ensureSelectionChild(
@@ -4107,31 +4116,41 @@ export class FormUI extends HTMLElement {
       "data-qr-controls",
       fieldConfig.name,
     );
-    controls.innerHTML = "";
-
-    const startButton = document.createElement("button");
-    startButton.type = "button";
+    let startButton = controls.querySelector('[data-qr-action="start"]') as HTMLButtonElement | null;
+    if (!startButton) {
+      startButton = document.createElement("button");
+      startButton.type = "button";
+      startButton.setAttribute("data-qr-action", "start");
+      controls.appendChild(startButton);
+    }
     startButton.className = "btn btn-xs btn-outline";
     startButton.textContent =
       qrState.status === "starting" ? "Starting..." : qrState.status === "live" ? "Camera Live" : "Start Camera";
-    startButton.setAttribute("data-qr-action", "start");
     startButton.disabled = qrState.status === "starting" || qrState.status === "live";
-    controls.appendChild(startButton);
 
     if (qrState.status === "live") {
-      const scanButton = document.createElement("button");
-      scanButton.type = "button";
+      let scanButton = controls.querySelector('[data-qr-action="scan"]') as HTMLButtonElement | null;
+      if (!scanButton) {
+        scanButton = document.createElement("button");
+        scanButton.type = "button";
+        scanButton.setAttribute("data-qr-action", "scan");
+        controls.appendChild(scanButton);
+      }
       scanButton.className = "btn btn-xs btn-primary";
       scanButton.textContent = "Scan Now";
-      scanButton.setAttribute("data-qr-action", "scan");
-      controls.appendChild(scanButton);
 
-      const stopButton = document.createElement("button");
-      stopButton.type = "button";
+      let stopButton = controls.querySelector('[data-qr-action="stop"]') as HTMLButtonElement | null;
+      if (!stopButton) {
+        stopButton = document.createElement("button");
+        stopButton.type = "button";
+        stopButton.setAttribute("data-qr-action", "stop");
+        controls.appendChild(stopButton);
+      }
       stopButton.className = "btn btn-xs btn-ghost";
       stopButton.textContent = "Stop";
-      stopButton.setAttribute("data-qr-action", "stop");
-      controls.appendChild(stopButton);
+    } else {
+      controls.querySelector('[data-qr-action="scan"]')?.remove();
+      controls.querySelector('[data-qr-action="stop"]')?.remove();
     }
 
     const message = this.ensureSelectionChild(

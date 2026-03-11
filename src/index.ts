@@ -2018,7 +2018,7 @@ export class FormUI extends HTMLElement {
     overlay.setAttribute("aria-hidden", "true");
     overlay.style.position = "fixed";
     overlay.style.inset = "0";
-    overlay.style.background = "rgba(15, 23, 42, 0.45)";
+    overlay.style.background = "rgba(15, 23, 42, 0.26)";
     overlay.style.zIndex = "10002";
     overlay.style.display = "none";
     overlay.style.justifyContent = "flex-end";
@@ -2031,17 +2031,18 @@ export class FormUI extends HTMLElement {
     panel.setAttribute("data-product-cart-panel", "true");
     panel.id = `${this.getAttribute("name") || "form"}_product_cart_panel`;
     panel.setAttribute("aria-label", "Mini cart");
-    panel.style.width = "min(420px, 92vw)";
+    panel.style.width = "min(340px, 88vw)";
     panel.style.height = "100%";
-    panel.style.background = "#ffffff";
-    panel.style.borderLeft = "1px solid rgba(15, 23, 42, 0.12)";
-    panel.style.padding = "12px";
+    panel.style.background = "rgba(255, 255, 255, 0.98)";
+    panel.style.borderLeft = "1px solid rgba(15, 23, 42, 0.08)";
+    panel.style.padding = "14px";
     panel.style.overflowY = "auto";
     panel.style.display = "flex";
     panel.style.flexDirection = "column";
-    panel.style.gap = "8px";
+    panel.style.gap = "10px";
     panel.style.transform = "translateX(100%)";
     panel.style.transition = "transform 180ms ease";
+    panel.style.boxShadow = "-24px 0 48px -36px rgba(15, 23, 42, 0.28)";
 
     overlay.appendChild(panel);
     this.appendChild(overlay);
@@ -2367,19 +2368,38 @@ export class FormUI extends HTMLElement {
     const header = document.createElement("div");
     header.className = "flex items-center justify-between";
     const heading = document.createElement("div");
-    heading.className = "flex items-center gap-2 text-sm font-semibold";
+    heading.className = "grid gap-1";
     const headingIcon = document.createElement("span");
     headingIcon.setAttribute("aria-hidden", "true");
     headingIcon.textContent = "🛒";
+    headingIcon.style.display = "none";
+    const headingEyebrow = document.createElement("span");
+    headingEyebrow.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
+    headingEyebrow.style.opacity = "0.64";
+    headingEyebrow.textContent = "Current cart";
     const headingText = document.createElement("span");
-    headingText.textContent = `${totalAmount.toFixed(2)}€`;
-    heading.appendChild(headingIcon);
+    headingText.textContent = `${totalAmount.toFixed(2)}€ total`;
+    headingText.style.fontSize = "16px";
+    heading.appendChild(headingEyebrow);
     heading.appendChild(headingText);
     const closeButton = document.createElement("button");
     closeButton.type = "button";
-    closeButton.className = "btn btn-sm btn-ghost";
-    closeButton.textContent = "Close";
+    closeButton.className = "btn";
+    closeButton.textContent = "×";
     closeButton.setAttribute("data-product-cart-close", "true");
+    closeButton.style.width = "34px";
+    closeButton.style.minWidth = "34px";
+    closeButton.style.height = "34px";
+    closeButton.style.padding = "0";
+    closeButton.style.display = "inline-flex";
+    closeButton.style.alignItems = "center";
+    closeButton.style.justifyContent = "center";
+    closeButton.style.borderRadius = "999px";
+    closeButton.style.border = "1px solid rgba(148, 163, 184, 0.4)";
+    closeButton.style.background = "#f8fafc";
+    closeButton.style.color = "#0f172a";
+    closeButton.style.boxShadow = "none";
+    closeButton.setAttribute("aria-label", "Close cart");
     header.appendChild(heading);
     header.appendChild(closeButton);
     cart.appendChild(header);
@@ -2406,7 +2426,7 @@ export class FormUI extends HTMLElement {
 
     const list = document.createElement("div");
     list.style.display = "grid";
-    list.style.gap = "6px";
+    list.style.gap = "8px";
     list.style.maxHeight = "calc(100vh - 170px)";
     list.style.overflowY = "auto";
     entries.forEach(({ fieldName, item }) => {
@@ -2414,6 +2434,7 @@ export class FormUI extends HTMLElement {
       row.className = "grid gap-2 rounded border border-base-300 px-2 py-2";
       row.setAttribute("data-product-cart-item", `${fieldName}:${item.id}`);
       row.style.background = "rgba(248, 250, 252, 0.82)";
+      row.style.padding = "10px";
 
       const top = document.createElement("div");
       top.className = "flex items-center gap-2";
@@ -2441,9 +2462,7 @@ export class FormUI extends HTMLElement {
       const meta = document.createElement("div");
       meta.className = "text-xs opacity-70";
       const unitPrice = item.discount_price ?? item.sale_price ?? 0;
-      meta.textContent = typeof item.maxNumOfChoices === "number"
-        ? `Qty: ${item.quantity}/${item.maxNumOfChoices} · Unit: ${unitPrice.toFixed(2)}€`
-        : `Qty: ${item.quantity} · Unit: ${unitPrice.toFixed(2)}€`;
+      meta.textContent = `Unit ${unitPrice.toFixed(2)}€`;
       details.appendChild(meta);
       const subtotal = document.createElement("div");
       subtotal.className = "text-xs font-semibold";
@@ -2453,6 +2472,7 @@ export class FormUI extends HTMLElement {
 
       const controls = document.createElement("div");
       controls.className = "flex items-center gap-1";
+      controls.style.justifyContent = "flex-end";
 
       const createControl = (action: "inc" | "dec" | "remove", label: string) => {
         const button = document.createElement("button");

@@ -1,6 +1,7 @@
 import getFormConfig, { getFieldConfig } from "../dom-utils";
 import TFieldConfig from "../common/TFieldConfig";
 import {
+  CHECKBOXES_TYPE,
   CAMERA_PHOTO_TYPE,
   DOCUMENT_SCAN_TYPE,
   HTML_TYPE,
@@ -19,6 +20,7 @@ import {
   UPLOAD_IMAGE_TYPE,
   URL_TYPE,
   PRODUCT_LIST_TYPE,
+  RADIO_BUTTONS_TYPE,
 } from "../common/field";
 import type {
   TFormRenderMode,
@@ -56,11 +58,20 @@ export function collectDomFieldValues(formElem: HTMLFormElement): Record<string,
           fieldConfig.type === PRODUCT_LIST_TYPE
           || fieldConfig.type === IMAGE_GALLERY_TYPE
           || fieldConfig.type === QUIZ_TYPE
+          || fieldConfig.type === RADIO_BUTTONS_TYPE
+          || fieldConfig.type === CHECKBOXES_TYPE
         )
       ) {
         if (!node.value) {
-          domValues[fieldConfig.name] = fieldConfig.type === QUIZ_TYPE && !fieldConfig.choices?.length ? "" : [];
+          domValues[fieldConfig.name] =
+            fieldConfig.type === QUIZ_TYPE && !fieldConfig.choices?.length
+              ? ""
+              : fieldConfig.type === RADIO_BUTTONS_TYPE
+                ? ""
+                : [];
         } else if (fieldConfig.type === QUIZ_TYPE && !fieldConfig.choices?.length) {
+          domValues[fieldConfig.name] = node.value;
+        } else if (fieldConfig.type === RADIO_BUTTONS_TYPE) {
           domValues[fieldConfig.name] = node.value;
         } else {
           try {
@@ -210,6 +221,7 @@ export function readInputElementValue(
   isProductListField: (fieldConfig: TFieldConfig) => boolean,
   isImageGalleryField: (fieldConfig: TFieldConfig) => boolean,
   isQuizField: (fieldConfig: TFieldConfig) => boolean,
+  isChoiceListField: (fieldConfig: TFieldConfig) => boolean,
   fieldConfig: TFieldConfig,
   inputElement: HTMLElement | null,
 ): any {
@@ -224,12 +236,21 @@ export function readInputElementValue(
 
     if (
       inputElement.type === "hidden"
-      && (isProductListField(fieldConfig) || isImageGalleryField(fieldConfig) || isQuizField(fieldConfig))
+      && (isProductListField(fieldConfig) || isImageGalleryField(fieldConfig) || isQuizField(fieldConfig) || isChoiceListField(fieldConfig))
     ) {
       if (!inputElement.value) {
-        return isQuizField(fieldConfig) && !fieldConfig.choices?.length ? "" : [];
+        if (isQuizField(fieldConfig) && !fieldConfig.choices?.length) {
+          return "";
+        }
+        if (fieldConfig.type === RADIO_BUTTONS_TYPE) {
+          return "";
+        }
+        return [];
       }
       if (isQuizField(fieldConfig) && !fieldConfig.choices?.length) {
+        return inputElement.value;
+      }
+      if (fieldConfig.type === RADIO_BUTTONS_TYPE) {
         return inputElement.value;
       }
       try {

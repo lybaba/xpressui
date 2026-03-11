@@ -24,11 +24,13 @@ import {
 import {
   APPROVAL_STATE_TYPE,
   CAMERA_PHOTO_TYPE,
+  CHECKBOXES_TYPE,
   DOCUMENT_SCAN_TYPE,
   isFileFieldType,
   IMAGE_GALLERY_TYPE,
   PRODUCT_LIST_TYPE,
   QUIZ_TYPE,
+  RADIO_BUTTONS_TYPE,
   QR_SCAN_TYPE,
   SETTING_TYPE,
   UPLOAD_FILE_TYPE,
@@ -897,6 +899,7 @@ export class FormUI extends HTMLElement {
       (nextFieldConfig) => this.isProductListField(nextFieldConfig),
       (nextFieldConfig) => this.isImageGalleryField(nextFieldConfig),
       (nextFieldConfig) => this.isQuizField(nextFieldConfig),
+      (nextFieldConfig) => this.isChoiceListField(nextFieldConfig),
       fieldConfig,
       inputElement,
     );
@@ -1884,6 +1887,10 @@ export class FormUI extends HTMLElement {
     return fieldConfig.type === QUIZ_TYPE;
   }
 
+  isChoiceListField = (fieldConfig: TFieldConfig) => {
+    return fieldConfig.type === RADIO_BUTTONS_TYPE || fieldConfig.type === CHECKBOXES_TYPE;
+  }
+
   isOpenQuizField = (fieldConfig: TFieldConfig) => {
     return isConfiguredOpenQuizField(fieldConfig);
   }
@@ -1944,6 +1951,13 @@ export class FormUI extends HTMLElement {
     return getNormalizedQuizSelectionItems(value);
   }
 
+  getChoiceSelectionItems = (fieldConfig: TFieldConfig, value: any): string[] => {
+    if (fieldConfig.type === RADIO_BUTTONS_TYPE) {
+      return typeof value === "string" && value ? [value] : [];
+    }
+    return Array.isArray(value) ? value.map((entry) => String(entry)) : [];
+  }
+
   getQuizSelectionLimit = (fieldConfig: TFieldConfig) => {
     return getNormalizedQuizSelectionLimit(fieldConfig);
   }
@@ -1954,6 +1968,28 @@ export class FormUI extends HTMLElement {
     answerId: string,
   ) => {
     return getNextNormalizedQuizSelectionItems(fieldConfig, currentValue, answerId);
+  }
+
+  getNextChoiceSelectionValue = (
+    fieldConfig: TFieldConfig,
+    currentValue: any,
+    choiceValue: string,
+  ) => {
+    if (fieldConfig.type === RADIO_BUTTONS_TYPE) {
+      return currentValue === choiceValue ? "" : choiceValue;
+    }
+
+    const currentValues = Array.isArray(currentValue)
+      ? currentValue.map((entry) => String(entry))
+      : [];
+    if (currentValues.includes(choiceValue)) {
+      return currentValues.filter((entry) => entry !== choiceValue);
+    }
+    const maxChoices = typeof fieldConfig.maxNumOfChoices === "number" ? fieldConfig.maxNumOfChoices : null;
+    if (maxChoices !== null && maxChoices > 0 && currentValues.length >= maxChoices) {
+      return currentValues;
+    }
+    return [...currentValues, choiceValue];
   }
 
   getProductCartTotal = (cartItems: TProductCartItem[]): number => {
@@ -3366,6 +3402,82 @@ export class FormUI extends HTMLElement {
     });
     selectedPanel.appendChild(list);
     selectionElement.appendChild(selectedPanel);
+  }
+
+  renderChoiceListSelection = (
+    fieldConfig: TFieldConfig,
+    value: any,
+    selectionElement: HTMLElement | null,
+  ) => {
+    if (!selectionElement) {
+      return;
+    }
+
+    selectionElement.innerHTML = "";
+    const choices = fieldConfig.choices || [];
+    const selectedValues = this.getChoiceSelectionItems(fieldConfig, value);
+    const selectedMap = selectedValues.reduce((accumulator, item) => {
+      accumulator[item] = true;
+      return accumulator;
+    }, {} as Record<string, boolean>);
+    const selectionLimit =
+      fieldConfig.type === CHECKBOXES_TYPE && typeof fieldConfig.maxNumOfChoices === "number"
+        ? fieldConfig.maxNumOfChoices
+        : 1;
+    const limitReached =
+      fieldConfig.type === CHECKBOXES_TYPE && selectionLimit > 0 && selectedValues.length >= selectionLimit;
+
+    const grid = document.createElement("div");
+    grid.style.display = "grid";
+    grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
+    grid.style.gap = "10px";
+
+    choices.forEach((choice) => {
+      const optionValue = String(choice.value ?? choice.id ?? choice.label ?? "");
+      const selected = Boolean(selectedMap[optionValue]);
+      const disabled = !selected && limitReached;
+
+      const card = document.createElement("div");
+      card.setAttribute("data-choice-option-action", "toggle");
+      card.setAttribute("data-choice-option-value", optionValue);
+      card.setAttribute("data-selected", selected ? "true" : "false");
+      card.setAttribute("data-disabled", disabled ? "true" : "false");
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", disabled ? "-1" : "0");
+      card.setAttribute("aria-pressed", selected ? "true" : "false");
+      card.className = "rounded border p-3 transition-all";
+      card.style.cursor = disabled ? "not-allowed" : "pointer";
+      card.style.opacity = disabled ? "0.55" : "1";
+      card.style.borderColor = selected ? "rgb(59 130 246)" : "";
+      card.style.boxShadow = selected ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "";
+      card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "rgba(248, 250, 252, 0.82)";
+
+      const title = document.createElement("div");
+      title.className = "text-sm font-semibold";
+      title.style.overflowWrap = "anywhere";
+      title.textContent = String(choice.label ?? optionValue);
+      card.appendChild(title);
+
+      if (choice.desc) {
+        const description = document.createElement("div");
+        description.className = "mt-1 text-xs opacity-80";
+        description.style.overflowWrap = "anywhere";
+        description.textContent = choice.desc;
+        card.appendChild(description);
+      }
+
+      const footer = document.createElement("div");
+      footer.className = "mt-2 text-xs opacity-70";
+      footer.textContent = selected
+        ? "Selected"
+        : disabled
+          ? "Selection limit reached"
+          : (fieldConfig.type === RADIO_BUTTONS_TYPE ? "Click to choose" : "Click to toggle");
+      card.appendChild(footer);
+      grid.appendChild(card);
+    });
+
+    selectionElement.appendChild(grid);
   }
 
   renderDocumentScanSelection = (
@@ -5131,6 +5243,7 @@ export class FormUI extends HTMLElement {
               isProductListField: this.isProductListField(fieldConfig),
               isImageGalleryField: this.isImageGalleryField(fieldConfig),
               isQuizField: this.isQuizField(fieldConfig),
+              isChoiceListField: this.isChoiceListField(fieldConfig),
               isOpenQuizField: this.isOpenQuizField(fieldConfig),
               getCurrentValue: () => this.getFieldValue(name),
               onChangeValue: (nextValue) => {
@@ -5147,6 +5260,8 @@ export class FormUI extends HTMLElement {
                 this.getNextImageGallerySelectionItems(fieldConfig, this.getFieldValue(name), action, imageId),
               getNextQuizSelectionItems: (answerId) =>
                 this.getNextQuizSelectionItems(fieldConfig, this.getFieldValue(name), answerId),
+              getNextChoiceSelectionValue: (choiceValue) =>
+                this.getNextChoiceSelectionValue(fieldConfig, this.getFieldValue(name), choiceValue),
               openProductGallery: (productId) => {
                 const product = this.getProductListCatalog(fieldConfig).find((entry) => entry.id === productId);
                 if (product) {
@@ -5219,6 +5334,7 @@ export class FormUI extends HTMLElement {
           isProductListField: this.isProductListField(fieldConfig),
           isImageGalleryField: this.isImageGalleryField(fieldConfig),
           isQuizField: this.isQuizField(fieldConfig),
+          isChoiceListField: this.isChoiceListField(fieldConfig),
           isOpenQuizField: this.isOpenQuizField(fieldConfig),
           applyFieldViewPresentation: () => {
             this.applyFieldViewPresentation(fieldConfig, inputElement, selectionElement, errorElement, value);
@@ -5234,6 +5350,9 @@ export class FormUI extends HTMLElement {
           },
           renderQuizSelection: () => {
             this.renderQuizSelection(fieldConfig, value, selectionElement);
+          },
+          renderChoiceListSelection: () => {
+            this.renderChoiceListSelection(fieldConfig, value, selectionElement);
           },
           getProductCartItems: () => this.getProductCartItems(value),
           getImageGallerySelectionItems: () => this.getImageGallerySelectionItems(value),

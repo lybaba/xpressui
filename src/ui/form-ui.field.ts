@@ -130,6 +130,7 @@ export function bindSelectionFieldEvents(options: {
   isProductListField: boolean;
   isImageGalleryField: boolean;
   isQuizField: boolean;
+  isChoiceListField: boolean;
   isOpenQuizField: boolean;
   getCurrentValue: () => any;
   onChangeValue: (value: any) => void;
@@ -137,6 +138,7 @@ export function bindSelectionFieldEvents(options: {
   getNextProductCartItems: (action: "add" | "inc" | "dec" | "remove", productId: string) => any;
   getNextImageGallerySelectionItems: (action: "toggle" | "remove", imageId: string) => any;
   getNextQuizSelectionItems: (answerId: string) => any;
+  getNextChoiceSelectionValue: (choiceValue: string) => any;
   openProductGallery: (productId: string) => void;
   openImageGallery: (imageId: string) => void;
   startQrCamera: () => void;
@@ -166,6 +168,21 @@ export function bindSelectionFieldEvents(options: {
         || quizAnswerCard.getAttribute("tabindex") === "-1";
       if (answerId && !disabled) {
         options.onChangeValue(options.getNextQuizSelectionItems(answerId));
+        options.onAfterChange();
+      }
+      return;
+    }
+
+    const choiceCard = target?.closest("[data-choice-option-action]") as HTMLElement | null;
+    if (options.isChoiceListField && choiceCard) {
+      event.preventDefault();
+      event.stopPropagation();
+      const choiceValue = choiceCard.getAttribute("data-choice-option-value");
+      const disabled =
+        choiceCard.getAttribute("data-disabled") === "true"
+        || choiceCard.getAttribute("tabindex") === "-1";
+      if (choiceValue && !disabled) {
+        options.onChangeValue(options.getNextChoiceSelectionValue(choiceValue));
         options.onAfterChange();
       }
       return;
@@ -335,12 +352,14 @@ export function applyFieldValuePresentation(options: {
   isProductListField: boolean;
   isImageGalleryField: boolean;
   isQuizField: boolean;
+  isChoiceListField: boolean;
   isOpenQuizField: boolean;
   applyFieldViewPresentation: () => void;
   renderFileSelection: () => void;
   renderProductListSelection: () => void;
   renderImageGallerySelection: () => void;
   renderQuizSelection: () => void;
+  renderChoiceListSelection: () => void;
   getProductCartItems: () => any[];
   getImageGallerySelectionItems: () => any[];
   getQuizSelectionItems: () => any[];
@@ -381,6 +400,9 @@ export function applyFieldValuePresentation(options: {
     input.value = options.isOpenQuizField
       ? (typeof value === "string" ? value : "")
       : JSON.stringify(options.getQuizSelectionItems());
+  } else if (options.isChoiceListField) {
+    options.renderChoiceListSelection();
+    input.value = Array.isArray(value) ? JSON.stringify(value) : String(value ?? "");
   } else if (input instanceof HTMLSelectElement && input.multiple) {
     const selectedValues = Array.isArray(value)
       ? value.map((entry) => String(entry))

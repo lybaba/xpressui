@@ -4132,14 +4132,20 @@ export class FormUI extends HTMLElement {
       }
     });
 
-    const slotGrid = this.ensureSelectionChild(
-      selectionElement,
-      `[data-document-scan-grid="${fieldConfig.name}"]`,
-      "div",
-      "grid gap-3 md:grid-cols-2",
-      "data-document-scan-grid",
-      fieldConfig.name,
-    );
+    const slotGrid =
+      (selectionElement.querySelector(
+        `[data-document-scan-grid="${fieldConfig.name}"]`,
+      ) as HTMLDivElement | null)
+      ?? (selectionElement.getAttribute("data-document-scan-grid") === fieldConfig.name
+        ? selectionElement as HTMLDivElement
+        : this.ensureSelectionChild(
+            selectionElement,
+            `[data-document-scan-grid="${fieldConfig.name}"]`,
+            "div",
+            "grid gap-3 md:grid-cols-2",
+            "data-document-scan-grid",
+            fieldConfig.name,
+          ) as HTMLDivElement);
 
     Array.from({ length: slotCount }, (_, index) => index).forEach((slotIndex) => {
       const file = selectedFiles[slotIndex];

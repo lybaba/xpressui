@@ -6167,6 +6167,39 @@ describe('FormUI', () => {
     revokeObjectUrlSpy.mockRestore();
   });
 
+  it('reuses a hydrated document-scan grid shell when it already exists', () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <form id="hydrated_document_scan_form" data-type="contactform" data-name="hydrated_document_scan" data-label="Hydrated Document Scan">
+        <div data-type="section" data-name="main" data-label="Main">
+          <input id="identity_card" name="identity_card" type="file" data-type="document-scan" data-name="identity_card" data-label="Identity Card" data-section-name="main" multiple />
+          <div id="identity_card_selection">
+            <div data-document-scan-controls="identity_card"></div>
+            <div data-document-scan-grid="identity_card"></div>
+          </div>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(container);
+
+    const element = hydrateFormUI(container, createFormConfig({
+      name: 'hydrated_document_scan',
+      title: 'Hydrated Document Scan',
+      fields: [
+        {
+          name: 'identity_card',
+          label: 'Identity Card',
+          type: 'document-scan',
+        },
+      ],
+    })) as FormUI;
+
+    const grid = element.querySelector('[data-document-scan-grid="identity_card"]') as HTMLElement;
+
+    expect(element.querySelector('[data-document-scan-grid="identity_card"]')).toBe(grid);
+    expect(element.querySelector('[data-document-scan-controls="identity_card"]')).not.toBeNull();
+  });
+
   it('preserves document-scan shell nodes while updating slot content', async () => {
     const createObjectUrlSpy = vi
       .spyOn(URL, 'createObjectURL')

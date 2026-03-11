@@ -2910,7 +2910,7 @@ export class FormUI extends HTMLElement {
         thumb.src = previewSource;
         thumb.alt = product.name;
         thumb.style.width = "100%";
-        thumb.style.height = "112px";
+        thumb.style.height = "94px";
         thumb.style.objectFit = "cover";
         thumb.style.borderRadius = "8px";
         card.appendChild(thumb);
@@ -2924,10 +2924,10 @@ export class FormUI extends HTMLElement {
       card.appendChild(title);
 
       const pricing = document.createElement("div");
-      pricing.className = "mt-1 flex items-center gap-2 text-xs";
+      pricing.className = "mt-1 text-xs";
       const primaryPrice = document.createElement("span");
       primaryPrice.className = "font-semibold";
-      primaryPrice.style.fontSize = "15px";
+      primaryPrice.style.fontSize = "14px";
       primaryPrice.style.overflowWrap = "anywhere";
       primaryPrice.textContent =
         product.discount_price !== null
@@ -2947,7 +2947,7 @@ export class FormUI extends HTMLElement {
       card.appendChild(pricing);
 
       const buttonRow = document.createElement("div");
-      buttonRow.className = "mt-2 flex items-center justify-between";
+      buttonRow.className = "mt-1.5 flex items-center justify-between";
 
       const quantityTag = document.createElement("span");
       quantityTag.className = "text-xs opacity-70";
@@ -2986,7 +2986,7 @@ export class FormUI extends HTMLElement {
         controls.appendChild(decButton);
         const qty = document.createElement("span");
         qty.className = "text-xs font-semibold";
-        qty.style.minWidth = "18px";
+        qty.style.minWidth = "16px";
         qty.style.textAlign = "center";
         qty.textContent = String(currentQuantity);
         controls.appendChild(qty);

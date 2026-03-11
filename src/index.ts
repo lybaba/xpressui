@@ -973,11 +973,18 @@ export class FormUI extends HTMLElement {
       inputElement.insertAdjacentElement("afterend", viewElement);
     }
 
-    viewElement.innerHTML = "";
     const { rendererType, renderer } = this.resolveOutputRendererForField(fieldConfig, inputElement);
     viewElement.setAttribute("data-renderer-type", rendererType);
     const mediaDisplayPolicy = this.resolveMediaDisplayPolicy(fieldConfig, inputElement, rendererType);
     viewElement.setAttribute("data-media-display-policy", mediaDisplayPolicy);
+    const viewBody = this.ensureSelectionChild(
+      viewElement,
+      `[data-view-field-body="${fieldConfig.name}"]`,
+      "div",
+      "",
+      "data-view-field-body",
+      fieldConfig.name,
+    );
     const unsafeHtml = this.shouldRenderUnsafeHtml(inputElement);
     const resolvedValue = this.resolveViewTemplateValue(
       fieldConfig,
@@ -993,7 +1000,7 @@ export class FormUI extends HTMLElement {
       unsafeHtml,
       mediaDisplayPolicy,
     });
-    viewElement.appendChild(rendered);
+    viewBody.replaceChildren(rendered);
   }
 
   applyViewMode = (formElem: HTMLFormElement) => {

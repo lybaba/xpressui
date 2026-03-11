@@ -92,6 +92,7 @@ Major capabilities already implemented in the codebase:
   - radio-buttons and checkboxes now also ship a card-list shell in template markup, and the runtime updates those option cards in place instead of wiping the whole selection zone
   - QR scan start/live controls and document-scan slot toggles now also stay stable inside their preserved shells, so scan-state updates no longer recreate those button rows
   - product-list inline totals and global cart panel rows now also update in place, so cart quantity changes no longer rebuild the summary/panel subtree after the main catalog shell cleanup
+  - view/hybrid output fields now keep a stable `data-view-field` shell with a dedicated body node, so output refreshes no longer recreate the whole rendered view container
   - product-list now keeps card/control shells stable and updates cart state in place while retaining the global cart drawer contract
 
 Current built-in provider families:

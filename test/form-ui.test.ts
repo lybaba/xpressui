@@ -904,6 +904,49 @@ describe('FormUI', () => {
     expect((element.querySelector('#title_view span') as HTMLSpanElement).textContent).toBe('New title');
   });
 
+  it('preserves the view-field shell while hybrid output updates', () => {
+    const element = renderFixture(`
+      <template id="hybrid_shell_sync">
+        <form
+          id="hybrid_shell_sync_form"
+          data-type="contactform"
+          data-name="hybrid_shell_sync"
+          data-label="Hybrid Shell Sync"
+        >
+          <input
+            id="title"
+            name="title"
+            type="text"
+            value=""
+            data-type="text"
+            data-name="title"
+            data-label="Title"
+            data-section-name="main"
+          />
+        </form>
+      </template>
+      <form-ui name="hybrid_shell_sync" mode="hybrid"></form-ui>
+    `);
+
+    const input = element.querySelector('#title') as HTMLInputElement;
+    const view = element.querySelector('#title_view') as HTMLElement;
+    const body = view.querySelector('[data-view-field-body="title"]') as HTMLElement;
+
+    input.value = 'First';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(element.querySelector('#title_view')).toBe(view);
+    expect(view.querySelector('[data-view-field-body="title"]')).toBe(body);
+    expect((view.querySelector('span') as HTMLSpanElement).textContent).toBe('First');
+
+    input.value = 'Second';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(element.querySelector('#title_view')).toBe(view);
+    expect(view.querySelector('[data-view-field-body="title"]')).toBe(body);
+    expect((view.querySelector('span') as HTMLSpanElement).textContent).toBe('Second');
+  });
+
   it('supports field-level view mode in a normal form while keeping other fields editable', async () => {
     const element = renderFixture(`
       <template id="mixed_field_view_mode">

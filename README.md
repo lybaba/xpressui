@@ -21,6 +21,7 @@ The public API is centered on:
 - `FormUI` (the custom element class)
 - `FormRuntime` (the composed headless runtime)
 - `FormUploadRuntime` (the dedicated upload runtime)
+- `hydrateFormUI(...)`
 - `mountFormUI(...)`
 - `createFormConfig(...)`
 - `createMountSnippet(...)`
@@ -28,8 +29,12 @@ The public API is centered on:
 - `fieldFactory`
 - `createTemplateMarkup(...)`
 
-The recommended path is `mountFormUI(...)`, which lets you mount a form from a
-plain object without hand-writing a full HTML template.
+For backend-rendered integrations such as `iakpress-console`, the recommended
+path is `hydrateFormUI(...)` from `@lybaba/xpressui/hydrate`, so the page owns
+the HTML shell and `xpressui` only hydrates it.
+
+`mountFormUI(...)` remains available for standalone usage when you want
+`xpressui` to generate the template markup from a plain object.
 If you need scaffolding code from an existing config object, use
 `createMountSnippet(...)`.
 
@@ -46,6 +51,7 @@ Use `getOperationalSummary()` for aggregate state and `getIncidentSummary()`
 for queue/dead-letter/resume samples oriented toward ops/debug workflows.
 
 Public API you should treat as stable:
+- `hydrateFormUI(...)`
 - `mountFormUI(...)`
 - `createFormConfig(...)`
 - `createMountSnippet(...)`
@@ -109,34 +115,70 @@ The package is configured for GitHub Packages:
 npm install @lybaba/xpressui
 ```
 
+For hydration-only usage, import the lighter subpath:
+
+```ts
+import { hydrateFormUI } from '@lybaba/xpressui/hydrate';
+```
+
 If you publish privately through GitHub Packages, make sure your npm registry
 and auth are configured for the `@lybaba` scope.
 
 ## Quick Start
 
 ```ts
-import { mountFormUI } from '@lybaba/xpressui';
+import { hydrateFormUI } from '@lybaba/xpressui/hydrate';
 
 const container = document.getElementById('app');
 
 if (container) {
-  const form = mountFormUI(container, {
+  container.innerHTML = `
+    <form data-type="contactform" data-name="contact-form" data-label="Contact Us">
+      <div data-type="section" data-name="main" data-label="Main">
+        <label>
+          <span>Email</span>
+          <input name="email" type="email" data-type="email" data-name="email" data-label="Email" data-required="true" />
+        </label>
+        <label>
+          <span>Topics</span>
+          <select name="topics" multiple data-type="select-multiple" data-name="topics" data-label="Topics">
+            <option value="sales">Sales</option>
+            <option value="support">Support</option>
+            <option value="billing">Billing</option>
+          </select>
+        </label>
+        <label>
+          <span>Message</span>
+          <textarea name="message" data-type="textarea" data-name="message" data-label="Message" data-required="true"></textarea>
+        </label>
+      </div>
+    </form>
+  `;
+
+  const form = hydrateFormUI(container, {
+    version: 1,
+    id: 'contact-form',
+    uid: 'contact-form',
+    type: 'contactform',
     name: 'contact-form',
     title: 'Contact Us',
-    fields: [
-      { name: 'email', label: 'Email', type: 'email', required: true },
-      {
-        name: 'topics',
-        label: 'Topics',
-        type: 'select-multiple',
-        choices: [
-          { value: 'sales', label: 'Sales' },
-          { value: 'support', label: 'Support' },
-          { value: 'billing', label: 'Billing' },
-        ],
-      },
-      { name: 'message', label: 'Message', type: 'textarea', required: true },
-    ],
+    sections: {
+      custom: [{ type: 'section', name: 'main', label: 'Main' }],
+      main: [
+        { name: 'email', label: 'Email', type: 'email', required: true },
+        {
+          name: 'topics',
+          label: 'Topics',
+          type: 'select-multiple',
+          choices: [
+            { value: 'sales', label: 'Sales' },
+            { value: 'support', label: 'Support' },
+            { value: 'billing', label: 'Billing' },
+          ],
+        },
+        { name: 'message', label: 'Message', type: 'textarea', required: true },
+      ],
+    },
   });
 
   form?.addEventListener('form-ui:submit-success', (event) => {
@@ -144,6 +186,9 @@ if (container) {
   });
 }
 ```
+
+If you want `xpressui` to generate the full HTML template for you, keep using
+`mountFormUI(...)` from `@lybaba/xpressui`.
 
 ## Faster Form Creation
 

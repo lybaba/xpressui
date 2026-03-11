@@ -965,13 +965,15 @@ export class FormUI extends HTMLElement {
     valuesContext?: Record<string, any>,
   ) => {
     const viewFieldId = `${fieldConfig.name}_view`;
-    let viewElement = this.querySelector(`#${viewFieldId}`) as HTMLElement | null;
+    let viewElement =
+      (this.querySelector(`#${viewFieldId}`) as HTMLElement | null)
+      || (this.querySelector(`[data-view-field="${fieldConfig.name}"]`) as HTMLElement | null);
     if (!viewElement) {
       viewElement = document.createElement("div");
-      viewElement.id = viewFieldId;
       viewElement.setAttribute("data-view-field", fieldConfig.name);
       inputElement.insertAdjacentElement("afterend", viewElement);
     }
+    viewElement.id = viewFieldId;
 
     const { rendererType, renderer } = this.resolveOutputRendererForField(fieldConfig, inputElement);
     viewElement.setAttribute("data-renderer-type", rendererType);

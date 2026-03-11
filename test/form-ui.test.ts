@@ -948,6 +948,51 @@ describe('FormUI', () => {
     expect((view.querySelector('span') as HTMLSpanElement).textContent).toBe('Second');
   });
 
+  it('reuses an existing backend view-field shell in hybrid mode', () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <form id="hydrated_hybrid_view_form" data-type="contactform" data-name="hydrated_hybrid_view" data-label="Hydrated Hybrid View">
+        <div data-type="section" data-name="main" data-label="Main">
+          <input
+            id="title"
+            name="title"
+            type="text"
+            value="Initial"
+            data-type="text"
+            data-name="title"
+            data-label="Title"
+            data-section-name="main"
+          />
+          <div data-view-field="title">
+            <div data-view-field-body="title"></div>
+          </div>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(container);
+
+    const element = hydrateFormUI(container, createFormConfig({
+      name: 'hydrated_hybrid_view',
+      title: 'Hydrated Hybrid View',
+      mode: 'hybrid',
+      fields: [
+        { type: 'text', name: 'title', label: 'Title' },
+      ],
+    })) as FormUI;
+
+    const input = element.querySelector('#title') as HTMLInputElement;
+    const view = element.querySelector('[data-view-field="title"]') as HTMLElement;
+    const body = view.querySelector('[data-view-field-body="title"]') as HTMLElement;
+
+    input.value = 'Updated';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(element.querySelector('[data-view-field="title"]')).toBe(view);
+    expect(element.querySelector('#title_view')).toBe(view);
+    expect(view.querySelector('[data-view-field-body="title"]')).toBe(body);
+    expect(view.textContent).toContain('Updated');
+  });
+
   it('supports field-level view mode in a normal form while keeping other fields editable', async () => {
     const element = renderFixture(`
       <template id="mixed_field_view_mode">

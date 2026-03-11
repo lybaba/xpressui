@@ -3851,7 +3851,6 @@ export class FormUI extends HTMLElement {
       return;
     }
 
-    selectionElement.innerHTML = "";
     const choices = fieldConfig.choices || [];
     const selectedValues = this.getChoiceSelectionItems(fieldConfig, value);
     const selectedMap = selectedValues.reduce((accumulator, item) => {
@@ -3865,7 +3864,14 @@ export class FormUI extends HTMLElement {
     const limitReached =
       fieldConfig.type === CHECKBOXES_TYPE && selectionLimit > 0 && selectedValues.length >= selectionLimit;
 
-    const grid = document.createElement("div");
+    const grid = this.ensureSelectionChild(
+      selectionElement,
+      `[data-choice-list-grid="${fieldConfig.name}"]`,
+      "div",
+      "",
+      "data-choice-list-grid",
+      fieldConfig.name,
+    ) as HTMLDivElement;
     grid.style.display = "grid";
     grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
     grid.style.gap = "10px";
@@ -3875,7 +3881,11 @@ export class FormUI extends HTMLElement {
       const selected = Boolean(selectedMap[optionValue]);
       const disabled = !selected && limitReached;
 
-      const card = document.createElement("div");
+      let card = grid.querySelector(`[data-choice-option-value="${optionValue}"]`) as HTMLDivElement | null;
+      if (!card) {
+        card = document.createElement("div");
+        grid.appendChild(card);
+      }
       card.setAttribute("data-choice-option-action", "toggle");
       card.setAttribute("data-choice-option-value", optionValue);
       card.setAttribute("data-selected", selected ? "true" : "false");
@@ -3890,32 +3900,51 @@ export class FormUI extends HTMLElement {
       card.style.boxShadow = selected ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "";
       card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "rgba(248, 250, 252, 0.82)";
 
-      const title = document.createElement("div");
+      let title = card.querySelector(`[data-choice-option-title="${optionValue}"]`) as HTMLDivElement | null;
+      if (!title) {
+        title = document.createElement("div");
+        title.setAttribute("data-choice-option-title", optionValue);
+        card.appendChild(title);
+      }
       title.className = "text-sm font-semibold";
       title.style.overflowWrap = "anywhere";
       title.textContent = String(choice.label ?? optionValue);
-      card.appendChild(title);
 
+      let description = card.querySelector(
+        `[data-choice-option-description="${optionValue}"]`,
+      ) as HTMLDivElement | null;
       if (choice.desc) {
-        const description = document.createElement("div");
+        if (!description) {
+          description = document.createElement("div");
+          description.setAttribute("data-choice-option-description", optionValue);
+          card.appendChild(description);
+        }
         description.className = "mt-1 text-xs opacity-80";
         description.style.overflowWrap = "anywhere";
         description.textContent = choice.desc;
-        card.appendChild(description);
+      } else {
+        description?.remove();
       }
 
-      const footer = document.createElement("div");
+      let footer = card.querySelector(`[data-choice-option-footer="${optionValue}"]`) as HTMLDivElement | null;
+      if (!footer) {
+        footer = document.createElement("div");
+        footer.setAttribute("data-choice-option-footer", optionValue);
+        card.appendChild(footer);
+      }
       footer.className = "mt-2 text-xs opacity-70";
       footer.textContent = selected
         ? "Selected"
         : disabled
           ? "Selection limit reached"
           : (fieldConfig.type === RADIO_BUTTONS_TYPE ? "Click to choose" : "Click to toggle");
-      card.appendChild(footer);
-      grid.appendChild(card);
     });
-
-    selectionElement.appendChild(grid);
+    Array.from(grid.querySelectorAll("[data-choice-option-value]")).forEach((node) => {
+      const optionValue = (node as HTMLElement).getAttribute("data-choice-option-value");
+      if (optionValue && !choices.some((choice) => String(choice.value ?? choice.id ?? choice.label ?? "") === optionValue)) {
+        node.remove();
+      }
+    });
   }
 
   renderDocumentScanSelection = (

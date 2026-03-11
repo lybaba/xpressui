@@ -17,11 +17,13 @@ import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-s
 import {
   APPROVAL_STATE_TYPE,
   CAMERA_PHOTO_TYPE,
+  CHECKBOXES_TYPE,
   CHECKBOX_TYPE,
   DOCUMENT_SCAN_TYPE,
   getHtmlInputType,
   isFileFieldType,
   QR_SCAN_TYPE,
+  RADIO_BUTTONS_TYPE,
   PRODUCT_LIST_TYPE,
   IMAGE_GALLERY_TYPE,
   QUIZ_TYPE,
@@ -269,6 +271,32 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </label>`;
+  }
+
+  if (field.type === RADIO_BUTTONS_TYPE || field.type === CHECKBOXES_TYPE) {
+    const choicesAttr = field.choices?.length
+      ? ` data-choices="${escapeHtml(JSON.stringify(field.choices))}"`
+      : '';
+    const selectedValues = Array.isArray(rawFieldValue)
+      ? rawFieldValue.map((entry) => String(entry))
+      : rawFieldValue === undefined || rawFieldValue === null || rawFieldValue === ''
+        ? []
+        : [String(rawFieldValue)];
+    const choiceListMarkup = (field.choices || [])
+      .map((choice) => {
+        const optionValue = String(choice.value ?? choice.id ?? choice.label ?? '');
+        const selected = selectedValues.includes(optionValue);
+        return `<div class="rounded border p-3 transition-all" data-choice-option-action="toggle" data-choice-option-value="${escapeHtml(optionValue)}" data-selected="${selected ? 'true' : 'false'}" data-disabled="false" role="button" tabindex="0" aria-pressed="${selected ? 'true' : 'false'}"><div class="text-sm font-semibold" data-choice-option-title="${escapeHtml(optionValue)}">${escapeHtml(String(choice.label ?? optionValue))}</div>${choice.desc ? `<div class="mt-1 text-xs opacity-80" data-choice-option-description="${escapeHtml(optionValue)}">${escapeHtml(String(choice.desc))}</div>` : ''}<div class="mt-2 text-xs opacity-70" data-choice-option-footer="${escapeHtml(optionValue)}">${selected ? 'Selected' : field.type === RADIO_BUTTONS_TYPE ? 'Click to choose' : 'Click to toggle'}</div></div>`;
+      })
+      .join('');
+
+    return `<div class="form-control w-full">
+    <div class="label"><label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label></div>
+    <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${choicesAttr}${multipleAttr}${minNumOfChoicesAttr}${maxNumOfChoicesAttr}${includeInSubmitAttr}${viewTemplateAttr}${viewTemplateUnsafeAttr}${viewModeAttr}${conditionalAttrs} />
+    <div class="mt-2 grid gap-3" id="${escapeHtml(field.name)}_selection" data-choice-list-zone="${escapeHtml(field.name)}"><div class="grid gap-3" data-choice-list-grid="${escapeHtml(field.name)}" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));">${choiceListMarkup}</div></div>
+    ${helpText}
+    <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
+</div>`;
   }
 
   if (field.type === PRODUCT_LIST_TYPE) {

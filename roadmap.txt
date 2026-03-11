@@ -89,6 +89,7 @@ Major capabilities already implemented in the codebase:
   - image-gallery and quiz now preserve their catalog and selected-state panels while replacing only the dynamic list content
   - image-gallery and quiz selected-item rows now also stay stable while counts and adjacent selections change, reducing more churn inside already-preserved shells
   - open-answer quiz fields now ship a textarea shell directly in template markup, and the runtime reuses that shell instead of clearing the zone on first render
+  - radio-buttons and checkboxes now also ship a card-list shell in template markup, and the runtime updates those option cards in place instead of wiping the whole selection zone
   - product-list now keeps card/control shells stable and updates cart state in place while retaining the global cart drawer contract
 
 Current built-in provider families:

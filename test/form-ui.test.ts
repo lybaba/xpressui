@@ -1516,6 +1516,31 @@ describe('FormUI', () => {
     expect(markup).toContain('placeholder="Write your answer"');
   });
 
+  it('renders a choice-list shell directly in template markup', () => {
+    const markup = createTemplateMarkup(
+      createFormConfig({
+        name: 'choice-list-template-demo',
+        title: 'Choice List Template Demo',
+        fields: [
+          {
+            type: 'checkboxes',
+            name: 'interests',
+            label: 'Interests',
+            choices: [
+              { value: 'design', label: 'Design' },
+              { value: 'ops', label: 'Ops' },
+            ],
+          },
+        ],
+      }),
+    );
+
+    expect(markup).toContain('data-choice-list-zone="interests"');
+    expect(markup).toContain('data-choice-list-grid="interests"');
+    expect(markup).toContain('data-choice-option-value="design"');
+    expect(markup).toContain('data-choice-option-title="design"');
+  });
+
   it('preserves quiz shell nodes while updating selected answers', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {
@@ -1566,6 +1591,51 @@ describe('FormUI', () => {
     expect(selection.querySelector('[data-quiz-selection-item="wood"]')).toBe(selectedRow);
     expect(heading.textContent).toBe('Selected Answers (2/2)');
     expect(body.textContent).toContain('Steel');
+  });
+
+  it('preserves choice-list shell nodes while updating selected options', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'choice-list-shell-demo',
+      title: 'Choice List Shell Demo',
+      fields: [
+        {
+          type: 'checkboxes',
+          name: 'interests',
+          label: 'Interests',
+          maxNumOfChoices: 2,
+          choices: [
+            { value: 'design', label: 'Design', desc: 'Systems and layouts' },
+            { value: 'ops', label: 'Ops', desc: 'Delivery and automation' },
+          ] as any,
+        },
+      ],
+    }) as FormUI;
+
+    const selection = element.querySelector('#interests_selection') as HTMLElement;
+    const grid = selection.querySelector('[data-choice-list-grid="interests"]') as HTMLElement;
+    const designCard = selection.querySelector('[data-choice-option-value="design"]') as HTMLElement;
+    const designTitle = selection.querySelector('[data-choice-option-title="design"]') as HTMLElement;
+    const designFooter = selection.querySelector('[data-choice-option-footer="design"]') as HTMLElement;
+    const opsCard = selection.querySelector('[data-choice-option-value="ops"]') as HTMLElement;
+
+    expect(designFooter.textContent).toBe('Click to toggle');
+
+    designCard.click();
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-choice-list-grid="interests"]')).toBe(grid);
+    expect(selection.querySelector('[data-choice-option-value="design"]')).toBe(designCard);
+    expect(selection.querySelector('[data-choice-option-title="design"]')).toBe(designTitle);
+    expect(selection.querySelector('[data-choice-option-footer="design"]')).toBe(designFooter);
+    expect(designFooter.textContent).toBe('Selected');
+
+    opsCard.click();
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-choice-option-value="design"]')).toBe(designCard);
+    expect(designFooter.textContent).toBe('Selected');
+    expect((element.getFieldValue('interests') as string[])).toEqual(['design', 'ops']);
   });
 
   it('validates product-list, image-gallery, and quiz selections with array and text semantics', () => {

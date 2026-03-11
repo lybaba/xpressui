@@ -1874,6 +1874,51 @@ describe('FormUI', () => {
     expect((element.getFieldValue('interests') as string[])).toEqual(['design', 'ops']);
   });
 
+  it('reuses backend choice-list shells instead of creating an extra grid wrapper', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <form id="hydrated_choice_list_form" data-type="contactform" data-name="hydrated_choice_list" data-label="Hydrated Choice List">
+        <div data-type="section" data-name="main" data-label="Main">
+          <input id="interests" name="interests" type="hidden" data-type="checkboxes" data-name="interests" data-label="Interests" data-section-name="main" />
+          <div id="interests_selection" data-choice-list-zone="interests">
+            <article data-choice-option-action="toggle" data-choice-option-value="design">
+              <div data-choice-option-title="design">Design</div>
+              <div data-choice-option-footer="design">Select</div>
+            </article>
+          </div>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(container);
+
+    const element = hydrateFormUI(container, createFormConfig({
+      name: 'hydrated_choice_list',
+      title: 'Hydrated Choice List',
+      fields: [
+        {
+          type: 'checkboxes',
+          name: 'interests',
+          label: 'Interests',
+          choices: [
+            { value: 'design', label: 'Design' },
+          ] as any,
+        },
+      ],
+    })) as FormUI;
+
+    const selection = element.querySelector('#interests_selection') as HTMLElement;
+    const card = element.querySelector('[data-choice-option-value="design"]') as HTMLElement;
+
+    card.click();
+    await flushAsyncWork();
+
+    expect(element.querySelector('#interests_selection')).toBe(selection);
+    expect(element.querySelector('[data-choice-list-grid="interests"]')).toBe(selection);
+    expect(element.querySelectorAll('[data-choice-list-grid="interests"]')).toHaveLength(1);
+    expect(element.querySelector('[data-choice-option-value="design"]')).toBe(card);
+    expect(card.getAttribute('data-selected')).toBe('true');
+  });
+
   it('validates product-list, image-gallery, and quiz selections with array and text semantics', () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {

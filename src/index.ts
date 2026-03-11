@@ -4010,14 +4010,14 @@ export class FormUI extends HTMLElement {
     const limitReached =
       fieldConfig.type === CHECKBOXES_TYPE && selectionLimit > 0 && selectedValues.length >= selectionLimit;
 
-    const grid = this.ensureSelectionChild(
-      selectionElement,
-      `[data-choice-list-grid="${fieldConfig.name}"]`,
-      "div",
-      "",
-      "data-choice-list-grid",
-      fieldConfig.name,
-    ) as HTMLDivElement;
+    const grid =
+      (selectionElement.querySelector(
+        `[data-choice-list-grid="${fieldConfig.name}"]`,
+      ) as HTMLDivElement | null)
+      ?? (selectionElement as HTMLDivElement);
+    if (grid === selectionElement) {
+      grid.setAttribute("data-choice-list-grid", fieldConfig.name);
+    }
     grid.style.display = "grid";
     grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
     grid.style.gap = "10px";

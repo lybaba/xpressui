@@ -74,7 +74,7 @@ export function renderFieldErrorState(options: {
       typeof displayedError === "object" && displayedError && "errorMessage" in (displayedError as Record<string, any>)
         ? String((displayedError as Record<string, any>).errorMessage || "")
         : String(displayedError);
-    errorElement.innerHTML = ruleError ? ruleError : errorMessage;
+    errorElement.textContent = ruleError ? ruleError : errorMessage;
     errorElement.style.display = "block";
     inputElement.classList.add(errorClass);
     options.errors[fieldName] = true;
@@ -82,7 +82,7 @@ export function renderFieldErrorState(options: {
   }
 
   if (options.errors[fieldName]) {
-    errorElement.innerHTML = "";
+    errorElement.textContent = "";
     errorElement.style.display = "none";
     const errorClass = getErrorClass(inputElement);
     inputElement.classList.remove(errorClass);

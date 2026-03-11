@@ -8535,6 +8535,47 @@ describe('FormUI', () => {
     expect((document.querySelector('#slot') as HTMLSelectElement).options.length).toBe(3);
   });
 
+  it('preserves matching select option nodes when remote options refresh', () => {
+    document.body.innerHTML = `
+      <label id="slot-container">
+        <select id="slot"></select>
+      </label>
+    `;
+
+    const runtime = new FormDynamicRuntime({
+      getFieldConfigs: () => [],
+      getRules: () => [],
+      getFieldContainer: () => document.querySelector('#slot-container') as HTMLElement | null,
+      getFieldElement: () => document.querySelector('#slot') as HTMLSelectElement | null,
+      setFieldDisabled: () => {},
+      getFieldValue: () => undefined,
+      clearFieldValue: () => {},
+      setFieldValue: () => {},
+      getFormValues: () => ({}),
+      emitEvent: () => true,
+      getEventContext: () => ({ formConfig: null, submit: undefined }),
+    });
+
+    runtime.populateSelectOptions('slot', [
+      { value: 'morning', label: 'Morning' },
+      { value: 'evening', label: 'Evening' },
+    ]);
+
+    const field = document.querySelector('#slot') as HTMLSelectElement;
+    const morningOption = field.querySelector('option[value="morning"]') as HTMLOptionElement;
+
+    runtime.populateSelectOptions('slot', [
+      { value: 'morning', label: 'Morning Updated' },
+      { value: 'afternoon', label: 'Afternoon' },
+    ]);
+
+    const updatedMorningOption = field.querySelector('option[value="morning"]') as HTMLOptionElement;
+    expect(updatedMorningOption).toBe(morningOption);
+    expect(updatedMorningOption.textContent).toBe('Morning Updated');
+    expect(field.querySelector('option[value="evening"]')).toBeNull();
+    expect(field.options[0].value).toBe('');
+  });
+
   it('exposes active template warnings from the standalone dynamic runtime', () => {
     let values: Record<string, any> = { autoFullName: false, firstName: '' };
     const runtime = new FormDynamicRuntime({

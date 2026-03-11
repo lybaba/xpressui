@@ -560,6 +560,36 @@ export class FormDynamicRuntime {
       .filter((choice: TChoice) => Boolean(choice.value));
   }
 
+  syncSelectOptionChildren(
+    fieldElement: HTMLSelectElement,
+    options: TChoice[],
+  ): void {
+    const desiredOptions = fieldElement.multiple
+      ? options
+      : [{ value: "", label: "" }, ...options];
+    const desiredValues = new Set(desiredOptions.map((choice) => choice.value));
+
+    desiredOptions.forEach((choice, index) => {
+      let option = Array.from(fieldElement.options).find((candidate) => candidate.value === choice.value) || null;
+      if (!option) {
+        option = document.createElement("option");
+      }
+
+      option.value = choice.value;
+      option.textContent = choice.label;
+      const currentOptionAtIndex = fieldElement.options[index] || null;
+      if (currentOptionAtIndex !== option) {
+        fieldElement.insertBefore(option, currentOptionAtIndex);
+      }
+    });
+
+    Array.from(fieldElement.options).forEach((option) => {
+      if (!desiredValues.has(option.value)) {
+        option.remove();
+      }
+    });
+  }
+
   populateSelectOptions(fieldName: string, options: TChoice[], sourceField?: string): void {
     const fieldElement = this.options.getFieldElement(fieldName);
     if (!(fieldElement instanceof HTMLSelectElement)) {
@@ -569,21 +599,7 @@ export class FormDynamicRuntime {
     const currentValue = fieldElement.multiple
       ? Array.from(fieldElement.selectedOptions).map((option) => option.value)
       : fieldElement.value;
-    fieldElement.innerHTML = "";
-
-    if (!fieldElement.multiple) {
-      const emptyOption = document.createElement("option");
-      emptyOption.value = "";
-      emptyOption.textContent = "";
-      fieldElement.appendChild(emptyOption);
-    }
-
-    options.forEach((choice) => {
-      const option = document.createElement("option");
-      option.value = choice.value;
-      option.textContent = choice.label;
-      fieldElement.appendChild(option);
-    });
+    this.syncSelectOptionChildren(fieldElement, options);
 
     if (fieldElement.multiple && Array.isArray(currentValue)) {
       Array.from(fieldElement.options).forEach((option) => {

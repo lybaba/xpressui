@@ -2003,6 +2003,46 @@ export class FormUI extends HTMLElement {
     return getNormalizedProductCartTotal(cartItems);
   }
 
+  createCartGlyph = () => {
+    const icon = document.createElement("span");
+    icon.setAttribute("aria-hidden", "true");
+    icon.style.display = "inline-flex";
+    icon.style.alignItems = "center";
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "12");
+    svg.setAttribute("height", "12");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+
+    const circleLeft = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circleLeft.setAttribute("cx", "9");
+    circleLeft.setAttribute("cy", "20");
+    circleLeft.setAttribute("r", "1");
+    svg.appendChild(circleLeft);
+
+    const circleRight = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circleRight.setAttribute("cx", "18");
+    circleRight.setAttribute("cy", "20");
+    circleRight.setAttribute("r", "1");
+    svg.appendChild(circleRight);
+
+    const basket = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    basket.setAttribute("d", "M5 6h16l-1.5 9h-11z");
+    svg.appendChild(basket);
+
+    const handle = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    handle.setAttribute("d", "M5 6 4 3H2");
+    svg.appendChild(handle);
+
+    icon.appendChild(svg);
+    return icon;
+  }
+
   createCartCountBadge = (value: string) => {
     const badge = document.createElement("span");
     badge.className = "text-xs opacity-70";
@@ -2011,10 +2051,7 @@ export class FormUI extends HTMLElement {
     badge.style.alignItems = "center";
     badge.style.gap = "4px";
 
-    const icon = document.createElement("span");
-    icon.setAttribute("aria-hidden", "true");
-    icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1"></circle><circle cx="18" cy="20" r="1"></circle><path d="M5 6h16l-1.5 9h-11z"></path><path d="M5 6 4 3H2"></path></svg>';
-    badge.appendChild(icon);
+    badge.appendChild(this.createCartGlyph());
 
     const text = document.createElement("span");
     text.textContent = value;
@@ -3119,7 +3156,22 @@ export class FormUI extends HTMLElement {
             quantityPill.style.color = "#ffffff";
             quantityPill.style.fontSize = "11px";
             quantityPill.style.fontWeight = "700";
-            quantityPill.innerHTML = `<span aria-hidden="true">🛒</span><span>${currentQuantity}</span>`;
+            let quantityIcon = quantityPill.querySelector("[data-product-quantity-pill-icon]") as HTMLSpanElement | null;
+            if (!quantityIcon) {
+              quantityIcon = document.createElement("span");
+              quantityIcon.setAttribute("data-product-quantity-pill-icon", product.id);
+              quantityIcon.setAttribute("aria-hidden", "true");
+              quantityPill.appendChild(quantityIcon);
+            }
+            quantityIcon.textContent = "🛒";
+
+            let quantityValue = quantityPill.querySelector("[data-product-quantity-pill-value]") as HTMLSpanElement | null;
+            if (!quantityValue) {
+              quantityValue = document.createElement("span");
+              quantityValue.setAttribute("data-product-quantity-pill-value", product.id);
+              quantityPill.appendChild(quantityValue);
+            }
+            quantityValue.textContent = String(currentQuantity);
 
             let subtotalPill = imageOverlay.querySelector("[data-product-subtotal-pill]") as HTMLSpanElement | null;
             if (!subtotalPill) {
@@ -3224,7 +3276,6 @@ export class FormUI extends HTMLElement {
         controls.setAttribute("data-product-control-row", product.id);
         existingControls.appendChild(controls);
       }
-      controls.innerHTML = "";
       controls.className = "flex items-center gap-1";
       controls.style.display = "flex";
       controls.style.alignItems = "center";
@@ -3257,10 +3308,12 @@ export class FormUI extends HTMLElement {
         return button;
       };
 
+      const activeActions = new Set<string>();
       if (currentQuantity > 0) {
         const decButton = buildAction("dec", "−");
         styleProductActionButton(decButton);
         controls.appendChild(decButton);
+        activeActions.add("dec");
       }
 
       const incButton = buildAction("inc", "+", maxReached);
@@ -3268,6 +3321,14 @@ export class FormUI extends HTMLElement {
       incButton.setAttribute("aria-label", `Add ${product.name}`);
       styleProductActionButton(incButton, { emphasized: true });
       controls.appendChild(incButton);
+      activeActions.add("inc");
+
+      Array.from(controls.querySelectorAll("[data-product-action-slot]")).forEach((node) => {
+        const action = node.getAttribute("data-product-action-slot");
+        if (!action || !activeActions.has(action)) {
+          node.remove();
+        }
+      });
     });
 
     Array.from(productList.querySelectorAll("[data-product-card]")).forEach((node) => {
@@ -3439,8 +3500,13 @@ export class FormUI extends HTMLElement {
         controls.setAttribute("data-image-controls", imageItem.id);
         card.appendChild(controls);
       }
-      controls.innerHTML = "";
       controls.className = "mt-2 flex items-center justify-center";
+      const existingToggle = controls.querySelector(
+        '[data-image-gallery-action="toggle"]',
+      ) as HTMLButtonElement | null;
+      if (existingToggle && existingToggle !== toggleButton) {
+        existingToggle.remove();
+      }
       controls.appendChild(toggleButton);
     });
 
@@ -4111,8 +4177,9 @@ export class FormUI extends HTMLElement {
         "data-document-scan-preview",
         slotRef,
       );
-      previewFrame.innerHTML = "";
       (previewFrame as HTMLElement).style.aspectRatio = "1.586 / 1";
+      let previewImage = previewFrame.querySelector("[data-document-scan-preview-image]") as HTMLImageElement | null;
+      let placeholder = previewFrame.querySelector("[data-document-scan-placeholder]") as HTMLDivElement | null;
 
       if (
         file instanceof File &&
@@ -4125,26 +4192,37 @@ export class FormUI extends HTMLElement {
           ...(this.filePreviewUrls[fieldConfig.name] || []),
           previewUrl,
         ];
-        const image = document.createElement("img");
-        image.src = previewUrl;
-        image.alt = file.name;
-        image.className = "h-full w-full object-cover";
-        image.style.display = "block";
-        image.style.width = "100%";
-        image.style.height = "100%";
-        image.style.objectFit = "cover";
-        previewFrame.appendChild(image);
+        if (!previewImage) {
+          previewImage = document.createElement("img");
+          previewImage.setAttribute("data-document-scan-preview-image", slotRef);
+          previewFrame.appendChild(previewImage);
+        }
+        previewImage.src = previewUrl;
+        previewImage.alt = file.name;
+        previewImage.className = "h-full w-full object-cover";
+        previewImage.style.display = "block";
+        previewImage.style.width = "100%";
+        previewImage.style.height = "100%";
+        previewImage.style.objectFit = "cover";
+        if (placeholder) {
+          placeholder.style.display = "none";
+        }
       } else {
-        const placeholder = this.ensureSelectionChild(
-          previewFrame,
-          `[data-document-scan-placeholder="${slotRef}"]`,
-          "div",
-          "px-2 text-center text-xs opacity-70",
-          "data-document-scan-placeholder",
-          slotRef,
-        );
+        if (!placeholder) {
+          placeholder = this.ensureSelectionChild(
+            previewFrame,
+            `[data-document-scan-placeholder="${slotRef}"]`,
+            "div",
+            "px-2 text-center text-xs opacity-70",
+            "data-document-scan-placeholder",
+            slotRef,
+          ) as HTMLDivElement;
+        }
         placeholder.textContent = file?.name || "No scan yet";
-        previewFrame.appendChild(placeholder);
+        placeholder.style.display = "";
+        if (previewImage) {
+          previewImage.remove();
+        }
       }
 
       const name = this.ensureSelectionChild(

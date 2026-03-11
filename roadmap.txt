@@ -95,6 +95,10 @@ Major capabilities already implemented in the codebase:
   - view/hybrid output fields now keep a stable `data-view-field` shell with a dedicated body node, so output refreshes no longer recreate the whole rendered view container
   - standard upload file rows now also update in place inside the preserved selection body, so adding/removing files no longer rebuilds the whole file list subtree
   - product-list now keeps card/control shells stable and updates cart state in place while retaining the global cart drawer contract
+  - product-list action rows and image-gallery toggle rows now also update in place, so quantity/selection changes no longer clear and rebuild those secondary control containers
+  - document-scan preview frames now keep a stable preview shell and only swap image/placeholder state instead of resetting the whole preview subtree
+  - field validation feedback now writes plain text into stable error nodes instead of injecting raw HTML strings
+  - dynamic remote select fields now reconcile their `<option>` nodes in place, preserving matching options instead of clearing and rebuilding the whole `<select>`
 
 Current built-in provider families:
 - booking / reservation
@@ -141,6 +145,8 @@ Planning principle for the next lots:
 - do not add many new primitives before provider/save-resume/file contracts are tighter
 - prioritize leverage over breadth
 - finish contract-heavy runtime work before expanding showcase/demo surface
+- treat backend/console-rendered HTML as the preferred presentation source whenever a hydration contract exists
+- keep runtime-created HTML as a fallback path for standalone usage, not the default ownership model for field shells
 
 
 Roadmap Phases
@@ -638,24 +644,21 @@ Next Best Task
 
 The most immediately profitable next feature set is:
 
-- finish shrinking runtime-owned HTML on the remaining secondary field renderers
+- keep shrinking runtime-owned HTML so `xpressui` mostly hydrates shells coming from `iakpress-console`
 
 Why:
 - the biggest runtime-heavy shells have now been cleaned across uploads, QR/document scan, image-gallery, quiz, and product-list
 - that makes the remaining DOM-rebuild paths smaller, easier to reason about, and more extractable
 - reducing markup ownership inside `FormUI` directly supports the parallel `iakpress-console` hydration work
-- this is now a higher-leverage cleanup step than introducing more UI breadth
+- `iakpress-console` now treats backend-rendered HTML as the export/preview source of truth, so the next leverage point is to remove more fallback-only shell creation from `xpressui`
 
 Suggested first scope:
-- audit the remaining renderer paths that still call broad `innerHTML = ""` on selection containers, especially:
-  - secondary choice/reference renderers
-  - open-answer / review-adjacent surfaces
-  - any remaining document helper blocks outside the now-stable OCR/MRZ slot nodes
-  - `choice-list`
-  - open-answer/editor-adjacent surfaces
-  - any secondary catalog/detail helpers
-- keep moving from "rebuild subtree" to "preserve shell + update state/body"
-- only after that cleanup, reassess whether some shell/state helpers can be extracted further out of `src/index.ts`
+- audit field families that `iakpress-console` already classifies as `hydration-ready` or `interactive shell`, and prefer existing backend nodes before creating fallback runtime shells
+  - product-list overlays, badges, and secondary controls still created ad hoc inside card bodies
+  - image-gallery / quiz selected-state and helper regions that still create rows/cards when backend shells are absent
+  - view/review helpers whose body is stable but whose wrapper is still runtime-owned
+- keep moving from "runtime creates shell" to "runtime finds shell, mutates state, and only falls back if the shell is missing"
+- after each slice, re-audit which field types are still truly `runtime-heavy` in practice rather than only in fallback mode
 
 Follow-up scope (after current P0 shell cleanup):
 - cross-device resume UX hardening

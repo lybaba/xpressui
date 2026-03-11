@@ -5188,6 +5188,55 @@ describe('FormUI', () => {
     expect(body.textContent).toContain('shell.pdf');
   });
 
+  it('preserves upload file row nodes while standard file selection changes', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'upload-row-shell-form',
+      title: 'Upload Row Shell Form',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+        },
+      ],
+    }) as FormUI;
+    const input = element.querySelector('#attachments') as HTMLInputElement;
+    const firstFile = new File(['a'], 'contract.pdf', { type: 'application/pdf' });
+    const secondFile = new File(['b'], 'invoice.pdf', { type: 'application/pdf' });
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [firstFile],
+    });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    const selection = element.querySelector('#attachments_selection') as HTMLElement;
+    const body = selection.querySelector('[data-upload-selection-body="attachments"]') as HTMLElement;
+    const list = body.querySelector('[data-upload-file-list="attachments"]') as HTMLElement;
+    const row = list.querySelector('[data-upload-file-row="attachments:0"]') as HTMLElement;
+    const details = row.querySelector('[data-upload-file-details="attachments:0"]') as HTMLElement;
+    const name = row.querySelector('[data-upload-file-name="attachments:0"]') as HTMLElement;
+    const remove = row.querySelector('[data-remove-file-index="0"]') as HTMLButtonElement;
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [firstFile, secondFile],
+    });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(body.querySelector('[data-upload-file-list="attachments"]')).toBe(list);
+    expect(list.querySelector('[data-upload-file-row="attachments:0"]')).toBe(row);
+    expect(row.querySelector('[data-upload-file-details="attachments:0"]')).toBe(details);
+    expect(row.querySelector('[data-upload-file-name="attachments:0"]')).toBe(name);
+    expect(row.querySelector('[data-remove-file-index="0"]')).toBe(remove);
+    expect(name.textContent).toBe('contract.pdf');
+    expect(list.querySelector('[data-upload-file-row="attachments:1"]')).not.toBeNull();
+  });
+
   it('rejects invalid dropped files before updating the field value', async () => {
     const container = document.createElement('div');
     const onFileValidationError = vi.fn();

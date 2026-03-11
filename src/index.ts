@@ -4328,17 +4328,19 @@ export class FormUI extends HTMLElement {
     const qrValue = isQrScan && typeof value === "string" && value.length ? value : "";
 
     this.clearFilePreviewUrls(fieldConfig.name);
-    if (!isDocumentScan && !isQrScan) {
-      bodyElement.innerHTML = "";
-    }
 
     selectionElement.classList.toggle("border-primary", isDragActive);
     selectionElement.classList.toggle("bg-base-200", isDragActive);
     titleElement.textContent = this.getUploadSelectionTitle(fieldConfig, selectedFiles, qrValue, fileCountLabel);
     messageElement.textContent = this.getUploadSelectionMessage(fieldConfig, selectedFiles, qrValue);
 
+    let status = bodyElement.querySelector(`[data-upload-status="${fieldConfig.name}"]`) as HTMLDivElement | null;
     if (uploadState) {
-      const status = document.createElement("div");
+      if (!status) {
+        status = document.createElement("div");
+        status.setAttribute("data-upload-status", fieldConfig.name);
+        bodyElement.appendChild(status);
+      }
       status.className = "text-xs font-medium";
       status.textContent =
         uploadState.status === "uploading"
@@ -4353,6 +4355,8 @@ export class FormUI extends HTMLElement {
           : uploadState.status === "complete"
             ? "Upload completed."
             : "Upload failed. Please try again.";
+    } else {
+      status?.remove();
     }
 
     if (isDocumentScan) {
@@ -4368,29 +4372,62 @@ export class FormUI extends HTMLElement {
     }
 
     if (!selectedFiles.length) {
+      bodyElement.querySelector(`[data-upload-file-list="${fieldConfig.name}"]`)?.remove();
       return;
     }
 
-    const list = document.createElement("div");
+    const list = this.ensureSelectionChild(
+      bodyElement,
+      `[data-upload-file-list="${fieldConfig.name}"]`,
+      "div",
+      "space-y-2",
+      "data-upload-file-list",
+      fieldConfig.name,
+    );
     list.className = "space-y-2";
 
     selectedFiles.forEach((file, index) => {
-      const row = document.createElement("div");
+      const rowRef = `${fieldConfig.name}:${index}`;
+      const row = this.ensureSelectionChild(
+        list,
+        `[data-upload-file-row="${rowRef}"]`,
+        "div",
+        "flex items-start justify-between gap-3 rounded border border-base-300 px-3 py-2",
+        "data-upload-file-row",
+        rowRef,
+      );
       row.className = "flex items-start justify-between gap-3 rounded border border-base-300 px-3 py-2";
 
-      const details = document.createElement("div");
+      const details = this.ensureSelectionChild(
+        row,
+        `[data-upload-file-details="${rowRef}"]`,
+        "div",
+        "min-w-0 flex-1",
+        "data-upload-file-details",
+        rowRef,
+      );
       details.className = "min-w-0 flex-1";
 
-      const name = document.createElement("div");
+      let name = details.querySelector(`[data-upload-file-name="${rowRef}"]`) as HTMLDivElement | null;
+      if (!name) {
+        name = document.createElement("div");
+        name.setAttribute("data-upload-file-name", rowRef);
+        details.appendChild(name);
+      }
       name.className = "text-sm";
       name.textContent = file?.name || "";
-      details.appendChild(name);
 
+      let meta = details.querySelector(`[data-upload-file-size="${rowRef}"]`) as HTMLDivElement | null;
       if (typeof file?.size === "number") {
-        const meta = document.createElement("div");
+        if (!meta) {
+          meta = document.createElement("div");
+          meta.setAttribute("data-upload-file-size", rowRef);
+          details.appendChild(meta);
+        }
         meta.className = "text-xs opacity-70";
         meta.textContent = `${Math.max(1, Math.round(file.size / 1024))} KB`;
-        details.appendChild(meta);
+      } else {
+        meta?.remove();
       }
 
       if (
@@ -4404,7 +4441,12 @@ export class FormUI extends HTMLElement {
           ...(this.filePreviewUrls[fieldConfig.name] || []),
           previewUrl,
         ];
-        const image = document.createElement("img");
+        let image = details.querySelector(`[data-upload-file-preview="${rowRef}"]`) as HTMLImageElement | null;
+        if (!image) {
+          image = document.createElement("img");
+          image.setAttribute("data-upload-file-preview", rowRef);
+          details.appendChild(image);
+        }
         image.src = previewUrl;
         image.alt = file.name;
         image.className = "mt-2 h-20 w-20 rounded object-cover";
@@ -4415,21 +4457,26 @@ export class FormUI extends HTMLElement {
         image.style.borderRadius = "8px";
         image.style.objectFit = "cover";
         image.style.flexShrink = "0";
-        details.appendChild(image);
+      } else {
+        details.querySelector(`[data-upload-file-preview="${rowRef}"]`)?.remove();
       }
 
-      const removeButton = document.createElement("button");
-      removeButton.type = "button";
+      let removeButton = row.querySelector(`[data-remove-file-index="${index}"]`) as HTMLButtonElement | null;
+      if (!removeButton) {
+        removeButton = document.createElement("button");
+        removeButton.type = "button";
+        row.appendChild(removeButton);
+      }
       removeButton.className = "btn btn-xs btn-ghost";
       removeButton.textContent = "Remove";
       removeButton.setAttribute("data-remove-file-index", String(index));
-
-      row.appendChild(details);
-      row.appendChild(removeButton);
-      list.appendChild(row);
     });
-
-    bodyElement.appendChild(list);
+    Array.from(list.querySelectorAll("[data-upload-file-row]")).forEach((node) => {
+      const rowRef = (node as HTMLElement).getAttribute("data-upload-file-row");
+      if (rowRef && !selectedFiles.some((_, index) => `${fieldConfig.name}:${index}` === rowRef)) {
+        node.remove();
+      }
+    });
   }
 
   ensureUploadSelectionTextNode = (

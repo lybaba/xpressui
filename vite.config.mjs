@@ -5,11 +5,12 @@ export default defineConfig({
   build: {
     copyPublicDir: false,
     lib: {
-      // Could also be a dictionary or array of multiple entry points
-      entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+      entry: {
+        xpressui: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+        hydrate: fileURLToPath(new URL('./src/hydrate.ts', import.meta.url)),
+      },
       name: 'xpressui',
-      // the proper extensions will be added
-      fileName: 'xpressui',
+      fileName: (_format, entryName) => entryName,
     },
   },
 })

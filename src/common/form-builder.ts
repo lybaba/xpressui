@@ -1,19 +1,9 @@
 import { CUSTOM_SECTION } from './Constants';
 import TFieldConfig from './TFieldConfig';
-import TFormConfig, {
-  CONTACTFORM_TYPE,
-  TFormNavigationLabels,
-  TFormProviderRequest,
-  TFormRule,
-  TFormStepUiConfig,
-  TFormValidationConfig,
-  TFormStorageConfig,
-  TFormSubmitRequest,
-} from './TFormConfig';
-import { generateRuntimeId } from './id';
-import type { TFormRenderMode } from '../ui/form-ui.types';
-import { createSubmitRequestFromProvider } from './provider-registry';
+import TFormConfig from './TFormConfig';
 import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-schema';
+import { createFormConfig, TSimpleFieldInput, TSimpleFormInput } from './form-config-factory';
+import { hydrateFormUI } from './form-hydrate';
 import {
   APPROVAL_STATE_TYPE,
   CAMERA_PHOTO_TYPE,
@@ -33,30 +23,6 @@ import {
   TEXTAREA_TYPE,
   UPLOAD_IMAGE_TYPE,
 } from './field';
-
-export type TSimpleFieldInput = Partial<TFieldConfig> & {
-  type: string;
-  name: string;
-  label: string;
-};
-
-export type TSimpleFormInput = {
-  name: string;
-  title?: string;
-  type?: string;
-  mode?: TFormRenderMode;
-  fields: TSimpleFieldInput[];
-  submit?: TFormSubmitRequest;
-  provider?: TFormProviderRequest;
-  storage?: TFormStorageConfig;
-  workflowStepTargets?: Record<string, string>;
-  navigationLabels?: TFormNavigationLabels;
-  stepUi?: TFormStepUiConfig;
-  rules?: TFormRule[];
-  validation?: TFormValidationConfig;
-  sectionName?: string;
-  sectionLabel?: string;
-};
 
 export type TFormSnippetOptions = {
   containerSelector?: string;
@@ -392,52 +358,6 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 </label>`;
 }
 
-export function createFormConfig(input: TSimpleFormInput): TFormConfig {
-  const sectionName = input.sectionName || 'main';
-  const sectionLabel = input.sectionLabel || 'Main';
-  const fields = input.fields.map((field) => ({ ...field }));
-  const provider = input.provider;
-  const submit = input.submit || (provider
-    ? createSubmitRequestFromProvider(provider)
-    : undefined);
-
-  return validatePublicFormConfig({
-    version: PUBLIC_FORM_SCHEMA_VERSION,
-    id: generateRuntimeId(),
-    uid: generateRuntimeId(),
-    timestamp: Math.floor(Date.now() / 1000),
-    type: input.type || CONTACTFORM_TYPE,
-    mode: input.mode,
-    name: input.name,
-    title: input.title || input.name,
-    sections: {
-      [CUSTOM_SECTION]: [
-        {
-          type: 'section',
-          name: sectionName,
-          label: sectionLabel,
-        },
-      ],
-      [sectionName]: fields,
-    },
-    stepSections: [
-      {
-        type: 'section',
-        name: sectionName,
-        label: sectionLabel,
-      },
-    ],
-    workflowStepTargets: 'workflowStepTargets' in input ? (input as any).workflowStepTargets : undefined,
-    submit,
-    provider,
-    storage: input.storage,
-    validation: input.validation,
-    navigationLabels: input.navigationLabels,
-    stepUi: input.stepUi,
-    rules: input.rules,
-  });
-}
-
 export function createTemplateMarkup(
   config: TFormConfig,
   templateName: string = config.name
@@ -738,42 +658,6 @@ export function mountFormUI(
         ...storageConfig,
       };
     }
-  }
-
-  return element;
-}
-
-export function hydrateFormUI(
-  container: Element,
-  input: TSimpleFormInput | TFormConfig
-): HTMLElement | null {
-  const config = 'fields' in input ? createFormConfig(input) : validatePublicFormConfig(input);
-  const existingForm = container.querySelector('form') as HTMLFormElement | null;
-
-  if (!existingForm) {
-    return null;
-  }
-
-  const element = document.createElement('form-ui') as HTMLElement & {
-    initialize?: () => void;
-    initialized?: boolean;
-    __xpressuiHydrationConfig?: TFormConfig;
-  };
-
-  if (config.mode) {
-    element.setAttribute('mode', config.mode);
-  }
-  element.setAttribute('hydrate-existing', 'true');
-  element.__xpressuiHydrationConfig = config;
-  existingForm.replaceWith(element);
-  element.appendChild(existingForm);
-
-  if (
-    'initialize' in element &&
-    typeof element.initialize === 'function' &&
-    !element.initialized
-  ) {
-    element.initialize();
   }
 
   return element;

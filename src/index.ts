@@ -1959,6 +1959,37 @@ export class FormUI extends HTMLElement {
     return getNormalizedProductCartTotal(cartItems);
   }
 
+  createCartCountBadge = (value: string) => {
+    const badge = document.createElement("span");
+    badge.className = "text-xs opacity-70";
+    badge.style.lineHeight = "1.2";
+    badge.style.display = "inline-flex";
+    badge.style.alignItems = "center";
+    badge.style.gap = "4px";
+
+    const icon = document.createElement("span");
+    icon.setAttribute("aria-hidden", "true");
+    icon.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1"></circle><circle cx="18" cy="20" r="1"></circle><path d="M5 6h16l-1.5 9h-11z"></path><path d="M5 6 4 3H2"></path></svg>';
+    badge.appendChild(icon);
+
+    const text = document.createElement("span");
+    text.textContent = value;
+    badge.appendChild(text);
+
+    return badge;
+  }
+
+  updateProductListInlineTotal = (fieldConfig: TFieldConfig, value: any) => {
+    const totalNode = this.querySelector(`[data-product-list-total="${fieldConfig.name}"]`) as HTMLElement | null;
+    if (!totalNode) {
+      return;
+    }
+
+    const cartItems = this.getProductCartItems(value);
+    const totalAmount = this.getProductCartTotal(cartItems);
+    totalNode.textContent = totalAmount > 0 ? `${totalAmount.toFixed(2)}€` : "";
+  }
+
   getProductCartEntries = (): Array<{ fieldName: string; item: TProductCartItem }> => {
     return Object.values(this.engine.getFields())
       .filter((fieldConfig) => this.isProductListField(fieldConfig))
@@ -2303,232 +2334,20 @@ export class FormUI extends HTMLElement {
   }
 
   renderProductListGlobalCart = () => {
-    const hasProductListField = Object.values(this.engine.getFields()).some((fieldConfig) =>
-      this.isProductListField(fieldConfig),
-    );
-    const trigger = hasProductListField ? this.ensureProductCartTrigger() : null;
-    const cart = this.ensureProductListGlobalCart();
-    if (!cart || !trigger) {
-      return;
+    Object.values(this.engine.getFields())
+      .filter((fieldConfig) => this.isProductListField(fieldConfig))
+      .forEach((fieldConfig) => {
+        this.updateProductListInlineTotal(fieldConfig, this.getFieldValue(fieldConfig.name));
+      });
+
+    const trigger = this.querySelector("[data-product-cart-trigger]") as HTMLElement | null;
+    if (trigger) {
+      trigger.remove();
     }
-
-    const entries = this.getProductCartEntries();
-    const totalItems = entries.reduce((sum, entry) => sum + entry.item.quantity, 0);
-    const totalAmount = entries.reduce((sum, entry) => {
-      const unit = entry.item.discount_price ?? entry.item.sale_price ?? 0;
-      return sum + unit * entry.item.quantity;
-    }, 0);
-    trigger.innerHTML = "";
-    if (cart.id) {
-      trigger.setAttribute("aria-controls", cart.id);
+    if (this.productCartOverlay) {
+      this.productCartOverlay.remove();
+      this.productCartOverlay = null;
     }
-    const triggerIcon = document.createElement("span");
-    triggerIcon.setAttribute("aria-hidden", "true");
-    triggerIcon.textContent = "🛒";
-    const triggerLabel = document.createElement("span");
-    triggerLabel.className = "sr-only";
-    triggerLabel.textContent = "Open cart";
-    const triggerCount = document.createElement("span");
-    triggerCount.setAttribute("data-product-cart-summary", "true");
-    triggerCount.textContent = String(totalItems);
-    triggerCount.style.position = "absolute";
-    triggerCount.style.top = "-5px";
-    triggerCount.style.right = "-5px";
-    triggerCount.style.minWidth = "20px";
-    triggerCount.style.height = "20px";
-    triggerCount.style.borderRadius = "999px";
-    triggerCount.style.display = "inline-flex";
-    triggerCount.style.alignItems = "center";
-    triggerCount.style.justifyContent = "center";
-    triggerCount.style.fontSize = "11px";
-    triggerCount.style.fontWeight = "700";
-    triggerCount.style.background = "#0f172a";
-    triggerCount.style.color = "#ffffff";
-    const triggerTotal = document.createElement("span");
-    triggerTotal.setAttribute("data-product-cart-total-badge", "true");
-    triggerTotal.textContent = `${totalAmount.toFixed(2)}€`;
-    triggerTotal.style.position = "absolute";
-    triggerTotal.style.bottom = "-8px";
-    triggerTotal.style.left = "50%";
-    triggerTotal.style.transform = "translateX(-50%)";
-    triggerTotal.style.padding = "2px 8px";
-    triggerTotal.style.borderRadius = "999px";
-    triggerTotal.style.fontSize = "10px";
-    triggerTotal.style.fontWeight = "700";
-    triggerTotal.style.background = "#ffffff";
-    triggerTotal.style.color = "#0f172a";
-    triggerTotal.style.border = "1px solid rgba(15, 23, 42, 0.2)";
-    trigger.style.position = "fixed";
-    trigger.appendChild(triggerIcon);
-    trigger.appendChild(triggerLabel);
-    trigger.appendChild(triggerCount);
-    trigger.appendChild(triggerTotal);
-
-    cart.innerHTML = "";
-    const header = document.createElement("div");
-    header.className = "flex items-center justify-between";
-    const heading = document.createElement("div");
-    heading.className = "grid gap-1";
-    const headingIcon = document.createElement("span");
-    headingIcon.setAttribute("aria-hidden", "true");
-    headingIcon.textContent = "🛒";
-    headingIcon.style.display = "none";
-    const headingEyebrow = document.createElement("span");
-    headingEyebrow.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
-    headingEyebrow.style.opacity = "0.64";
-    headingEyebrow.textContent = "Current cart";
-    const headingText = document.createElement("span");
-    headingText.textContent = `${totalAmount.toFixed(2)}€ total`;
-    headingText.style.fontSize = "16px";
-    heading.appendChild(headingEyebrow);
-    heading.appendChild(headingText);
-    const closeButton = document.createElement("button");
-    closeButton.type = "button";
-    closeButton.className = "btn";
-    closeButton.textContent = "×";
-    closeButton.setAttribute("data-product-cart-close", "true");
-    closeButton.style.width = "34px";
-    closeButton.style.minWidth = "34px";
-    closeButton.style.height = "34px";
-    closeButton.style.padding = "0";
-    closeButton.style.display = "inline-flex";
-    closeButton.style.alignItems = "center";
-    closeButton.style.justifyContent = "center";
-    closeButton.style.borderRadius = "999px";
-    closeButton.style.border = "1px solid rgba(148, 163, 184, 0.4)";
-    closeButton.style.background = "#f8fafc";
-    closeButton.style.color = "#0f172a";
-    closeButton.style.boxShadow = "none";
-    closeButton.setAttribute("aria-label", "Close cart");
-    header.appendChild(heading);
-    header.appendChild(closeButton);
-    cart.appendChild(header);
-
-    if (!entries.length) {
-      const empty = document.createElement("div");
-      empty.className = "grid gap-1 rounded border border-base-300 px-3 py-3 text-xs";
-      empty.style.background = "rgba(248, 250, 252, 0.82)";
-      const emptyTitle = document.createElement("div");
-      emptyTitle.className = "font-semibold";
-      emptyTitle.textContent = "Cart is empty";
-      const emptyHint = document.createElement("div");
-      emptyHint.style.opacity = "0.72";
-      emptyHint.textContent = "Add products from the catalog to build the order.";
-      empty.appendChild(emptyTitle);
-      empty.appendChild(emptyHint);
-      cart.appendChild(empty);
-      const totalBlock = document.createElement("div");
-      totalBlock.className = "text-sm font-semibold";
-      totalBlock.textContent = "Total: 0.00€";
-      cart.appendChild(totalBlock);
-      return;
-    }
-
-    const list = document.createElement("div");
-    list.style.display = "grid";
-    list.style.gap = "8px";
-    list.style.maxHeight = "calc(100vh - 170px)";
-    list.style.overflowY = "auto";
-    entries.forEach(({ fieldName, item }) => {
-      const row = document.createElement("div");
-      row.className = "grid gap-2 rounded border border-base-300 px-2 py-2";
-      row.setAttribute("data-product-cart-item", `${fieldName}:${item.id}`);
-      row.style.background = "rgba(248, 250, 252, 0.82)";
-      row.style.padding = "10px";
-
-      const top = document.createElement("div");
-      top.className = "flex items-center gap-2";
-      if (item.image_thumbnail || item.image_medium) {
-        const thumb = document.createElement("img");
-        thumb.src = item.image_thumbnail || item.image_medium;
-        thumb.alt = item.name;
-        thumb.style.width = "52px";
-        thumb.style.height = "52px";
-        thumb.style.objectFit = "cover";
-        thumb.style.borderRadius = "8px";
-        thumb.style.flexShrink = "0";
-        top.appendChild(thumb);
-      }
-
-      const details = document.createElement("div");
-      details.className = "min-w-0 flex-1";
-      const name = document.createElement("div");
-      name.className = "text-sm font-medium";
-      name.style.overflowWrap = "anywhere";
-      name.style.wordBreak = "break-word";
-      name.textContent = item.name;
-      details.appendChild(name);
-
-      const meta = document.createElement("div");
-      meta.className = "text-xs opacity-70";
-      const unitPrice = item.discount_price ?? item.sale_price ?? 0;
-      meta.textContent = `Unit ${unitPrice.toFixed(2)}€`;
-      details.appendChild(meta);
-      const subtotal = document.createElement("div");
-      subtotal.className = "text-xs font-semibold";
-      subtotal.textContent = `Subtotal: ${(unitPrice * item.quantity).toFixed(2)}€`;
-      details.appendChild(subtotal);
-      top.appendChild(details);
-
-      const controls = document.createElement("div");
-      controls.className = "flex items-center gap-1";
-      controls.style.justifyContent = "flex-end";
-
-      const createControl = (action: "inc" | "dec" | "remove", label: string) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "btn";
-        button.textContent = label;
-        button.setAttribute("data-product-cart-action", action);
-        button.setAttribute("data-product-field", fieldName);
-        button.setAttribute("data-product-id", item.id);
-        button.setAttribute("aria-label", `${action} ${item.name}`);
-        button.style.width = action === "remove" ? "32px" : "34px";
-        button.style.minWidth = action === "remove" ? "32px" : "34px";
-        button.style.height = "34px";
-        button.style.padding = "0";
-        button.style.display = "inline-flex";
-        button.style.alignItems = "center";
-        button.style.justifyContent = "center";
-        button.style.borderRadius = "999px";
-        button.style.fontSize = action === "remove" ? "16px" : "14px";
-        button.style.fontWeight = "700";
-        button.style.lineHeight = "1";
-        button.style.boxShadow = "none";
-        button.style.border = action === "remove"
-          ? "1px solid transparent"
-          : "1px solid rgba(148, 163, 184, 0.4)";
-        button.style.background = action === "inc" ? "#0f172a" : (action === "remove" ? "transparent" : "#f8fafc");
-        button.style.color = action === "inc" ? "#ffffff" : "#0f172a";
-        if (action === "inc" && typeof item.maxNumOfChoices === "number" && item.quantity >= item.maxNumOfChoices) {
-          button.disabled = true;
-        }
-        return button;
-      };
-
-      controls.appendChild(createControl("dec", "−"));
-      controls.appendChild(createControl("inc", "+"));
-      controls.appendChild(createControl("remove", "×"));
-
-      const footer = document.createElement("div");
-      footer.className = "flex items-center justify-between gap-2";
-
-      const qtyText = document.createElement("div");
-      qtyText.className = "text-xs opacity-70";
-      qtyText.textContent = `In cart: ${item.quantity}`;
-      footer.appendChild(qtyText);
-      footer.appendChild(controls);
-
-      row.appendChild(top);
-      row.appendChild(footer);
-      list.appendChild(row);
-    });
-    cart.appendChild(list);
-
-    const totalBlock = document.createElement("div");
-    totalBlock.className = "text-sm font-semibold";
-    totalBlock.textContent = `Total: ${totalAmount.toFixed(2)}€`;
-    cart.appendChild(totalBlock);
   }
 
   bindProductListGlobalCartEvents = () => {
@@ -2877,21 +2696,22 @@ export class FormUI extends HTMLElement {
     productList.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
     productList.style.gap = "10px";
     productList.style.marginBottom = "14px";
+    productList.style.alignItems = "start";
 
     const styleProductActionButton = (
       button: HTMLButtonElement,
       options: { emphasized?: boolean; ghost?: boolean } = {},
     ) => {
       const { emphasized = false, ghost = false } = options;
-      button.style.width = "36px";
-      button.style.minWidth = "36px";
-      button.style.height = "36px";
+      button.style.width = "30px";
+      button.style.minWidth = "30px";
+      button.style.height = "30px";
       button.style.padding = "0";
       button.style.display = "inline-flex";
       button.style.alignItems = "center";
       button.style.justifyContent = "center";
       button.style.borderRadius = "999px";
-      button.style.fontSize = "14px";
+      button.style.fontSize = "13px";
       button.style.fontWeight = "700";
       button.style.lineHeight = "1";
       button.style.boxShadow = "none";
@@ -2903,6 +2723,8 @@ export class FormUI extends HTMLElement {
     products.forEach((product) => {
       const currentQuantity = cartMap[product.id] || 0;
       const maxReached = typeof product.maxNumOfChoices === "number" && currentQuantity >= product.maxNumOfChoices;
+      const unitPrice = product.discount_price ?? product.sale_price ?? 0;
+      const subtotalAmount = unitPrice * currentQuantity;
 
       const card = document.createElement("div");
       card.setAttribute("data-product-open-gallery", product.id);
@@ -2911,38 +2733,112 @@ export class FormUI extends HTMLElement {
       card.style.cursor = "pointer";
       card.style.borderColor = currentQuantity > 0 ? "rgb(59 130 246)" : "";
       card.style.boxShadow = currentQuantity > 0 ? "0 0 0 2px rgba(59, 130, 246, 0.12)" : "";
-      card.style.background = currentQuantity > 0 ? "rgba(59, 130, 246, 0.04)" : "rgba(248, 250, 252, 0.82)";
+      card.style.background = currentQuantity > 0 ? "rgba(59, 130, 246, 0.05)" : "rgba(248, 250, 252, 0.84)";
       card.style.display = "grid";
-      card.style.gridTemplateRows = "auto auto auto 1fr";
+      card.style.gridTemplateRows = "auto auto auto";
+      card.style.padding = "10px";
+      card.style.justifyItems = "center";
+      card.style.borderRadius = "16px";
 
       const previewSource = product.image_medium || product.image_thumbnail;
       if (previewSource) {
+        const thumbFrame = document.createElement("div");
+        thumbFrame.style.width = "100%";
+        thumbFrame.style.aspectRatio = "4 / 3";
+        thumbFrame.style.maxHeight = "164px";
+        thumbFrame.style.position = "relative";
+        thumbFrame.style.display = "flex";
+        thumbFrame.style.alignItems = "center";
+        thumbFrame.style.justifyContent = "center";
+        thumbFrame.style.borderRadius = "12px";
+        thumbFrame.style.background = "rgba(255,255,255,0.72)";
+        thumbFrame.style.overflow = "hidden";
+
         const thumb = document.createElement("img");
         thumb.src = previewSource;
         thumb.alt = product.name;
         thumb.style.width = "100%";
-        thumb.style.height = "88px";
+        thumb.style.height = "100%";
         thumb.style.objectFit = "cover";
-        thumb.style.borderRadius = "8px";
-        card.appendChild(thumb);
+        thumb.style.objectPosition = "center center";
+        thumbFrame.appendChild(thumb);
+
+        if (currentQuantity > 0) {
+          const imageOverlay = document.createElement("div");
+          imageOverlay.style.position = "absolute";
+          imageOverlay.style.left = "0";
+          imageOverlay.style.right = "0";
+          imageOverlay.style.bottom = "0";
+          imageOverlay.style.display = "flex";
+          imageOverlay.style.justifyContent = "space-between";
+          imageOverlay.style.alignItems = "center";
+          imageOverlay.style.gap = "8px";
+          imageOverlay.style.padding = "10px";
+          imageOverlay.style.background = "linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0.74) 100%)";
+
+          const quantityPill = document.createElement("span");
+          quantityPill.style.display = "inline-flex";
+          quantityPill.style.alignItems = "center";
+          quantityPill.style.gap = "4px";
+          quantityPill.style.padding = "4px 8px";
+          quantityPill.style.borderRadius = "999px";
+          quantityPill.style.background = "rgba(255,255,255,0.16)";
+          quantityPill.style.color = "#ffffff";
+          quantityPill.style.fontSize = "11px";
+          quantityPill.style.fontWeight = "700";
+          quantityPill.innerHTML = `<span aria-hidden="true">🛒</span><span>${currentQuantity}</span>`;
+
+          const subtotalPill = document.createElement("span");
+          subtotalPill.style.display = "inline-flex";
+          subtotalPill.style.alignItems = "center";
+          subtotalPill.style.padding = "4px 8px";
+          subtotalPill.style.borderRadius = "999px";
+          subtotalPill.style.background = "rgba(15,23,42,0.42)";
+          subtotalPill.style.color = "#ffffff";
+          subtotalPill.style.fontSize = "11px";
+          subtotalPill.style.fontWeight = "700";
+          subtotalPill.textContent = `${subtotalAmount.toFixed(2)}€`;
+
+          imageOverlay.appendChild(quantityPill);
+          imageOverlay.appendChild(subtotalPill);
+          thumbFrame.appendChild(imageOverlay);
+        }
+        card.appendChild(thumbFrame);
       }
 
       const title = document.createElement("div");
       title.className = "mt-2 text-sm font-semibold";
-      title.style.overflowWrap = "anywhere";
-      title.style.wordBreak = "break-word";
+      title.style.width = "100%";
+      title.style.overflow = "hidden";
+      title.style.textOverflow = "ellipsis";
+      title.style.whiteSpace = "nowrap";
       title.style.lineHeight = "1.2";
+      title.style.textAlign = "center";
       title.textContent = product.name;
       card.appendChild(title);
 
+      const metaRow = document.createElement("div");
+      metaRow.className = "mt-1 flex flex-col items-center gap-2";
+      metaRow.style.width = "100%";
+      metaRow.style.alignItems = "center";
+      metaRow.style.justifyItems = "center";
+
+      const metaText = document.createElement("div");
+      metaText.className = "min-w-0 text-xs";
+      metaText.style.display = "grid";
+      metaText.style.gap = "1px";
+      metaText.style.textAlign = "center";
+      metaText.style.justifyItems = "center";
+
       const pricing = document.createElement("div");
-      pricing.className = "mt-1 text-xs";
+      pricing.className = "text-xs";
       pricing.style.display = "flex";
       pricing.style.alignItems = "baseline";
-      pricing.style.gap = "6px";
+      pricing.style.justifyContent = "center";
+      pricing.style.gap = "4px";
       const primaryPrice = document.createElement("span");
       primaryPrice.className = "font-semibold";
-      primaryPrice.style.fontSize = "14px";
+      primaryPrice.style.fontSize = "13px";
       primaryPrice.style.overflowWrap = "anywhere";
       primaryPrice.textContent =
         product.discount_price !== null
@@ -2951,34 +2847,25 @@ export class FormUI extends HTMLElement {
             ? `${product.sale_price.toFixed(2)}€`
             : "Price on request";
       pricing.appendChild(primaryPrice);
-      if (product.discount_price !== null && product.sale_price !== null) {
-        const compareAt = document.createElement("span");
-        compareAt.style.textDecoration = "line-through";
-        compareAt.style.opacity = "0.7";
-        compareAt.style.whiteSpace = "nowrap";
-        compareAt.textContent = `${product.sale_price.toFixed(2)}€`;
-        pricing.appendChild(compareAt);
-      }
-      card.appendChild(pricing);
+      metaText.appendChild(pricing);
+      metaRow.appendChild(metaText);
 
-      const buttonRow = document.createElement("div");
-      buttonRow.className = "mt-2 flex items-center justify-between";
-      buttonRow.style.gap = "8px";
-      buttonRow.style.alignSelf = "end";
-
-      const quantityTag = document.createElement("span");
-      quantityTag.className = "text-xs opacity-70";
-      quantityTag.style.overflowWrap = "anywhere";
-      quantityTag.style.lineHeight = "1.2";
-      quantityTag.textContent = typeof product.maxNumOfChoices === "number"
-        ? `In cart: ${currentQuantity}/${product.maxNumOfChoices}`
-        : `In cart: ${currentQuantity}`;
-      buttonRow.appendChild(quantityTag);
+      const controlsWrap = document.createElement("div");
+      controlsWrap.style.width = "100%";
+      controlsWrap.style.display = "grid";
+      controlsWrap.style.placeItems = "center";
 
       const controls = document.createElement("div");
       controls.className = "flex items-center gap-1";
+      controls.style.display = "flex";
+      controls.style.alignItems = "center";
+      controls.style.justifyContent = "center";
       controls.style.flexShrink = "0";
-      controls.style.marginLeft = "auto";
+      controls.style.columnGap = "10px";
+      controls.style.margin = "0 auto";
+      controls.style.padding = currentQuantity > 0 ? "5px 8px" : "0";
+      controls.style.borderRadius = "999px";
+      controls.style.background = currentQuantity > 0 ? "#eef2f7" : "transparent";
 
       const buildAction = (
         action: "add" | "inc" | "dec" | "remove",
@@ -2999,33 +2886,19 @@ export class FormUI extends HTMLElement {
       if (currentQuantity > 0) {
         const decButton = buildAction("dec", "−");
         styleProductActionButton(decButton);
-        decButton.style.width = "32px";
-        decButton.style.minWidth = "32px";
-        decButton.style.height = "32px";
         controls.appendChild(decButton);
-        const qty = document.createElement("span");
-        qty.className = "text-xs font-semibold";
-        qty.style.minWidth = "16px";
-        qty.style.textAlign = "center";
-        qty.textContent = String(currentQuantity);
-        controls.appendChild(qty);
         const incButton = buildAction("inc", "+", maxReached);
         styleProductActionButton(incButton, { emphasized: true });
-        incButton.style.width = "32px";
-        incButton.style.minWidth = "32px";
-        incButton.style.height = "32px";
         controls.appendChild(incButton);
       } else {
         const addButton = buildAction("add", "+", maxReached);
         styleProductActionButton(addButton, { emphasized: true });
-        addButton.style.width = "32px";
-        addButton.style.minWidth = "32px";
-        addButton.style.height = "32px";
         controls.appendChild(addButton);
       }
 
-      card.appendChild(buttonRow);
-      buttonRow.appendChild(controls);
+      controlsWrap.appendChild(controls);
+      metaRow.appendChild(controlsWrap);
+      card.appendChild(metaRow);
       productList.appendChild(card);
     });
 
@@ -3277,34 +3150,17 @@ export class FormUI extends HTMLElement {
         selectionElement.innerHTML = "";
 
         wrapper = document.createElement("div");
-        wrapper.className = "grid gap-2 rounded border border-base-300 p-3";
+        wrapper.className = "grid gap-2";
         wrapper.setAttribute("data-quiz-open-wrapper", fieldConfig.name);
-        wrapper.style.background = "rgba(248, 250, 252, 0.82)";
-        wrapper.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.55)";
-        wrapper.style.padding = "14px";
-        wrapper.style.gap = "8px";
-
-        const hint = document.createElement("div");
-        hint.className = "text-xs font-semibold";
-        hint.style.opacity = "0.88";
-        hint.style.overflowWrap = "anywhere";
-        hint.style.letterSpacing = "0.01em";
-        hint.textContent = "Open question";
-        wrapper.appendChild(hint);
-
-        const helper = document.createElement("div");
-        helper.className = "text-xs";
-        helper.style.opacity = "0.68";
-        helper.textContent = "Use a free-text answer when predefined choices are not enough.";
-        wrapper.appendChild(helper);
+        wrapper.style.gap = "6px";
 
         textarea = document.createElement("textarea");
         textarea.className = "textarea textarea-bordered w-full";
-        textarea.rows = 3;
+        textarea.rows = 2;
         textarea.placeholder = fieldConfig.placeholder || "Write your answer";
         textarea.setAttribute("data-quiz-open-answer", fieldConfig.name);
         textarea.style.background = "#ffffff";
-        textarea.style.minHeight = "120px";
+        textarea.style.minHeight = "72px";
         wrapper.appendChild(textarea);
         selectionElement.appendChild(wrapper);
       }

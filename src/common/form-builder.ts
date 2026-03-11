@@ -274,7 +274,10 @@ function renderField(field: TFieldConfig, sectionName: string): string {
       ? ` data-choices="${escapeHtml(JSON.stringify(field.choices))}"`
       : '';
     return `<div class="form-control w-full">
-    <div class="label"><label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label></div>
+    <div class="label" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label>
+      <span class="label-text-alt" data-product-list-total="${escapeHtml(field.name)}"></span>
+    </div>
     <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${includeInSubmitAttr}${viewTemplateAttr}${viewTemplateUnsafeAttr}${viewModeAttr}${choicesAttr}${conditionalAttrs} />
     <div class="mt-2 rounded border border-base-300 p-3" id="${escapeHtml(field.name)}_selection" data-product-list-zone="${escapeHtml(field.name)}"></div>
     ${helpText}
@@ -300,10 +303,14 @@ function renderField(field: TFieldConfig, sectionName: string): string {
       ? ` data-choices="${escapeHtml(JSON.stringify(field.choices))}"`
       : '';
     const openQuizAttr = !field.choices?.length ? ' data-quiz-open="true"' : '';
+    const quizZoneClass = field.choices?.length
+      ? 'mt-2 rounded border border-base-300 p-3'
+      : 'mt-2';
+    const openQuizZoneAttr = !field.choices?.length ? ' data-quiz-open-zone="true"' : '';
     return `<div class="form-control w-full">
     <div class="label"><label class="label-text" for="${escapeHtml(field.name)}">${escapeHtml(field.label)}</label></div>
     <input class="input input-bordered w-full hidden" id="${escapeHtml(field.name)}" name="${escapeHtml(field.name)}" type="hidden" data-label="${escapeHtml(field.label)}" data-type="${escapeHtml(field.type)}" data-name="${escapeHtml(field.name)}"${requiredAttr} data-section-name="${escapeHtml(sectionName)}"${valueAttr}${includeInSubmitAttr}${viewTemplateAttr}${viewTemplateUnsafeAttr}${viewModeAttr}${choicesAttr}${openQuizAttr}${multipleAttr}${minNumOfChoicesAttr}${maxNumOfChoicesAttr}${placeholderAttr}${conditionalAttrs} />
-    <div class="mt-2 rounded border border-base-300 p-3" id="${escapeHtml(field.name)}_selection" data-quiz-zone="${escapeHtml(field.name)}"></div>
+    <div class="${quizZoneClass}" id="${escapeHtml(field.name)}_selection" data-quiz-zone="${escapeHtml(field.name)}"${openQuizZoneAttr}></div>
     ${helpText}
     <div class="label"><span class="label-text-alt" id="${escapeHtml(field.name)}_error"></span></div>
 </div>`;

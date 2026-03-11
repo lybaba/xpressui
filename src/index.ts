@@ -3036,7 +3036,6 @@ export class FormUI extends HTMLElement {
       return;
     }
 
-    selectionElement.innerHTML = "";
     const images = this.getImageGalleryCatalog(fieldConfig);
     const selectedItems = this.getImageGallerySelectionItems(value);
     const selectedMap = selectedItems.reduce((accumulator, item) => {
@@ -3046,15 +3045,17 @@ export class FormUI extends HTMLElement {
     const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
     const limitReached = selectionLimit > 0 && selectedItems.length >= selectionLimit;
 
-    const intro = document.createElement("div");
-    intro.className = "mb-3 flex items-center justify-between gap-3 text-xs opacity-70";
-    intro.textContent = selectionLimit > 0
-      ? `Select up to ${selectionLimit} image${selectionLimit > 1 ? "s" : ""}`
-      : "Select images";
-    selectionElement.appendChild(intro);
+    let gallery = selectionElement.querySelector(
+      `[data-image-gallery-catalog="${fieldConfig.name}"]`,
+    ) as HTMLDivElement | null;
 
-    const gallery = document.createElement("div");
-    gallery.setAttribute("data-image-gallery-catalog", fieldConfig.name);
+    if (!gallery) {
+      gallery = document.createElement("div");
+      gallery.setAttribute("data-image-gallery-catalog", fieldConfig.name);
+      selectionElement.innerHTML = "";
+      selectionElement.appendChild(gallery);
+    }
+
     gallery.style.display = "grid";
     gallery.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
     gallery.style.gap = "10px";
@@ -3064,9 +3065,13 @@ export class FormUI extends HTMLElement {
       const selected = Boolean(selectedMap[imageItem.id]);
       const disabled = !selected && limitReached;
 
-      const card = document.createElement("div");
+      let card = gallery!.querySelector(`[data-image-card="${imageItem.id}"]`) as HTMLDivElement | null;
+      if (!card) {
+        card = document.createElement("div");
+        card.setAttribute("data-image-card", imageItem.id);
+        gallery!.appendChild(card);
+      }
       card.setAttribute("data-image-open-gallery", imageItem.id);
-      card.setAttribute("data-image-card", imageItem.id);
       card.className = "rounded border border-base-300 p-2 transition-all";
       card.style.cursor = disabled ? "not-allowed" : "pointer";
       card.style.opacity = disabled ? "0.55" : "1";
@@ -3075,65 +3080,84 @@ export class FormUI extends HTMLElement {
       card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "rgba(248, 250, 252, 0.82)";
 
       const previewSrc = imageItem.image_medium || imageItem.image_thumbnail;
-      if (previewSrc) {
-        const preview = document.createElement("img");
-        preview.src = previewSrc;
+      let preview = card.querySelector("img") as HTMLImageElement | null;
+      if (!preview && previewSrc) {
+        preview = document.createElement("img");
+        preview.setAttribute("data-image-preview", imageItem.id);
+        card.appendChild(preview);
+      }
+      if (preview) {
+        preview.src = previewSrc || "";
         preview.alt = imageItem.name;
         preview.style.width = "100%";
         preview.style.height = "140px";
         preview.style.objectFit = "cover";
         preview.style.borderRadius = "8px";
-        card.appendChild(preview);
       }
 
-      const title = document.createElement("div");
+      let title = card.querySelector("[data-image-title]") as HTMLDivElement | null;
+      if (!title) {
+        title = document.createElement("div");
+        title.setAttribute("data-image-title", imageItem.id);
+        card.appendChild(title);
+      }
       title.className = "mt-2 text-sm font-semibold";
       title.style.overflowWrap = "anywhere";
       title.style.wordBreak = "break-word";
       title.textContent = imageItem.name;
-      card.appendChild(title);
 
       const photoCount = imageItem.photos_full.length;
-      const stateRow = document.createElement("div");
+      let stateRow = card.querySelector("[data-image-meta-row]") as HTMLDivElement | null;
+      if (!stateRow) {
+        stateRow = document.createElement("div");
+        stateRow.setAttribute("data-image-meta-row", imageItem.id);
+        card.appendChild(stateRow);
+      }
       stateRow.className = "mt-2 flex items-center justify-between gap-2";
 
-      const galleryBadge = document.createElement("span");
+      let galleryBadge = stateRow.querySelector("[data-image-gallery-badge]") as HTMLSpanElement | null;
+      if (!galleryBadge) {
+        galleryBadge = document.createElement("span");
+        galleryBadge.setAttribute("data-image-gallery-badge", imageItem.id);
+        stateRow.appendChild(galleryBadge);
+      }
       galleryBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
       galleryBadge.style.opacity = "0.68";
       galleryBadge.style.overflowWrap = "anywhere";
       galleryBadge.textContent = photoCount ? `${photoCount} photos` : "single image";
-      stateRow.appendChild(galleryBadge);
 
+      let selectedBadge = stateRow.querySelector("[data-image-gallery-state]") as HTMLSpanElement | null;
+      if (!selectedBadge) {
+        selectedBadge = document.createElement("span");
+        selectedBadge.setAttribute("data-image-gallery-state", imageItem.id);
+        stateRow.appendChild(selectedBadge);
+      }
       if (selected) {
-        const selectedBadge = document.createElement("span");
         selectedBadge.className = "text-[11px] font-semibold";
+        selectedBadge.style.display = "inline-flex";
         selectedBadge.style.padding = "4px 8px";
         selectedBadge.style.borderRadius = "999px";
         selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
         selectedBadge.style.color = "rgb(29, 78, 216)";
         selectedBadge.style.whiteSpace = "nowrap";
         selectedBadge.textContent = "Selected";
-        stateRow.appendChild(selectedBadge);
-      }
-      card.appendChild(stateRow);
-
-      const meta = document.createElement("div");
-      meta.className = "text-xs opacity-70";
-      meta.style.overflowWrap = "anywhere";
-      meta.textContent = photoCount ? `${photoCount} full photos` : "No full gallery";
-      card.appendChild(meta);
-
-      const buttonRow = document.createElement("div");
-      buttonRow.className = "mt-2 flex items-center justify-between";
-
-      const statusTag = document.createElement("span");
-      statusTag.className = "text-xs opacity-70";
-      if (selected) {
-        statusTag.textContent = "Selected";
       } else if (disabled) {
-        statusTag.textContent = "Limit reached";
+        selectedBadge.className = "text-[11px] font-semibold";
+        selectedBadge.style.display = "inline-flex";
+        selectedBadge.style.padding = "4px 8px";
+        selectedBadge.style.borderRadius = "999px";
+        selectedBadge.style.background = "rgba(148, 163, 184, 0.12)";
+        selectedBadge.style.color = "#475569";
+        selectedBadge.style.whiteSpace = "nowrap";
+        selectedBadge.textContent = "Limit reached";
       } else {
-        statusTag.textContent = "Ready to add";
+        selectedBadge.className = "text-[11px] opacity-70";
+        selectedBadge.style.display = "inline-flex";
+        selectedBadge.style.padding = "0";
+        selectedBadge.style.background = "transparent";
+        selectedBadge.style.color = "";
+        selectedBadge.style.whiteSpace = "nowrap";
+        selectedBadge.textContent = "Available";
       }
 
       const toggleButton = document.createElement("button");
@@ -3159,16 +3183,33 @@ export class FormUI extends HTMLElement {
       toggleButton.style.background = selected ? "transparent" : "#0f172a";
       toggleButton.style.color = selected ? "#0f172a" : "#ffffff";
 
-      buttonRow.appendChild(statusTag);
-      buttonRow.appendChild(toggleButton);
-      card.appendChild(buttonRow);
-      gallery.appendChild(card);
+      let controls = card.querySelector("[data-image-controls]") as HTMLDivElement | null;
+      if (!controls) {
+        controls = document.createElement("div");
+        controls.setAttribute("data-image-controls", imageItem.id);
+        card.appendChild(controls);
+      }
+      controls.innerHTML = "";
+      controls.className = "mt-2 flex items-center justify-center";
+      controls.appendChild(toggleButton);
     });
 
-    selectionElement.appendChild(gallery);
+    Array.from(gallery.querySelectorAll("[data-image-card]")).forEach((node) => {
+      const imageId = (node as HTMLElement).getAttribute("data-image-card");
+      if (imageId && !images.some((image) => image.id === imageId)) {
+        node.remove();
+      }
+    });
 
-    const selectedPanel = document.createElement("div");
-    selectedPanel.setAttribute("data-image-gallery-selection", fieldConfig.name);
+    let selectedPanel = selectionElement.querySelector(
+      `[data-image-gallery-selection="${fieldConfig.name}"]`,
+    ) as HTMLDivElement | null;
+    if (!selectedPanel) {
+      selectedPanel = document.createElement("div");
+      selectedPanel.setAttribute("data-image-gallery-selection", fieldConfig.name);
+      selectionElement.appendChild(selectedPanel);
+    }
+    selectedPanel.innerHTML = "";
     selectedPanel.className = "rounded border border-base-300 p-3";
 
     const heading = document.createElement("div");

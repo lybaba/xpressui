@@ -3261,6 +3261,7 @@ export class FormUI extends HTMLElement {
         wrapper.className = "grid gap-2 rounded border border-base-300 p-3";
         wrapper.setAttribute("data-quiz-open-wrapper", fieldConfig.name);
         wrapper.style.background = "rgba(248, 250, 252, 0.82)";
+        wrapper.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.55)";
 
         const hint = document.createElement("div");
         hint.className = "text-xs font-semibold";
@@ -3269,11 +3270,18 @@ export class FormUI extends HTMLElement {
         hint.textContent = "Open question";
         wrapper.appendChild(hint);
 
+        const helper = document.createElement("div");
+        helper.className = "text-xs";
+        helper.style.opacity = "0.68";
+        helper.textContent = "Use a free-text answer when predefined choices are not enough.";
+        wrapper.appendChild(helper);
+
         textarea = document.createElement("textarea");
         textarea.className = "textarea textarea-bordered w-full";
-        textarea.rows = 5;
+        textarea.rows = 4;
         textarea.placeholder = fieldConfig.placeholder || "Write your answer";
         textarea.setAttribute("data-quiz-open-answer", fieldConfig.name);
+        textarea.style.background = "#ffffff";
         wrapper.appendChild(textarea);
         selectionElement.appendChild(wrapper);
       }

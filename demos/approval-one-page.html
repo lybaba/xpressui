@@ -26,7 +26,22 @@
 
       <div class="layout">
         <section class="panel">
-          <div id="app"></div>
+          <div id="app">
+            <form id="approval_one_page_demo_form" data-version="1" data-type="contactform" data-name="approval-one-page" data-label="Approval One-Page">
+              <label class="w-full">
+                <span>Requester Email</span>
+                <input id="requester_email" name="requester_email" type="email" data-type="email" data-name="requester_email" data-label="Requester Email" data-required="true" />
+              </label>
+              <label class="w-full">
+                <span>Amount</span>
+                <input id="amount" name="amount" type="number" data-type="number" data-name="amount" data-label="Amount" data-required="true" />
+              </label>
+              <label class="w-full">
+                <span>Justification</span>
+                <textarea id="justification" name="justification" data-type="textarea" data-name="justification" data-label="Justification" data-required="true"></textarea>
+              </label>
+            </form>
+          </div>
         </section>
         <aside class="panel">
           <h2>Provider Result</h2>
@@ -36,7 +51,7 @@
     </main>
 
     <script type="module">
-      import { mountFormUI } from "../dist/xpressui.mjs";
+      import { hydrateFormUI } from "../dist/xpressui.mjs";
 
       const result = document.getElementById("result");
       const write = (payload) => {
@@ -67,7 +82,7 @@
         });
       };
 
-      const form = mountFormUI(document.getElementById("app"), {
+      const form = hydrateFormUI(document.getElementById("app"), {
         version: 1,
         id: "approval_one_page_demo",
         uid: "approval_one_page_demo_uid",

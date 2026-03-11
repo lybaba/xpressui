@@ -37,7 +37,23 @@
       <p>Démo d’un flux d’approbation avec panneau ops combiné branché sur les événements et l’état local.</p>
       <div class="layout">
         <div class="primary">
-          <div class="shell" id="app"></div>
+          <div class="shell" id="app">
+            <form id="approval_demo_form" data-version="1" data-type="multistepform" data-name="approval-demo" data-label="Approval Demo">
+              <div data-type="section" data-name="request_step" data-label="Request">
+                <label class="w-full">
+                  <span>Requester Email</span>
+                  <input id="requester_email" name="requester_email" type="email" data-type="email" data-name="requester_email" data-label="Requester Email" data-required="true" data-section-name="request_step" />
+                </label>
+                <label class="w-full">
+                  <span>Amount</span>
+                  <input id="amount" name="amount" type="number" data-type="number" data-name="amount" data-label="Amount" data-required="true" data-section-name="request_step" />
+                </label>
+              </div>
+              <div data-type="section" data-name="review_step" data-label="Review">
+                <input id="approval_state" name="approval_state" type="hidden" data-type="approval-state" data-name="approval_state" data-label="Approval Status" data-section-name="review_step" />
+              </div>
+            </form>
+          </div>
           <div class="result" id="result"></div>
         </div>
         <div class="stack">
@@ -46,7 +62,7 @@
       </div>
     </main>
     <script type="module">
-      import { createFormOpsPanel, mountFormUI } from "../dist/xpressui.mjs";
+      import { createFormOpsPanel, hydrateFormUI } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
       const debug = document.getElementById("debug");
@@ -101,7 +117,7 @@
         return originalFetch(input, init);
       };
 
-      const form = mountFormUI(app, {
+      const form = hydrateFormUI(app, {
         version: 1,
         id: "approval_demo",
         uid: "approval_demo_uid",

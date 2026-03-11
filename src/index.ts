@@ -3840,21 +3840,28 @@ export class FormUI extends HTMLElement {
       "data-document-scan-grid",
       fieldConfig.name,
     );
-    slotGrid.innerHTML = "";
 
     Array.from({ length: slotCount }, (_, index) => index).forEach((slotIndex) => {
       const file = selectedFiles[slotIndex];
-      const card = document.createElement("div");
-      card.className = "rounded border border-base-300 p-3";
-
-      const title = document.createElement("div");
-      title.className = "mb-2 text-xs font-medium uppercase opacity-70";
-      title.textContent = slotIndex === 0 ? "Front" : "Back";
-      card.appendChild(title);
-
-      const previewFrame = document.createElement("div");
-      previewFrame.className = "flex h-28 w-full items-center justify-center overflow-hidden rounded border border-base-300 bg-base-200";
-      previewFrame.style.aspectRatio = "1.586 / 1";
+      const slotRef = `${fieldConfig.name}:${slotIndex}`;
+      const card = this.ensureSelectionChild(
+        slotGrid,
+        `[data-document-scan-slot-card="${slotRef}"]`,
+        "div",
+        "rounded border border-base-300 p-3",
+        "data-document-scan-slot-card",
+        slotRef,
+      );
+      const previewFrame = this.ensureSelectionChild(
+        card,
+        `[data-document-scan-preview="${slotRef}"]`,
+        "div",
+        "flex h-28 w-full items-center justify-center overflow-hidden rounded border border-base-300 bg-base-200",
+        "data-document-scan-preview",
+        slotRef,
+      );
+      previewFrame.innerHTML = "";
+      (previewFrame as HTMLElement).style.aspectRatio = "1.586 / 1";
 
       if (
         file instanceof File &&
@@ -3877,38 +3884,52 @@ export class FormUI extends HTMLElement {
         image.style.objectFit = "cover";
         previewFrame.appendChild(image);
       } else {
-        const placeholder = document.createElement("div");
-        placeholder.className = "px-2 text-center text-xs opacity-70";
+        const placeholder = this.ensureSelectionChild(
+          previewFrame,
+          `[data-document-scan-placeholder="${slotRef}"]`,
+          "div",
+          "px-2 text-center text-xs opacity-70",
+          "data-document-scan-placeholder",
+          slotRef,
+        );
         placeholder.textContent = file?.name || "No scan yet";
         previewFrame.appendChild(placeholder);
       }
 
-      card.appendChild(previewFrame);
-
-      if (file?.name) {
-        const name = document.createElement("div");
-        name.className = "mt-2 text-xs";
-        name.textContent = file.name;
-        card.appendChild(name);
-      }
+      const name = this.ensureSelectionChild(
+        card,
+        `[data-document-scan-file-name="${slotRef}"]`,
+        "div",
+        "mt-2 text-xs",
+        "data-document-scan-file-name",
+        slotRef,
+      );
+      name.textContent = file?.name || "";
+      name.style.display = file?.name ? "" : "none";
 
       const textInsight = insight.textBySlot[slotIndex];
-      if (textInsight) {
-        const textBlock = document.createElement("div");
-        textBlock.className = "mt-2 text-[11px] opacity-80";
-        textBlock.textContent = `OCR: ${textInsight.slice(0, 80)}`;
-        card.appendChild(textBlock);
-      }
+      const textBlock = this.ensureSelectionChild(
+        card,
+        `[data-document-scan-ocr="${slotRef}"]`,
+        "div",
+        "mt-2 text-[11px] opacity-80",
+        "data-document-scan-ocr",
+        slotRef,
+      );
+      textBlock.textContent = textInsight ? `OCR: ${textInsight.slice(0, 80)}` : "";
+      textBlock.style.display = textBlock.textContent ? "" : "none";
 
       const mrzInsight = insight.mrzBySlot[slotIndex];
-      if (mrzInsight) {
-        const mrzBlock = document.createElement("div");
-        mrzBlock.className = "mt-1 text-[11px] font-medium";
-        mrzBlock.textContent = `MRZ: ${mrzInsight.documentCode} ${mrzInsight.issuingCountry}`;
-        card.appendChild(mrzBlock);
-      }
-
-      slotGrid.appendChild(card);
+      const mrzBlock = this.ensureSelectionChild(
+        card,
+        `[data-document-scan-mrz="${slotRef}"]`,
+        "div",
+        "mt-1 text-[11px] font-medium",
+        "data-document-scan-mrz",
+        slotRef,
+      );
+      mrzBlock.textContent = mrzInsight ? `MRZ: ${mrzInsight.documentCode} ${mrzInsight.issuingCountry}` : "";
+      mrzBlock.style.display = mrzBlock.textContent ? "" : "none";
     });
 
     const helper = this.ensureSelectionChild(

@@ -5591,6 +5591,11 @@ describe('FormUI', () => {
     const title = selection.querySelector('[data-upload-selection-title="identity_card"]') as HTMLElement;
     const message = selection.querySelector('[data-upload-selection-message="identity_card"]') as HTMLElement;
     const body = selection.querySelector('[data-upload-selection-body="identity_card"]') as HTMLElement;
+    const frontCard = selection.querySelector('[data-document-scan-slot-card="identity_card:0"]') as HTMLElement;
+    const frontPreview = selection.querySelector('[data-document-scan-preview="identity_card:0"]') as HTMLElement;
+    const frontName = selection.querySelector('[data-document-scan-file-name="identity_card:0"]') as HTMLElement;
+    const frontOcr = selection.querySelector('[data-document-scan-ocr="identity_card:0"]') as HTMLElement;
+    const frontMrz = selection.querySelector('[data-document-scan-mrz="identity_card:0"]') as HTMLElement;
     const input = element.querySelector('#identity_card') as HTMLInputElement;
     const backFile = new File(['back'], 'back.png', { type: 'image/png' });
 
@@ -5613,6 +5618,11 @@ describe('FormUI', () => {
     expect(selection.querySelector('[data-upload-selection-title="identity_card"]')).toBe(title);
     expect(selection.querySelector('[data-upload-selection-message="identity_card"]')).toBe(message);
     expect(selection.querySelector('[data-upload-selection-body="identity_card"]')).toBe(body);
+    expect(selection.querySelector('[data-document-scan-slot-card="identity_card:0"]')).toBe(frontCard);
+    expect(selection.querySelector('[data-document-scan-preview="identity_card:0"]')).toBe(frontPreview);
+    expect(selection.querySelector('[data-document-scan-file-name="identity_card:0"]')).toBe(frontName);
+    expect(selection.querySelector('[data-document-scan-ocr="identity_card:0"]')).toBe(frontOcr);
+    expect(selection.querySelector('[data-document-scan-mrz="identity_card:0"]')).toBe(frontMrz);
     expect(title.textContent).toBe('1/2 scans captured');
     expect(message.textContent).toBe('1 of 2 document sides captured.');
     expect(body.textContent).toContain('Back');
@@ -5892,6 +5902,102 @@ describe('FormUI', () => {
     (globalThis as any).TextDetector = originalTextDetector;
     HTMLCanvasElement.prototype.getContext = originalGetContext;
     HTMLCanvasElement.prototype.toBlob = originalToBlob;
+  });
+
+  it('preserves document-scan OCR and MRZ nodes while insight content updates', async () => {
+    const originalCreateImageBitmap = (globalThis as any).createImageBitmap;
+    const originalTextDetector = (globalThis as any).TextDetector;
+    const originalGetContext = HTMLCanvasElement.prototype.getContext;
+    const originalToBlob = HTMLCanvasElement.prototype.toBlob;
+    const createObjectUrlSpy = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockImplementation((file: Blob) => `blob:${(file as File).name}`);
+    const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    const mockContext = {
+      canvas: document.createElement('canvas'),
+      drawImage: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      stroke: vi.fn(),
+      clearRect: vi.fn(),
+      setTransform: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
+      scale: vi.fn(),
+      fillRect: vi.fn(),
+      strokeRect: vi.fn(),
+    };
+    Object.defineProperty(mockContext.canvas, 'width', { configurable: true, value: 1200, writable: true });
+    Object.defineProperty(mockContext.canvas, 'height', { configurable: true, value: 760, writable: true });
+    HTMLCanvasElement.prototype.getContext = vi.fn(function getContext(this: HTMLCanvasElement) {
+      (mockContext.canvas as any) = this;
+      return mockContext as any;
+    }) as any;
+    HTMLCanvasElement.prototype.toBlob = vi.fn((callback: BlobCallback) => {
+      callback(new Blob(['cropped'], { type: 'image/png' }));
+    }) as any;
+    (globalThis as any).createImageBitmap = vi.fn(async () => ({
+      width: 1200,
+      height: 760,
+      close: vi.fn(),
+    }));
+    class MockTextDetector {
+      detect = vi.fn().mockResolvedValue([
+        {
+          rawValue: [
+            'P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<',
+            'L898902C36UTO7408122F1204159ZE184226B<<<<<10',
+          ].join('\n'),
+        },
+      ]);
+    }
+    (globalThis as any).TextDetector = MockTextDetector;
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'document-insight-shell-form',
+      title: 'Document Insight Shell Form',
+      fields: [
+        {
+          name: 'passport',
+          label: 'Passport',
+          type: 'document-scan',
+          documentScanMode: 'single',
+          enableDocumentOcr: true,
+          documentMrzTargetField: 'passport_mrz',
+        },
+      ],
+    }) as FormUI;
+
+    const selection = element.querySelector('#passport_selection') as HTMLElement;
+    const ocrNode = selection.querySelector('[data-document-scan-ocr="passport:0"]') as HTMLElement;
+    const mrzNode = selection.querySelector('[data-document-scan-mrz="passport:0"]') as HTMLElement;
+    const input = element.querySelector('#passport') as HTMLInputElement;
+    const sourceFile = new File(['passport'], 'passport.png', { type: 'image/png' });
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [sourceFile],
+    });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-document-scan-ocr="passport:0"]')).toBe(ocrNode);
+    expect(selection.querySelector('[data-document-scan-mrz="passport:0"]')).toBe(mrzNode);
+    expect(ocrNode.textContent).toContain('OCR:');
+    expect(mrzNode.textContent).toContain('MRZ:');
+
+    (globalThis as any).createImageBitmap = originalCreateImageBitmap;
+    (globalThis as any).TextDetector = originalTextDetector;
+    HTMLCanvasElement.prototype.getContext = originalGetContext;
+    HTMLCanvasElement.prototype.toBlob = originalToBlob;
+    createObjectUrlSpy.mockRestore();
+    revokeObjectUrlSpy.mockRestore();
   });
 
   it('emits a dedicated event for file validation errors', () => {

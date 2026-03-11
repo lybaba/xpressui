@@ -79,7 +79,100 @@
       <div class="layout">
         <section class="shell">
           <h2>Checkout Form</h2>
-          <div id="app"></div>
+          <div id="app">
+            <form id="ecommerce_checkout_form" data-version="1" data-type="multistepform" data-name="ecommerce-checkout" data-label="Ecommerce Checkout">
+              <div data-type="section" data-name="catalog_step" data-label="1. Cart &amp; Details">
+                <input id="products" name="products" type="hidden" data-type="product-list" data-name="products" data-label="Products" data-section-name="catalog_step" />
+                <div id="products_selection" data-product-list-zone="products">
+                  <article data-product-card="sku-camera">
+                    <img data-product-image="sku-camera" alt="Nomad Camera Bag" />
+                    <div data-product-title="sku-camera">Nomad Camera Bag</div>
+                    <div data-product-price="sku-camera">99.00€</div>
+                    <div data-product-controls="sku-camera"></div>
+                  </article>
+                  <article data-product-card="sku-headset">
+                    <img data-product-image="sku-headset" alt="Studio Headset" />
+                    <div data-product-title="sku-headset">Studio Headset</div>
+                    <div data-product-price="sku-headset">159.00€</div>
+                    <div data-product-controls="sku-headset"></div>
+                  </article>
+                  <article data-product-card="sku-keyboard">
+                    <img data-product-image="sku-keyboard" alt="Mechanical Keyboard" />
+                    <div data-product-title="sku-keyboard">Mechanical Keyboard</div>
+                    <div data-product-price="sku-keyboard">129.00€</div>
+                    <div data-product-controls="sku-keyboard"></div>
+                  </article>
+                  <article data-product-card="sku-lamp">
+                    <img data-product-image="sku-lamp" alt="Desk Lamp" />
+                    <div data-product-title="sku-lamp">Desk Lamp</div>
+                    <div data-product-price="sku-lamp">69.00€</div>
+                    <div data-product-controls="sku-lamp"></div>
+                  </article>
+                </div>
+
+                <input id="lookbook" name="lookbook" type="hidden" data-type="image-gallery" data-name="lookbook" data-label="Lookbook Gallery" data-section-name="catalog_step" />
+                <div id="lookbook_selection" data-image-gallery-zone="lookbook">
+                  <article data-image-card="look_1">
+                    <img data-image-preview="look_1" alt="Lookbook 1" />
+                    <div data-image-title="look_1">Lookbook 1</div>
+                    <div data-image-meta-row="look_1">
+                      <span data-image-gallery-badge="look_1">Ready</span>
+                      <span data-image-gallery-state="look_1">Available</span>
+                    </div>
+                    <div data-image-controls="look_1"></div>
+                  </article>
+                  <article data-image-card="look_2">
+                    <img data-image-preview="look_2" alt="Lookbook 2" />
+                    <div data-image-title="look_2">Lookbook 2</div>
+                    <div data-image-meta-row="look_2">
+                      <span data-image-gallery-badge="look_2">Ready</span>
+                      <span data-image-gallery-state="look_2">Available</span>
+                    </div>
+                    <div data-image-controls="look_2"></div>
+                  </article>
+                  <article data-image-card="look_3">
+                    <img data-image-preview="look_3" alt="Lookbook 3" />
+                    <div data-image-title="look_3">Lookbook 3</div>
+                    <div data-image-meta-row="look_3">
+                      <span data-image-gallery-badge="look_3">Ready</span>
+                      <span data-image-gallery-state="look_3">Available</span>
+                    </div>
+                    <div data-image-controls="look_3"></div>
+                  </article>
+                </div>
+
+                <input id="checkout_currency_setting" name="checkout_currency_setting" type="hidden" value="EUR" data-type="setting" data-name="checkout_currency_setting" data-label="Currency Setting" data-section-name="catalog_step" />
+                <input id="checkout_shipping_setting" name="checkout_shipping_setting" type="hidden" value="8.9" data-type="setting" data-name="checkout_shipping_setting" data-label="Shipping Setting" data-section-name="catalog_step" />
+                <input id="checkout_tax_rate_setting" name="checkout_tax_rate_setting" type="hidden" value="0.2" data-type="setting" data-name="checkout_tax_rate_setting" data-label="Tax Rate Setting" data-section-name="catalog_step" />
+              </div>
+
+              <div data-type="section" data-name="checkout_step" data-label="2. Checkout &amp; Pay">
+                <label class="w-full">
+                  <span>Currency</span>
+                  <input id="order_currency" name="order_currency" type="text" data-type="text" data-name="order_currency" data-label="Currency" data-section-name="checkout_step" />
+                  <div id="order_currency_view" data-view-field="order_currency">
+                    <div data-view-field-body="order_currency"></div>
+                  </div>
+                </label>
+                <label class="w-full">
+                  <span>Email</span>
+                  <input id="billing_email" name="billing_email" type="email" data-type="email" data-name="billing_email" data-label="Email" data-required="true" data-section-name="checkout_step" />
+                </label>
+                <label class="w-full">
+                  <span>Card Number</span>
+                  <input id="payment_card_number" name="payment_card_number" type="text" data-type="text" data-name="payment_card_number" data-label="Card Number" data-required="true" data-section-name="checkout_step" />
+                </label>
+                <label class="w-full">
+                  <span>Expiry (MM/YY)</span>
+                  <input id="payment_card_expiry" name="payment_card_expiry" type="text" data-type="text" data-name="payment_card_expiry" data-label="Expiry (MM/YY)" data-required="true" data-section-name="checkout_step" />
+                </label>
+                <label class="w-full">
+                  <span>CVC</span>
+                  <input id="payment_card_cvc" name="payment_card_cvc" type="text" data-type="text" data-name="payment_card_cvc" data-label="CVC" data-required="true" data-section-name="checkout_step" />
+                </label>
+              </div>
+            </form>
+          </div>
         </section>
 
         <aside class="result" id="result"></aside>
@@ -87,7 +180,7 @@
     </main>
 
     <script type="module">
-      import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
+      import { createFormPreset, hydrateFormUI } from "../dist/xpressui.mjs";
 
       const products = [
         {
@@ -257,7 +350,7 @@
         prevLabel: "Back to cart",
       };
 
-      const form = mountFormUI(app, config);
+      const form = hydrateFormUI(app, config);
       const renderCheckoutSummary = () => {
         const checkoutStep = form.querySelector('[data-name="checkout_step"]');
         if (!checkoutStep) return;

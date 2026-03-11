@@ -2510,8 +2510,17 @@ export class FormUI extends HTMLElement {
       controls.appendChild(createControl("inc", "+"));
       controls.appendChild(createControl("remove", "×"));
 
+      const footer = document.createElement("div");
+      footer.className = "flex items-center justify-between gap-2";
+
+      const qtyText = document.createElement("div");
+      qtyText.className = "text-xs opacity-70";
+      qtyText.textContent = `In cart: ${item.quantity}`;
+      footer.appendChild(qtyText);
+      footer.appendChild(controls);
+
       row.appendChild(top);
-      row.appendChild(controls);
+      row.appendChild(footer);
       list.appendChild(row);
     });
     cart.appendChild(list);
@@ -2903,6 +2912,8 @@ export class FormUI extends HTMLElement {
       card.style.borderColor = currentQuantity > 0 ? "rgb(59 130 246)" : "";
       card.style.boxShadow = currentQuantity > 0 ? "0 0 0 2px rgba(59, 130, 246, 0.12)" : "";
       card.style.background = currentQuantity > 0 ? "rgba(59, 130, 246, 0.04)" : "rgba(248, 250, 252, 0.82)";
+      card.style.display = "grid";
+      card.style.gridTemplateRows = "auto auto auto 1fr";
 
       const previewSource = product.image_medium || product.image_thumbnail;
       if (previewSource) {
@@ -2910,7 +2921,7 @@ export class FormUI extends HTMLElement {
         thumb.src = previewSource;
         thumb.alt = product.name;
         thumb.style.width = "100%";
-        thumb.style.height = "94px";
+        thumb.style.height = "88px";
         thumb.style.objectFit = "cover";
         thumb.style.borderRadius = "8px";
         card.appendChild(thumb);
@@ -2920,11 +2931,15 @@ export class FormUI extends HTMLElement {
       title.className = "mt-2 text-sm font-semibold";
       title.style.overflowWrap = "anywhere";
       title.style.wordBreak = "break-word";
+      title.style.lineHeight = "1.2";
       title.textContent = product.name;
       card.appendChild(title);
 
       const pricing = document.createElement("div");
       pricing.className = "mt-1 text-xs";
+      pricing.style.display = "flex";
+      pricing.style.alignItems = "baseline";
+      pricing.style.gap = "6px";
       const primaryPrice = document.createElement("span");
       primaryPrice.className = "font-semibold";
       primaryPrice.style.fontSize = "14px";
@@ -2947,11 +2962,14 @@ export class FormUI extends HTMLElement {
       card.appendChild(pricing);
 
       const buttonRow = document.createElement("div");
-      buttonRow.className = "mt-1.5 flex items-center justify-between";
+      buttonRow.className = "mt-2 flex items-center justify-between";
+      buttonRow.style.gap = "8px";
+      buttonRow.style.alignSelf = "end";
 
       const quantityTag = document.createElement("span");
       quantityTag.className = "text-xs opacity-70";
       quantityTag.style.overflowWrap = "anywhere";
+      quantityTag.style.lineHeight = "1.2";
       quantityTag.textContent = typeof product.maxNumOfChoices === "number"
         ? `In cart: ${currentQuantity}/${product.maxNumOfChoices}`
         : `In cart: ${currentQuantity}`;
@@ -2960,6 +2978,7 @@ export class FormUI extends HTMLElement {
       const controls = document.createElement("div");
       controls.className = "flex items-center gap-1";
       controls.style.flexShrink = "0";
+      controls.style.marginLeft = "auto";
 
       const buildAction = (
         action: "add" | "inc" | "dec" | "remove",
@@ -3262,11 +3281,14 @@ export class FormUI extends HTMLElement {
         wrapper.setAttribute("data-quiz-open-wrapper", fieldConfig.name);
         wrapper.style.background = "rgba(248, 250, 252, 0.82)";
         wrapper.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.55)";
+        wrapper.style.padding = "14px";
+        wrapper.style.gap = "8px";
 
         const hint = document.createElement("div");
         hint.className = "text-xs font-semibold";
-        hint.style.opacity = "0.78";
+        hint.style.opacity = "0.88";
         hint.style.overflowWrap = "anywhere";
+        hint.style.letterSpacing = "0.01em";
         hint.textContent = "Open question";
         wrapper.appendChild(hint);
 
@@ -3278,10 +3300,11 @@ export class FormUI extends HTMLElement {
 
         textarea = document.createElement("textarea");
         textarea.className = "textarea textarea-bordered w-full";
-        textarea.rows = 4;
+        textarea.rows = 3;
         textarea.placeholder = fieldConfig.placeholder || "Write your answer";
         textarea.setAttribute("data-quiz-open-answer", fieldConfig.name);
         textarea.style.background = "#ffffff";
+        textarea.style.minHeight = "120px";
         wrapper.appendChild(textarea);
         selectionElement.appendChild(wrapper);
       }

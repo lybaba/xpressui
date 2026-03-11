@@ -4823,6 +4823,46 @@ describe('FormUI', () => {
     expect(selection.textContent).toContain('drop.pdf');
   });
 
+  it('preserves the static upload shell and updates only the dynamic file selection body', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'file-shell-form',
+      title: 'File Shell Form',
+      fields: [
+        {
+          name: 'attachment',
+          label: 'Attachment',
+          type: 'file',
+        },
+      ],
+    }) as FormUI;
+    const selection = element.querySelector('#attachment_selection') as HTMLElement;
+    const title = selection.querySelector('[data-upload-selection-title="attachment"]') as HTMLElement;
+    const message = selection.querySelector('[data-upload-selection-message="attachment"]') as HTMLElement;
+    const body = selection.querySelector('[data-upload-selection-body="attachment"]') as HTMLElement;
+    const input = element.querySelector('#attachment') as HTMLInputElement;
+    const file = new File(['shell'], 'shell.pdf', { type: 'application/pdf' });
+
+    expect(title.textContent).toBe('Awaiting file');
+    expect(message.textContent).toContain('Drop files here or use the file picker.');
+    expect(body.childElementCount).toBe(0);
+
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [file],
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-upload-selection-title="attachment"]')).toBe(title);
+    expect(selection.querySelector('[data-upload-selection-message="attachment"]')).toBe(message);
+    expect(selection.querySelector('[data-upload-selection-body="attachment"]')).toBe(body);
+    expect(title.textContent).toBe('shell.pdf');
+    expect(message.textContent).toBe('Ready for upload.');
+    expect(body.textContent).toContain('shell.pdf');
+  });
+
   it('rejects invalid dropped files before updating the field value', async () => {
     const container = document.createElement('div');
     const onFileValidationError = vi.fn();

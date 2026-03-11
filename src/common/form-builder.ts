@@ -178,7 +178,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
     ? ` data-file-size-error-msg="${escapeHtml(String(field.fileSizeErrorMsg))}"`
     : '';
   const fileSelectionMarkup = isFileFieldType(field.type)
-    ? `<div class="mt-2 rounded border border-dashed border-base-300 p-3 transition-colors" id="${escapeHtml(field.name)}_selection" data-file-drop-zone="${escapeHtml(field.name)}"></div>`
+    ? `<div class="mt-2 rounded border border-dashed border-base-300 p-3 transition-colors" id="${escapeHtml(field.name)}_selection" data-file-drop-zone="${escapeHtml(field.name)}"><div class="flex items-center justify-between gap-2"><div class="text-sm font-medium" data-upload-selection-title="${escapeHtml(field.name)}">Awaiting file</div><span class="rounded-full border border-base-300 px-2 py-0.5 text-xs" data-upload-selection-kind="${escapeHtml(field.name)}">${escapeHtml(field.type === UPLOAD_IMAGE_TYPE ? 'Image upload' : 'File upload')}</span></div><div class="mt-2 text-xs opacity-70" data-upload-selection-message="${escapeHtml(field.name)}">${escapeHtml(field.type === UPLOAD_IMAGE_TYPE ? 'Drop an image here or use the file picker.' : 'Drop files here or use the file picker.')}</div><div class="mt-3 grid gap-2" data-upload-selection-body="${escapeHtml(field.name)}"></div></div>`
     : '';
   const minNumOfChoicesAttr = field.minNumOfChoices !== undefined
     ? ` data-min-num-of-choices="${escapeHtml(String(field.minNumOfChoices))}"`

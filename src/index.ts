@@ -3804,45 +3804,71 @@ export class FormUI extends HTMLElement {
       return;
     }
 
-    this.clearFilePreviewUrls(fieldConfig.name);
-    selectionElement.innerHTML = "";
     const selectedFiles = this.getFileValueList(value);
     const isDragActive = Boolean(this.fileDragActive[fieldConfig.name]);
     const uploadState = this.fileUploadState[fieldConfig.name];
+    const titleElement = this.ensureUploadSelectionTextNode(
+      selectionElement,
+      fieldConfig.name,
+      "data-upload-selection-title",
+      "div",
+      "text-sm font-medium",
+    );
+    const messageElement = this.ensureUploadSelectionTextNode(
+      selectionElement,
+      fieldConfig.name,
+      "data-upload-selection-message",
+      "div",
+      "mt-2 text-xs opacity-70",
+    );
+    const bodyElement = this.ensureUploadSelectionBody(selectionElement, fieldConfig.name);
+    const fileCountLabel = selectedFiles.length === 1 ? "1 file selected" : `${selectedFiles.length} files selected`;
+
+    this.clearFilePreviewUrls(fieldConfig.name);
+    bodyElement.innerHTML = "";
 
     selectionElement.classList.toggle("border-primary", isDragActive);
     selectionElement.classList.toggle("bg-base-200", isDragActive);
+    titleElement.textContent = !selectedFiles.length
+      ? "Awaiting file"
+      : selectedFiles.length === 1
+        ? selectedFiles[0]?.name || "1 file selected"
+        : fileCountLabel;
+    messageElement.textContent = !selectedFiles.length
+      ? this.getUploadSelectionIdleMessage(fieldConfig)
+      : "Ready for upload.";
 
     if (uploadState) {
       const status = document.createElement("div");
-      status.className = "mb-2 text-xs font-medium";
+      status.className = "text-xs font-medium";
       status.textContent =
         uploadState.status === "uploading"
           ? `Uploading... ${uploadState.progress}%`
           : uploadState.status === "complete"
             ? "Uploaded"
             : "Upload failed";
-      selectionElement.appendChild(status);
+      bodyElement.appendChild(status);
+      messageElement.textContent =
+        uploadState.status === "uploading"
+          ? `Upload in progress (${uploadState.progress}%).`
+          : uploadState.status === "complete"
+            ? "Upload completed."
+            : "Upload failed. Please try again.";
     }
 
     if (this.isDocumentScanField(fieldConfig)) {
-      this.renderDocumentScanSelection(fieldConfig, selectedFiles, selectionElement);
+      this.renderDocumentScanSelection(fieldConfig, selectedFiles, bodyElement);
       return;
     }
 
     if (this.isQrScanField(fieldConfig)) {
-      this.renderQrSelection(fieldConfig, value, selectionElement);
+      this.renderQrSelection(fieldConfig, value, bodyElement);
       if (!selectedFiles.length) {
         return;
       }
     }
 
     if (!selectedFiles.length) {
-
-      const placeholder = document.createElement("div");
-      placeholder.className = "text-xs opacity-70";
-      placeholder.textContent = "Drop files here or use the file picker.";
-      selectionElement.appendChild(placeholder);
       return;
     }
 
@@ -3904,8 +3930,49 @@ export class FormUI extends HTMLElement {
       list.appendChild(row);
     });
 
-    selectionElement.appendChild(list);
+    bodyElement.appendChild(list);
   }
+
+  ensureUploadSelectionTextNode = (
+    selectionElement: HTMLElement,
+    fieldName: string,
+    attributeName: string,
+    tagName: "div" | "span",
+    className: string,
+  ) => {
+    let element = selectionElement.querySelector(
+      `[${attributeName}="${fieldName}"]`,
+    ) as HTMLElement | null;
+    if (element) {
+      return element;
+    }
+
+    element = document.createElement(tagName);
+    element.className = className;
+    element.setAttribute(attributeName, fieldName);
+    selectionElement.appendChild(element);
+    return element;
+  }
+
+  ensureUploadSelectionBody = (selectionElement: HTMLElement, fieldName: string) => {
+    let bodyElement = selectionElement.querySelector(
+      `[data-upload-selection-body="${fieldName}"]`,
+    ) as HTMLDivElement | null;
+    if (bodyElement) {
+      return bodyElement;
+    }
+
+    bodyElement = document.createElement("div");
+    bodyElement.className = "mt-3 grid gap-2";
+    bodyElement.setAttribute("data-upload-selection-body", fieldName);
+    selectionElement.appendChild(bodyElement);
+    return bodyElement;
+  }
+
+  getUploadSelectionIdleMessage = (fieldConfig: TFieldConfig) =>
+    fieldConfig.type === "upload-image"
+      ? "Drop an image here or use the file picker."
+      : "Drop files here or use the file picker."
 
   setFileDragState = (fieldName: string, active: boolean) => {
     this.fileDragActive[fieldName] = active;

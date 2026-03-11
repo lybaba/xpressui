@@ -1226,6 +1226,62 @@ describe('FormUI', () => {
     expect(element.querySelectorAll('[data-product-cart-item]').length).toBe(2);
   });
 
+  it('preserves product-list catalog and control shells while cart quantities change', async () => {
+    const products = [
+      {
+        value: 'sku_1',
+        name: 'Product 1',
+        label: 'Product 1',
+        sale_price: 100,
+        discount_price: 90,
+        image_thumbnail: 'https://cdn.example.test/thumb_1.jpg',
+        image_medium: 'https://cdn.example.test/medium_1.jpg',
+        photos_full: ['https://cdn.example.test/full_1.jpg'],
+      },
+    ];
+
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'product-list-shell-demo',
+      title: 'Product List Shell Demo',
+      fields: [
+        {
+          type: 'product-list',
+          name: 'products',
+          label: 'Products',
+          choices: products as any,
+        },
+      ],
+    }) as FormUI;
+
+    const selection = element.querySelector('#products_selection') as HTMLElement;
+    const catalog = selection.querySelector('[data-product-list-catalog="products"]') as HTMLElement;
+    const card = selection.querySelector('[data-product-card="sku_1"]') as HTMLElement;
+    const controls = selection.querySelector('[data-product-controls="sku_1"]') as HTMLElement;
+    const controlRow = selection.querySelector('[data-product-control-row="sku_1"]') as HTMLElement;
+    const add = selection.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
+
+    add.click();
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-product-list-catalog="products"]')).toBe(catalog);
+    expect(selection.querySelector('[data-product-card="sku_1"]')).toBe(card);
+    expect(selection.querySelector('[data-product-controls="sku_1"]')).toBe(controls);
+    expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controlRow);
+    expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(1);
+
+    const inc = selection.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
+    inc.click();
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-product-list-catalog="products"]')).toBe(catalog);
+    expect(selection.querySelector('[data-product-card="sku_1"]')).toBe(card);
+    expect(selection.querySelector('[data-product-controls="sku_1"]')).toBe(controls);
+    expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controlRow);
+    expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(2);
+    expect((selection.querySelector('[data-product-quantity-pill="sku_1"]') as HTMLElement).textContent).toContain('2');
+  });
+
   it('supports image-gallery fields with a 20-image max catalog and selection modal interactions', async () => {
     const images = Array.from({ length: 24 }, (_, index) => ({
       value: `img_${index + 1}`,

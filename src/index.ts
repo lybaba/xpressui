@@ -2384,14 +2384,166 @@ export class FormUI extends HTMLElement {
         this.updateProductListInlineTotal(fieldConfig, this.getFieldValue(fieldConfig.name));
       });
 
-    const trigger = this.querySelector("[data-product-cart-trigger]") as HTMLElement | null;
-    if (trigger) {
+    const entries = this.getProductCartEntries();
+    const itemCount = entries.reduce((total, entry) => total + entry.item.quantity, 0);
+    const totalAmount = entries.reduce((total, entry) => {
+      const unitPrice = entry.item.discount_price ?? entry.item.sale_price ?? 0;
+      return total + unitPrice * entry.item.quantity;
+    }, 0);
+
+    const trigger = this.ensureProductCartTrigger();
+    const panel = this.ensureProductListGlobalCart();
+
+    if (!trigger || !panel) {
+      return;
+    }
+
+    if (!entries.length) {
       trigger.remove();
+    } else {
+      let summary = trigger.querySelector("[data-product-cart-summary]") as HTMLSpanElement | null;
+      if (!summary) {
+        summary = document.createElement("span");
+        summary.setAttribute("data-product-cart-summary", "true");
+        summary.style.position = "absolute";
+        summary.style.top = "-4px";
+        summary.style.right = "-2px";
+        summary.style.minWidth = "20px";
+        summary.style.height = "20px";
+        summary.style.padding = "0 6px";
+        summary.style.display = "inline-flex";
+        summary.style.alignItems = "center";
+        summary.style.justifyContent = "center";
+        summary.style.borderRadius = "999px";
+        summary.style.background = "#ffffff";
+        summary.style.color = "#0f172a";
+        summary.style.fontSize = "11px";
+        summary.style.fontWeight = "700";
+        trigger.appendChild(summary);
+      }
+      summary.textContent = String(itemCount);
+
+      let totalBadge = trigger.querySelector("[data-product-cart-total-badge]") as HTMLSpanElement | null;
+      if (!totalBadge) {
+        totalBadge = document.createElement("span");
+        totalBadge.setAttribute("data-product-cart-total-badge", "true");
+        totalBadge.style.position = "absolute";
+        totalBadge.style.right = "58px";
+        totalBadge.style.bottom = "8px";
+        totalBadge.style.padding = "6px 10px";
+        totalBadge.style.borderRadius = "999px";
+        totalBadge.style.background = "rgba(15, 23, 42, 0.92)";
+        totalBadge.style.color = "#ffffff";
+        totalBadge.style.fontSize = "12px";
+        totalBadge.style.fontWeight = "700";
+        totalBadge.style.whiteSpace = "nowrap";
+        trigger.appendChild(totalBadge);
+      }
+      totalBadge.textContent = `${totalAmount.toFixed(2)}€`;
+
+      let icon = trigger.querySelector("[data-product-cart-icon]") as HTMLSpanElement | null;
+      if (!icon) {
+        icon = document.createElement("span");
+        icon.setAttribute("data-product-cart-icon", "true");
+        icon.textContent = "🛒";
+        trigger.appendChild(icon);
+      }
     }
-    if (this.productCartOverlay) {
-      this.productCartOverlay.remove();
-      this.productCartOverlay = null;
-    }
+
+    panel.innerHTML = "";
+
+    const header = document.createElement("div");
+    header.style.display = "flex";
+    header.style.alignItems = "center";
+    header.style.justifyContent = "space-between";
+    header.style.gap = "10px";
+
+    const heading = document.createElement("div");
+    heading.className = "text-sm font-semibold";
+    heading.textContent = `Cart (${itemCount})`;
+    header.appendChild(heading);
+
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "btn btn-ghost btn-sm";
+    closeButton.textContent = "Close";
+    closeButton.setAttribute("data-product-cart-close", "true");
+    header.appendChild(closeButton);
+    panel.appendChild(header);
+
+    const totalRow = document.createElement("div");
+    totalRow.className = "text-xs";
+    totalRow.style.opacity = "0.75";
+    totalRow.textContent = `Total: ${totalAmount.toFixed(2)}€`;
+    panel.appendChild(totalRow);
+
+    const list = document.createElement("div");
+    list.style.display = "grid";
+    list.style.gap = "8px";
+
+    entries.forEach(({ fieldName, item }) => {
+      const row = document.createElement("div");
+      row.setAttribute("data-product-cart-item", item.id);
+      row.className = "rounded border border-base-300 p-2";
+      row.style.display = "grid";
+      row.style.gap = "8px";
+
+      const meta = document.createElement("div");
+      meta.style.display = "flex";
+      meta.style.alignItems = "center";
+      meta.style.justifyContent = "space-between";
+      meta.style.gap = "10px";
+
+      const name = document.createElement("div");
+      name.className = "text-sm font-medium";
+      name.style.overflowWrap = "anywhere";
+      name.textContent = item.name;
+      meta.appendChild(name);
+
+      const qty = document.createElement("div");
+      qty.className = "text-xs";
+      qty.style.opacity = "0.75";
+      qty.textContent = `x${item.quantity}`;
+      meta.appendChild(qty);
+      row.appendChild(meta);
+
+      const actions = document.createElement("div");
+      actions.style.display = "flex";
+      actions.style.alignItems = "center";
+      actions.style.justifyContent = "space-between";
+      actions.style.gap = "8px";
+
+      const subtotal = document.createElement("div");
+      subtotal.className = "text-xs font-semibold";
+      subtotal.textContent = `${(((item.discount_price ?? item.sale_price) || 0) * item.quantity).toFixed(2)}€`;
+      actions.appendChild(subtotal);
+
+      const buttons = document.createElement("div");
+      buttons.style.display = "flex";
+      buttons.style.gap = "6px";
+
+      ([
+        { action: "dec", label: "−" },
+        { action: "inc", label: "+" },
+        { action: "remove", label: "×" },
+      ] as const).forEach(({ action, label }) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-xs";
+        button.textContent = label;
+        button.setAttribute("data-product-cart-action", action);
+        button.setAttribute("data-product-field", fieldName);
+        button.setAttribute("data-product-id", item.id);
+        button.setAttribute("aria-label", `${action} ${item.name}`);
+        buttons.appendChild(button);
+      });
+
+      actions.appendChild(buttons);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+
+    panel.appendChild(list);
   }
 
   bindProductListGlobalCartEvents = () => {
@@ -2741,7 +2893,6 @@ export class FormUI extends HTMLElement {
 
     if (productList === selectionElement) {
       productList.setAttribute("data-product-list-catalog", fieldConfig.name);
-      productList.innerHTML = "";
     }
 
     productList.style.display = "grid";
@@ -2958,12 +3109,23 @@ export class FormUI extends HTMLElement {
             ? `${product.sale_price.toFixed(2)}€`
             : "Price on request";
 
-      const controlsWrap = document.createElement("div");
-      controlsWrap.style.width = "100%";
-      controlsWrap.style.display = "grid";
-      controlsWrap.style.placeItems = "center";
+      let existingControls = card.querySelector("[data-product-controls]") as HTMLDivElement | null;
+      if (!existingControls) {
+        existingControls = document.createElement("div");
+        existingControls.setAttribute("data-product-controls", product.id);
+        card.appendChild(existingControls);
+      }
+      existingControls.style.width = "100%";
+      existingControls.style.display = "grid";
+      existingControls.style.placeItems = "center";
 
-      const controls = document.createElement("div");
+      let controls = existingControls.querySelector("[data-product-control-row]") as HTMLDivElement | null;
+      if (!controls) {
+        controls = document.createElement("div");
+        controls.setAttribute("data-product-control-row", product.id);
+        existingControls.appendChild(controls);
+      }
+      controls.innerHTML = "";
       controls.className = "flex items-center gap-1";
       controls.style.display = "flex";
       controls.style.alignItems = "center";
@@ -2980,9 +3142,14 @@ export class FormUI extends HTMLElement {
         label: string,
         disabled = false,
       ) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "btn";
+        const selector = `[data-product-action-slot="${action}"][data-product-id="${product.id}"]`;
+        let button = controls!.querySelector(selector) as HTMLButtonElement | null;
+        if (!button) {
+          button = document.createElement("button");
+          button.type = "button";
+          button.className = "btn";
+          button.setAttribute("data-product-action-slot", action);
+        }
         button.textContent = label;
         button.setAttribute("data-product-action", action);
         button.setAttribute("data-product-id", product.id);
@@ -2997,23 +3164,11 @@ export class FormUI extends HTMLElement {
         controls.appendChild(decButton);
       }
 
-      const incButton = buildAction(currentQuantity > 0 ? "inc" : "add", "+", maxReached);
+      const incButton = buildAction("inc", "+", maxReached);
+      incButton.setAttribute("data-product-action", "add");
+      incButton.setAttribute("aria-label", `Add ${product.name}`);
       styleProductActionButton(incButton, { emphasized: true });
       controls.appendChild(incButton);
-
-      controlsWrap.appendChild(controls);
-
-      let existingControls = card.querySelector("[data-product-controls]") as HTMLDivElement | null;
-      if (!existingControls) {
-        existingControls = document.createElement("div");
-        existingControls.setAttribute("data-product-controls", product.id);
-        card.appendChild(existingControls);
-      }
-      existingControls.innerHTML = "";
-      existingControls.style.width = "100%";
-      existingControls.style.display = "grid";
-      existingControls.style.placeItems = "center";
-      existingControls.appendChild(controls);
     });
 
     Array.from(productList.querySelectorAll("[data-product-card]")).forEach((node) => {
@@ -3022,8 +3177,6 @@ export class FormUI extends HTMLElement {
         node.remove();
       }
     });
-
-    selectionElement.appendChild(productList);
     this.renderProductListGlobalCart();
   }
 

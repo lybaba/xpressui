@@ -2386,8 +2386,16 @@ export class FormUI extends HTMLElement {
 
     if (!entries.length) {
       const empty = document.createElement("div");
-      empty.className = "text-xs opacity-70";
-      empty.textContent = "No product added yet.";
+      empty.className = "grid gap-1 rounded border border-base-300 px-3 py-3 text-xs";
+      empty.style.background = "rgba(248, 250, 252, 0.82)";
+      const emptyTitle = document.createElement("div");
+      emptyTitle.className = "font-semibold";
+      emptyTitle.textContent = "Cart is empty";
+      const emptyHint = document.createElement("div");
+      emptyHint.style.opacity = "0.72";
+      emptyHint.textContent = "Add products from the catalog to build the order.";
+      empty.appendChild(emptyTitle);
+      empty.appendChild(emptyHint);
       cart.appendChild(empty);
       const totalBlock = document.createElement("div");
       totalBlock.className = "text-sm font-semibold";
@@ -3161,8 +3169,16 @@ export class FormUI extends HTMLElement {
 
     if (!selectedItems.length) {
       const empty = document.createElement("div");
-      empty.className = "text-xs opacity-70";
-      empty.textContent = "No image selected yet.";
+      empty.className = "grid gap-1 rounded border border-base-300 px-3 py-3 text-xs";
+      empty.style.background = "rgba(248, 250, 252, 0.82)";
+      const emptyTitle = document.createElement("div");
+      emptyTitle.className = "font-semibold";
+      emptyTitle.textContent = "No image selected";
+      const emptyHint = document.createElement("div");
+      emptyHint.style.opacity = "0.72";
+      emptyHint.textContent = "Use the gallery cards above to build the selection.";
+      empty.appendChild(emptyTitle);
+      empty.appendChild(emptyHint);
       selectedPanel.appendChild(empty);
       selectionElement.appendChild(selectedPanel);
       return;
@@ -3400,8 +3416,16 @@ export class FormUI extends HTMLElement {
 
     if (!selectedItems.length) {
       const empty = document.createElement("div");
-      empty.className = "text-xs opacity-70";
-      empty.textContent = "No answer selected yet.";
+      empty.className = "grid gap-1 rounded border border-base-300 px-3 py-3 text-xs";
+      empty.style.background = "rgba(248, 250, 252, 0.82)";
+      const emptyTitle = document.createElement("div");
+      emptyTitle.className = "font-semibold";
+      emptyTitle.textContent = "No answer selected";
+      const emptyHint = document.createElement("div");
+      emptyHint.style.opacity = "0.72";
+      emptyHint.textContent = "Pick one or more answers from the cards above.";
+      empty.appendChild(emptyTitle);
+      empty.appendChild(emptyHint);
       selectedPanel.appendChild(empty);
       selectionElement.appendChild(selectedPanel);
       return;

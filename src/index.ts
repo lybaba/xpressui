@@ -2789,19 +2789,25 @@ export class FormUI extends HTMLElement {
     productList.style.marginBottom = "14px";
 
     products.forEach((product) => {
+      const currentQuantity = cartMap[product.id] || 0;
+      const maxReached = typeof product.maxNumOfChoices === "number" && currentQuantity >= product.maxNumOfChoices;
+
       const card = document.createElement("div");
       card.setAttribute("data-product-open-gallery", product.id);
       card.setAttribute("data-product-card", product.id);
-      card.className = "rounded border border-base-300 p-2";
+      card.className = "rounded border border-base-300 p-2 transition-all";
       card.style.cursor = "pointer";
+      card.style.borderColor = currentQuantity > 0 ? "rgb(59 130 246)" : "";
+      card.style.boxShadow = currentQuantity > 0 ? "0 0 0 2px rgba(59, 130, 246, 0.12)" : "";
+      card.style.background = currentQuantity > 0 ? "rgba(59, 130, 246, 0.04)" : "";
 
-      const previewSource = product.image_thumbnail || product.image_medium;
+      const previewSource = product.image_medium || product.image_thumbnail;
       if (previewSource) {
         const thumb = document.createElement("img");
         thumb.src = previewSource;
         thumb.alt = product.name;
         thumb.style.width = "100%";
-        thumb.style.height = "96px";
+        thumb.style.height = "112px";
         thumb.style.objectFit = "cover";
         thumb.style.borderRadius = "8px";
         card.appendChild(thumb);
@@ -2813,16 +2819,35 @@ export class FormUI extends HTMLElement {
       card.appendChild(title);
 
       const pricing = document.createElement("div");
-      pricing.className = "text-xs opacity-80";
-      const saleText = product.sale_price !== null ? `${product.sale_price.toFixed(2)}€` : "n/a";
-      const discountText = product.discount_price !== null ? `${product.discount_price.toFixed(2)}€` : "n/a";
-      pricing.textContent = `Sale: ${saleText} | Discount: ${discountText}`;
+      pricing.className = "mt-1 flex items-center gap-2 text-xs";
+      const primaryPrice = document.createElement("span");
+      primaryPrice.className = "font-semibold";
+      primaryPrice.textContent =
+        product.discount_price !== null
+          ? `${product.discount_price.toFixed(2)}€`
+          : product.sale_price !== null
+            ? `${product.sale_price.toFixed(2)}€`
+            : "Price on request";
+      pricing.appendChild(primaryPrice);
+      if (product.discount_price !== null && product.sale_price !== null) {
+        const compareAt = document.createElement("span");
+        compareAt.style.textDecoration = "line-through";
+        compareAt.style.opacity = "0.7";
+        compareAt.textContent = `${product.sale_price.toFixed(2)}€`;
+        pricing.appendChild(compareAt);
+      }
       card.appendChild(pricing);
 
       const galleryHint = document.createElement("div");
       galleryHint.className = "mt-1 text-xs opacity-70";
       const photoCount = product.photos_full.length;
-      galleryHint.textContent = photoCount > 0 ? `${photoCount} full photos` : "No full gallery";
+      if (typeof product.maxNumOfChoices === "number") {
+        galleryHint.textContent = photoCount > 0
+          ? `${photoCount} full photos · max ${product.maxNumOfChoices}`
+          : `No full gallery · max ${product.maxNumOfChoices}`;
+      } else {
+        galleryHint.textContent = photoCount > 0 ? `${photoCount} full photos` : "No full gallery";
+      }
       card.appendChild(galleryHint);
 
       const buttonRow = document.createElement("div");
@@ -2830,23 +2855,44 @@ export class FormUI extends HTMLElement {
 
       const quantityTag = document.createElement("span");
       quantityTag.className = "text-xs opacity-70";
-      const currentQuantity = cartMap[product.id] || 0;
       quantityTag.textContent = typeof product.maxNumOfChoices === "number"
         ? `In cart: ${currentQuantity}/${product.maxNumOfChoices}`
         : `In cart: ${currentQuantity}`;
 
-      const addButton = document.createElement("button");
-      addButton.type = "button";
-      addButton.className = "btn btn-xs btn-primary";
-      const maxReached = typeof product.maxNumOfChoices === "number" && currentQuantity >= product.maxNumOfChoices;
-      addButton.textContent = maxReached ? "Max reached" : "Add";
-      addButton.setAttribute("data-product-action", "add");
-      addButton.setAttribute("data-product-id", product.id);
-      addButton.disabled = maxReached;
-
       buttonRow.appendChild(quantityTag);
-      buttonRow.appendChild(addButton);
+
+      const controls = document.createElement("div");
+      controls.className = "flex items-center gap-1";
+
+      const buildAction = (
+        action: "add" | "inc" | "dec" | "remove",
+        label: string,
+        className: string,
+        disabled = false,
+      ) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = className;
+        button.textContent = label;
+        button.setAttribute("data-product-action", action);
+        button.setAttribute("data-product-id", product.id);
+        button.disabled = disabled;
+        return button;
+      };
+
+      if (currentQuantity > 0) {
+        controls.appendChild(buildAction("dec", "-", "btn btn-xs btn-outline"));
+        const qty = document.createElement("span");
+        qty.className = "text-xs font-semibold";
+        qty.textContent = String(currentQuantity);
+        controls.appendChild(qty);
+        controls.appendChild(buildAction("inc", "+", "btn btn-xs btn-outline", maxReached));
+      } else {
+        controls.appendChild(buildAction("add", maxReached ? "Max reached" : "Add", "btn btn-xs btn-primary", maxReached));
+      }
+
       card.appendChild(buttonRow);
+      buttonRow.appendChild(controls);
       productList.appendChild(card);
     });
 

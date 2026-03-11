@@ -3064,9 +3064,30 @@ export class FormUI extends HTMLElement {
       title.textContent = imageItem.name;
       card.appendChild(title);
 
+      const photoCount = imageItem.photos_full.length;
+      const stateRow = document.createElement("div");
+      stateRow.className = "mt-2 flex items-center justify-between gap-2";
+
+      const galleryBadge = document.createElement("span");
+      galleryBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
+      galleryBadge.style.opacity = "0.68";
+      galleryBadge.textContent = photoCount ? `${photoCount} photos` : "single image";
+      stateRow.appendChild(galleryBadge);
+
+      if (selected) {
+        const selectedBadge = document.createElement("span");
+        selectedBadge.className = "text-[11px] font-semibold";
+        selectedBadge.style.padding = "4px 8px";
+        selectedBadge.style.borderRadius = "999px";
+        selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
+        selectedBadge.style.color = "rgb(29, 78, 216)";
+        selectedBadge.textContent = "Selected";
+        stateRow.appendChild(selectedBadge);
+      }
+      card.appendChild(stateRow);
+
       const meta = document.createElement("div");
       meta.className = "text-xs opacity-70";
-      const photoCount = imageItem.photos_full.length;
       meta.textContent = photoCount ? `${photoCount} full photos` : "No full gallery";
       card.appendChild(meta);
 
@@ -3301,6 +3322,27 @@ export class FormUI extends HTMLElement {
       title.textContent = answer.name;
       card.appendChild(title);
 
+      const stateRow = document.createElement("div");
+      stateRow.className = "mt-2 flex items-center justify-between gap-2";
+
+      const modeBadge = document.createElement("span");
+      modeBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
+      modeBadge.style.opacity = "0.68";
+      modeBadge.textContent = fieldConfig.multiple ? "Multi select" : "Single select";
+      stateRow.appendChild(modeBadge);
+
+      if (selected) {
+        const selectedBadge = document.createElement("span");
+        selectedBadge.className = "text-[11px] font-semibold";
+        selectedBadge.style.padding = "4px 8px";
+        selectedBadge.style.borderRadius = "999px";
+        selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
+        selectedBadge.style.color = "rgb(29, 78, 216)";
+        selectedBadge.textContent = "Selected";
+        stateRow.appendChild(selectedBadge);
+      }
+      card.appendChild(stateRow);
+
       if (answer.desc) {
         const description = document.createElement("div");
         description.className = "mt-1 text-xs opacity-80";
@@ -3347,9 +3389,37 @@ export class FormUI extends HTMLElement {
     list.style.gap = "8px";
     selectedItems.forEach((item) => {
       const row = document.createElement("div");
-      row.className = "rounded border border-base-300 px-2 py-2 text-sm";
+      row.className = "flex items-center gap-2 rounded border border-base-300 px-2 py-2";
       row.setAttribute("data-quiz-selection-item", item.id);
-      row.textContent = item.name;
+
+      if (item.image_thumbnail || item.image_medium) {
+        const thumb = document.createElement("img");
+        thumb.src = item.image_thumbnail || item.image_medium;
+        thumb.alt = item.name;
+        thumb.style.width = "40px";
+        thumb.style.height = "40px";
+        thumb.style.objectFit = "cover";
+        thumb.style.borderRadius = "8px";
+        thumb.style.flexShrink = "0";
+        row.appendChild(thumb);
+      }
+
+      const content = document.createElement("div");
+      content.className = "min-w-0";
+
+      const name = document.createElement("div");
+      name.className = "text-sm font-medium";
+      name.textContent = item.name;
+      content.appendChild(name);
+
+      if (item.desc) {
+        const desc = document.createElement("div");
+        desc.className = "text-xs opacity-70";
+        desc.textContent = item.desc;
+        content.appendChild(desc);
+      }
+
+      row.appendChild(content);
       list.appendChild(row);
     });
     selectedPanel.appendChild(list);

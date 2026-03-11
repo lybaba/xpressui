@@ -197,7 +197,28 @@
           </section>
 
           <section class="panel shell">
-            <div id="app"></div>
+            <div id="app">
+              <form id="remote_resume_demo_form" data-version="1" data-type="contactform" data-name="remote-resume-demo" data-label="Remote Resume Demo">
+                <div data-type="section" data-name="main" data-label="Main">
+                  <label class="w-full">
+                    <span>Full Name</span>
+                    <input id="full_name" name="full_name" type="text" data-type="text" data-name="full_name" data-label="Full Name" data-required="true" data-section-name="main" />
+                  </label>
+                  <label class="w-full">
+                    <span>Email</span>
+                    <input id="email" name="email" type="email" data-type="email" data-name="email" data-label="Email" data-required="true" data-section-name="main" />
+                  </label>
+                  <label class="w-full">
+                    <span>Preferred Slot</span>
+                    <input id="slot" name="slot" type="datetime-local" data-type="datetime" data-name="slot" data-label="Preferred Slot" data-required="true" data-section-name="main" />
+                  </label>
+                  <label class="w-full">
+                    <span>Notes</span>
+                    <textarea id="notes" name="notes" data-type="textarea" data-name="notes" data-label="Notes" data-section-name="main"></textarea>
+                  </label>
+                </div>
+              </form>
+            </div>
           </section>
 
           <section class="panel">
@@ -216,7 +237,7 @@
       import {
         createLocalFormAdmin,
         createFormOpsPanel,
-        mountFormUI,
+        hydrateFormUI,
       } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
@@ -512,7 +533,7 @@
         },
       };
       const admin = createLocalFormAdmin(formConfig);
-      const form = mountFormUI(app, formConfig);
+      const form = hydrateFormUI(app, formConfig);
       const opsPanel = createFormOpsPanel(form, admin, {
         title: "Remote Resume Ops",
         debug: { title: "Remote Resume Debug" },

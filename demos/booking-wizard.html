@@ -22,14 +22,59 @@
       <h1>Booking Wizard</h1>
       <p>Preset multi-step avec progression native, revue finale et saut conditionnel.</p>
       <div class="layout">
-        <div class="shell" id="app"></div>
+        <div class="shell" id="app">
+          <form id="booking_wizard_form_form" data-version="1" data-type="multistepform" data-name="booking-wizard-form" data-label="Booking Wizard">
+            <div data-type="section" data-name="details_step" data-label="Details">
+              <label class="w-full">
+                <span>First Name</span>
+                <input id="first_name" name="first_name" type="text" data-type="text" data-name="first_name" data-label="First Name" data-required="true" data-section-name="details_step" />
+              </label>
+              <label class="w-full">
+                <span>Last Name</span>
+                <input id="last_name" name="last_name" type="text" data-type="text" data-name="last_name" data-label="Last Name" data-required="true" data-section-name="details_step" />
+              </label>
+              <label class="w-full">
+                <span>Email</span>
+                <input id="email" name="email" type="email" data-type="email" data-name="email" data-label="Email" data-required="true" data-section-name="details_step" />
+              </label>
+              <label class="w-full">
+                <span>Service</span>
+                <select id="service" name="service" data-type="select" data-name="service" data-label="Service" data-required="true" data-section-name="details_step">
+                  <option value=""></option>
+                  <option value="consultation">Consultation</option>
+                  <option value="onsite">On-site Visit</option>
+                  <option value="follow_up">Follow-up</option>
+                </select>
+              </label>
+            </div>
+            <div data-type="section" data-name="review_step" data-label="Review">
+              <label class="w-full">
+                <span>Notes</span>
+                <textarea id="notes" name="notes" data-type="textarea" data-name="notes" data-label="Notes" data-section-name="review_step"></textarea>
+              </label>
+            </div>
+            <div data-type="section" data-name="scheduling_step" data-label="Scheduling">
+              <label class="w-full">
+                <span>Booking Date</span>
+                <input id="booking_date" name="booking_date" type="date" data-type="date" data-name="booking_date" data-label="Booking Date" data-required="true" data-section-name="scheduling_step" />
+              </label>
+              <label class="w-full">
+                <span>Booking Time</span>
+                <input id="booking_time" name="booking_time" type="time" data-type="time" data-name="booking_time" data-label="Booking Time" data-required="true" data-section-name="scheduling_step" />
+              </label>
+            </div>
+            <div data-type="section" data-name="confirmation_step" data-label="Confirmation">
+              <input id="approval_state" name="approval_state" type="hidden" data-type="approval-state" data-name="approval_state" data-label="Status" data-section-name="confirmation_step" />
+            </div>
+          </form>
+        </div>
       </div>
     </main>
     <script type="module">
-      import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
+      import { createFormPreset, hydrateFormUI } from "../dist/xpressui.mjs";
 
       const container = document.getElementById("app");
-      mountFormUI(container, createFormPreset("booking-wizard"));
+      hydrateFormUI(container, createFormPreset("booking-wizard"));
     </script>
   </body>
   </html>

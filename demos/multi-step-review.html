@@ -38,12 +38,66 @@
         et un résumé final natif sur la dernière étape.
       </p>
       <div class="layout">
-        <div class="shell" id="app"></div>
+        <div class="shell" id="app">
+          <form id="multi_step_review_demo_form" data-version="1" data-type="multistepform" data-name="multi-step-review-demo" data-label="Project Intake Wizard">
+            <div data-type="section" data-name="contact_step" data-label="Contact">
+              <label class="w-full">
+                <span>Full Name</span>
+                <input id="full_name" name="full_name" type="text" data-type="text" data-name="full_name" data-label="Full Name" data-required="true" data-section-name="contact_step" />
+              </label>
+              <label class="w-full">
+                <span>Work Email</span>
+                <input id="email" name="email" type="email" data-type="email" data-name="email" data-label="Work Email" data-required="true" data-section-name="contact_step" />
+              </label>
+              <label class="w-full">
+                <span>Team</span>
+                <select id="team" name="team" data-type="select" data-name="team" data-label="Team" data-required="true" data-section-name="contact_step">
+                  <option value=""></option>
+                  <option value="sales">Sales</option>
+                  <option value="operations">Operations</option>
+                  <option value="support">Support</option>
+                </select>
+              </label>
+            </div>
+            <div data-type="section" data-name="project_step" data-label="Project">
+              <label class="w-full">
+                <span>Project Name</span>
+                <input id="project_name" name="project_name" type="text" data-type="text" data-name="project_name" data-label="Project Name" data-required="true" data-section-name="project_step" />
+              </label>
+              <fieldset class="w-full">
+                <legend>Channels</legend>
+                <label>
+                  <input type="checkbox" name="channels" value="email" data-type="checkbox" data-name="channels" data-label="Email" data-section-name="project_step" />
+                  <span>Email</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="channels" value="sms" data-type="checkbox" data-name="channels" data-label="SMS" data-section-name="project_step" />
+                  <span>SMS</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="channels" value="web" data-type="checkbox" data-name="channels" data-label="Web" data-section-name="project_step" />
+                  <span>Web</span>
+                </label>
+                <label>
+                  <input type="checkbox" name="channels" value="retail" data-type="checkbox" data-name="channels" data-label="Retail" data-section-name="project_step" />
+                  <span>Retail</span>
+                </label>
+              </fieldset>
+              <label class="w-full">
+                <span>Scope Notes</span>
+                <textarea id="notes" name="notes" data-type="textarea" data-name="notes" data-label="Scope Notes" data-section-name="project_step"></textarea>
+              </label>
+            </div>
+            <div data-type="section" data-name="review_step" data-label="Review">
+              <div id="final_hint" data-type="output" data-name="final_hint" data-label="Final Review" data-section-name="review_step"></div>
+            </div>
+          </form>
+        </div>
         <aside class="preview" id="preview"></aside>
       </div>
     </main>
     <script type="module">
-      import { mountFormUI } from "../dist/xpressui.mjs";
+      import { hydrateFormUI } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
       const preview = document.getElementById("preview");
@@ -107,7 +161,7 @@
         },
       };
 
-      const form = mountFormUI(app, config);
+      const form = hydrateFormUI(app, config);
 
       const renderCurrentStepPreview = () => {
         const currentStepName = form.getCurrentStepName();

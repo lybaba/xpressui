@@ -22,14 +22,60 @@
       <h1>Identity Check</h1>
       <p>Démo KYC avec `document-scan`, extraction de données document et payload normalisé.</p>
       <div class="layout">
-        <div class="shell" id="app"></div>
+        <div class="shell" id="app">
+          <form id="identity_check_form" data-type="contactform" data-name="identity-check-form" data-label="Identity Check">
+            <div data-type="section" data-name="main" data-label="Main">
+              <label class="w-full">
+                <span>Email</span>
+                <input id="email" name="email" type="email" data-type="email" data-name="email" data-label="Email" data-required="true" data-section-name="main" />
+              </label>
+              <label class="w-full">
+                <span>Passport</span>
+                <input id="passport" name="passport" type="file" multiple data-type="document-scan" data-name="passport" data-label="Passport" data-required="true" data-section-name="main" />
+                <div id="passport_selection" data-upload-selection-zone="passport">
+                  <div data-upload-selection-title="passport">Awaiting document scan</div>
+                  <div data-upload-selection-message="passport">Capture or upload the front and back of your document.</div>
+                  <div data-upload-selection-body="passport">
+                    <div data-document-scan-controls="passport"></div>
+                    <div data-document-scan-grid="passport"></div>
+                    <div data-document-scan-helper="passport">Scans are center-cropped to an ID card frame before submit.</div>
+                  </div>
+                </div>
+              </label>
+              <label class="w-full">
+                <span>First Name</span>
+                <input id="first_name" name="first_name" type="text" data-type="text" data-name="first_name" data-label="First Name" data-required="true" data-section-name="main" />
+              </label>
+              <label class="w-full">
+                <span>Last Name</span>
+                <input id="last_name" name="last_name" type="text" data-type="text" data-name="last_name" data-label="Last Name" data-required="true" data-section-name="main" />
+              </label>
+              <label class="w-full">
+                <span>Document Number</span>
+                <input id="document_number" name="document_number" type="text" data-type="text" data-name="document_number" data-label="Document Number" data-required="true" data-section-name="main" />
+              </label>
+              <label class="w-full">
+                <span>Nationality</span>
+                <input id="nationality" name="nationality" type="text" data-type="text" data-name="nationality" data-label="Nationality" data-section-name="main" />
+              </label>
+              <label class="w-full">
+                <span>Birth Date</span>
+                <input id="birth_date" name="birth_date" type="date" data-type="date" data-name="birth_date" data-label="Birth Date" data-section-name="main" />
+              </label>
+              <label class="w-full">
+                <span>Expiry Date</span>
+                <input id="expiry_date" name="expiry_date" type="date" data-type="date" data-name="expiry_date" data-label="Expiry Date" data-section-name="main" />
+              </label>
+            </div>
+          </form>
+        </div>
       </div>
     </main>
     <script type="module">
-      import { createFormPreset, mountFormUI } from "../dist/xpressui.mjs";
+      import { createFormPreset, hydrateFormUI } from "../dist/xpressui.mjs";
 
       const container = document.getElementById("app");
-      mountFormUI(container, createFormPreset("identity-check"));
+      hydrateFormUI(container, createFormPreset("identity-check"));
     </script>
   </body>
   </html>

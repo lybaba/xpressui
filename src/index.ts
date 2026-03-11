@@ -3045,16 +3045,14 @@ export class FormUI extends HTMLElement {
     const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
     const limitReached = selectionLimit > 0 && selectedItems.length >= selectionLimit;
 
-    let gallery = selectionElement.querySelector(
+    const gallery = this.ensureSelectionChild(
+      selectionElement,
       `[data-image-gallery-catalog="${fieldConfig.name}"]`,
-    ) as HTMLDivElement | null;
-
-    if (!gallery) {
-      gallery = document.createElement("div");
-      gallery.setAttribute("data-image-gallery-catalog", fieldConfig.name);
-      selectionElement.innerHTML = "";
-      selectionElement.appendChild(gallery);
-    }
+      "div",
+      "",
+      "data-image-gallery-catalog",
+      fieldConfig.name,
+    ) as HTMLDivElement;
 
     gallery.style.display = "grid";
     gallery.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
@@ -3201,21 +3199,36 @@ export class FormUI extends HTMLElement {
       }
     });
 
-    let selectedPanel = selectionElement.querySelector(
+    const selectedPanel = this.ensureSelectionChild(
+      selectionElement,
       `[data-image-gallery-selection="${fieldConfig.name}"]`,
-    ) as HTMLDivElement | null;
-    if (!selectedPanel) {
-      selectedPanel = document.createElement("div");
-      selectedPanel.setAttribute("data-image-gallery-selection", fieldConfig.name);
-      selectionElement.appendChild(selectedPanel);
-    }
-    selectedPanel.innerHTML = "";
+      "div",
+      "",
+      "data-image-gallery-selection",
+      fieldConfig.name,
+    ) as HTMLDivElement;
     selectedPanel.className = "rounded border border-base-300 p-3";
 
-    const heading = document.createElement("div");
+    const heading = this.ensureSelectionChild(
+      selectedPanel,
+      `[data-image-gallery-heading="${fieldConfig.name}"]`,
+      "div",
+      "mb-2 text-sm font-semibold",
+      "data-image-gallery-heading",
+      fieldConfig.name,
+    );
+    heading.innerHTML = "";
     heading.className = "mb-2 text-sm font-semibold";
     heading.textContent = `Selected Images (${selectedItems.length}${selectionLimit ? `/${selectionLimit}` : ""})`;
-    selectedPanel.appendChild(heading);
+    const selectedBody = this.ensureSelectionChild(
+      selectedPanel,
+      `[data-image-gallery-selection-body="${fieldConfig.name}"]`,
+      "div",
+      "",
+      "data-image-gallery-selection-body",
+      fieldConfig.name,
+    ) as HTMLDivElement;
+    selectedBody.innerHTML = "";
 
     if (!selectedItems.length) {
       const empty = document.createElement("div");
@@ -3229,8 +3242,7 @@ export class FormUI extends HTMLElement {
       emptyHint.textContent = "Use the gallery cards above to build the selection.";
       empty.appendChild(emptyTitle);
       empty.appendChild(emptyHint);
-      selectedPanel.appendChild(empty);
-      selectionElement.appendChild(selectedPanel);
+      selectedBody.appendChild(empty);
       return;
     }
 
@@ -3289,8 +3301,7 @@ export class FormUI extends HTMLElement {
       row.appendChild(remove);
       list.appendChild(row);
     });
-    selectedPanel.appendChild(list);
-    selectionElement.appendChild(selectedPanel);
+    selectedBody.appendChild(list);
   }
 
   renderQuizSelection = (
@@ -3355,7 +3366,6 @@ export class FormUI extends HTMLElement {
     if (!grid) {
       grid = document.createElement("div");
       grid.setAttribute("data-quiz-catalog", fieldConfig.name);
-      selectionElement.innerHTML = "";
       selectionElement.appendChild(grid);
     }
     grid.style.display = "grid";
@@ -3473,21 +3483,36 @@ export class FormUI extends HTMLElement {
       }
     });
 
-    let selectedPanel = selectionElement.querySelector(
+    const selectedPanel = this.ensureSelectionChild(
+      selectionElement,
       `[data-quiz-selection="${fieldConfig.name}"]`,
-    ) as HTMLDivElement | null;
-    if (!selectedPanel) {
-      selectedPanel = document.createElement("div");
-      selectedPanel.setAttribute("data-quiz-selection", fieldConfig.name);
-      selectionElement.appendChild(selectedPanel);
-    }
-    selectedPanel.innerHTML = "";
+      "div",
+      "",
+      "data-quiz-selection",
+      fieldConfig.name,
+    ) as HTMLDivElement;
     selectedPanel.className = "rounded border border-base-300 p-3";
 
-    const heading = document.createElement("div");
+    const heading = this.ensureSelectionChild(
+      selectedPanel,
+      `[data-quiz-selection-heading="${fieldConfig.name}"]`,
+      "div",
+      "mb-2 text-sm font-semibold",
+      "data-quiz-selection-heading",
+      fieldConfig.name,
+    );
+    heading.innerHTML = "";
     heading.className = "mb-2 text-sm font-semibold";
     heading.textContent = `Selected Answers (${selectedItems.length}${selectionLimit ? `/${selectionLimit}` : ""})`;
-    selectedPanel.appendChild(heading);
+    const selectedBody = this.ensureSelectionChild(
+      selectedPanel,
+      `[data-quiz-selection-body="${fieldConfig.name}"]`,
+      "div",
+      "",
+      "data-quiz-selection-body",
+      fieldConfig.name,
+    ) as HTMLDivElement;
+    selectedBody.innerHTML = "";
 
     if (!selectedItems.length) {
       const empty = document.createElement("div");
@@ -3501,8 +3526,7 @@ export class FormUI extends HTMLElement {
       emptyHint.textContent = "Pick one or more answers from the cards above.";
       empty.appendChild(emptyTitle);
       empty.appendChild(emptyHint);
-      selectedPanel.appendChild(empty);
-      selectionElement.appendChild(selectedPanel);
+      selectedBody.appendChild(empty);
       return;
     }
 
@@ -3548,8 +3572,7 @@ export class FormUI extends HTMLElement {
       row.appendChild(content);
       list.appendChild(row);
     });
-    selectedPanel.appendChild(list);
-    selectionElement.appendChild(selectedPanel);
+    selectedBody.appendChild(list);
   }
 
   renderChoiceListSelection = (

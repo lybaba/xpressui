@@ -1,10 +1,19 @@
 import { getErrorClass } from "../dom-utils";
 
+function escapeSelectorValue(value: string): string {
+  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
+    return CSS.escape(value);
+  }
+
+  return value.replace(/["\\#.:()[\]=>+~*^$|,\s]/g, "\\$&");
+}
+
 export function getFieldElement(
   host: ParentNode,
   fieldName: string,
 ): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null {
-  const directId = host.querySelector(`#${CSS.escape(fieldName)}`) as
+  const escapedFieldName = escapeSelectorValue(fieldName);
+  const directId = host.querySelector(`#${escapedFieldName}`) as
     | HTMLInputElement
     | HTMLSelectElement
     | HTMLTextAreaElement
@@ -13,7 +22,7 @@ export function getFieldElement(
     return directId;
   }
 
-  const prefixedId = host.querySelector(`#${CSS.escape(`field-${fieldName}`)}`) as
+  const prefixedId = host.querySelector(`#${escapeSelectorValue(`field-${fieldName}`)}`) as
     | HTMLInputElement
     | HTMLSelectElement
     | HTMLTextAreaElement
@@ -22,7 +31,7 @@ export function getFieldElement(
     return prefixedId;
   }
 
-  return host.querySelector(`[name="${CSS.escape(fieldName)}"]`) as
+  return host.querySelector(`[name="${escapedFieldName}"]`) as
     | HTMLInputElement
     | HTMLSelectElement
     | HTMLTextAreaElement

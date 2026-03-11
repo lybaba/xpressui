@@ -1278,6 +1278,58 @@ describe('FormUI', () => {
     expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).length).toBe(0);
   });
 
+  it('preserves image-gallery shell nodes while updating selection state', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'image-gallery-shell-demo',
+      title: 'Image Gallery Shell Demo',
+      fields: [
+        {
+          type: 'image-gallery',
+          name: 'lookbook',
+          label: 'Lookbook',
+          maxNumOfChoices: 2,
+          choices: [
+            {
+              value: 'img_1',
+              label: 'Image 1',
+              image_thumbnail: 'https://cdn.example.test/thumb_1.jpg',
+              image_medium: 'https://cdn.example.test/medium_1.jpg',
+              photos_full: ['https://cdn.example.test/full_1.jpg'],
+            },
+            {
+              value: 'img_2',
+              label: 'Image 2',
+              image_thumbnail: 'https://cdn.example.test/thumb_2.jpg',
+              image_medium: 'https://cdn.example.test/medium_2.jpg',
+              photos_full: ['https://cdn.example.test/full_2.jpg'],
+            },
+          ] as any,
+        },
+      ],
+    }) as FormUI;
+
+    const selection = element.querySelector('#lookbook_selection') as HTMLElement;
+    const gallery = selection.querySelector('[data-image-gallery-catalog="lookbook"]') as HTMLElement;
+    const selectedPanel = selection.querySelector('[data-image-gallery-selection="lookbook"]') as HTMLElement;
+    const heading = selection.querySelector('[data-image-gallery-heading="lookbook"]') as HTMLElement;
+    const body = selection.querySelector('[data-image-gallery-selection-body="lookbook"]') as HTMLElement;
+    const toggle = selection.querySelector('[data-image-gallery-action="toggle"][data-image-id="img_1"]') as HTMLButtonElement;
+
+    expect(heading.textContent).toBe('Selected Images (0/2)');
+    expect(body.textContent).toContain('No image selected');
+
+    toggle.click();
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-image-gallery-catalog="lookbook"]')).toBe(gallery);
+    expect(selection.querySelector('[data-image-gallery-selection="lookbook"]')).toBe(selectedPanel);
+    expect(selection.querySelector('[data-image-gallery-heading="lookbook"]')).toBe(heading);
+    expect(selection.querySelector('[data-image-gallery-selection-body="lookbook"]')).toBe(body);
+    expect(heading.textContent).toBe('Selected Images (1/2)');
+    expect(body.textContent).toContain('Image 1');
+  });
+
   it('supports quiz fields with single choice, multi choice limits, and open answers', async () => {
     const container = document.createElement('div');
     const element = mountFormUI(container, {
@@ -1375,6 +1427,48 @@ describe('FormUI', () => {
     const storyInputAfter = element.querySelector('[data-quiz-open-answer="story"]') as HTMLTextAreaElement;
     expect(storyInputAfter).toBe(storyInput);
     expect(storyInputAfter.value).toBe('An open-ended answer');
+  });
+
+  it('preserves quiz shell nodes while updating selected answers', async () => {
+    const container = document.createElement('div');
+    const element = mountFormUI(container, {
+      name: 'quiz-shell-demo',
+      title: 'Quiz Shell Demo',
+      fields: [
+        {
+          type: 'quiz',
+          name: 'materials',
+          label: 'Choose materials',
+          required: true,
+          multiple: true,
+          maxNumOfChoices: 2,
+          choices: [
+            { value: 'wood', label: 'Wood', image_thumbnail: 'https://cdn.example.test/wood.jpg' },
+            { value: 'steel', label: 'Steel', image_thumbnail: 'https://cdn.example.test/steel.jpg' },
+          ] as any,
+        },
+      ],
+    }) as FormUI;
+
+    const selection = element.querySelector('#materials_selection') as HTMLElement;
+    const grid = selection.querySelector('[data-quiz-catalog="materials"]') as HTMLElement;
+    const selectedPanel = selection.querySelector('[data-quiz-selection="materials"]') as HTMLElement;
+    const heading = selection.querySelector('[data-quiz-selection-heading="materials"]') as HTMLElement;
+    const body = selection.querySelector('[data-quiz-selection-body="materials"]') as HTMLElement;
+    const woodCard = selection.querySelector('[data-quiz-answer-card="wood"]') as HTMLElement;
+
+    expect(heading.textContent).toBe('Selected Answers (0/2)');
+    expect(body.textContent).toContain('No answer selected');
+
+    woodCard.click();
+    await flushAsyncWork();
+
+    expect(selection.querySelector('[data-quiz-catalog="materials"]')).toBe(grid);
+    expect(selection.querySelector('[data-quiz-selection="materials"]')).toBe(selectedPanel);
+    expect(selection.querySelector('[data-quiz-selection-heading="materials"]')).toBe(heading);
+    expect(selection.querySelector('[data-quiz-selection-body="materials"]')).toBe(body);
+    expect(heading.textContent).toBe('Selected Answers (1/2)');
+    expect(body.textContent).toContain('Wood');
   });
 
   it('validates product-list, image-gallery, and quiz selections with array and text semantics', () => {

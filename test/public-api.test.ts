@@ -28,7 +28,7 @@ import {
   createMountSnippet,
   createTemplateMarkup,
   mountFormUI,
-} from "../src/common/form-builder";
+} from "./test-form-builder";
 import { resetDomAndStorage } from "./test-utils";
 
 describe("Public API", () => {

@@ -1,9 +1,9 @@
-import { CUSTOM_SECTION } from './Constants';
-import TFieldConfig from './TFieldConfig';
-import TFormConfig from './TFormConfig';
-import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from './public-schema';
-import { createFormConfig, TSimpleFieldInput, TSimpleFormInput } from './form-config-factory';
-import { hydrateFormUI } from './form-hydrate';
+import { CUSTOM_SECTION } from '../src/common/Constants';
+import TFieldConfig from '../src/common/TFieldConfig';
+import TFormConfig from '../src/common/TFormConfig';
+import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from '../src/common/public-schema';
+import { createFormConfig, TSimpleFieldInput, TSimpleFormInput } from '../src/common/form-config-factory';
+import { hydrateFormUI } from '../src/common/form-hydrate';
 import {
   APPROVAL_STATE_TYPE,
   CAMERA_PHOTO_TYPE,
@@ -22,7 +22,7 @@ import {
   SELECT_ONE_TYPE,
   TEXTAREA_TYPE,
   UPLOAD_IMAGE_TYPE,
-} from './field';
+} from '../src/common/field';
 
 export type TFormSnippetOptions = {
   containerSelector?: string;

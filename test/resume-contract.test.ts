@@ -6,7 +6,7 @@ import {
   REMOTE_RESUME_CONTRACT_VERSION,
   TFormUISubmitDetail,
 } from "../src/index";
-import { mountFormUI } from "../src/common/form-builder";
+import { mountFormUI } from "./test-form-builder";
 import { resetDomAndStorage } from "./test-utils";
 
 describe("Resume Contract", () => {

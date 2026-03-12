@@ -37,7 +37,7 @@ import {
   createMountSnippet,
   createTemplateMarkup,
   mountFormUI,
-} from '../src/common/form-builder';
+} from './test-form-builder';
 
 function renderFixture(markup: string): FormUI {
   document.body.innerHTML = markup;

@@ -1215,6 +1215,12 @@ describe('HydratedFormHost', () => {
     expect(element.querySelectorAll('[data-product-card]').length).toBe(20);
     expect(element.querySelectorAll('[data-product-list-global-cart]').length).toBe(0);
 
+    const decBeforeAdd = element.querySelector('[data-product-action="dec"][data-product-id="sku_1"]') as HTMLButtonElement;
+    const qtyBeforeAdd = element.querySelector('[data-product-quantity-label="sku_1"]') as HTMLElement;
+    expect(decBeforeAdd).not.toBeNull();
+    expect(decBeforeAdd.disabled).toBe(true);
+    expect(qtyBeforeAdd.textContent).toBe('0');
+
     const addFirst = element.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
     addFirst.click();
     await flushAsyncWork();
@@ -1231,6 +1237,8 @@ describe('HydratedFormHost', () => {
         discount_price: 90,
       }),
     );
+    expect((element.querySelector('[data-product-action="dec"][data-product-id="sku_1"]') as HTMLButtonElement).disabled).toBe(false);
+    expect((element.querySelector('[data-product-quantity-label="sku_1"]') as HTMLElement).textContent).toBe('1');
 
     const addAgain = element.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
     addAgain.click();

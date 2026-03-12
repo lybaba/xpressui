@@ -2973,11 +2973,11 @@ export class HydratedFormHost extends HTMLElement {
       controls.style.alignItems = "center";
       controls.style.justifyContent = "center";
       controls.style.flexShrink = "0";
-      controls.style.columnGap = "10px";
+      controls.style.columnGap = "8px";
       controls.style.margin = "0 auto";
-      controls.style.padding = currentQuantity > 0 ? "5px 8px" : "0";
+      controls.style.padding = "5px 8px";
       controls.style.borderRadius = "999px";
-      controls.style.background = currentQuantity > 0 ? "#eef2f7" : "transparent";
+      controls.style.background = "#eef2f7";
 
       const buildAction = (
         action: "add" | "inc" | "dec" | "remove",
@@ -3000,24 +3000,33 @@ export class HydratedFormHost extends HTMLElement {
         return button;
       };
 
-      const activeActions = new Set<string>();
-      if (currentQuantity > 0) {
-        const decButton = buildAction("dec", "−");
-        styleProductActionButton(decButton);
-        controls.appendChild(decButton);
-        activeActions.add("dec");
-      }
+      const decButton = buildAction("dec", "−", currentQuantity <= 0);
+      styleProductActionButton(decButton);
+      controls.appendChild(decButton);
 
       const incButton = buildAction("inc", "+", maxReached);
       incButton.setAttribute("data-product-action", "add");
       incButton.setAttribute("aria-label", `Add ${product.name}`);
       styleProductActionButton(incButton, { emphasized: true });
+
+      let quantityLabel = controls.querySelector(`[data-product-quantity-label="${product.id}"]`) as HTMLSpanElement | null;
+      if (!quantityLabel) {
+        quantityLabel = document.createElement("span");
+        quantityLabel.setAttribute("data-product-quantity-label", product.id);
+        controls.appendChild(quantityLabel);
+      }
+      quantityLabel.style.minWidth = "18px";
+      quantityLabel.style.textAlign = "center";
+      quantityLabel.style.fontSize = "13px";
+      quantityLabel.style.fontWeight = "700";
+      quantityLabel.style.fontVariantNumeric = "tabular-nums";
+      quantityLabel.textContent = String(currentQuantity);
+      controls.appendChild(quantityLabel);
       controls.appendChild(incButton);
-      activeActions.add("inc");
 
       Array.from(controls.querySelectorAll("[data-product-action-slot]")).forEach((node) => {
         const action = node.getAttribute("data-product-action-slot");
-        if (!action || !activeActions.has(action)) {
+        if (!action || !["dec", "inc"].includes(action)) {
           node.remove();
         }
       });

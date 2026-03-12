@@ -1,9 +1,8 @@
 import { vi } from "vitest";
-import { FormUI } from "../src/form-ui";
 
-export function renderFixture(markup: string): FormUI {
+export function renderFixture(markup: string): HTMLElement {
   document.body.innerHTML = markup;
-  return document.querySelector("form-ui") as FormUI;
+  return document.querySelector("form-ui") as HTMLElement;
 }
 
 export function normalizeLocalStorageApi() {

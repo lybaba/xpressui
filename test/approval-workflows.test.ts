@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { THydratedFormSubmitDetail } from "../src/index";
-import { FormUI } from "../src/form-ui";
 import { mountHydratedTestForm } from "./test-form-builder";
 import { flushAsyncWork, resetDomAndStorage } from "./test-utils";
+
+type THydratedApprovalHost = HTMLElement & {
+  getFieldValue(fieldName: string): any;
+};
 
 describe("Approval Workflows", () => {
   beforeEach(() => {
@@ -44,7 +47,7 @@ describe("Approval Workflows", () => {
         { name: "requester_email", label: "Requester Email", type: "email", required: true },
         { name: "amount", label: "Amount", type: "number", required: true },
       ],
-    }) as FormUI;
+    }) as THydratedApprovalHost;
     const requesterEmail = element.querySelector("#requester_email") as HTMLInputElement;
     const amount = element.querySelector("#amount") as HTMLInputElement;
     const form = element.querySelector("#approval-request-form_form") as HTMLFormElement;
@@ -110,7 +113,7 @@ describe("Approval Workflows", () => {
         endpoint: "https://api.example.test/approvals",
       },
       fields: [{ name: "request_id", label: "Request ID", type: "text", required: true }],
-    }) as FormUI;
+    }) as THydratedApprovalHost;
     const requestId = element.querySelector("#request_id") as HTMLInputElement;
     const form = element.querySelector("#approval-complete-form_form") as HTMLFormElement;
     const onApprovalComplete = vi.fn();
@@ -164,7 +167,7 @@ describe("Approval Workflows", () => {
         { name: "approval_id", label: "Approval ID", type: "text", required: true },
         { name: "decision", label: "Decision", type: "text", required: true },
       ],
-    }) as FormUI;
+    }) as THydratedApprovalHost;
     const approvalId = element.querySelector("#approval_id") as HTMLInputElement;
     const decision = element.querySelector("#decision") as HTMLInputElement;
     const form = element.querySelector("#approval-decision-form_form") as HTMLFormElement;
@@ -245,7 +248,7 @@ describe("Approval Workflows", () => {
         { name: "approval_id", label: "Approval ID", type: "text", required: true },
         { name: "comment", label: "Comment", type: "textarea", required: true },
       ],
-    }) as FormUI;
+    }) as THydratedApprovalHost;
     const approvalId = element.querySelector("#approval_id") as HTMLInputElement;
     const comment = element.querySelector("#comment") as HTMLTextAreaElement;
     const form = element.querySelector("#approval-comment-form_form") as HTMLFormElement;
@@ -301,7 +304,7 @@ describe("Approval Workflows", () => {
         { name: "requester_email", label: "Requester Email", type: "email", required: true },
         { name: "approval_status", label: "Approval Status", type: "approval-state" },
       ],
-    }) as FormUI;
+    }) as THydratedApprovalHost;
     const requesterEmail = element.querySelector("#requester_email") as HTMLInputElement;
     const approvalStatus = element.querySelector("#approval_status") as HTMLInputElement;
     const form = element.querySelector("#approval-state-field-form_form") as HTMLFormElement;
@@ -332,7 +335,7 @@ describe("Approval Workflows", () => {
         endpoint: "https://api.example.test/approvals",
       },
       fields: [{ name: "requester_email", label: "Requester Email", type: "email", required: true }],
-    }) as FormUI;
+    }) as THydratedApprovalHost;
     const requesterEmail = element.querySelector("#requester_email") as HTMLInputElement;
     const form = element.querySelector("#approval-workflow-form_form") as HTMLFormElement;
     const onWorkflowState = vi.fn();

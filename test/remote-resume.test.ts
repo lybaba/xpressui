@@ -1,8 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { THydratedFormSubmitDetail } from "../src/index";
-import { FormUI } from "../src/form-ui";
 import { mountHydratedTestForm } from "./test-form-builder";
 import { flushAsyncWork, resetDomAndStorage } from "./test-utils";
+
+type THydratedResumeHost = HTMLElement & {
+  createResumeTokenAsync(): Promise<string | null>;
+  restoreFromResumeTokenAsync(token: string): Promise<Record<string, any> | null>;
+  lookupResumeToken(token: string): Promise<unknown>;
+  invalidateResumeToken(token: string): Promise<boolean>;
+  createResumeShareCodeDetail(token: string): Promise<unknown>;
+  claimResumeShareCode(code: string): Promise<unknown>;
+};
 
 describe("Remote Resume", () => {
   beforeEach(() => {
@@ -60,7 +68,7 @@ describe("Remote Resume", () => {
         resumeEndpoint: "https://api.example.test/resume",
       },
       fields: [{ name: "email", label: "Email", type: "email" }],
-    }) as FormUI;
+    }) as THydratedResumeHost;
     const input = element.querySelector("#email") as HTMLInputElement;
 
     input.value = "remote-resume@example.com";
@@ -111,7 +119,7 @@ describe("Remote Resume", () => {
         resumeEndpoint: "https://api.example.test/resume",
       },
       fields: [{ name: "email", label: "Email", type: "email" }],
-    }) as FormUI;
+    }) as THydratedResumeHost;
 
     await expect(element.lookupResumeToken("missing_token")).resolves.toBeNull();
     await expect(element.invalidateResumeToken("remote_token_contract")).resolves.toBe(true);
@@ -188,7 +196,7 @@ describe("Remote Resume", () => {
         verifyResumeToken: (payload) => sign(payload) === payload.signature,
       },
       fields: [{ name: "email", label: "Email", type: "email" }],
-    }) as FormUI;
+    }) as THydratedResumeHost;
 
     const input = element.querySelector("#email") as HTMLInputElement;
     input.value = "signed-remote@example.com";
@@ -246,7 +254,7 @@ describe("Remote Resume", () => {
         verifyResumeToken: (payload) => sign(payload) === payload.signature,
       },
       fields: [{ name: "email", label: "Email", type: "email" }],
-    }) as FormUI;
+    }) as THydratedResumeHost;
     const onInvalidSignature = vi.fn();
     element.addEventListener("xpressui:resume-token-invalid-signature", (event) => {
       onInvalidSignature((event as CustomEvent<THydratedFormSubmitDetail>).detail);
@@ -315,7 +323,7 @@ describe("Remote Resume", () => {
         verifyResumeToken: (payload) => sign(payload) === payload.signature,
       },
       fields: [{ name: "email", label: "Email", type: "email" }],
-    }) as FormUI;
+    }) as THydratedResumeHost;
 
     const detail = await element.createResumeShareCodeDetail("remote_token_123");
     expect(detail).toEqual({
@@ -388,7 +396,7 @@ describe("Remote Resume", () => {
         verifyResumeToken: () => false,
       },
       fields: [{ name: "email", label: "Email", type: "email" }],
-    }) as FormUI;
+    }) as THydratedResumeHost;
     const onInvalidSignature = vi.fn();
     element.addEventListener("xpressui:resume-token-invalid-signature", (event) => {
       onInvalidSignature((event as CustomEvent<THydratedFormSubmitDetail>).detail);
@@ -427,7 +435,7 @@ describe("Remote Resume", () => {
         shareCodeClaimBlockMs: 60_000,
       },
       fields: [{ name: "email", label: "Email", type: "email" }],
-    }) as FormUI;
+    }) as THydratedResumeHost;
     const onClaimBlocked = vi.fn();
     element.addEventListener("xpressui:resume-share-code-claim-blocked", (event) => {
       onClaimBlocked((event as CustomEvent<THydratedFormSubmitDetail>).detail);

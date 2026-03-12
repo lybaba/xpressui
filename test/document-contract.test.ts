@@ -5,9 +5,15 @@ import {
   isDocumentNormalizedContractV2,
   summarizeNormalizedDocumentContract,
 } from "../src/index";
-import { FormUI } from "../src/form-ui";
 import { mountHydratedTestForm } from "./test-form-builder";
 import { resetDomAndStorage } from "./test-utils";
+
+type THydratedDocumentHost = HTMLElement & {
+  engine: {
+    setDocumentData(fieldName: string, value: Record<string, any>): void;
+  };
+  onSubmit(values: Record<string, any>): Promise<unknown>;
+};
 
 describe("Document Contract", () => {
   beforeEach(() => {
@@ -103,7 +109,7 @@ describe("Document Contract", () => {
           type: "email",
         },
       ],
-    }) as FormUI;
+    }) as THydratedDocumentHost;
 
     element.engine.setDocumentData("passport", {
       text: "P<UTOERIKSSON",

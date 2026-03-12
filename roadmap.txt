@@ -23,7 +23,7 @@ Current State
 Major capabilities already implemented in the codebase:
 - public hydration/runtime entry via `hydrateFormUI(...)` + `FormRuntime`
 - headless runtime via `FormRuntime`
-- hydration runtime via `FormUI`
+- hydration runtime implementation
 - schema validation + migration helpers
 - provider registry abstraction
 - dynamic rules and conditional field runtime
@@ -72,7 +72,7 @@ Major capabilities already implemented in the codebase:
 - product demos published via GitHub Pages
 - CI / release checks
 - structural refactor progress:
-  - contracts extracted from `FormUI`
+  - contracts extracted from the hydration runtime
   - view/output rendering helpers extracted
   - workflow step UI helpers extracted
   - submit/provider event helpers extracted
@@ -229,7 +229,7 @@ Completed:
 - pre-submit / post-success / post-failure lifecycle hooks
 
 Exit criteria:
-- new providers can be added with little or no `FormUI` changes
+- new providers can be added with little or no hydration-layer changes
 - provider outputs drive workflow transitions consistently
 
 
@@ -389,7 +389,7 @@ Phase 7: View Runtime and Resource Rendering
 Status: In progress (hardening complete, extending)
 
 Goal:
-Let one runtime support both data capture and data presentation so a `FormUI`
+Let one runtime support both data capture and data presentation so a hydrated
 instance can behave as a `ViewUI`.
 
 Completed MVP scope:
@@ -489,7 +489,7 @@ Target layer ownership:
 - local / indexed / future remote persistence
 
 6. `ui`
-- `FormUI`
+- hydrated form runtime
 - DOM rendering only
 - demo helpers only
 

@@ -11,7 +11,6 @@ import {
   fieldFactory,
   FormRuntime,
   FormStepRuntime,
-  FormUI,
   FormUploadRuntime,
   getProviderDefinition,
   getPublicApiManifest,
@@ -42,7 +41,6 @@ describe("Public API", () => {
   });
 
   it("keeps the main public runtime exports available from the package entrypoint", () => {
-    expect(publicApi.FormUI).toBe(FormUI);
     expect(publicApi.FormRuntime).toBe(FormRuntime);
     expect(publicApi.FormStepRuntime).toBe(FormStepRuntime);
     expect(publicApi.FormUploadRuntime).toBe(FormUploadRuntime);
@@ -79,7 +77,6 @@ describe("Public API", () => {
         "createFormConfig",
         "createFormPreset",
         "fieldFactory",
-        "FormUI",
         "FormRuntime",
         "FormUploadRuntime",
         "createLocalFormAdmin",

@@ -10,7 +10,6 @@ const STABLE_PUBLIC_API = [
   "createFormPreset",
   "fieldFactory",
   "stepFactory",
-  "FormUI",
   "FormRuntime",
   "FormUploadRuntime",
   "createLocalFormAdmin",

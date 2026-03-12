@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { THydratedFormSubmitDetail } from "../src/index";
 import { FormUI } from "../src/form-ui";
-import { mountFormUI } from "./test-form-builder";
+import { mountHydratedTestForm } from "./test-form-builder";
 import { flushAsyncWork, resetDomAndStorage } from "./test-utils";
 
 describe("Approval Workflows", () => {
@@ -33,7 +33,7 @@ describe("Approval Workflows", () => {
       }),
     );
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "approval-request-form",
       title: "Approval Request Form",
       provider: {
@@ -102,7 +102,7 @@ describe("Approval Workflows", () => {
       }),
     );
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "approval-complete-form",
       title: "Approval Complete Form",
       provider: {
@@ -153,7 +153,7 @@ describe("Approval Workflows", () => {
       }),
     );
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "approval-decision-form",
       title: "Approval Decision Form",
       provider: {
@@ -234,7 +234,7 @@ describe("Approval Workflows", () => {
       }),
     );
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "approval-comment-form",
       title: "Approval Comment Form",
       provider: {
@@ -290,7 +290,7 @@ describe("Approval Workflows", () => {
       }),
     );
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "approval-state-field-form",
       title: "Approval State Field Form",
       provider: {
@@ -324,7 +324,7 @@ describe("Approval Workflows", () => {
       }),
     );
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "approval-workflow-form",
       title: "Approval Workflow Form",
       provider: {

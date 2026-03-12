@@ -602,7 +602,7 @@ ${submitButtonMarkup}
 <form-ui name="${escapeHtml(templateName)}"${formUIModeAttr}></form-ui>`;
 }
 
-export function mountFormUI(
+export function mountHydratedTestForm(
   container: Element,
   input: TSimpleFormInput | TFormConfig,
   templateName?: string

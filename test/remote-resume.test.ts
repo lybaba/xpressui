@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { THydratedFormSubmitDetail } from "../src/index";
 import { FormUI } from "../src/form-ui";
-import { mountFormUI } from "./test-form-builder";
+import { mountHydratedTestForm } from "./test-form-builder";
 import { flushAsyncWork, resetDomAndStorage } from "./test-utils";
 
 describe("Remote Resume", () => {
@@ -50,7 +50,7 @@ describe("Remote Resume", () => {
     });
 
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "remote-resume-form",
       title: "Remote Resume Form",
       storage: {
@@ -101,7 +101,7 @@ describe("Remote Resume", () => {
     });
 
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "remote-resume-contract-form",
       title: "Remote Resume Contract Form",
       storage: {
@@ -176,7 +176,7 @@ describe("Remote Resume", () => {
     });
 
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "remote-resume-signed-contract-form",
       title: "Remote Resume Signed Contract Form",
       storage: {
@@ -234,7 +234,7 @@ describe("Remote Resume", () => {
     });
 
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "remote-resume-signed-invalid-form",
       title: "Remote Resume Signed Invalid Form",
       storage: {
@@ -302,7 +302,7 @@ describe("Remote Resume", () => {
     });
 
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "remote-share-code-form",
       title: "Remote Share Code Form",
       storage: {
@@ -375,7 +375,7 @@ describe("Remote Resume", () => {
     });
 
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "remote-share-code-invalid-form",
       title: "Remote Share Code Invalid Form",
       storage: {
@@ -413,7 +413,7 @@ describe("Remote Resume", () => {
       }),
     );
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "remote-share-code-throttle-form",
       title: "Remote Share Code Throttle Form",
       storage: {

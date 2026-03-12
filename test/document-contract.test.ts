@@ -6,7 +6,7 @@ import {
   summarizeNormalizedDocumentContract,
 } from "../src/index";
 import { FormUI } from "../src/form-ui";
-import { mountFormUI } from "./test-form-builder";
+import { mountHydratedTestForm } from "./test-form-builder";
 import { resetDomAndStorage } from "./test-utils";
 
 describe("Document Contract", () => {
@@ -87,7 +87,7 @@ describe("Document Contract", () => {
       }),
     );
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "document-submit-form",
       title: "Document Submit Form",
       submit: {

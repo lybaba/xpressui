@@ -35,7 +35,7 @@ import {
 import { FormUI } from '../src/form-ui';
 import {
   createTemplateMarkup,
-  mountFormUI,
+  mountHydratedTestForm,
 } from './test-form-builder';
 
 function renderFixture(markup: string): FormUI {
@@ -1188,7 +1188,7 @@ describe('FormUI', () => {
     }));
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'product-list-demo',
       title: 'Product List Demo',
       fields: [
@@ -1284,7 +1284,7 @@ describe('FormUI', () => {
     ];
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'product-list-multi-demo',
       title: 'Product List Multi Demo',
       fields: [
@@ -1330,7 +1330,7 @@ describe('FormUI', () => {
     ];
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'product-list-shell-demo',
       title: 'Product List Shell Demo',
       fields: [
@@ -1465,7 +1465,7 @@ describe('FormUI', () => {
     }));
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'image-gallery-demo',
       title: 'Image Gallery Demo',
       fields: [
@@ -1508,7 +1508,7 @@ describe('FormUI', () => {
 
   it('preserves image-gallery shell nodes while updating selection state', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'image-gallery-shell-demo',
       title: 'Image Gallery Shell Demo',
       fields: [
@@ -1631,7 +1631,7 @@ describe('FormUI', () => {
 
   it('supports quiz fields with single choice, multi choice limits, and open answers', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'quiz-demo',
       title: 'Quiz Demo',
       fields: [
@@ -1776,7 +1776,7 @@ describe('FormUI', () => {
 
   it('preserves quiz shell nodes while updating selected answers', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'quiz-shell-demo',
       title: 'Quiz Shell Demo',
       fields: [
@@ -1876,7 +1876,7 @@ describe('FormUI', () => {
 
   it('preserves choice-list shell nodes while updating selected options', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'choice-list-shell-demo',
       title: 'Choice List Shell Demo',
       fields: [
@@ -1966,7 +1966,7 @@ describe('FormUI', () => {
 
   it('validates product-list, image-gallery, and quiz selections with array and text semantics', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'ecommerce-array-validation-demo',
       title: 'Ecommerce Array Validation Demo',
       fields: [
@@ -3573,7 +3573,7 @@ describe('FormUI', () => {
       }),
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-base-url-form',
       title: 'Submit Base URL Form',
       submit: {
@@ -3599,7 +3599,7 @@ describe('FormUI', () => {
 
   it('preserves advanced upload submit options through template serialization', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, createFormConfig({
+    const element = mountHydratedTestForm(container, createFormConfig({
       name: 'submit-upload-options-form',
       title: 'Submit Upload Options Form',
       submit: {
@@ -3640,7 +3640,7 @@ describe('FormUI', () => {
 
   it('preserves advanced storage security options through template serialization', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, createFormConfig({
+    const element = mountHydratedTestForm(container, createFormConfig({
       name: 'storage-security-options-form',
       title: 'Storage Security Options Form',
       storage: {
@@ -3681,7 +3681,7 @@ describe('FormUI', () => {
       }),
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-with-settings-form',
       title: 'Submit With Settings Form',
       submit: {
@@ -3716,7 +3716,7 @@ describe('FormUI', () => {
       }),
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-with-allowlisted-setting-form',
       title: 'Submit With Allowlisted Setting Form',
       submit: {
@@ -3757,7 +3757,7 @@ describe('FormUI', () => {
       }),
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-with-field-opt-in-setting-form',
       title: 'Submit With Field Opt In Setting Form',
       submit: {
@@ -3799,7 +3799,7 @@ describe('FormUI', () => {
     const preSubmit = vi.fn().mockReturnValue({ email: 'normalized@example.com' });
     const postSuccess = vi.fn();
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-lifecycle-success-form',
       title: 'Submit Lifecycle Success Form',
       submit: {
@@ -3845,7 +3845,7 @@ describe('FormUI', () => {
         throw new Error('post-success-hook-failure');
       });
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-lifecycle-hook-error-form',
       title: 'Submit Lifecycle Hook Error Form',
       submit: {
@@ -3889,7 +3889,7 @@ describe('FormUI', () => {
       },
     });
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-transport-form',
       title: 'Submit Transport Form',
       submit: {
@@ -3934,7 +3934,7 @@ describe('FormUI', () => {
       }),
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-transport-response-form',
       title: 'Submit Transport Response Form',
       submit: {
@@ -3968,7 +3968,7 @@ describe('FormUI', () => {
       result: { ok: true },
     });
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-transport-invalid-response-envelope-form',
       title: 'Submit Transport Invalid Envelope Form',
       submit: {
@@ -4009,7 +4009,7 @@ describe('FormUI', () => {
       }
       return errors;
     });
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'validation-hooks-form',
       title: 'Validation Hooks Form',
       validation: {
@@ -4046,7 +4046,7 @@ describe('FormUI', () => {
     );
     const onSubmitCanceled = vi.fn();
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-lifecycle-cancel-form',
       title: 'Submit Lifecycle Cancel Form',
       submit: {
@@ -4085,7 +4085,7 @@ describe('FormUI', () => {
     );
     const postFailure = vi.fn();
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'submit-lifecycle-failure-form',
       title: 'Submit Lifecycle Failure Form',
       submit: {
@@ -4196,7 +4196,7 @@ describe('FormUI', () => {
 
   it('observes upload and resume hardening events in the debug observer stream', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'debug-extra-events-form',
       title: 'Debug Extra Events Form',
       fields: [
@@ -4229,7 +4229,7 @@ describe('FormUI', () => {
 
   it('tracks provider contract warnings and share-code claim state in the debug observer snapshot', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'debug-provider-resume-events-form',
       title: 'Debug Provider Resume Events Form',
       fields: [
@@ -4301,7 +4301,7 @@ describe('FormUI', () => {
 
   it('can render a live debug panel from form events', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'debug-panel-form',
       title: 'Debug Panel Form',
       rules: [
@@ -4398,7 +4398,7 @@ describe('FormUI', () => {
 
   it('renders provider warning and resume claim details in the debug panel', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'debug-provider-panel-form',
       title: 'Debug Provider Panel Form',
       fields: [
@@ -4444,7 +4444,7 @@ describe('FormUI', () => {
 
   it('renders a filterable recent event timeline in the debug panel', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'debug-timeline-form',
       title: 'Debug Timeline Form',
       fields: [
@@ -4492,7 +4492,7 @@ describe('FormUI', () => {
 
   it('can render an admin panel from FormUI operational helpers', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'admin-panel-form',
       title: 'Admin Panel Form',
       storage: {
@@ -4543,7 +4543,7 @@ describe('FormUI', () => {
 
   it('can render a combined ops panel from FormUI and local admin helpers', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'ops-panel-form',
       title: 'Ops Panel Form',
       storage: {
@@ -4605,7 +4605,7 @@ describe('FormUI', () => {
 
   it('can render a dedicated resume status panel from cross-device events', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'resume-status-panel-form',
       title: 'Resume Status Panel Form',
       fields: [
@@ -4647,7 +4647,7 @@ describe('FormUI', () => {
 
   it('can observe applied rules through the debug observer helper', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'debug-rule-history-form',
       title: 'Debug Rule History Form',
       rules: [
@@ -4746,7 +4746,7 @@ describe('FormUI', () => {
 
   it('can observe template diagnostics through the debug observer helper', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'debug-template-diagnostics-form',
       title: 'Debug Template Diagnostics Form',
       rules: [
@@ -4792,7 +4792,7 @@ describe('FormUI', () => {
 
   it('can read the active template warnings through the debug observer helper', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'debug-active-template-warnings-form',
       title: 'Debug Active Template Warnings Form',
       rules: [
@@ -4906,7 +4906,7 @@ describe('FormUI', () => {
 
   it('exposes active template warnings directly on FormUI', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'form-ui-active-template-warnings-form',
       title: 'Form UI Active Template Warnings Form',
       rules: [
@@ -4955,7 +4955,7 @@ describe('FormUI', () => {
 
   it('exposes recently applied rules directly on FormUI', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'form-ui-recent-rules-form',
       title: 'Form UI Recent Rules Form',
       rules: [
@@ -5098,7 +5098,7 @@ describe('FormUI', () => {
 
   it('can mount a form from a simple config object', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'booking-form',
       title: 'Booking Form',
       fields: [
@@ -5126,7 +5126,7 @@ describe('FormUI', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'attached-mount-form',
       title: 'Attached Mount Form',
       fields: [
@@ -5152,7 +5152,7 @@ describe('FormUI', () => {
     expect(element.form?.getState().values.full_name).toBe('Alice');
   });
 
-  it('mountFormUI hydrates an existing backend form instead of replacing it', () => {
+  it('mountHydratedTestForm hydrates an existing backend form instead of replacing it', () => {
     const container = document.createElement('div');
     container.innerHTML = `
       <form id="hydrated_mount_form" data-type="contactform" data-name="hydrated_mount" data-label="Hydrated Mount">
@@ -5172,7 +5172,7 @@ describe('FormUI', () => {
     `;
     const existingForm = container.querySelector('form') as HTMLFormElement;
 
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'hydrated_mount',
       title: 'Hydrated Mount',
       fields: [
@@ -5196,7 +5196,7 @@ describe('FormUI', () => {
   it('supports select-multiple fields in mounted forms', async () => {
     const container = document.createElement('div');
     const onSubmitSuccess = vi.fn();
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'multi-select-form',
       title: 'Multi Select Form',
       fields: [
@@ -5264,7 +5264,7 @@ describe('FormUI', () => {
     (window as any).XMLHttpRequest = MockXhr;
     (globalThis as any).XMLHttpRequest = MockXhr;
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'upload-form',
       title: 'Upload Form',
       submit: {
@@ -5374,7 +5374,7 @@ describe('FormUI', () => {
     (globalThis as any).XMLHttpRequest = MockXhr;
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'upload-progress-form',
       title: 'Upload Progress Form',
       submit: {
@@ -5421,7 +5421,7 @@ describe('FormUI', () => {
 
   it('supports drag and drop for file fields in the default UI', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'file-drop-form',
       title: 'File Drop Form',
       fields: [
@@ -5453,7 +5453,7 @@ describe('FormUI', () => {
 
   it('preserves the static upload shell and updates only the dynamic file selection body', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'file-shell-form',
       title: 'File Shell Form',
       fields: [
@@ -5493,7 +5493,7 @@ describe('FormUI', () => {
 
   it('preserves upload file row nodes while standard file selection changes', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'upload-row-shell-form',
       title: 'Upload Row Shell Form',
       fields: [
@@ -5589,7 +5589,7 @@ describe('FormUI', () => {
   it('rejects invalid dropped files before updating the field value', async () => {
     const container = document.createElement('div');
     const onFileValidationError = vi.fn();
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'file-drop-validated-form',
       title: 'File Drop Validated Form',
       fields: [
@@ -5637,7 +5637,7 @@ describe('FormUI', () => {
 
   it('can append dropped files when fileDropMode is append', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'file-drop-append-form',
       title: 'File Drop Append Form',
       fields: [
@@ -5673,7 +5673,7 @@ describe('FormUI', () => {
 
   it('can remove a selected file from the default upload UI', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'file-remove-form',
       title: 'File Remove Form',
       fields: [
@@ -5724,7 +5724,7 @@ describe('FormUI', () => {
       .mockReturnValue('blob:test-preview');
     const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'image-preview-form',
       title: 'Image Preview Form',
       fields: [
@@ -5764,7 +5764,7 @@ describe('FormUI', () => {
 
   it('does not apply string-only AJV validation to file fields', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'file-validation-form',
       title: 'File Validation Form',
       fields: [
@@ -5788,7 +5788,7 @@ describe('FormUI', () => {
 
   it('renders native capture attributes for file and camera-photo fields', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'camera-fields-form',
       title: 'Camera Fields Form',
       fields: [
@@ -5827,7 +5827,7 @@ describe('FormUI', () => {
     (globalThis as any).BarcodeDetector = MockBarcodeDetector;
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'qr-scan-form',
       title: 'QR Scan Form',
       fields: [
@@ -5876,7 +5876,7 @@ describe('FormUI', () => {
     (globalThis as any).BarcodeDetector = undefined;
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'qr-scan-error-form',
       title: 'QR Scan Error Form',
       fields: [
@@ -5939,7 +5939,7 @@ describe('FormUI', () => {
     (globalThis as any).BarcodeDetector = MockBarcodeDetector;
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'qr-live-form',
       title: 'QR Live Form',
       fields: [
@@ -6007,7 +6007,7 @@ describe('FormUI', () => {
     (globalThis as any).BarcodeDetector = MockBarcodeDetector;
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'qr-auto-form',
       title: 'QR Auto Form',
       fields: [
@@ -6044,7 +6044,7 @@ describe('FormUI', () => {
     (globalThis as any).BarcodeDetector = MockBarcodeDetector;
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'qr-shell-form',
       title: 'QR Shell Form',
       fields: [
@@ -6109,7 +6109,7 @@ describe('FormUI', () => {
     (globalThis as any).BarcodeDetector = MockBarcodeDetector;
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'qr-video-reuse-form',
       title: 'QR Video Reuse Form',
       fields: [
@@ -6154,7 +6154,7 @@ describe('FormUI', () => {
       .mockImplementation((file: Blob) => `blob:${(file as File).name}`);
     const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'document-scan-form',
       title: 'Document Scan Form',
       fields: [
@@ -6247,7 +6247,7 @@ describe('FormUI', () => {
       .mockImplementation((file: Blob) => `blob:${(file as File).name}`);
     const revokeObjectUrlSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'document-shell-form',
       title: 'Document Shell Form',
       fields: [
@@ -6342,7 +6342,7 @@ describe('FormUI', () => {
     };
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'document-ocr-form',
       title: 'Document OCR Form',
       fields: [
@@ -6634,7 +6634,7 @@ describe('FormUI', () => {
     (globalThis as any).TextDetector = MockTextDetector;
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'document-insight-shell-form',
       title: 'Document Insight Shell Form',
       fields: [
@@ -6678,7 +6678,7 @@ describe('FormUI', () => {
   it('emits a dedicated event for file validation errors', () => {
     const container = document.createElement('div');
     const onFileValidationError = vi.fn();
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'file-validation-event-form',
       title: 'File Validation Event Form',
       fields: [
@@ -6715,7 +6715,7 @@ describe('FormUI', () => {
 
   it('validates file type and size before submit', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'validated-upload-form',
       title: 'Validated Upload Form',
       fields: [
@@ -6746,7 +6746,7 @@ describe('FormUI', () => {
 
   it('supports maxFiles and custom file validation messages', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'custom-upload-errors-form',
       title: 'Custom Upload Errors Form',
       fields: [
@@ -6789,7 +6789,7 @@ describe('FormUI', () => {
 
   it('supports minFiles validation for multiple uploads', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'min-files-form',
       title: 'Min Files Form',
       fields: [
@@ -6813,7 +6813,7 @@ describe('FormUI', () => {
 
   it('supports total file size validation for multiple uploads', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'total-size-form',
       title: 'Total Size Form',
       fields: [
@@ -6861,7 +6861,7 @@ describe('FormUI', () => {
     (window as any).XMLHttpRequest = MockXhr;
     (globalThis as any).XMLHttpRequest = MockXhr;
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'upload-repeat-form',
       title: 'Upload Repeat Form',
       submit: {
@@ -6916,7 +6916,7 @@ describe('FormUI', () => {
     (window as any).XMLHttpRequest = MockXhr;
     (globalThis as any).XMLHttpRequest = MockXhr;
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'upload-custom-field-form',
       title: 'Upload Custom Field Form',
       submit: {
@@ -7566,7 +7566,7 @@ describe('FormUI', () => {
 
   it('disables offline queue for forms that include file fields', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'queued-upload-form',
       title: 'Queued Upload Form',
       submit: {
@@ -8663,7 +8663,7 @@ describe('FormUI', () => {
 
   it('can switch validation.i18n locale at runtime', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, createFormConfig({
+    const element = mountHydratedTestForm(container, createFormConfig({
       name: 'runtime-validation-i18n-form',
       title: 'Runtime Validation I18n Form',
       fields: [
@@ -8697,7 +8697,7 @@ describe('FormUI', () => {
     );
 
     const container = document.createElement('div');
-    const element = mountFormUI(
+    const element = mountHydratedTestForm(
       container,
       createFormConfig({
         name: 'booking-api',
@@ -8757,7 +8757,7 @@ describe('FormUI', () => {
       }),
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'provider-contract-strict-form',
       title: 'Provider Contract Strict Form',
       submit: {
@@ -8855,7 +8855,7 @@ describe('FormUI', () => {
     );
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'dynamic-form',
       title: 'Dynamic Form',
       fields: [
@@ -9129,7 +9129,7 @@ describe('FormUI', () => {
 
   it('supports basic rules with AND/OR logic and show/hide actions', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'rules-form',
       title: 'Rules Form',
       rules: [
@@ -9204,7 +9204,7 @@ describe('FormUI', () => {
 
   it('emits a debug event when a rule is applied', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'rule-event-form',
       title: 'Rule Event Form',
       rules: [
@@ -9248,7 +9248,7 @@ describe('FormUI', () => {
 
   it('does not emit a rule-applied event when a matching rule does not change state', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'no-op-rule-event-form',
       title: 'No Op Rule Event Form',
       rules: [
@@ -9290,7 +9290,7 @@ describe('FormUI', () => {
 
   it('supports advanced rule operators for string and numeric comparisons', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'advanced-rules-form',
       title: 'Advanced Rules Form',
       rules: [
@@ -9345,7 +9345,7 @@ describe('FormUI', () => {
 
   it('supports exists and empty rule operators', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'presence-rules-form',
       title: 'Presence Rules Form',
       rules: [
@@ -9402,7 +9402,7 @@ describe('FormUI', () => {
 
   it('supports the set-value rule action', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-rules-form',
       title: 'Set Value Rules Form',
       rules: [
@@ -9433,7 +9433,7 @@ describe('FormUI', () => {
 
   it('supports the set-value rule action from another field', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-source-field-rules-form',
       title: 'Set Value Source Field Rules Form',
       rules: [
@@ -9468,7 +9468,7 @@ describe('FormUI', () => {
 
   it('supports hidden setting fields as rule inputs without rendering them in the UI', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'setting-rule-form',
       title: 'Setting Rule Form',
       rules: [
@@ -9499,7 +9499,7 @@ describe('FormUI', () => {
 
   it('supports numeric setting values in rule conditions', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'setting-numeric-rule-form',
       title: 'Setting Numeric Rule Form',
       rules: [
@@ -9526,7 +9526,7 @@ describe('FormUI', () => {
 
   it('supports set-value transforms for copied field values', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-transform-rules-form',
       title: 'Set Value Transform Rules Form',
       rules: [
@@ -9566,7 +9566,7 @@ describe('FormUI', () => {
 
   it('supports the slugify set-value transform', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-slugify-rules-form',
       title: 'Set Value Slugify Rules Form',
       rules: [
@@ -9606,7 +9606,7 @@ describe('FormUI', () => {
 
   it('supports set-value templates built from multiple fields', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-template-rules-form',
       title: 'Set Value Template Rules Form',
       rules: [
@@ -9651,7 +9651,7 @@ describe('FormUI', () => {
   it('emits a debug event when a set-value template references a missing field', async () => {
     const container = document.createElement('div');
     const onMissingField = vi.fn();
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-missing-template-field-rules-form',
       title: 'Set Value Missing Template Field Rules Form',
       rules: [
@@ -9708,7 +9708,7 @@ describe('FormUI', () => {
   it('does not re-emit the same missing template field warning while it stays unchanged', async () => {
     const container = document.createElement('div');
     const onMissingField = vi.fn();
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-stable-missing-template-field-rules-form',
       title: 'Set Value Stable Missing Template Field Rules Form',
       rules: [
@@ -9755,7 +9755,7 @@ describe('FormUI', () => {
   it('re-emits a missing template field warning after the template becomes valid and then invalid again', async () => {
     const container = document.createElement('div');
     const onMissingField = vi.fn();
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-reset-missing-template-field-rules-form',
       title: 'Set Value Reset Missing Template Field Rules Form',
       rules: [
@@ -9837,7 +9837,7 @@ describe('FormUI', () => {
   it('emits a debug event when a template warning is cleared', async () => {
     const container = document.createElement('div');
     const onWarningCleared = vi.fn();
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-template-warning-cleared-form',
       title: 'Set Value Template Warning Cleared Form',
       rules: [
@@ -9910,7 +9910,7 @@ describe('FormUI', () => {
   it('emits the current template warning state when warnings appear and clear', async () => {
     const container = document.createElement('div');
     const onWarningState = vi.fn();
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-value-template-warning-state-form',
       title: 'Set Value Template Warning State Form',
       rules: [
@@ -10006,7 +10006,7 @@ describe('FormUI', () => {
       )
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'fetch-options-rules-form',
       title: 'Fetch Options Rules Form',
       rules: [
@@ -10050,7 +10050,7 @@ describe('FormUI', () => {
 
   it('supports enable and disable rule actions', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'enable-disable-rules-form',
       title: 'Enable Disable Rules Form',
       rules: [
@@ -10094,7 +10094,7 @@ describe('FormUI', () => {
 
   it('supports set-error and lock-submit rule actions', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'set-error-lock-submit-rules-form',
       title: 'Set Error And Lock Submit Rules Form',
       rules: [
@@ -10159,7 +10159,7 @@ describe('FormUI', () => {
 
   it('supports emit-event rule actions', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'emit-event-rules-form',
       title: 'Emit Event Rules Form',
       rules: [
@@ -10216,7 +10216,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'payment-form',
       title: 'Payment Form',
       provider: {
@@ -10295,7 +10295,7 @@ describe('FormUI', () => {
       )
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'stripe-form',
       title: 'Stripe Form',
       provider: {
@@ -10374,7 +10374,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'payment-capture-form',
       title: 'Payment Capture Form',
       provider: {
@@ -10444,7 +10444,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'webhook-form',
       title: 'Webhook Form',
       provider: {
@@ -10523,7 +10523,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'webhook-messages-form',
       title: 'Webhook Messages Form',
       provider: {
@@ -10589,7 +10589,7 @@ describe('FormUI', () => {
       )
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'availability-form',
       title: 'Availability Form',
       provider: {
@@ -10666,7 +10666,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'calendar-booking-form',
       title: 'Calendar Booking Form',
       provider: {
@@ -11068,7 +11068,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'calendar-cancel-form',
       title: 'Calendar Cancel Form',
       provider: {
@@ -11134,7 +11134,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'calendar-reschedule-form',
       title: 'Calendar Reschedule Form',
       provider: {
@@ -11214,7 +11214,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'calendar-availability-hold-form',
       title: 'Calendar Availability Hold Form',
       provider: {
@@ -11284,7 +11284,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'email-form',
       title: 'Email Form',
       provider: {
@@ -11356,7 +11356,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'crm-form',
       title: 'CRM Form',
       provider: {
@@ -11422,7 +11422,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'identity-form',
       title: 'Identity Form',
       provider: {
@@ -11489,7 +11489,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'identity-stripe-form',
       title: 'Identity Stripe Form',
       provider: {
@@ -11535,7 +11535,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'document-submit-filter-form',
       title: 'Document Submit Filter Form',
       submit: {
@@ -11583,7 +11583,7 @@ describe('FormUI', () => {
 
   it('blocks validation when a document-scan field requires a valid MRZ and the checksum fails', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'document-validation-form',
       title: 'Document Validation Form',
       fields: [
@@ -11615,7 +11615,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'identity-webhook-form',
       title: 'Identity Webhook Form',
       provider: {
@@ -11664,7 +11664,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'identity-review-form',
       title: 'Identity Review Form',
       provider: {
@@ -11746,7 +11746,7 @@ describe('FormUI', () => {
       })
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'quote-form',
       title: 'Quote Form',
       submit: {
@@ -11925,7 +11925,7 @@ describe('FormUI', () => {
   it('saves and restores drafts with local storage', async () => {
     const key = 'xpressui:test-draft';
     const firstContainer = document.createElement('div');
-    const firstElement = mountFormUI(firstContainer, {
+    const firstElement = mountHydratedTestForm(firstContainer, {
       name: 'draft-form',
       title: 'Draft Form',
       storage: {
@@ -11953,7 +11953,7 @@ describe('FormUI', () => {
     expect(window.localStorage.getItem(key)).toContain('draft@example.com');
 
     const secondContainer = document.createElement('div');
-    const secondElement = mountFormUI(secondContainer, {
+    const secondElement = mountHydratedTestForm(secondContainer, {
       name: 'draft-form',
       title: 'Draft Form',
       storage: {
@@ -11989,7 +11989,7 @@ describe('FormUI', () => {
 
   it('creates and restores local resume tokens through FormUI', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'resume-form',
       title: 'Resume Form',
       storage: {
@@ -12066,7 +12066,7 @@ describe('FormUI', () => {
 
   it('can list and delete local resume tokens, including through the admin helper', async () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'resume-admin-form',
       title: 'Resume Admin Form',
       storage: {
@@ -12152,7 +12152,7 @@ describe('FormUI', () => {
       draft: payload.snapshot?.draft || null,
     });
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'resume-signed-form',
       title: 'Resume Signed Form',
       storage: {
@@ -12238,7 +12238,7 @@ describe('FormUI', () => {
     });
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'remote-resume-form',
       title: 'Remote Resume Form',
       storage: {
@@ -12373,7 +12373,7 @@ describe('FormUI', () => {
     });
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'remote-resume-contract-form',
       title: 'Remote Resume Contract Form',
       storage: {
@@ -12492,7 +12492,7 @@ describe('FormUI', () => {
     });
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'remote-resume-signed-contract-form',
       title: 'Remote Resume Signed Contract Form',
       storage: {
@@ -12559,7 +12559,7 @@ describe('FormUI', () => {
     });
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'remote-resume-signed-invalid-form',
       title: 'Remote Resume Signed Invalid Form',
       storage: {
@@ -12643,7 +12643,7 @@ describe('FormUI', () => {
     });
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'remote-share-code-form',
       title: 'Remote Share Code Form',
       storage: {
@@ -12735,7 +12735,7 @@ describe('FormUI', () => {
     });
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'remote-share-code-invalid-form',
       title: 'Remote Share Code Invalid Form',
       storage: {
@@ -12813,7 +12813,7 @@ describe('FormUI', () => {
     });
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'remote-share-code-restore-detail-form',
       title: 'Remote Share Code Restore Detail Form',
       storage: {
@@ -12886,7 +12886,7 @@ describe('FormUI', () => {
     );
 
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'remote-share-code-restore-failed-form',
       title: 'Remote Share Code Restore Failed Form',
       storage: {
@@ -12920,7 +12920,7 @@ describe('FormUI', () => {
       }),
     );
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'remote-share-code-throttle-form',
       title: 'Remote Share Code Throttle Form',
       storage: {
@@ -12967,7 +12967,7 @@ describe('FormUI', () => {
       .mockRejectedValue(new TypeError('Failed to fetch'));
     const key = 'xpressui:test-queue';
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'queue-form',
       title: 'Queue Form',
       storage: {
@@ -13026,7 +13026,7 @@ describe('FormUI', () => {
     );
     const key = 'xpressui:test-sync';
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'sync-form',
       title: 'Sync Form',
       storage: {
@@ -13098,7 +13098,7 @@ describe('FormUI', () => {
       .mockRejectedValue(new TypeError('Temporary offline'));
     const key = 'xpressui:test-backoff';
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'backoff-form',
       title: 'Backoff Form',
       storage: {
@@ -13158,7 +13158,7 @@ describe('FormUI', () => {
       .mockRejectedValue(new TypeError('Permanent failure'));
     const key = 'xpressui:test-dead-letter';
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'dead-letter-form',
       title: 'Dead Letter Form',
       storage: {
@@ -13227,7 +13227,7 @@ describe('FormUI', () => {
   it('can clear the dead-letter queue', () => {
     const key = 'xpressui:test-dead-letter-clear';
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'dead-letter-clear-form',
       title: 'Dead Letter Clear Form',
       storage: {
@@ -13270,7 +13270,7 @@ describe('FormUI', () => {
   it('can requeue a dead-letter entry back into the active queue', () => {
     const key = 'xpressui:test-dead-letter-requeue';
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'dead-letter-requeue-form',
       title: 'Dead Letter Requeue Form',
       storage: {
@@ -13333,7 +13333,7 @@ describe('FormUI', () => {
     );
     const key = 'xpressui:test-dead-letter-replay';
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'dead-letter-replay-form',
       title: 'Dead Letter Replay Form',
       storage: {
@@ -13840,7 +13840,7 @@ describe('FormUI', () => {
 
   it('exposes operational and incident summaries directly on FormUI', () => {
     const container = document.createElement('div');
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: 'form-ui-summary-form',
       title: 'FormUI Summary Form',
       storage: {

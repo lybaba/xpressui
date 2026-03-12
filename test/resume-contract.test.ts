@@ -6,7 +6,7 @@ import {
   REMOTE_RESUME_CONTRACT_VERSION,
   THydratedFormSubmitDetail,
 } from "../src/index";
-import { mountFormUI } from "./test-form-builder";
+import { mountHydratedTestForm } from "./test-form-builder";
 import { resetDomAndStorage } from "./test-utils";
 
 describe("Resume Contract", () => {
@@ -56,7 +56,7 @@ describe("Resume Contract", () => {
     );
 
     const container = document.createElement("div");
-    const element = mountFormUI(container, {
+    const element = mountHydratedTestForm(container, {
       name: "resume-contract-form",
       title: "Resume Contract Form",
       storage: {

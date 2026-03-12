@@ -2516,7 +2516,7 @@ describe('HydratedFormHost', () => {
     expect(hydrated.querySelector('[data-form-step-actions]')).toBeNull();
   });
 
-  it('reuses backend workflow controls and advances using hydrated DOM values', () => {
+  it('reuses backend workflow controls and keeps non-workflow buttons untouched during hydration', () => {
     document.body.innerHTML = `
       <div id="mount">
         <form
@@ -2584,10 +2584,10 @@ describe('HydratedFormHost', () => {
     const firstName = hydrated.querySelector('#first_name') as HTMLInputElement;
     const backButton = hydrated.querySelector('[data-step-action="back"]') as HTMLButtonElement;
     const nextButton = hydrated.querySelector('[data-step-action="next"]') as HTMLButtonElement;
+    const submitButton = hydrated.querySelector('#submit_button') as HTMLButtonElement;
 
     expect(hydrated.getCurrentStepIndex()).toBe(0);
-    expect(backButton.getAttribute('data-xpressui-step-bound')).toBe('true');
-    expect(nextButton.getAttribute('data-xpressui-step-bound')).toBe('true');
+    expect(submitButton.type).toBe('submit');
 
     firstName.value = 'Alice';
     expect(hydrated.nextStep()).toBe(true);

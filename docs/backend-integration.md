@@ -12,6 +12,9 @@ The frontend component can submit directly to your backend and emit events based
 on the response. These examples show the payloads your API should accept and the
 responses your frontend can rely on.
 
+Unless stated otherwise, examples in this guide assume the backend already
+rendered the form HTML and the browser only calls `hydrateFormUI(container, formConfig)`.
+
 ## General Notes
 
 - Default method is `POST`

@@ -33,6 +33,7 @@ shell and `xpressui` only hydrates it.
 Note:
 - a few deeper historical examples below still reference older standalone mounting flows
 - they should be read as legacy/internal context, not as the current public integration model
+- unless stated otherwise, examples below assume the matching HTML shell already exists in the page and the JS layer only calls `hydrateFormUI(...)`
 
 `FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
 active template issues on the mounted component.
@@ -387,9 +388,9 @@ Use `attachFormDebugObserver(...)` to record `form-ui:*` runtime events without
 instrumenting each event manually.
 
 ```ts
-import { attachFormDebugObserver, mountFormUI } from '@lybaba/xpressui';
+import { attachFormDebugObserver, hydrateFormUI } from '@lybaba/xpressui';
 
-const form = mountFormUI(container, {
+const form = hydrateFormUI(container, {
   name: 'debug-form',
   fields: [
     { name: 'email', label: 'Email', type: 'email', required: true },
@@ -473,9 +474,9 @@ workflow state, and output snapshots in separate sections, shows a
 `listening` or `detached`.
 
 ```ts
-import { createFormDebugPanel, mountFormUI } from '@lybaba/xpressui';
+import { createFormDebugPanel, hydrateFormUI } from '@lybaba/xpressui';
 
-const form = mountFormUI(container, {
+const form = hydrateFormUI(container, {
   name: 'debug-panel-form',
   fields: [
     { name: 'email', label: 'Email', type: 'email' },
@@ -1879,10 +1880,11 @@ Approval helpers:
 
 ## Advanced Usage
 
-If you need more control, you can generate the HTML template yourself:
+If you need more control, keep the HTML shell server-rendered and hydrate that
+existing markup with `hydrateFormUI(container, formConfig)`.
 
 ```ts
-import { createFormConfig, createTemplateMarkup } from '@lybaba/xpressui';
+import { createFormConfig, hydrateFormUI } from '@lybaba/xpressui';
 
 const formConfig = createFormConfig({
   name: 'custom-form',
@@ -1892,8 +1894,10 @@ const formConfig = createFormConfig({
   ],
 });
 
-const markup = createTemplateMarkup(formConfig);
-document.getElementById('app')!.innerHTML = markup;
+const container = document.getElementById('app');
+if (container) {
+  hydrateFormUI(container, formConfig);
+}
 ```
 
 ## Development

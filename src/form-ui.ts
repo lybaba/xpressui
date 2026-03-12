@@ -6295,6 +6295,8 @@ export class HydratedFormHost extends HTMLElement {
   }
 }
 
-if (typeof window !== "undefined" && !window.customElements.get('form-ui')) {
-  window.customElements.define('form-ui', HydratedFormHost);
+if (typeof window !== "undefined") {
+  if (!window.customElements.get('form-ui')) {
+    window.customElements.define('form-ui', HydratedFormHost);
+  }
 }

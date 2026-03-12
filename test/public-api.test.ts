@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as publicApi from "../src/index";
+import { HydratedFormHost } from "../src/form-ui";
 import {
   createFormAdminPanel,
   createFormOpsPanel,
@@ -65,6 +66,10 @@ describe("Public API", () => {
     expect(publicApi.createTemplateMarkup).toBeUndefined();
     expect((publicApi as Record<string, unknown>)[legacyStandaloneMountExport]).toBeUndefined();
     expect((publicApi as Record<string, unknown>)[legacyHostExport]).toBeUndefined();
+  });
+
+  it("registers the hydrated custom element from the public entrypoint", () => {
+    expect(window.customElements.get("form-ui")).toBe(HydratedFormHost);
   });
 
   it("keeps the submit detail alias stable", () => {

@@ -62,7 +62,7 @@
     </main>
 
     <script type="module">
-      import { hydrateFormUI } from "../dist/xpressui.mjs";
+      import { hydrateForm } from "../dist/xpressui.mjs";
 
       const trace = document.getElementById("trace");
       const state = document.getElementById("state");
@@ -115,7 +115,7 @@
         });
       };
 
-      const form = hydrateFormUI(document.getElementById("app"), {
+      const form = hydrateForm(document.getElementById("app"), {
         version: 1,
         id: "provider_transition_flow_demo",
         uid: "provider_transition_flow_demo_uid",

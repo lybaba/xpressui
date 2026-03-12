@@ -97,7 +97,7 @@
       </div>
     </main>
     <script type="module">
-      import { hydrateFormUI } from "../dist/xpressui.mjs";
+      import { hydrateForm } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
       const preview = document.getElementById("preview");
@@ -161,7 +161,7 @@
         },
       };
 
-      const form = hydrateFormUI(app, config);
+      const form = hydrateForm(app, config);
 
       const renderCurrentStepPreview = () => {
         const currentStepName = form.getCurrentStepName();

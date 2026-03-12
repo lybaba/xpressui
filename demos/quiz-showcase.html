@@ -199,7 +199,7 @@
     </main>
 
     <script type="module">
-      import { hydrateFormUI } from "../dist/xpressui.mjs";
+      import { hydrateForm } from "../dist/xpressui.mjs";
 
       const config = {
         name: "quiz_showcase_demo",
@@ -296,7 +296,7 @@
         `;
       };
 
-      const form = hydrateFormUI(document.getElementById("app"), config);
+      const form = hydrateForm(document.getElementById("app"), config);
       renderState(readValues());
 
       form.addEventListener("input", () => {

@@ -237,7 +237,7 @@
       import {
         createLocalFormAdmin,
         createFormOpsPanel,
-        hydrateFormUI,
+        hydrateForm,
       } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
@@ -533,7 +533,7 @@
         },
       };
       const admin = createLocalFormAdmin(formConfig);
-      const form = hydrateFormUI(app, formConfig);
+      const form = hydrateForm(app, formConfig);
       const opsPanel = createFormOpsPanel(form, admin, {
         title: "Remote Resume Ops",
         debug: { title: "Remote Resume Debug" },

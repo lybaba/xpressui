@@ -71,10 +71,10 @@
       </div>
     </main>
     <script type="module">
-      import { createFormPreset, hydrateFormUI } from "../dist/xpressui.mjs";
+      import { createFormPreset, hydrateForm } from "../dist/xpressui.mjs";
 
       const container = document.getElementById("app");
-      hydrateFormUI(container, createFormPreset("booking-wizard"));
+      hydrateForm(container, createFormPreset("booking-wizard"));
     </script>
   </body>
   </html>

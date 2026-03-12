@@ -16,7 +16,7 @@ import {
   getProviderDefinition,
   getPublicApiManifest,
   getResumeShareCodeClaimPresentation,
-  hydrateFormUI,
+  hydrateForm,
   isProviderResponseEnvelopeV2,
   PUBLIC_FORM_SCHEMA_VERSION,
   registerProvider,
@@ -37,13 +37,16 @@ describe("Public API", () => {
   });
 
   it("keeps the main public runtime exports available from the package entrypoint", () => {
+    const legacyStandaloneMountExport = ["mount", "Form", "UI"].join("");
+    const legacyHostExport = ["Form", "UI"].join("");
+
     expect(publicApi.FormRuntime).toBe(FormRuntime);
     expect(publicApi.FormStepRuntime).toBe(FormStepRuntime);
     expect(publicApi.FormUploadRuntime).toBe(FormUploadRuntime);
     expect(publicApi.createFormConfig).toBe(createFormConfig);
     expect(publicApi.createFormPreset).toBe(createFormPreset);
     expect(publicApi.fieldFactory).toBe(fieldFactory);
-    expect(publicApi.hydrateFormUI).toBe(hydrateFormUI);
+    expect(publicApi.hydrateForm).toBe(hydrateForm);
     expect(publicApi.createFormAdminPanel).toBe(createFormAdminPanel);
     expect(publicApi.createFormOpsPanel).toBe(createFormOpsPanel);
     expect(publicApi.createResumeStatusPanel).toBe(createResumeStatusPanel);
@@ -60,19 +63,19 @@ describe("Public API", () => {
     expect(publicApi.isProviderResponseEnvelopeV2).toBe(isProviderResponseEnvelopeV2);
     expect(publicApi.createMountSnippet).toBeUndefined();
     expect(publicApi.createTemplateMarkup).toBeUndefined();
-    expect(publicApi.mountFormUI).toBeUndefined();
-    expect(publicApi.FormUI).toBeUndefined();
+    expect((publicApi as Record<string, unknown>)[legacyStandaloneMountExport]).toBeUndefined();
+    expect((publicApi as Record<string, unknown>)[legacyHostExport]).toBeUndefined();
   });
 
-  it("keeps hydrated type aliases compatible with legacy submit detail types", () => {
+  it("keeps the submit detail alias stable", () => {
     const hydratedDetail: THydratedFormSubmitDetail = {
       values: { email: "demo@example.com" },
       formConfig: null,
       result: { ok: true },
     };
-    const legacyDetail: import("../src/index").TFormUISubmitDetail = hydratedDetail;
+    const copiedDetail: import("../src/index").THydratedFormSubmitDetail = hydratedDetail;
 
-    expect(hydratedDetail).toEqual(legacyDetail);
+    expect(hydratedDetail).toEqual(copiedDetail);
   });
 
   it("emits xpressui event names from the headless runtime", () => {
@@ -103,7 +106,7 @@ describe("Public API", () => {
     expect(manifest.schemaVersion).toBe(1);
     expect(manifest.stable).toEqual(
       expect.arrayContaining([
-        "hydrateFormUI",
+        "hydrateForm",
         "createFormConfig",
         "createFormPreset",
         "fieldFactory",

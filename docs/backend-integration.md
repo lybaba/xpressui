@@ -13,7 +13,7 @@ on the response. These examples show the payloads your API should accept and the
 responses your frontend can rely on.
 
 Unless stated otherwise, examples in this guide assume the backend already
-rendered the form HTML and the browser only calls `hydrateFormUI(container, formConfig)`.
+rendered the form HTML and the browser only calls `hydrateForm(container, formConfig)`.
 
 ## General Notes
 
@@ -502,10 +502,10 @@ import {
   createFormDebugPanel,
   createLocalFormAdmin,
   createFormOpsPanel,
-  hydrateFormUI,
+  hydrateForm,
 } from "@lybaba/xpressui";
 
-const form = hydrateFormUI(container, formConfig);
+const form = hydrateForm(container, formConfig);
 const panel = createFormDebugPanel(form, { title: "Resume Debug" });
 const admin = createLocalFormAdmin(formConfig);
 const adminPanel = createFormAdminPanel(admin, { title: "Resume Admin" });
@@ -657,7 +657,7 @@ Compatibility notes:
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'reservation-form',
   provider: {
     type: 'reservation',
@@ -803,7 +803,7 @@ Frontend events:
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'payment-form',
   provider: {
     type: 'payment',
@@ -864,7 +864,7 @@ Use this provider when your backend creates a Stripe PaymentIntent.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'stripe-payment-form',
   provider: {
     type: 'payment-stripe',
@@ -923,7 +923,7 @@ internal webhook or a third-party KYC system.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'identity-webhook-form',
   provider: {
     type: 'identity-verification-webhook',
@@ -987,7 +987,7 @@ Use this provider when your backend creates or updates leads in a CRM system.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'crm-form',
   provider: {
     type: 'crm',
@@ -1033,7 +1033,7 @@ calendar booking.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'calendar-booking-form',
   provider: {
     type: 'calendar-booking',
@@ -1089,7 +1089,7 @@ Use this provider when your backend cancels an existing booking.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'calendar-cancel-form',
   provider: {
     type: 'calendar-cancel',
@@ -1134,7 +1134,7 @@ Use this provider when your backend changes an existing booking to a new slot.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'calendar-reschedule-form',
   provider: {
     type: 'calendar-reschedule',
@@ -1182,7 +1182,7 @@ can remain pending before a final decision.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'approval-request-form',
   provider: {
     type: 'approval-request',
@@ -1262,7 +1262,7 @@ existing approval request.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'approval-decision-form',
   provider: {
     type: 'approval-decision',
@@ -1309,7 +1309,7 @@ messages linked to an approval request.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'approval-comment-form',
   provider: {
     type: 'approval-comment',
@@ -1373,7 +1373,7 @@ expects either:
 Example frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'booking-form',
   fields: [
     {
@@ -1441,7 +1441,7 @@ browser `File` blobs in a `multipart/form-data` request.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'upload-form',
   submit: {
     endpoint: '/api/uploads',
@@ -1504,7 +1504,7 @@ submission.
 Frontend config:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'presigned-upload-form',
   submit: {
     endpoint: '/api/uploads/complete',

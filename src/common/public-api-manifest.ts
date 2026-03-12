@@ -5,7 +5,7 @@ export type TPublicApiManifest = {
 };
 
 const STABLE_PUBLIC_API = [
-  "hydrateFormUI",
+  "hydrateForm",
   "createFormConfig",
   "createFormPreset",
   "fieldFactory",

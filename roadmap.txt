@@ -21,7 +21,7 @@ Current State
 -------------
 
 Major capabilities already implemented in the codebase:
-- public hydration/runtime entry via `hydrateFormUI(...)` + `FormRuntime`
+- public hydration/runtime entry via `hydrateForm(...)` + `FormRuntime`
 - headless runtime via `FormRuntime`
 - hydration runtime implementation
 - schema validation + migration helpers
@@ -82,14 +82,14 @@ Major capabilities already implemented in the codebase:
   - unused `TFieldConfig` options removed
   - unused `TFormConfig` options removed
   - dead form-builder / preset wiring for removed config attributes cleaned up
-  - hydrated public aliases now avoid introducing new `TFormUI*` names into the public surface while keeping compatibility with existing imports
-  - public entrypoint tests now prefer hydrated aliases, leaving `TFormUI*` names as compatibility types instead of the recommended naming path
+  - hydrated public aliases now avoid reintroducing host-specific legacy type names into the public surface
+  - public entrypoint tests now prefer hydrated aliases as the recommended naming path
   - runtime event emission now mirrors legacy `form-ui:*` notifications onto `xpressui:*` aliases so new integrations can detach from the old component name without breaking existing listeners
   - test-only mount snippet generation was removed because the package no longer exposes any public standalone mount API
   - internal test harness naming now prefers `mountHydratedTestForm(...)` so helper vocabulary matches the hydrate-only product model
-  - high-signal test descriptions now describe hydrated runtime behavior instead of treating `FormUI` as the product-facing concept
-  - small direct-host tests now use focused structural host types where the full `FormUI` class is not needed
-  - shared test fixture helpers now return generic hydrated host shapes instead of centering the helper signature on `FormUI`
+  - high-signal test descriptions now describe hydrated runtime behavior instead of treating `HydratedFormHost` as the product-facing concept
+  - small direct-host tests now use focused structural host types where the full `HydratedFormHost` class is not needed
+  - shared test fixture helpers now return generic hydrated host shapes instead of centering the helper signature on `HydratedFormHost`
 - UI shell preservation progress:
   - standard file uploads now keep a persistent selection shell and only replace a focused dynamic body region
   - QR scan and document scan now keep their upload shell and mutate dedicated result/control regions instead of rebuilding the whole selection area
@@ -148,7 +148,7 @@ feature breadth:
 - file/document flows need stronger backend and privacy semantics for production
 - admin/debug building blocks exist, but operator workflows are still thin
 - docs/demos need to mirror the canonical backend and operational scenarios exactly
-- hydrated demos should embed the HTML shell they need and prefer `hydrateFormUI(...)` so showcase pages exercise the same ownership model as `iakpress-console`
+- hydrated demos should embed the HTML shell they need and prefer `hydrateForm(...)` so showcase pages exercise the same ownership model as `iakpress-console`
 
 Planning principle for the next lots:
 - do not add many new primitives before provider/save-resume/file contracts are tighter
@@ -169,7 +169,7 @@ Current direction:
 
 Completed:
 - every hydrated demo page under `demos/` now embeds its required form shell directly in HTML
-- demo pages now use `hydrateFormUI(...)`
+- demo pages now use `hydrateForm(...)`
 - the main `@lybaba/xpressui` entrypoint now matches that runtime/hydration-focused surface
 - hydrated demo pages now import `../dist/xpressui.mjs`, which is now the single public runtime/hydration bundle
 - `headless-runtime.html` remains the intentional exception because it demonstrates `FormRuntime` without the hydration layer

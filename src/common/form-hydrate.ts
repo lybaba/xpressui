@@ -4,7 +4,7 @@ import { createFormConfig, TSimpleFormInput } from './form-config-factory';
 
 export type THydratableFormInput = TSimpleFormInput | TFormConfig;
 
-export function hydrateFormUI(
+export function hydrateForm(
   container: Element,
   input: THydratableFormInput,
 ): HTMLElement | null {

@@ -3,8 +3,8 @@ import TFieldConfig from '../src/common/TFieldConfig';
 import TFormConfig from '../src/common/TFormConfig';
 import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from '../src/common/public-schema';
 import { createFormConfig, TSimpleFieldInput, TSimpleFormInput } from '../src/common/form-config-factory';
-import { hydrateFormUI } from '../src/common/form-hydrate';
-import { FormUI } from '../src/form-ui';
+import { hydrateForm } from '../src/common/form-hydrate';
+import { HydratedFormHost } from '../src/form-ui';
 import {
   APPROVAL_STATE_TYPE,
   CAMERA_PHOTO_TYPE,
@@ -613,7 +613,7 @@ export function mountHydratedTestForm(
   const existingTemplate = container.querySelector('template');
   if (existingForm && !existingTemplate) {
     customElements.upgrade(container);
-    const hydratedElement = hydrateFormUI(container, config);
+    const hydratedElement = hydrateForm(container, config);
     if (hydratedElement) {
       customElements.upgrade(hydratedElement);
     }
@@ -625,7 +625,7 @@ export function mountHydratedTestForm(
   const resolvedTemplateName = templateName || config.name;
   let element = container.querySelector('form-ui') as HTMLElement | null;
 
-  if (!(element instanceof FormUI)) {
+  if (!(element instanceof HydratedFormHost)) {
     const host = document.createElement('form-ui') as HTMLElement;
     host.setAttribute('name', resolvedTemplateName);
     if (config.mode) {

@@ -21,18 +21,18 @@ versions of the README.
 The public API is centered on:
 - `FormRuntime` (the composed headless runtime)
 - `FormUploadRuntime` (the dedicated upload runtime)
-- `hydrateFormUI(...)`
+- `hydrateForm(...)`
 - `createFormConfig(...)`
 - `createFormPreset(...)`
 - `fieldFactory`
 
 The main package entrypoint now focuses on `FormRuntime` plus hydration helpers.
 For backend-rendered integrations such as `iakpress-console`, the recommended
-path is `hydrateFormUI(...)` from `@lybaba/xpressui`, so the page owns the HTML
+path is `hydrateForm(...)` from `@lybaba/xpressui`, so the page owns the HTML
 shell and `xpressui` only hydrates it.
 
 Note:
-- unless stated otherwise, examples below assume the matching HTML shell already exists in the page and the JS layer only calls `hydrateFormUI(...)`
+- unless stated otherwise, examples below assume the matching HTML shell already exists in the page and the JS layer only calls `hydrateForm(...)`
 
 The hydrated form instance also exposes `getActiveTemplateWarnings()` for direct
 inspection of active template issues on the mounted component.
@@ -47,7 +47,7 @@ Use `getOperationalSummary()` for aggregate state and `getIncidentSummary()`
 for queue/dead-letter/resume samples oriented toward ops/debug workflows.
 
 Public API you should treat as stable:
-- `hydrateFormUI(...)`
+- `hydrateForm(...)`
 - `createFormConfig(...)`
 - `createFormPreset(...)`
 - `fieldFactory`
@@ -110,7 +110,7 @@ npm install @lybaba/xpressui
 Use the main package entrypoint:
 
 ```ts
-import { hydrateFormUI } from '@lybaba/xpressui';
+import { hydrateForm } from '@lybaba/xpressui';
 ```
 
 If you publish privately through GitHub Packages, make sure your npm registry
@@ -119,7 +119,7 @@ and auth are configured for the `@lybaba` scope.
 ## Quick Start
 
 ```ts
-import { hydrateFormUI } from '@lybaba/xpressui';
+import { hydrateForm } from '@lybaba/xpressui';
 
 const container = document.getElementById('app');
 
@@ -147,7 +147,7 @@ if (container) {
     </form>
   `;
 
-  const form = hydrateFormUI(container, {
+  const form = hydrateForm(container, {
     version: 1,
     id: 'contact-form',
     uid: 'contact-form',
@@ -184,7 +184,7 @@ if (container) {
 If you want less boilerplate, use the built-in field helpers and presets:
 
 ```ts
-import { createFormPreset, fieldFactory, hydrateFormUI } from '@lybaba/xpressui';
+import { createFormPreset, fieldFactory, hydrateForm } from '@lybaba/xpressui';
 
 const form = createFormPreset('identity-check', {
   name: 'onboarding-kyc',
@@ -193,7 +193,7 @@ const form = createFormPreset('identity-check', {
   ],
 });
 
-hydrateFormUI(container, form);
+hydrateForm(container, form);
 ```
 
 Available presets:
@@ -387,9 +387,9 @@ Use `attachFormDebugObserver(...)` to record `xpressui:*` runtime events without
 instrumenting each event manually.
 
 ```ts
-import { attachFormDebugObserver, hydrateFormUI } from '@lybaba/xpressui';
+import { attachFormDebugObserver, hydrateForm } from '@lybaba/xpressui';
 
-const form = hydrateFormUI(container, {
+const form = hydrateForm(container, {
   name: 'debug-form',
   fields: [
     { name: 'email', label: 'Email', type: 'email', required: true },
@@ -473,9 +473,9 @@ workflow state, and output snapshots in separate sections, shows a
 `listening` or `detached`.
 
 ```ts
-import { createFormDebugPanel, hydrateFormUI } from '@lybaba/xpressui';
+import { createFormDebugPanel, hydrateForm } from '@lybaba/xpressui';
 
-const form = hydrateFormUI(container, {
+const form = hydrateForm(container, {
   name: 'debug-panel-form',
   fields: [
     { name: 'email', label: 'Email', type: 'email' },
@@ -512,7 +512,7 @@ Events:
 Provide a `submit` block and the component will call your backend with `fetch`.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'booking-form',
   title: 'Book a Table',
   submit: {
@@ -549,7 +549,7 @@ Supported submit options:
 Custom transport example:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'custom-submit-form',
   submit: {
     endpoint: '/api/unused-when-transport-is-set',
@@ -571,7 +571,7 @@ Validation hooks:
 Validation i18n example:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'checkout-form',
   title: 'Checkout',
   validation: {
@@ -601,7 +601,7 @@ hydrateFormUI(container, {
 Example lifecycle hooks:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'booking-form',
   title: 'Book a Table',
   submit: {
@@ -656,7 +656,7 @@ New workflow-aware providers are also available:
 ### Reservation
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'reservation-form',
   title: 'Reserve',
   provider: {
@@ -688,7 +688,7 @@ Extra event:
 ### Payment
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'payment-form',
   title: 'Pay Now',
   provider: {
@@ -724,7 +724,7 @@ Use `payment-stripe` when your backend creates a Stripe PaymentIntent and
 returns checkout metadata to the frontend.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'stripe-payment-form',
   title: 'Pay with Stripe',
   provider: {
@@ -771,7 +771,7 @@ normalized payload to another backend endpoint without creating a custom
 provider first.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'webhook-form',
   title: 'Webhook Form',
   provider: {
@@ -807,7 +807,7 @@ Use `booking-availability` when your backend returns available slots, pricing,
 or scheduling metadata for a selected service/date combination.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'availability-form',
   title: 'Availability',
   provider: {
@@ -854,7 +854,7 @@ Use `calendar-booking` when your backend confirms a selected slot and creates a
 real booking record.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'calendar-booking-form',
   title: 'Calendar Booking',
   provider: {
@@ -900,7 +900,7 @@ Extra events:
 Use `calendar-cancel` when your backend cancels an existing booking.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'calendar-cancel-form',
   title: 'Calendar Cancel',
   provider: {
@@ -945,7 +945,7 @@ Use `calendar-reschedule` when your backend changes an existing booking to a
 new date or slot.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'calendar-reschedule-form',
   title: 'Calendar Reschedule',
   provider: {
@@ -992,7 +992,7 @@ Use `approval-request` when your backend creates a request that may stay in a
 `pending_approval` state before final approval.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'approval-request-form',
   title: 'Approval Request',
   provider: {
@@ -1046,7 +1046,7 @@ Use `approval-decision` when your backend records the final approver decision on
 an existing approval request.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'approval-decision-form',
   title: 'Approval Decision',
   provider: {
@@ -1092,7 +1092,7 @@ Use `approval-comment` when your backend stores notes, approver comments, or
 audit trail messages linked to an approval request.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'approval-comment-form',
   title: 'Approval Comment',
   provider: {
@@ -1137,7 +1137,7 @@ Use `email` when your backend exposes a messaging endpoint and you want a
 normalized request contract for outbound email workflows.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'email-form',
   title: 'Email Form',
   provider: {
@@ -1182,7 +1182,7 @@ Use `crm` when your backend creates or updates leads in a CRM system with a
 normalized contact payload.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'crm-form',
   title: 'CRM Form',
   provider: {
@@ -1250,7 +1250,7 @@ The component supports two dynamic patterns out of the box:
 - basic rules (`AND` / `OR`, `show`, `hide`, `clear-value`)
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'dynamic-booking',
   title: 'Dynamic Booking',
   fields: [
@@ -1279,7 +1279,7 @@ hydrateFormUI(container, {
 `select-multiple` works with remote options as well:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'dynamic-topics',
   title: 'Dynamic Topics',
   fields: [
@@ -1319,7 +1319,7 @@ Use `type: 'file'` with `submit.mode: 'form-data'` when your backend expects
 multipart uploads.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'upload-form',
   title: 'Upload',
   submit: {
@@ -1446,7 +1446,7 @@ when available.
 You can also define basic rules at the form level:
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'rules-form',
   title: 'Rules',
   rules: [
@@ -1485,7 +1485,7 @@ Current rule scope:
 The runtime can persist draft values in the browser with `localStorage`.
 
 ```ts
-hydrateFormUI(container, {
+hydrateForm(container, {
   name: 'inspection-form',
   title: 'Inspection',
   storage: {
@@ -1880,10 +1880,10 @@ Approval helpers:
 ## Advanced Usage
 
 If you need more control, keep the HTML shell server-rendered and hydrate that
-existing markup with `hydrateFormUI(container, formConfig)`.
+existing markup with `hydrateForm(container, formConfig)`.
 
 ```ts
-import { createFormConfig, hydrateFormUI } from '@lybaba/xpressui';
+import { createFormConfig, hydrateForm } from '@lybaba/xpressui';
 
 const formConfig = createFormConfig({
   name: 'custom-form',
@@ -1895,7 +1895,7 @@ const formConfig = createFormConfig({
 
 const container = document.getElementById('app');
 if (container) {
-  hydrateFormUI(container, formConfig);
+  hydrateForm(container, formConfig);
 }
 ```
 

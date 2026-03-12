@@ -134,13 +134,13 @@
     </main>
 
     <script type="module">
-      import { createFormOpsPanel, hydrateFormUI } from "../dist/xpressui.mjs";
+      import { createFormOpsPanel, hydrateForm } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
       const debug = document.getElementById("debug");
       const latestSnapshot = document.getElementById("snapshot-json");
 
-      const form = hydrateFormUI(app, {
+      const form = hydrateForm(app, {
         version: 1,
         id: "hybrid_output_snapshot_demo",
         uid: "hybrid_output_snapshot_demo_uid",

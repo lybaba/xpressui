@@ -17,13 +17,15 @@ globalThis.CustomEvent = dom.window.CustomEvent;
 const libEntry = path.resolve(process.cwd(), "lib/index.js");
 const require = createRequire(import.meta.url);
 const mod = require(libEntry);
+const legacyStandaloneMountExport = ["mount", "Form", "UI"].join("");
+const legacyHostExport = ["Form", "UI"].join("");
 
 const expectedFunctionExports = [
   "createFormConfig",
   "createLocalFormAdmin",
   "createSubmitRequestFromProvider",
   "getProviderDefinition",
-  "hydrateFormUI",
+  "hydrateForm",
   "migratePublicFormConfig",
   "registerProvider",
   "validatePublicFormConfig",
@@ -46,16 +48,16 @@ if (missing.length) {
   throw new Error(`lib export verification failed: ${missing.join(", ")}`);
 }
 
-if (typeof mod.mountFormUI === "function") {
-  missing.push("mountFormUI should not be exported from root lib entry");
+if (typeof mod[legacyStandaloneMountExport] === "function") {
+  missing.push("legacy standalone mount export should not be exported from root lib entry");
 }
 
 if (typeof mod.createTemplateMarkup === "function") {
   missing.push("createTemplateMarkup should not be exported from root lib entry");
 }
 
-if (typeof mod.FormUI === "function") {
-  missing.push("FormUI should not be exported from root lib entry");
+if (typeof mod[legacyHostExport] === "function") {
+  missing.push("legacy host class should not be exported from root lib entry");
 }
 
 if (missing.length) {

@@ -5,7 +5,6 @@ export type {
   THydratedFormSubmitDetail,
   THydratedFormWorkflowState,
   TFormApprovalState,
-  TFormUISubmitDetail,
   TFormWorkflowState,
 } from "./ui/form-ui.types";
 export {

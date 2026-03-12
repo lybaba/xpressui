@@ -22,17 +22,17 @@ import {
   getProviderDefinition,
   isProviderResponseEnvelopeV2,
   getPublicApiManifest,
-  hydrateFormUI,
+  hydrateForm,
   normalizeProviderResult,
   resolveProviderTransition,
   PUBLIC_FORM_SCHEMA_VERSION,
   REMOTE_RESUME_CONTRACT_VERSION,
   registerProvider,
   validateProviderResponseEnvelopeV2,
-  TFormUISubmitDetail,
+  THydratedFormSubmitDetail,
   validatePublicFormConfig,
 } from '../src/index';
-import { FormUI } from '../src/form-ui';
+import { HydratedFormHost } from '../src/form-ui';
 import {
   createTemplateMarkup,
   mountHydratedTestForm,
@@ -41,7 +41,7 @@ import {
 type TEventCapableHydratedHost = HTMLElement & {
   emitFormEvent(
     eventName: string,
-    detail: TFormUISubmitDetail,
+    detail: THydratedFormSubmitDetail,
     cancelable?: boolean,
   ): boolean;
 };
@@ -106,7 +106,7 @@ async function flushAsyncWork() {
   await new Promise((resolve) => setTimeout(resolve, 10));
 }
 
-describe('FormUI', () => {
+describe('HydratedFormHost', () => {
   beforeEach(() => {
     normalizeLocalStorageApi();
     document.body.innerHTML = '';
@@ -291,7 +291,7 @@ describe('FormUI', () => {
     });
 
     expect(onSubmitSuccess).toHaveBeenCalledTimes(1);
-    expect((onSubmitSuccess.mock.calls[0]?.[0] as CustomEvent<TFormUISubmitDetail>).detail.result).toEqual({
+    expect((onSubmitSuccess.mock.calls[0]?.[0] as CustomEvent<THydratedFormSubmitDetail>).detail.result).toEqual({
       ok: true,
     });
   });
@@ -417,7 +417,7 @@ describe('FormUI', () => {
       <form-ui name="contact"></form-ui>
     `);
 
-    expect(customElements.get('form-ui')).toBe(FormUI);
+    expect(customElements.get('form-ui')).toBe(HydratedFormHost);
     expect(element.querySelector('#contact_form')).not.toBeNull();
     expect(element.formConfig?.name).toBe('contact');
     expect(element.validators).toHaveLength(1);
@@ -981,14 +981,14 @@ describe('FormUI', () => {
     `;
     document.body.appendChild(container);
 
-    const element = hydrateFormUI(container, createFormConfig({
+    const element = hydrateForm(container, createFormConfig({
       name: 'hydrated_hybrid_view',
       title: 'Hydrated Hybrid View',
       mode: 'hybrid',
       fields: [
         { type: 'text', name: 'title', label: 'Title' },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     const input = element.querySelector('#title') as HTMLInputElement;
     const view = element.querySelector('[data-view-field="title"]') as HTMLElement;
@@ -1210,7 +1210,7 @@ describe('FormUI', () => {
           choices: products as any,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     expect(element.querySelectorAll('[data-product-card]').length).toBe(20);
     expect(element.querySelectorAll('[data-product-list-global-cart]').length).toBe(1);
@@ -1311,7 +1311,7 @@ describe('FormUI', () => {
           choices: products as any,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const addA = element.querySelector('#products_a_selection [data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
     addA.click();
@@ -1351,7 +1351,7 @@ describe('FormUI', () => {
           choices: products as any,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const selection = element.querySelector('#products_selection') as HTMLElement;
     const catalog = selection.querySelector('[data-product-list-catalog="products"]') as HTMLElement;
@@ -1424,7 +1424,7 @@ describe('FormUI', () => {
     `;
     document.body.appendChild(container);
 
-    const element = hydrateFormUI(container, createFormConfig({
+    const element = hydrateForm(container, createFormConfig({
       name: 'hydrated_product_list',
       title: 'Hydrated Product List',
       fields: [
@@ -1446,7 +1446,7 @@ describe('FormUI', () => {
           ] as any,
         },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     const card = element.querySelector('[data-product-card="sku_1"]') as HTMLElement;
     const meta = (element.querySelector('[data-product-price="sku_1"]') as HTMLElement).parentElement as HTMLElement;
@@ -1487,7 +1487,7 @@ describe('FormUI', () => {
           choices: images as any,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     expect(element.querySelectorAll('[data-image-card]').length).toBe(20);
 
@@ -1545,7 +1545,7 @@ describe('FormUI', () => {
           ] as any,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const selection = element.querySelector('#lookbook_selection') as HTMLElement;
     const gallery = selection.querySelector('[data-image-gallery-catalog="lookbook"]') as HTMLElement;
@@ -1602,7 +1602,7 @@ describe('FormUI', () => {
     `;
     document.body.appendChild(container);
 
-    const element = hydrateFormUI(container, createFormConfig({
+    const element = hydrateForm(container, createFormConfig({
       name: 'hydrated_image_gallery',
       title: 'Hydrated Image Gallery',
       fields: [
@@ -1621,7 +1621,7 @@ describe('FormUI', () => {
           ] as any,
         },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     const selection = element.querySelector('#lookbook_selection') as HTMLElement;
     const card = element.querySelector('[data-image-card="img_1"]') as HTMLElement;
@@ -1687,7 +1687,7 @@ describe('FormUI', () => {
           placeholder: 'Write your answer',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const firstStyleImage = element.querySelector('[data-quiz-answer-image="minimal"]') as HTMLImageElement;
     firstStyleImage.click();
@@ -1803,7 +1803,7 @@ describe('FormUI', () => {
           ] as any,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const selection = element.querySelector('#materials_selection') as HTMLElement;
     const grid = selection.querySelector('[data-quiz-catalog="materials"]') as HTMLElement;
@@ -1856,7 +1856,7 @@ describe('FormUI', () => {
     `;
     document.body.appendChild(container);
 
-    const element = hydrateFormUI(container, createFormConfig({
+    const element = hydrateForm(container, createFormConfig({
       name: 'hydrated_quiz',
       title: 'Hydrated Quiz',
       fields: [
@@ -1869,7 +1869,7 @@ describe('FormUI', () => {
           ] as any,
         },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     const selection = element.querySelector('#materials_selection') as HTMLElement;
     const card = element.querySelector('[data-quiz-answer-card="wood"]') as HTMLElement;
@@ -1901,7 +1901,7 @@ describe('FormUI', () => {
           ] as any,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const selection = element.querySelector('#interests_selection') as HTMLElement;
     const grid = selection.querySelector('[data-choice-list-grid="interests"]') as HTMLElement;
@@ -1946,7 +1946,7 @@ describe('FormUI', () => {
     `;
     document.body.appendChild(container);
 
-    const element = hydrateFormUI(container, createFormConfig({
+    const element = hydrateForm(container, createFormConfig({
       name: 'hydrated_choice_list',
       title: 'Hydrated Choice List',
       fields: [
@@ -1959,7 +1959,7 @@ describe('FormUI', () => {
           ] as any,
         },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     const selection = element.querySelector('#interests_selection') as HTMLElement;
     const card = element.querySelector('[data-choice-option-value="design"]') as HTMLElement;
@@ -2034,7 +2034,7 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     expect(element.validateForm({})).toEqual({
       products: expect.objectContaining({ errorMessage: 'This field is required.' }),
@@ -2127,7 +2127,7 @@ describe('FormUI', () => {
 
     const snapshots: Array<Record<string, any>> = [];
     element.addEventListener('xpressui:output-snapshot', (event) => {
-      snapshots.push((event as CustomEvent<TFormUISubmitDetail>).detail.result);
+      snapshots.push((event as CustomEvent<THydratedFormSubmitDetail>).detail.result);
     });
 
     const input = element.querySelector('#title') as HTMLInputElement;
@@ -2180,7 +2180,7 @@ describe('FormUI', () => {
     const onStepChange = vi.fn();
 
     element.addEventListener('xpressui:step-change', (event) => {
-      onStepChange((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onStepChange((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     const firstName = element.querySelector('#first_name') as HTMLInputElement;
@@ -3557,7 +3557,7 @@ describe('FormUI', () => {
     const onSubmitSuccess = vi.fn();
 
     element.addEventListener('xpressui:submit-success', (event) => {
-      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSubmitSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     input.dispatchEvent(new FocusEvent('focus'));
@@ -3594,7 +3594,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     await element.onSubmit({ email: 'base-url@example.com' });
 
@@ -3629,7 +3629,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'attachment', label: 'Attachment', type: 'upload-file' },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     expect((element as any).formConfig?.submit).toEqual(
       expect.objectContaining({
@@ -3667,7 +3667,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     expect((element as any).formConfig?.storage).toEqual(
       expect.objectContaining({
@@ -3702,7 +3702,7 @@ describe('FormUI', () => {
         { name: 'email', label: 'Email', type: 'email' },
         { name: 'checkout_currency_setting', label: 'Currency', type: 'setting', value: 'EUR' } as any,
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     await element.onSubmit({
       email: 'shop@example.com',
@@ -3739,7 +3739,7 @@ describe('FormUI', () => {
         { name: 'checkout_currency_setting', label: 'Currency', type: 'setting', value: 'EUR' } as any,
         { name: 'checkout_tax_rate_setting', label: 'Tax', type: 'setting', value: 0.2 } as any,
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     await element.onSubmit({
       email: 'shop@example.com',
@@ -3779,7 +3779,7 @@ describe('FormUI', () => {
         { name: 'checkout_currency_setting', label: 'Currency', type: 'setting', value: 'EUR', includeInSubmit: true } as any,
         { name: 'checkout_tax_rate_setting', label: 'Tax', type: 'setting', value: 0.2 } as any,
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     await element.onSubmit({
       email: 'shop@example.com',
@@ -3823,7 +3823,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     await element.onSubmit({ email: 'INITIAL@example.com' });
 
@@ -3869,10 +3869,10 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onHookError = vi.fn();
     element.addEventListener('xpressui:submit-hook-error', (event) => {
-      onHookError((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onHookError((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await element.onSubmit({ email: 'hook@example.com' });
@@ -3910,10 +3910,10 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onSubmitSuccess = vi.fn();
     element.addEventListener('xpressui:submit-success', (event) => {
-      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSubmitSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await element.onSubmit({ email: 'transport@example.com' });
@@ -3955,10 +3955,10 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onSubmitSuccess = vi.fn();
     element.addEventListener('xpressui:submit-success', (event) => {
-      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSubmitSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await element.onSubmit({ email: 'response-transport@example.com' });
@@ -3989,7 +3989,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     await expect(
       element.onSubmit({ email: 'invalid-envelope@example.com' }),
@@ -4030,7 +4030,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const errors = element.validateForm({ email: '  BAD@OTHER.COM  ' });
 
@@ -4069,10 +4069,10 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     element.addEventListener('xpressui:submit-canceled', (event) => {
-      onSubmitCanceled((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSubmitCanceled((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await element.onSubmit({ email: 'cancel@example.com' });
@@ -4108,7 +4108,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     await expect(
       element.onSubmit({ email: 'failure@example.com' }),
@@ -4212,7 +4212,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const observer = attachFormDebugObserver(element, { maxEvents: 10 });
 
     element.dispatchEvent(new CustomEvent('xpressui:upload-retry', {
@@ -4245,7 +4245,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const observer = attachFormDebugObserver(element, { maxEvents: 10 });
 
     element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-claim-state', {
@@ -4329,7 +4329,7 @@ describe('FormUI', () => {
         { name: 'country', label: 'Country', type: 'text' },
         { name: 'currency', label: 'Currency', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const panel = createFormDebugPanel(element, { title: 'Runtime Debug' });
     const country = element.querySelector('#country') as HTMLInputElement;
 
@@ -4414,7 +4414,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const panel = createFormDebugPanel(element, { title: 'Provider Debug' });
     element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-claim-state', {
@@ -4460,7 +4460,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const panel = createFormDebugPanel(element, { title: 'Timeline Debug', maxVisibleEvents: 5 });
     element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-claim-state', {
@@ -4513,7 +4513,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     window.localStorage.setItem('xpressui:test-admin-panel', JSON.stringify({ email: 'panel@example.com' }));
     const panel = createFormAdminPanel(element, { title: 'Ops Panel', incidentLimit: 1 });
@@ -4564,7 +4564,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const admin = createLocalFormAdmin((element as any).formConfig);
 
     window.localStorage.setItem('xpressui:test-ops-panel', JSON.stringify({ email: 'ops@example.com' }));
@@ -4621,7 +4621,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const panel = createResumeStatusPanel(element, { title: 'Resume Status' });
     document.body.appendChild(panel.element);
 
@@ -4675,7 +4675,7 @@ describe('FormUI', () => {
         { name: 'country', label: 'Country', type: 'text' },
         { name: 'currency', label: 'Currency', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const observer = attachFormDebugObserver(element, { maxEvents: 10 });
     const country = element.querySelector('#country') as HTMLInputElement;
 
@@ -4780,7 +4780,7 @@ describe('FormUI', () => {
         { name: 'fullName', label: 'Full name', type: 'text' },
         { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const observer = attachFormDebugObserver(element, { maxEvents: 10 });
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
@@ -4826,7 +4826,7 @@ describe('FormUI', () => {
         { name: 'fullName', label: 'Full name', type: 'text' },
         { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const observer = attachFormDebugObserver(element, { maxEvents: 10 });
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
@@ -4940,7 +4940,7 @@ describe('FormUI', () => {
         { name: 'fullName', label: 'Full name', type: 'text' },
         { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
@@ -4983,7 +4983,7 @@ describe('FormUI', () => {
         { name: 'country', label: 'Country', type: 'text' },
         { name: 'currency', label: 'Currency', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const country = element.querySelector('#country') as HTMLInputElement;
 
     country.value = 'fr';
@@ -5090,7 +5090,7 @@ describe('FormUI', () => {
     const onValidationBlocked = vi.fn();
 
     element.addEventListener('xpressui:validation-blocked-submit', (event) => {
-      onValidationBlocked((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onValidationBlocked((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -5124,7 +5124,7 @@ describe('FormUI', () => {
           type: 'textarea',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     expect(element).not.toBeNull();
     expect(container.querySelector('template#booking-form')).not.toBeNull();
@@ -5147,7 +5147,7 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const forms = element.querySelectorAll('form');
     const inputs = element.querySelectorAll('#full_name');
@@ -5192,7 +5192,7 @@ describe('FormUI', () => {
           type: 'text',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     expect(element.querySelector('form')).toBe(existingForm);
     expect(container.querySelector('template')).toBeNull();
@@ -5221,11 +5221,11 @@ describe('FormUI', () => {
           ],
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const services = element.querySelector('#services') as HTMLSelectElement;
 
     element.addEventListener('xpressui:submit-success', (event) => {
-      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSubmitSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     Array.from(services.options).forEach((option) => {
@@ -5298,7 +5298,7 @@ describe('FormUI', () => {
           multiple: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#attachments') as HTMLInputElement;
     const fileOne = new File(['report'], 'report.pdf', { type: 'application/pdf' });
     const fileTwo = new File(['photo'], 'photo.png', { type: 'image/png' });
@@ -5399,7 +5399,7 @@ describe('FormUI', () => {
           type: 'file',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#attachment') as HTMLInputElement;
     const file = new File(['upload'], 'upload.pdf', { type: 'application/pdf' });
 
@@ -5442,7 +5442,7 @@ describe('FormUI', () => {
           multiple: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const selection = element.querySelector('#attachments_selection') as HTMLElement;
     const droppedFile = new File(['drop'], 'drop.pdf', { type: 'application/pdf' });
     const dropEvent = new Event('drop', { bubbles: true }) as DragEvent;
@@ -5473,7 +5473,7 @@ describe('FormUI', () => {
           type: 'file',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const selection = element.querySelector('#attachment_selection') as HTMLElement;
     const title = selection.querySelector('[data-upload-selection-title="attachment"]') as HTMLElement;
     const message = selection.querySelector('[data-upload-selection-message="attachment"]') as HTMLElement;
@@ -5514,7 +5514,7 @@ describe('FormUI', () => {
           multiple: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#attachments') as HTMLInputElement;
     const firstFile = new File(['a'], 'contract.pdf', { type: 'application/pdf' });
     const secondFile = new File(['b'], 'invoice.pdf', { type: 'application/pdf' });
@@ -5566,7 +5566,7 @@ describe('FormUI', () => {
     `;
     document.body.appendChild(container);
 
-    const element = hydrateFormUI(container, createFormConfig({
+    const element = hydrateForm(container, createFormConfig({
       name: 'hydrated_upload',
       title: 'Hydrated Upload',
       fields: [
@@ -5577,7 +5577,7 @@ describe('FormUI', () => {
           multiple: true,
         },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     const selection = element.querySelector('#attachments_selection') as HTMLElement;
     const input = element.querySelector('#attachments') as HTMLInputElement;
@@ -5612,13 +5612,13 @@ describe('FormUI', () => {
           maxFiles: 1,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const selection = element.querySelector('#attachments_selection') as HTMLElement;
     const initialFile = new File(['one'], 'one.pdf', { type: 'application/pdf' });
     const rejectedFile = new File(['two'], 'two.pdf', { type: 'application/pdf' });
 
     element.addEventListener('xpressui:file-validation-error', (event) => {
-      onFileValidationError((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onFileValidationError((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     element.form?.change('attachments', [initialFile]);
@@ -5660,7 +5660,7 @@ describe('FormUI', () => {
           maxFiles: 3,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const selection = element.querySelector('#attachments_selection') as HTMLElement;
     const firstFile = new File(['one'], 'one.pdf', { type: 'application/pdf' });
     const secondFile = new File(['two'], 'two.pdf', { type: 'application/pdf' });
@@ -5694,7 +5694,7 @@ describe('FormUI', () => {
           multiple: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#attachments') as HTMLInputElement;
     const fileOne = new File(['one'], 'one.pdf', { type: 'application/pdf' });
     const fileTwo = new File(['two'], 'two.pdf', { type: 'application/pdf' });
@@ -5745,7 +5745,7 @@ describe('FormUI', () => {
           accept: 'image/*',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#image') as HTMLInputElement;
     const imageFile = new File(['image'], 'photo.png', { type: 'image/png' });
 
@@ -5786,7 +5786,7 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const file = new File(['file'], 'doc.pdf', { type: 'application/pdf' });
 
     const errors = element.engine.validateValues({
@@ -5815,7 +5815,7 @@ describe('FormUI', () => {
           type: 'camera-photo',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const fileField = element.querySelector('#identity_photo') as HTMLInputElement;
     const cameraField = element.querySelector('#document_scan') as HTMLInputElement;
 
@@ -5847,12 +5847,12 @@ describe('FormUI', () => {
           type: 'qr-scan',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#scan_code') as HTMLInputElement;
     const imageFile = new File(['image'], 'qr.png', { type: 'image/png' });
 
     element.addEventListener('xpressui:qr-scan-success', (event) => {
-      onQrScanSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onQrScanSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     Object.defineProperty(input, 'files', {
@@ -5896,12 +5896,12 @@ describe('FormUI', () => {
           type: 'qr-scan',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#scan_code') as HTMLInputElement;
     const imageFile = new File(['image'], 'qr.png', { type: 'image/png' });
 
     element.addEventListener('xpressui:qr-scan-error', (event) => {
-      onQrScanError((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onQrScanError((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     Object.defineProperty(input, 'files', {
@@ -5959,10 +5959,10 @@ describe('FormUI', () => {
           type: 'qr-scan',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     element.addEventListener('xpressui:qr-scan-success', (event) => {
-      onQrScanSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onQrScanSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     const startButton = element.querySelector('[data-qr-action="start"]') as HTMLButtonElement;
@@ -6027,7 +6027,7 @@ describe('FormUI', () => {
           type: 'qr-scan',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const startButton = element.querySelector('[data-qr-action="start"]') as HTMLButtonElement;
     startButton.click();
@@ -6064,7 +6064,7 @@ describe('FormUI', () => {
           type: 'qr-scan',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const selection = element.querySelector('#scan_code_selection') as HTMLElement;
     const title = selection.querySelector('[data-upload-selection-title="scan_code"]') as HTMLElement;
     const message = selection.querySelector('[data-upload-selection-message="scan_code"]') as HTMLElement;
@@ -6129,7 +6129,7 @@ describe('FormUI', () => {
           type: 'qr-scan',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const startButton = element.querySelector('[data-qr-action="start"]') as HTMLButtonElement;
     startButton.click();
@@ -6174,7 +6174,7 @@ describe('FormUI', () => {
           type: 'document-scan',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#identity_card') as HTMLInputElement;
     const frontFile = new File(['front'], 'front.png', { type: 'image/png' });
     const backFile = new File(['back'], 'back.png', { type: 'image/png' });
@@ -6233,7 +6233,7 @@ describe('FormUI', () => {
     `;
     document.body.appendChild(container);
 
-    const element = hydrateFormUI(container, createFormConfig({
+    const element = hydrateForm(container, createFormConfig({
       name: 'hydrated_document_scan',
       title: 'Hydrated Document Scan',
       fields: [
@@ -6243,7 +6243,7 @@ describe('FormUI', () => {
           type: 'document-scan',
         },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     const grid = element.querySelector('[data-document-scan-grid="identity_card"]') as HTMLElement;
 
@@ -6267,7 +6267,7 @@ describe('FormUI', () => {
           type: 'document-scan',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const selection = element.querySelector('#identity_card_selection') as HTMLElement;
     const title = selection.querySelector('[data-upload-selection-title="identity_card"]') as HTMLElement;
     const message = selection.querySelector('[data-upload-selection-message="identity_card"]') as HTMLElement;
@@ -6390,27 +6390,27 @@ describe('FormUI', () => {
         { name: 'expiry_date', label: 'Expiry Date', type: 'text' },
         { name: 'sex', label: 'Sex', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#passport') as HTMLInputElement;
     const sourceFile = new File(['passport'], 'passport.png', { type: 'image/png' });
 
     element.addEventListener('xpressui:document-scan-cropped', (event) => {
-      onCrop((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onCrop((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
     element.addEventListener('xpressui:document-scan-bounds-detected', (event) => {
-      onBounds((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onBounds((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
     element.addEventListener('xpressui:document-text-detected', (event) => {
-      onText((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onText((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
     element.addEventListener('xpressui:document-mrz-detected', (event) => {
-      onMrz((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onMrz((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
     element.addEventListener('xpressui:document-data', (event) => {
-      onData((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onData((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
     element.addEventListener('xpressui:document-fields-populated', (event) => {
-      onFieldsPopulated((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onFieldsPopulated((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     Object.defineProperty(input, 'files', {
@@ -6657,7 +6657,7 @@ describe('FormUI', () => {
           documentMrzTargetField: 'passport_mrz',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const selection = element.querySelector('#passport_selection') as HTMLElement;
     const ocrNode = selection.querySelector('[data-document-scan-ocr="passport:0"]') as HTMLElement;
@@ -6699,11 +6699,11 @@ describe('FormUI', () => {
           accept: '.pdf',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const wrongType = new File(['image'], 'image.png', { type: 'image/png' });
 
     element.addEventListener('xpressui:file-validation-error', (event) => {
-      onFileValidationError((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onFileValidationError((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     const errors = element.validateForm({ attachment: wrongType });
@@ -6737,7 +6737,7 @@ describe('FormUI', () => {
           maxFileSizeMb: 0.000001,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const wrongType = new File(['image'], 'image.png', { type: 'image/png' });
     const tooLarge = new File(['123456789'], 'report.pdf', { type: 'application/pdf' });
 
@@ -6772,7 +6772,7 @@ describe('FormUI', () => {
           fileSizeErrorMsg: 'Custom size error',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const pdfA = new File(['a'], 'a.pdf', { type: 'application/pdf' });
     const pdfB = new File(['b'], 'b.pdf', { type: 'application/pdf' });
     const png = new File(['image'], 'bad.png', { type: 'image/png' });
@@ -6811,7 +6811,7 @@ describe('FormUI', () => {
           minFiles: 2,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const fileOne = new File(['one'], 'one.pdf', { type: 'application/pdf' });
 
     expect(element.validateForm({ attachments: [fileOne] })).toEqual({
@@ -6835,7 +6835,7 @@ describe('FormUI', () => {
           maxTotalFileSizeMb: 0.000001,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const fileOne = new File(['12345'], 'one.pdf', { type: 'application/pdf' });
     const fileTwo = new File(['67890'], 'two.pdf', { type: 'application/pdf' });
 
@@ -6888,7 +6888,7 @@ describe('FormUI', () => {
           multiple: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const fileOne = new File(['one'], 'one.pdf', { type: 'application/pdf' });
     const fileTwo = new File(['two'], 'two.pdf', { type: 'application/pdf' });
 
@@ -6944,7 +6944,7 @@ describe('FormUI', () => {
           formDataFieldName: 'documents',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const fileOne = new File(['one'], 'one.pdf', { type: 'application/pdf' });
     const fileTwo = new File(['two'], 'two.pdf', { type: 'application/pdf' });
 
@@ -7597,12 +7597,12 @@ describe('FormUI', () => {
           type: 'file',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onQueueDisabled = vi.fn();
     const upload = new File(['content'], 'proof.pdf', { type: 'application/pdf' });
 
     element.addEventListener('xpressui:queue-disabled-for-files', (event) => {
-      onQueueDisabled((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onQueueDisabled((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     vi.spyOn(element, 'submitToApi').mockRejectedValue(new Error('offline'));
@@ -7664,7 +7664,7 @@ describe('FormUI', () => {
     expect(formConfig.submit?.lifecycle?.postSuccess).toBe(postSuccess);
   });
 
-  it('supports standalone normalization and validation without mounting FormUI', () => {
+  it('supports standalone normalization and validation without mounting HydratedFormHost', () => {
     const formConfig = createFormConfig({
       name: 'engine-form',
       title: 'Engine Form',
@@ -8679,7 +8679,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email', required: true },
       ],
-    })) as FormUI;
+    })) as HydratedFormHost;
 
     expect(element.validateForm({ email: '' }).email).toEqual(
       expect.objectContaining({
@@ -8726,13 +8726,13 @@ describe('FormUI', () => {
           },
         ],
       })
-    ) as FormUI;
+    ) as HydratedFormHost;
     const input = element.querySelector('#email') as HTMLInputElement;
     const form = element.querySelector('#booking-api_form') as HTMLFormElement;
     const onSuccess = vi.fn();
 
     element.addEventListener('xpressui:submit-success', (event) => {
-      onSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     input.dispatchEvent(new FocusEvent('focus'));
@@ -8779,14 +8779,14 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onContractWarning = vi.fn();
     const onSubmitError = vi.fn();
     element.addEventListener('xpressui:provider-contract-warning', (event) => {
-      onContractWarning((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onContractWarning((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
     element.addEventListener('xpressui:submit-error', (event) => {
-      onSubmitError((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSubmitError((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await expect(
@@ -8810,7 +8810,7 @@ describe('FormUI', () => {
     expect(onSubmitError).toHaveBeenCalled();
   });
 
-  it('supports standalone persistence without mounting FormUI', async () => {
+  it('supports standalone persistence without mounting HydratedFormHost', async () => {
     const formConfig = createFormConfig({
       name: 'runtime-draft-form',
       title: 'Runtime Draft Form',
@@ -8888,7 +8888,7 @@ describe('FormUI', () => {
           optionsDependsOn: 'service',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const service = element.querySelector('#service') as HTMLSelectElement;
     const slot = element.querySelector('#slot') as HTMLSelectElement;
     const slotContainer = slot.closest('label') as HTMLElement;
@@ -8910,7 +8910,7 @@ describe('FormUI', () => {
     expect(slot.options[2].textContent).toBe('Evening');
   });
 
-  it('supports standalone dynamic field logic without mounting FormUI', async () => {
+  it('supports standalone dynamic field logic without mounting HydratedFormHost', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify([
@@ -9182,7 +9182,7 @@ describe('FormUI', () => {
           type: 'textarea',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const service = element.querySelector('#service') as HTMLInputElement;
     const urgency = element.querySelector('#urgency') as HTMLInputElement;
     const notes = element.querySelector('#notes') as HTMLTextAreaElement;
@@ -9232,12 +9232,12 @@ describe('FormUI', () => {
         { name: 'country', label: 'Country', type: 'text' },
         { name: 'currency', label: 'Currency', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const country = element.querySelector('#country') as HTMLInputElement;
     const onRuleApplied = vi.fn();
 
     element.addEventListener('xpressui:rule-applied', (event) => {
-      onRuleApplied((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onRuleApplied((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     country.value = 'fr';
@@ -9276,13 +9276,13 @@ describe('FormUI', () => {
         { name: 'country', label: 'Country', type: 'text' },
         { name: 'currency', label: 'Currency', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const country = element.querySelector('#country') as HTMLInputElement;
     const currency = element.querySelector('#currency') as HTMLInputElement;
     const onRuleApplied = vi.fn();
 
     element.addEventListener('xpressui:rule-applied', (event) => {
-      onRuleApplied((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onRuleApplied((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     country.value = 'fr';
@@ -9331,7 +9331,7 @@ describe('FormUI', () => {
         { name: 'vipNotes', label: 'VIP Notes', type: 'textarea' },
         { name: 'accountManager', label: 'Account Manager', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const email = element.querySelector('#email') as HTMLInputElement;
     const plan = element.querySelector('#plan') as HTMLInputElement;
     const amount = element.querySelector('#amount') as HTMLInputElement;
@@ -9390,7 +9390,7 @@ describe('FormUI', () => {
         { name: 'review_state', label: 'Review State', type: 'text' },
         { name: 'submit_ready', label: 'Submit Ready', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const documentNumber = element.querySelector('#document_number') as HTMLInputElement;
     const notes = element.querySelector('#notes') as HTMLTextAreaElement;
     const reviewState = element.querySelector('#review_state') as HTMLInputElement;
@@ -9429,7 +9429,7 @@ describe('FormUI', () => {
         { name: 'country', label: 'Country', type: 'text' },
         { name: 'currency', label: 'Currency', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const country = element.querySelector('#country') as HTMLInputElement;
     const currency = element.querySelector('#currency') as HTMLInputElement;
 
@@ -9461,7 +9461,7 @@ describe('FormUI', () => {
         { name: 'shippingEmail', label: 'Shipping Email', type: 'email' },
         { name: 'sameAsBilling', label: 'Same as billing', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const billingEmail = element.querySelector('#billingEmail') as HTMLInputElement;
     const shippingEmail = element.querySelector('#shippingEmail') as HTMLInputElement;
     const sameAsBilling = element.querySelector('#sameAsBilling') as HTMLInputElement;
@@ -9496,7 +9496,7 @@ describe('FormUI', () => {
         { name: 'default_currency', label: 'Default Currency', type: 'setting', value: 'EUR' } as any,
         { name: 'currency', label: 'Currency', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     await flushAsyncWork();
 
@@ -9527,7 +9527,7 @@ describe('FormUI', () => {
         { name: 'free_shipping_threshold', label: 'Free Shipping Threshold', type: 'setting', value: 120 } as any,
         { name: 'shipping_mode', label: 'Shipping Mode', type: 'text' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     await flushAsyncWork();
     expect(element.getFieldValue('free_shipping_threshold')).toBe(120);
@@ -9559,7 +9559,7 @@ describe('FormUI', () => {
         { name: 'slug', label: 'Slug', type: 'text' },
         { name: 'copySlug', label: 'Copy slug', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const name = element.querySelector('#name') as HTMLInputElement;
     const slug = element.querySelector('#slug') as HTMLInputElement;
     const copySlug = element.querySelector('#copySlug') as HTMLInputElement;
@@ -9599,7 +9599,7 @@ describe('FormUI', () => {
         { name: 'slug', label: 'Slug', type: 'text' },
         { name: 'copySlug', label: 'Copy slug', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const name = element.querySelector('#name') as HTMLInputElement;
     const slug = element.querySelector('#slug') as HTMLInputElement;
     const copySlug = element.querySelector('#copySlug') as HTMLInputElement;
@@ -9640,7 +9640,7 @@ describe('FormUI', () => {
         { name: 'fullName', label: 'Full name', type: 'text' },
         { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const lastName = element.querySelector('#lastName') as HTMLInputElement;
     const fullName = element.querySelector('#fullName') as HTMLInputElement;
@@ -9685,7 +9685,7 @@ describe('FormUI', () => {
         { name: 'fullName', label: 'Full name', type: 'text' },
         { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const fullName = element.querySelector('#fullName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
@@ -9742,7 +9742,7 @@ describe('FormUI', () => {
         { name: 'fullName', label: 'Full name', type: 'text' },
         { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
@@ -9789,7 +9789,7 @@ describe('FormUI', () => {
         { name: 'fullName', label: 'Full name', type: 'text' },
         { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
@@ -9871,7 +9871,7 @@ describe('FormUI', () => {
         { name: 'fullName', label: 'Full name', type: 'text' },
         { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
@@ -9944,7 +9944,7 @@ describe('FormUI', () => {
         { name: 'fullName', label: 'Full name', type: 'text' },
         { name: 'autoFullName', label: 'Auto full name', type: 'checkbox' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
@@ -10043,7 +10043,7 @@ describe('FormUI', () => {
           optionsDependsOn: 'service',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const service = element.querySelector('#service') as HTMLInputElement;
     const slot = element.querySelector('#slot') as HTMLSelectElement;
 
@@ -10085,7 +10085,7 @@ describe('FormUI', () => {
         { name: 'mode', label: 'Mode', type: 'text' },
         { name: 'notes', label: 'Notes', type: 'textarea' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const mode = element.querySelector('#mode') as HTMLInputElement;
     const notes = element.querySelector('#notes') as HTMLTextAreaElement;
 
@@ -10121,7 +10121,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const email = element.querySelector('#email') as HTMLInputElement;
     const error = element.querySelector('#email_error') as HTMLSpanElement;
     const submitButton = element.querySelector('button[type="submit"]') as HTMLButtonElement;
@@ -10130,10 +10130,10 @@ describe('FormUI', () => {
     const onSubmitSuccess = vi.fn();
 
     element.addEventListener('xpressui:submit-locked', (event) => {
-      onSubmitLocked((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSubmitLocked((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
     element.addEventListener('xpressui:submit-success', (event) => {
-      onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSubmitSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     email.value = 'blocked@example.com';
@@ -10191,13 +10191,13 @@ describe('FormUI', () => {
         { name: 'status', label: 'Status', type: 'text' },
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const status = element.querySelector('#status') as HTMLInputElement;
     const email = element.querySelector('#email') as HTMLInputElement;
     const onCustomReview = vi.fn();
 
     element.addEventListener('xpressui:custom-review', (event) => {
-      onCustomReview((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onCustomReview((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     email.value = 'review@example.com';
@@ -10247,14 +10247,14 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const amount = element.querySelector('#amount') as HTMLInputElement;
     const email = element.querySelector('#email') as HTMLInputElement;
     const form = element.querySelector('#payment-form_form') as HTMLFormElement;
     const onPaymentSuccess = vi.fn();
 
     element.addEventListener('xpressui:payment-success', (event) => {
-      onPaymentSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onPaymentSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     amount.dispatchEvent(new FocusEvent('focus'));
@@ -10326,14 +10326,14 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const amount = element.querySelector('#amount') as HTMLInputElement;
     const email = element.querySelector('#email') as HTMLInputElement;
     const form = element.querySelector('#stripe-form_form') as HTMLFormElement;
     const onStripeSuccess = vi.fn();
 
     element.addEventListener('xpressui:payment-stripe-success', (event) => {
-      onStripeSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onStripeSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     amount.dispatchEvent(new FocusEvent('focus'));
@@ -10405,14 +10405,14 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const paymentIntentId = element.querySelector('#payment_intent_id') as HTMLInputElement;
     const amountToCapture = element.querySelector('#amount_to_capture') as HTMLInputElement;
     const form = element.querySelector('#payment-capture-form_form') as HTMLFormElement;
     const onCaptureSuccess = vi.fn();
 
     element.addEventListener('xpressui:payment-capture-success', (event) => {
-      onCaptureSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onCaptureSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     paymentIntentId.value = 'pi_123';
@@ -10475,14 +10475,14 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const email = element.querySelector('#email') as HTMLInputElement;
     const topic = element.querySelector('#topic') as HTMLInputElement;
     const form = element.querySelector('#webhook-form_form') as HTMLFormElement;
     const onWebhookSuccess = vi.fn();
 
     element.addEventListener('xpressui:webhook-success', (event) => {
-      onWebhookSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onWebhookSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     email.dispatchEvent(new FocusEvent('focus'));
@@ -10547,13 +10547,13 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const email = element.querySelector('#email') as HTMLInputElement;
     const form = element.querySelector('#webhook-messages-form_form') as HTMLFormElement;
     const onProviderMessages = vi.fn();
 
     element.addEventListener('xpressui:provider-messages', (event) => {
-      onProviderMessages((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onProviderMessages((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     email.value = 'user@example.com';
@@ -10620,14 +10620,14 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const service = element.querySelector('#service') as HTMLInputElement;
     const date = element.querySelector('#date') as HTMLInputElement;
     const form = element.querySelector('#availability-form_form') as HTMLFormElement;
     const onAvailabilitySuccess = vi.fn();
 
     element.addEventListener('xpressui:booking-availability-success', (event) => {
-      onAvailabilitySuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onAvailabilitySuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     service.dispatchEvent(new FocusEvent('focus'));
@@ -10703,7 +10703,7 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const service = element.querySelector('#service') as HTMLInputElement;
     const date = element.querySelector('#date') as HTMLInputElement;
     const slot = element.querySelector('#slot') as HTMLInputElement;
@@ -10711,7 +10711,7 @@ describe('FormUI', () => {
     const onBookingSuccess = vi.fn();
 
     element.addEventListener('xpressui:calendar-booking-success', (event) => {
-      onBookingSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onBookingSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     service.value = 'massage';
@@ -10799,7 +10799,7 @@ describe('FormUI', () => {
     const onProviderTransition = vi.fn();
 
     element.addEventListener('xpressui:provider-transition', (event) => {
-      onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onProviderTransition((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     bookingId.value = 'bk_123';
@@ -10880,10 +10880,10 @@ describe('FormUI', () => {
     const onProviderStepRouted = vi.fn();
 
     element.addEventListener('xpressui:provider-transition', (event) => {
-      onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onProviderTransition((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
     element.addEventListener('xpressui:provider-step-routed', (event) => {
-      onProviderStepRouted((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onProviderStepRouted((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     requesterEmail.value = 'approver@example.com';
@@ -10972,7 +10972,7 @@ describe('FormUI', () => {
     const onProviderTransition = vi.fn();
 
     element.addEventListener('xpressui:provider-transition', (event) => {
-      onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onProviderTransition((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     input.value = 'policy@example.com';
@@ -11045,7 +11045,7 @@ describe('FormUI', () => {
     const onProviderTransition = vi.fn();
 
     element.addEventListener('xpressui:provider-transition', (event) => {
-      onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onProviderTransition((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     input.value = 'derived@example.com';
@@ -11098,14 +11098,14 @@ describe('FormUI', () => {
           type: 'text',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const bookingId = element.querySelector('#booking_id') as HTMLInputElement;
     const reason = element.querySelector('#reason') as HTMLInputElement;
     const form = element.querySelector('#calendar-cancel-form_form') as HTMLFormElement;
     const onCancelSuccess = vi.fn();
 
     element.addEventListener('xpressui:calendar-cancel-success', (event) => {
-      onCancelSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onCancelSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     bookingId.value = 'bk_123';
@@ -11171,7 +11171,7 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const bookingId = element.querySelector('#booking_id') as HTMLInputElement;
     const newDate = element.querySelector('#new_date') as HTMLInputElement;
     const newSlot = element.querySelector('#new_slot') as HTMLInputElement;
@@ -11179,7 +11179,7 @@ describe('FormUI', () => {
     const onRescheduleSuccess = vi.fn();
 
     element.addEventListener('xpressui:calendar-reschedule-success', (event) => {
-      onRescheduleSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onRescheduleSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     bookingId.value = 'bk_123';
@@ -11245,14 +11245,14 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const slotId = element.querySelector('#slot_id') as HTMLInputElement;
     const customerEmail = element.querySelector('#customer_email') as HTMLInputElement;
     const form = element.querySelector('#calendar-availability-hold-form_form') as HTMLFormElement;
     const onHoldSuccess = vi.fn();
 
     element.addEventListener('xpressui:calendar-availability-hold-success', (event) => {
-      onHoldSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onHoldSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     slotId.value = 'slot_0900';
@@ -11315,14 +11315,14 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const to = element.querySelector('#to') as HTMLInputElement;
     const subject = element.querySelector('#subject') as HTMLInputElement;
     const form = element.querySelector('#email-form_form') as HTMLFormElement;
     const onEmailSuccess = vi.fn();
 
     element.addEventListener('xpressui:email-success', (event) => {
-      onEmailSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onEmailSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     to.dispatchEvent(new FocusEvent('focus'));
@@ -11387,14 +11387,14 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const email = element.querySelector('#email') as HTMLInputElement;
     const name = element.querySelector('#full_name') as HTMLInputElement;
     const form = element.querySelector('#crm-form_form') as HTMLFormElement;
     const onCrmSuccess = vi.fn();
 
     element.addEventListener('xpressui:crm-success', (event) => {
-      onCrmSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onCrmSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     email.value = 'lead@example.com';
@@ -11453,14 +11453,14 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const documentNumber = element.querySelector('#document_number') as HTMLInputElement;
     const lastName = element.querySelector('#last_name') as HTMLInputElement;
     const form = element.querySelector('#identity-form_form') as HTMLFormElement;
     const onIdentitySuccess = vi.fn();
 
     element.addEventListener('xpressui:identity-verification-success', (event) => {
-      onIdentitySuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onIdentitySuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     documentNumber.value = 'L898902C3';
@@ -11514,7 +11514,7 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#document_number') as HTMLInputElement;
     const form = element.querySelector('#identity-stripe-form_form') as HTMLFormElement;
 
@@ -11562,7 +11562,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     element.engine.setDocumentData('passport', {
       text: 'P<UTOERIKSSON',
@@ -11604,7 +11604,7 @@ describe('FormUI', () => {
           requireValidDocumentMrz: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     element.engine.setDocumentData('passport', {
       mrz: { valid: false },
@@ -11640,7 +11640,7 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#document_number') as HTMLInputElement;
     const form = element.querySelector('#identity-webhook-form_form') as HTMLFormElement;
 
@@ -11694,14 +11694,14 @@ describe('FormUI', () => {
           type: 'textarea',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const verificationId = element.querySelector('#verification_id') as HTMLInputElement;
     const reviewerNote = element.querySelector('#reviewer_note') as HTMLTextAreaElement;
     const form = element.querySelector('#identity-review-form_form') as HTMLFormElement;
     const onIdentityReviewSuccess = vi.fn();
 
     element.addEventListener('xpressui:identity-review-success', (event) => {
-      onIdentityReviewSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onIdentityReviewSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     verificationId.value = 'ver_123';
@@ -11771,13 +11771,13 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#email') as HTMLInputElement;
     const form = element.querySelector('#quote-form_form') as HTMLFormElement;
     const onQuoteSuccess = vi.fn();
 
     element.addEventListener('xpressui:quote-success', (event) => {
-      onQuoteSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onQuoteSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     input.dispatchEvent(new FocusEvent('focus'));
@@ -11951,7 +11951,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = firstElement.querySelector('#email') as HTMLInputElement;
 
     input.dispatchEvent(new FocusEvent('focus'));
@@ -11979,12 +11979,12 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const restoredInput = secondElement.querySelector('#email') as HTMLInputElement;
     const onDraftRestored = vi.fn();
 
     secondElement.addEventListener('xpressui:draft-restored', (event) => {
-      onDraftRestored((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onDraftRestored((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
     secondElement.initialize();
     await flushAsyncWork();
@@ -12015,12 +12015,12 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#email') as HTMLInputElement;
     const onResumeRestored = vi.fn();
 
     element.addEventListener('xpressui:resume-token-restored', (event) => {
-      onResumeRestored((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onResumeRestored((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     input.value = 'resume@example.com';
@@ -12092,7 +12092,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#email') as HTMLInputElement;
 
     input.value = 'admin-resume@example.com';
@@ -12181,12 +12181,12 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#email') as HTMLInputElement;
     const onInvalidSignature = vi.fn();
 
     element.addEventListener('xpressui:resume-token-invalid-signature', (event) => {
-      onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onInvalidSignature((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     input.value = 'signed@example.com';
@@ -12264,7 +12264,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#email') as HTMLInputElement;
 
     input.value = 'remote-resume@example.com';
@@ -12399,7 +12399,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const input = element.querySelector('#email') as HTMLInputElement;
     input.value = 'contract@example.com';
@@ -12520,7 +12520,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const input = element.querySelector('#email') as HTMLInputElement;
     input.value = 'signed-remote@example.com';
@@ -12587,10 +12587,10 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onInvalidSignature = vi.fn();
     element.addEventListener('xpressui:resume-token-invalid-signature', (event) => {
-      onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onInvalidSignature((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await expect(element.createResumeTokenAsync()).resolves.toBeNull();
@@ -12668,10 +12668,10 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onClaimState = vi.fn();
     element.addEventListener('xpressui:resume-share-code-claim-state', (event) => {
-      onClaimState((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onClaimState((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     const code = await element.createResumeShareCode('remote_token_123');
@@ -12760,10 +12760,10 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onInvalidSignature = vi.fn();
     element.addEventListener('xpressui:resume-token-invalid-signature', (event) => {
-      onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onInvalidSignature((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     const claimDetail = await element.claimResumeShareCodeDetail('SHARE-FAIL');
@@ -12838,10 +12838,10 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onRestoreState = vi.fn();
     element.addEventListener('xpressui:resume-share-code-restore-state', (event) => {
-      onRestoreState((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onRestoreState((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     const detail = await element.restoreFromShareCodeDetailAsync('SHARE-RESTORE');
@@ -12909,7 +12909,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     const detail = await element.restoreFromShareCodeDetailAsync('SHARE-EXPIRED');
     expect(detail).toEqual(expect.objectContaining({
@@ -12946,10 +12946,10 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onClaimBlocked = vi.fn();
     element.addEventListener('xpressui:resume-share-code-claim-blocked', (event) => {
-      onClaimBlocked((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onClaimBlocked((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await expect(element.claimResumeShareCode('SHARE-LOCK')).resolves.toBeNull();
@@ -12998,13 +12998,13 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const input = element.querySelector('#email') as HTMLInputElement;
     const form = element.querySelector('#queue-form_form') as HTMLFormElement;
     const onQueued = vi.fn();
 
     element.addEventListener('xpressui:queued', (event) => {
-      onQueued((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onQueued((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     input.dispatchEvent(new FocusEvent('focus'));
@@ -13057,7 +13057,7 @@ describe('FormUI', () => {
           required: true,
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onSyncSuccess = vi.fn();
 
     window.localStorage.setItem(
@@ -13078,7 +13078,7 @@ describe('FormUI', () => {
     );
 
     element.addEventListener('xpressui:sync-success', (event) => {
-      onSyncSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSyncSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await element.flushSubmissionQueue();
@@ -13127,7 +13127,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onSyncError = vi.fn();
 
     window.localStorage.setItem(
@@ -13148,7 +13148,7 @@ describe('FormUI', () => {
     );
 
     element.addEventListener('xpressui:sync-error', (event) => {
-      onSyncError((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onSyncError((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await element.flushSubmissionQueue();
@@ -13187,7 +13187,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onDeadLettered = vi.fn();
 
     window.localStorage.setItem(
@@ -13208,7 +13208,7 @@ describe('FormUI', () => {
     );
 
     element.addEventListener('xpressui:dead-lettered', (event) => {
-      onDeadLettered((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onDeadLettered((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await element.flushSubmissionQueue();
@@ -13252,7 +13252,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     window.localStorage.setItem(
       `${key}:dead-letter`,
@@ -13295,7 +13295,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onRequeued = vi.fn();
 
     window.localStorage.setItem(
@@ -13316,7 +13316,7 @@ describe('FormUI', () => {
     );
 
     element.addEventListener('xpressui:dead-letter-requeued', (event) => {
-      onRequeued((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onRequeued((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     expect(element.requeueDeadLetterEntry('dead_requeue')).toBe(true);
@@ -13362,7 +13362,7 @@ describe('FormUI', () => {
           type: 'email',
         },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
     const onReplaySuccess = vi.fn();
 
     window.localStorage.setItem(
@@ -13383,7 +13383,7 @@ describe('FormUI', () => {
     );
 
     element.addEventListener('xpressui:dead-letter-replayed-success', (event) => {
-      onReplaySuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onReplaySuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await expect(element.replayDeadLetterEntry('dead_replay')).resolves.toBe(true);
@@ -13861,7 +13861,7 @@ describe('FormUI', () => {
       fields: [
         { name: 'email', label: 'Email', type: 'email' },
       ],
-    }) as FormUI;
+    }) as HydratedFormHost;
 
     window.localStorage.setItem('xpressui:test-form-ui-summary', JSON.stringify({ email: 'ui@example.com' }));
     window.localStorage.setItem(

@@ -180,7 +180,7 @@
     </main>
 
     <script type="module">
-      import { createFormPreset, hydrateFormUI } from "../dist/xpressui.mjs";
+      import { createFormPreset, hydrateForm } from "../dist/xpressui.mjs";
 
       const products = [
         {
@@ -350,7 +350,7 @@
         prevLabel: "Back to cart",
       };
 
-      const form = hydrateFormUI(app, config);
+      const form = hydrateForm(app, config);
       const renderCheckoutSummary = () => {
         const checkoutStep = form.querySelector('[data-name="checkout_step"]');
         if (!checkoutStep) return;

@@ -62,7 +62,7 @@
       </div>
     </main>
     <script type="module">
-      import { createFormOpsPanel, hydrateFormUI } from "../dist/xpressui.mjs";
+      import { createFormOpsPanel, hydrateForm } from "../dist/xpressui.mjs";
 
       const app = document.getElementById("app");
       const debug = document.getElementById("debug");
@@ -117,7 +117,7 @@
         return originalFetch(input, init);
       };
 
-      const form = hydrateFormUI(app, {
+      const form = hydrateForm(app, {
         version: 1,
         id: "approval_demo",
         uid: "approval_demo_uid",

@@ -154,7 +154,7 @@ import {
 } from "./ui/form-ui.output";
 export type {
   TFormApprovalState,
-  TFormUISubmitDetail,
+  THydratedFormSubmitDetail,
   TFormWorkflowState,
 } from "./ui/form-ui.types";
 import type {
@@ -165,7 +165,7 @@ import type {
   TFormHtmlSanitizer,
   TFormOutputRenderer,
   TFormRenderMode,
-  TFormUISubmitDetail,
+  THydratedFormSubmitDetail,
   TFormWorkflowState,
   TImageGalleryItem,
   TMediaDisplayPolicy,
@@ -314,7 +314,7 @@ export type {
   TFormSubmitLifecycleStage,
 } from "./common/TFormConfig";
 
-export class FormUI extends HTMLElement {
+export class HydratedFormHost extends HTMLElement {
   form: FormApi<any, any> | null;
   registered: Record<string, boolean>;
   formConfig: TFormConfig | null;
@@ -469,7 +469,7 @@ export class FormUI extends HTMLElement {
       },
       getFormValues: () => this.form?.getState().values || {},
       emitEvent: (eventName, detail) =>
-        this.emitFormEvent(eventName, detail as TFormUISubmitDetail),
+        this.emitFormEvent(eventName, detail as THydratedFormSubmitDetail),
       getEventContext: () => ({
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -485,7 +485,7 @@ export class FormUI extends HTMLElement {
           : null),
       setCurrentStepIndex: (index) => this.setCurrentStepIndex(index),
       emitEvent: (eventName, detail) =>
-        this.emitFormEvent(eventName, detail as TFormUISubmitDetail),
+        this.emitFormEvent(eventName, detail as THydratedFormSubmitDetail),
       submitValues: (values, submitConfig) => this.submitToApi(values, submitConfig),
     });
     this.upload = new FormUploadRuntime({
@@ -506,7 +506,7 @@ export class FormUI extends HTMLElement {
         }
 
         return this.emitFormEvent(eventName, {
-          ...(detail as TFormUISubmitDetail),
+          ...(detail as THydratedFormSubmitDetail),
           formConfig: this.formConfig,
         });
       },
@@ -1316,7 +1316,7 @@ export class FormUI extends HTMLElement {
     };
   }
 
-  getDocumentPerspectiveCorners = (bounds: ReturnType<FormUI["getDocumentCropBounds"]>): TDocumentPerspectiveCorners => {
+  getDocumentPerspectiveCorners = (bounds: ReturnType<HydratedFormHost["getDocumentCropBounds"]>): TDocumentPerspectiveCorners => {
     const topInset = Math.max(2, Math.round(bounds.width * 0.04));
     const bottomInset = Math.max(1, Math.round(bounds.width * 0.01));
 
@@ -1331,7 +1331,7 @@ export class FormUI extends HTMLElement {
   drawPerspectiveCorrectedDocument = (
     context: CanvasRenderingContext2D,
     imageBitmap: ImageBitmap,
-    bounds: ReturnType<FormUI["getDocumentCropBounds"]>,
+    bounds: ReturnType<HydratedFormHost["getDocumentCropBounds"]>,
     corners: TDocumentPerspectiveCorners,
   ) => {
     const destinationWidth = bounds.width;
@@ -5210,7 +5210,7 @@ export class FormUI extends HTMLElement {
   }
 
   emitWorkflowSnapshotEvent = (
-    detail: Omit<TFormUISubmitDetail, "result">,
+    detail: Omit<THydratedFormSubmitDetail, "result">,
     response?: Response,
   ) => {
     const workflowDetail = {
@@ -5588,7 +5588,7 @@ export class FormUI extends HTMLElement {
 
   setWorkflowState = (
     nextState: TFormWorkflowState,
-    detail: TFormUISubmitDetail,
+    detail: THydratedFormSubmitDetail,
     response?: Response,
     result?: any,
   ): TWorkflowRouteResult => {
@@ -5658,7 +5658,7 @@ export class FormUI extends HTMLElement {
 
   applySingleProviderTransition = (
     transition: TFormProviderTransition,
-    detail: TFormUISubmitDetail,
+    detail: THydratedFormSubmitDetail,
     response: Response | undefined,
     result: any,
   ): TProviderTransitionRouteResult | null => {
@@ -5711,7 +5711,7 @@ export class FormUI extends HTMLElement {
   }
 
   applyProviderTransition = (
-    detail: TFormUISubmitDetail,
+    detail: THydratedFormSubmitDetail,
     response: Response | undefined,
     result: any,
     providerResult?: TNormalizedProviderResult,
@@ -5789,10 +5789,10 @@ export class FormUI extends HTMLElement {
 
   emitFormEvent = (
     eventName: string,
-    detail: TFormUISubmitDetail,
+    detail: THydratedFormSubmitDetail,
     cancelable: boolean = false,
   ) => {
-    const event = new CustomEvent<TFormUISubmitDetail>(eventName, {
+    const event = new CustomEvent<THydratedFormSubmitDetail>(eventName, {
       detail,
       bubbles: true,
       cancelable,
@@ -5809,7 +5809,7 @@ export class FormUI extends HTMLElement {
   }
 
   emitApprovalStateEvents = (
-    detail: TFormUISubmitDetail,
+    detail: THydratedFormSubmitDetail,
     result: any,
     providerResult?: TNormalizedProviderResult,
     response?: Response,
@@ -5834,7 +5834,7 @@ export class FormUI extends HTMLElement {
   }
 
   emitProviderMessages = (
-    detail: TFormUISubmitDetail,
+    detail: THydratedFormSubmitDetail,
     providerResult?: TNormalizedProviderResult,
     response?: Response,
     source: "success" | "error" = "success",
@@ -5870,7 +5870,7 @@ export class FormUI extends HTMLElement {
 
   emitSubmitHookError = (
     stage: TFormSubmitLifecycleStage,
-    detail: TFormUISubmitDetail,
+    detail: THydratedFormSubmitDetail,
     hookError: unknown,
   ) => {
     this.emitFormEvent("xpressui:submit-hook-error", {
@@ -5898,7 +5898,7 @@ export class FormUI extends HTMLElement {
       });
       return;
     }
-    const detail: TFormUISubmitDetail = {
+    const detail: THydratedFormSubmitDetail = {
       values: formValues,
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
@@ -6296,5 +6296,5 @@ export class FormUI extends HTMLElement {
 }
 
 if (typeof window !== "undefined" && !window.customElements.get('form-ui')) {
-  window.customElements.define('form-ui', FormUI);
+  window.customElements.define('form-ui', HydratedFormHost);
 }

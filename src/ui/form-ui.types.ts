@@ -140,17 +140,6 @@ export type THydratedFormDocumentState = Record<string, TDocumentScanInsight>;
 
 export type THydratedFormProviderTransition = TFormProviderTransition;
 
-/** @deprecated Prefer `THydratedFormSubmitDetail`. */
-export type TFormUISubmitDetail = THydratedFormSubmitDetail;
-
-/** @deprecated Prefer `THydratedFormApprovalState`. */
 export type TFormApprovalState = THydratedFormApprovalState;
 
-/** @deprecated Prefer `THydratedFormWorkflowState`. */
 export type TFormWorkflowState = THydratedFormWorkflowState;
-
-/** @deprecated Prefer `THydratedFormDocumentState`. */
-export type TFormUIDocumentState = THydratedFormDocumentState;
-
-/** @deprecated Prefer `THydratedFormProviderTransition`. */
-export type TFormUIProviderTransition = THydratedFormProviderTransition;

@@ -12,6 +12,23 @@ export type TStepControlElements = {
   nextButton: HTMLButtonElement | null;
 };
 
+function bindExistingStepActionButton(
+  button: HTMLButtonElement | null,
+  action: (event: MouseEvent) => void,
+): void {
+  if (!button) {
+    return;
+  }
+
+  button.type = "button";
+  if (button.getAttribute("data-xpressui-step-bound") === "true") {
+    return;
+  }
+
+  button.addEventListener("click", action);
+  button.setAttribute("data-xpressui-step-bound", "true");
+}
+
 export function getStepUiConfig(formConfig: TFormConfig | null) {
   return {
     progressPlacement: formConfig?.stepUi?.progressPlacement || "top",
@@ -80,14 +97,26 @@ export function ensureStepControls(options: {
   const existingProgressContainer = options.formElem.querySelector("[data-form-step-progress-container]") as HTMLElement | null;
   const existingActionsContainer = options.formElem.querySelector("[data-form-step-actions]") as HTMLElement | null;
   if (existingProgressContainer || existingActionsContainer) {
+    const backButton = options.formElem.querySelector('[data-step-action="back"]') as HTMLButtonElement | null;
+    const nextButton = options.formElem.querySelector('[data-step-action="next"]') as HTMLButtonElement | null;
+
+    bindExistingStepActionButton(backButton, (event) => {
+        event.preventDefault();
+        options.onPrevious();
+    });
+    bindExistingStepActionButton(nextButton, (event) => {
+        event.preventDefault();
+        options.onNext();
+    });
+
     return {
       progressContainer: existingProgressContainer,
       progress: options.formElem.querySelector("[data-form-step-progress]") as HTMLElement | null,
       progressBar: options.formElem.querySelector("[data-form-step-progress-bar]") as HTMLElement | null,
       summary: options.formElem.querySelector("[data-form-step-summary]") as HTMLElement | null,
       actionsContainer: existingActionsContainer,
-      backButton: options.formElem.querySelector('[data-step-action="back"]') as HTMLButtonElement | null,
-      nextButton: options.formElem.querySelector('[data-step-action="next"]') as HTMLButtonElement | null,
+      backButton,
+      nextButton,
     };
   }
 

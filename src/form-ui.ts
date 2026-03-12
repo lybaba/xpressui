@@ -4816,6 +4816,10 @@ export class HydratedFormHost extends HTMLElement {
         renderMode === "hybrid"
           ? this.getInitialViewValues(formElem)
           : null;
+      const hydrationInitialValues =
+        useHydration
+          ? this.getInitialViewValues(formElem)
+          : draftValues;
 
       if (renderMode === "view") {
         this.applyViewMode(formElem);
@@ -4825,7 +4829,7 @@ export class HydratedFormHost extends HTMLElement {
 
       this.form = createForm({
         onSubmit: this.onSubmit,
-        initialValues: hybridInitialValues || draftValues,
+        initialValues: hybridInitialValues || hydrationInitialValues,
         validate: (values: Record<string, any>) => this.validateForm(values),
 
       });
@@ -4856,6 +4860,25 @@ export class HydratedFormHost extends HTMLElement {
           return;
         }
         this.form?.submit();
+      });
+      formElem.addEventListener("click", (event) => {
+        if (!this.isMultiStepMode()) {
+          return;
+        }
+
+        const actionButton = (event.target as HTMLElement | null)?.closest("[data-step-action]") as HTMLButtonElement | null;
+        if (!actionButton || !formElem.contains(actionButton)) {
+          return;
+        }
+
+        const action = actionButton.getAttribute("data-step-action");
+        if (action === "back") {
+          event.preventDefault();
+          this.previousStep();
+        } else if (action === "next") {
+          event.preventDefault();
+          this.nextStep();
+        }
       });
 
       if (useHydration && this.formConfig) {
@@ -5335,11 +5358,23 @@ export class HydratedFormHost extends HTMLElement {
       return true;
     }
 
+    const values = {
+      ...(this.form.getState().values || {}),
+    } as Record<string, any>;
+
     currentStepFields.forEach((fieldElement) => {
+      const fieldName = fieldElement.name;
+      const fieldConfig = this.engine.getFields()[fieldName] || getFieldConfig(fieldElement);
+      if (fieldName && fieldConfig?.type && fieldConfig.type !== UNKNOWN_TYPE) {
+        const domValue = this.readInputElementValue(fieldConfig, fieldElement);
+        if (domValue !== undefined) {
+          values[fieldName] = domValue;
+          this.form?.change(fieldName, domValue);
+        }
+      }
       fieldElement.dispatchEvent(new FocusEvent("blur"));
     });
 
-    const values = this.form.getState().values || {};
     const errors = this.engine.validateValues(values);
     return !currentStepFields.some((fieldElement) => Boolean(errors[fieldElement.name]));
   }

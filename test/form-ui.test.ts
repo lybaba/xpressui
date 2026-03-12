@@ -2516,6 +2516,89 @@ describe('HydratedFormHost', () => {
     expect(hydrated.querySelector('[data-form-step-actions]')).toBeNull();
   });
 
+  it('reuses backend workflow controls and advances using hydrated DOM values', () => {
+    document.body.innerHTML = `
+      <div id="mount">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+        >
+          <div class="template-step-progress" data-form-step-progress-container="true">
+            <div data-form-step-progress="true"></div>
+            <div data-form-step-progress-track="true">
+              <div data-form-step-progress-bar="true"></div>
+            </div>
+            <div data-form-step-summary="true"></div>
+          </div>
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-required="true"
+            data-section-name="step_one"
+          />
+          <input
+            id="last_name"
+            name="last_name"
+            type="text"
+            data-type="text"
+            data-name="last_name"
+            data-label="Last Name"
+            data-section-name="step_two"
+          />
+          <div class="template-step-actions" data-form-step-actions="true">
+            <button type="submit" data-step-action="back">Back</button>
+            <button type="submit" data-step-action="next">Next</button>
+          </div>
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </div>
+    `;
+
+    const mount = document.getElementById('mount') as HTMLDivElement;
+    const hydrated = hydrateForm(mount, validatePublicFormConfig({
+      version: 1,
+      id: 'wizard',
+      uid: 'wizard_uid',
+      type: 'multistepform',
+      name: 'wizard',
+      title: 'Wizard',
+      mode: 'form-multi-step',
+      sections: {
+        custom: [
+          { type: 'section', name: 'step_one', label: 'Step One' },
+          { type: 'section', name: 'step_two', label: 'Step Two' },
+        ],
+        step_one: [{ name: 'first_name', type: 'text', label: 'First Name', required: true }],
+        step_two: [{ name: 'last_name', type: 'text', label: 'Last Name' }],
+      },
+    })) as THydratedRuntimeHost;
+
+    const firstName = hydrated.querySelector('#first_name') as HTMLInputElement;
+    const backButton = hydrated.querySelector('[data-step-action="back"]') as HTMLButtonElement;
+    const nextButton = hydrated.querySelector('[data-step-action="next"]') as HTMLButtonElement;
+
+    expect(hydrated.getCurrentStepIndex()).toBe(0);
+    expect(backButton.getAttribute('data-xpressui-step-bound')).toBe('true');
+    expect(nextButton.getAttribute('data-xpressui-step-bound')).toBe('true');
+
+    firstName.value = 'Alice';
+    expect(hydrated.nextStep()).toBe(true);
+
+    expect(hydrated.getCurrentStepIndex()).toBe(1);
+
+    expect(hydrated.previousStep()).toBe(true);
+
+    expect(hydrated.getCurrentStepIndex()).toBe(0);
+  });
+
   it('does not restore the saved step index without a draft to restore', () => {
     window.localStorage.setItem('xpressui:draft:wizard:step', '2');
     const element = renderFixture(`

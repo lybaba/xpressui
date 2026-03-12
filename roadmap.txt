@@ -456,7 +456,7 @@ Constraints:
 - avoid unsafe raw HTML rendering without sanitization controls
 
 Exit criteria:
-- `FormUI` can render read-only resource views from existing form config/data
+- the hydration layer can render read-only resource views from existing form config/data
 - host apps can override output renderers without patching core runtime
 
 
@@ -669,7 +669,7 @@ The most immediately profitable next feature set is:
 Why:
 - the biggest runtime-heavy shells have now been cleaned across uploads, QR/document scan, image-gallery, quiz, and product-list
 - that makes the remaining DOM-rebuild paths smaller, easier to reason about, and more extractable
-- reducing markup ownership inside `FormUI` directly supports the parallel `iakpress-console` hydration work
+- reducing markup ownership inside the hydration layer directly supports the parallel `iakpress-console` hydration work
 - `iakpress-console` now treats backend-rendered HTML as the export/preview source of truth, so the next leverage point is to remove more fallback-only shell creation from `xpressui`
 
 Suggested first scope:

@@ -34,8 +34,8 @@ shell and `xpressui` only hydrates it.
 Note:
 - unless stated otherwise, examples below assume the matching HTML shell already exists in the page and the JS layer only calls `hydrateFormUI(...)`
 
-The hydrated form instance also exposes `getActiveTemplateWarnings()` for direct inspection of
-active template issues on the mounted component.
+The hydrated form instance also exposes `getActiveTemplateWarnings()` for direct
+inspection of active template issues on the mounted component.
 Use `clearActiveTemplateWarnings()` to reset that warning state.
 It also exposes `getRecentAppliedRules()` to inspect the latest effective rule
 applications.

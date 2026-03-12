@@ -2457,6 +2457,65 @@ describe('HydratedFormHost', () => {
     expect(progressBar.style.width).toBe('100%');
   });
 
+  it('does not create workflow controls during hydration when the backend shell does not provide them', () => {
+    document.body.innerHTML = `
+      <div id="mount">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+        >
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-section-name="step_one"
+          />
+          <input
+            id="last_name"
+            name="last_name"
+            type="text"
+            data-type="text"
+            data-name="last_name"
+            data-label="Last Name"
+            data-section-name="step_two"
+          />
+          <button id="submit_button" type="submit">Submit</button>
+        </form>
+      </div>
+    `;
+
+    const mount = document.getElementById('mount') as HTMLDivElement;
+    const hydrated = hydrateForm(mount, createFormConfig({
+      id: 'wizard',
+      name: 'wizard',
+      title: 'Wizard',
+      mode: 'form-multi-step',
+      fields: [
+        { name: 'first_name', type: 'text', label: 'First Name' },
+        { name: 'last_name', type: 'text', label: 'Last Name' },
+      ],
+      sections: {
+        custom: [
+          { name: 'step_one', type: 'section', label: 'Step One', adminLabel: 'Step One' },
+          { name: 'step_two', type: 'section', label: 'Step Two', adminLabel: 'Step Two' },
+        ],
+        step_one: [{ name: 'first_name', type: 'text', label: 'First Name' }],
+        step_two: [{ name: 'last_name', type: 'text', label: 'Last Name' }],
+      },
+    })) as THydratedRuntimeHost;
+
+    expect(hydrated).not.toBeNull();
+    expect(hydrated.querySelector('[data-form-step-progress-container]')).toBeNull();
+    expect(hydrated.querySelector('[data-form-step-actions]')).toBeNull();
+  });
+
   it('restores the saved current step from draft storage and supports custom step labels', () => {
     const markup = `
       <template id="wizard">

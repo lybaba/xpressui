@@ -5361,6 +5361,7 @@ export class HydratedFormHost extends HTMLElement {
       stepCount: this.stepNames.length,
       buttonLabels: this.getStepButtonLabels(),
       stepUi: this.getStepUiConfig(),
+      allowCreate: !this.hasAttribute("hydrate-existing"),
       onPrevious: () => {
         this.previousStep();
       },

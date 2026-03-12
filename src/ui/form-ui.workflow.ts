@@ -60,6 +60,7 @@ export function ensureStepControls(options: {
   stepCount: number;
   buttonLabels: { previous: string; next: string };
   stepUi: ReturnType<typeof getStepUiConfig>;
+  allowCreate?: boolean;
   existing?: TStepControlElements;
   onPrevious: () => void;
   onNext: () => void;
@@ -87,6 +88,18 @@ export function ensureStepControls(options: {
       actionsContainer: existingActionsContainer,
       backButton: options.formElem.querySelector('[data-step-action="back"]') as HTMLButtonElement | null,
       nextButton: options.formElem.querySelector('[data-step-action="next"]') as HTMLButtonElement | null,
+    };
+  }
+
+  if (options.allowCreate === false) {
+    return {
+      progressContainer: null,
+      progress: null,
+      progressBar: null,
+      summary: null,
+      actionsContainer: null,
+      backButton: null,
+      nextButton: null,
     };
   }
 

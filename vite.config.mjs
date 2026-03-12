@@ -8,8 +8,9 @@ export default defineConfig({
       entry: {
         xpressui: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
       },
+      formats: ['es'],
       name: 'xpressui',
-      fileName: (_format, entryName) => entryName,
+      fileName: (_format, entryName) => `${entryName}.mjs`,
     },
   },
 })

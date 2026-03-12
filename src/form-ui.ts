@@ -2704,6 +2704,9 @@ export class HydratedFormHost extends HTMLElement {
       }
 
       const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
+      if (selectionLimit === 1) {
+        return [image];
+      }
       if (selectionLimit > 0 && nextItems.length >= selectionLimit) {
         return nextItems;
       }
@@ -3057,6 +3060,7 @@ export class HydratedFormHost extends HTMLElement {
       return accumulator;
     }, {} as Record<string, boolean>);
     const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
+    const isSingleSelect = selectionLimit === 1;
     const limitReached = selectionLimit > 0 && selectedItems.length >= selectionLimit;
 
     const gallery =
@@ -3085,6 +3089,13 @@ export class HydratedFormHost extends HTMLElement {
         gallery!.appendChild(card);
       }
       card.setAttribute("data-image-open-gallery", imageItem.id);
+      if (isSingleSelect) {
+        card.setAttribute("data-image-gallery-action", "toggle");
+        card.setAttribute("data-image-id", imageItem.id);
+      } else {
+        card.removeAttribute("data-image-gallery-action");
+        card.removeAttribute("data-image-id");
+      }
       card.className = "rounded border border-base-300 p-2 transition-all";
       card.style.cursor = disabled ? "not-allowed" : "pointer";
       card.style.opacity = disabled ? "0.55" : "1";
@@ -3173,29 +3184,6 @@ export class HydratedFormHost extends HTMLElement {
         selectedBadge.textContent = "Available";
       }
 
-      const toggleButton = document.createElement("button");
-      toggleButton.type = "button";
-      toggleButton.className = "btn";
-      toggleButton.textContent = selected ? "×" : "+";
-      toggleButton.setAttribute("data-image-gallery-action", "toggle");
-      toggleButton.setAttribute("data-image-id", imageItem.id);
-      toggleButton.setAttribute("aria-label", selected ? `Remove ${imageItem.name}` : `Select ${imageItem.name}`);
-      toggleButton.disabled = disabled;
-      toggleButton.style.width = "36px";
-      toggleButton.style.minWidth = "36px";
-      toggleButton.style.height = "36px";
-      toggleButton.style.padding = "0";
-      toggleButton.style.display = "inline-flex";
-      toggleButton.style.alignItems = "center";
-      toggleButton.style.justifyContent = "center";
-      toggleButton.style.borderRadius = "999px";
-      toggleButton.style.fontSize = "14px";
-      toggleButton.style.fontWeight = "700";
-      toggleButton.style.boxShadow = "none";
-      toggleButton.style.border = selected ? "1px solid transparent" : "1px solid rgba(148, 163, 184, 0.4)";
-      toggleButton.style.background = selected ? "transparent" : "#0f172a";
-      toggleButton.style.color = selected ? "#0f172a" : "#ffffff";
-
       let controls = card.querySelector("[data-image-controls]") as HTMLDivElement | null;
       if (!controls) {
         controls = document.createElement("div");
@@ -3203,14 +3191,41 @@ export class HydratedFormHost extends HTMLElement {
         card.appendChild(controls);
       }
       controls.setAttribute("data-image-gallery-control-row", imageItem.id);
-      controls.className = "mt-2 flex items-center justify-center";
-      const existingToggle = controls.querySelector(
-        '[data-image-gallery-action="toggle"]',
-      ) as HTMLButtonElement | null;
-      if (existingToggle && existingToggle !== toggleButton) {
-        existingToggle.remove();
+      if (isSingleSelect) {
+        controls.className = "hidden";
+        Array.from(controls.querySelectorAll('[data-image-gallery-action="toggle"]')).forEach((node) => node.remove());
+      } else {
+        const toggleButton = document.createElement("button");
+        toggleButton.type = "button";
+        toggleButton.className = "btn";
+        toggleButton.textContent = selected ? "×" : "+";
+        toggleButton.setAttribute("data-image-gallery-action", "toggle");
+        toggleButton.setAttribute("data-image-id", imageItem.id);
+        toggleButton.setAttribute("aria-label", selected ? `Remove ${imageItem.name}` : `Select ${imageItem.name}`);
+        toggleButton.disabled = disabled;
+        toggleButton.style.width = "36px";
+        toggleButton.style.minWidth = "36px";
+        toggleButton.style.height = "36px";
+        toggleButton.style.padding = "0";
+        toggleButton.style.display = "inline-flex";
+        toggleButton.style.alignItems = "center";
+        toggleButton.style.justifyContent = "center";
+        toggleButton.style.borderRadius = "999px";
+        toggleButton.style.fontSize = "14px";
+        toggleButton.style.fontWeight = "700";
+        toggleButton.style.boxShadow = "none";
+        toggleButton.style.border = selected ? "1px solid transparent" : "1px solid rgba(148, 163, 184, 0.4)";
+        toggleButton.style.background = selected ? "transparent" : "#0f172a";
+        toggleButton.style.color = selected ? "#0f172a" : "#ffffff";
+        controls.className = "mt-2 flex items-center justify-center";
+        const existingToggle = controls.querySelector(
+          '[data-image-gallery-action="toggle"]',
+        ) as HTMLButtonElement | null;
+        if (existingToggle && existingToggle !== toggleButton) {
+          existingToggle.remove();
+        }
+        controls.appendChild(toggleButton);
       }
-      controls.appendChild(toggleButton);
     });
 
     Array.from(gallery.querySelectorAll("[data-image-card]")).forEach((node) => {

@@ -546,33 +546,33 @@
         opsPanel.refresh();
       };
 
-      form.addEventListener("form-ui:resume-token-restored", (event) => {
+      form.addEventListener("xpressui:resume-token-restored", (event) => {
         write({ type: "resume-token-restored", detail: event.detail });
         refreshAdminPanels();
       });
 
-      form.addEventListener("form-ui:draft-restored", (event) => {
+      form.addEventListener("xpressui:draft-restored", (event) => {
         write({ type: "draft-restored", detail: event.detail });
         refreshAdminPanels();
       });
 
-      form.addEventListener("form-ui:resume-token-invalidated", (event) => {
+      form.addEventListener("xpressui:resume-token-invalidated", (event) => {
         write({ type: "resume-token-invalidated", detail: event.detail });
         refreshAdminPanels();
       });
-      form.addEventListener("form-ui:resume-token-invalid-signature", (event) => {
+      form.addEventListener("xpressui:resume-token-invalid-signature", (event) => {
         write({ type: "resume-token-invalid-signature", detail: event.detail });
         refreshAdminPanels();
       });
-      form.addEventListener("form-ui:resume-share-code-claim-state", (event) => {
+      form.addEventListener("xpressui:resume-share-code-claim-state", (event) => {
         write({ type: "resume-share-code-claim-state", detail: event.detail });
         refreshAdminPanels();
       });
-      form.addEventListener("form-ui:resume-share-code-restore-state", (event) => {
+      form.addEventListener("xpressui:resume-share-code-restore-state", (event) => {
         write({ type: "resume-share-code-restore-state", detail: event.detail });
         refreshAdminPanels();
       });
-      form.addEventListener("form-ui:draft-saved", refreshAdminPanels);
+      form.addEventListener("xpressui:draft-saved", refreshAdminPanels);
 
       let activeToken = "";
       let activeShareCode = "";

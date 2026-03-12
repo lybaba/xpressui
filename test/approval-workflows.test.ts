@@ -50,7 +50,7 @@ describe("Approval Workflows", () => {
     const form = element.querySelector("#approval-request-form_form") as HTMLFormElement;
     const onApprovalRequested = vi.fn();
 
-    element.addEventListener("form-ui:approval-requested", (event) => {
+    element.addEventListener("xpressui:approval-requested", (event) => {
       onApprovalRequested((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
@@ -115,7 +115,7 @@ describe("Approval Workflows", () => {
     const form = element.querySelector("#approval-complete-form_form") as HTMLFormElement;
     const onApprovalComplete = vi.fn();
 
-    element.addEventListener("form-ui:approval-complete", (event) => {
+    element.addEventListener("xpressui:approval-complete", (event) => {
       onApprovalComplete((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
@@ -170,7 +170,7 @@ describe("Approval Workflows", () => {
     const form = element.querySelector("#approval-decision-form_form") as HTMLFormElement;
     const onApprovalState = vi.fn();
 
-    element.addEventListener("form-ui:approval-state", (event) => {
+    element.addEventListener("xpressui:approval-state", (event) => {
       onApprovalState((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
@@ -251,7 +251,7 @@ describe("Approval Workflows", () => {
     const form = element.querySelector("#approval-comment-form_form") as HTMLFormElement;
     const onCommentSuccess = vi.fn();
 
-    element.addEventListener("form-ui:approval-comment-success", (event) => {
+    element.addEventListener("xpressui:approval-comment-success", (event) => {
       onCommentSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
@@ -337,7 +337,7 @@ describe("Approval Workflows", () => {
     const form = element.querySelector("#approval-workflow-form_form") as HTMLFormElement;
     const onWorkflowState = vi.fn();
 
-    element.addEventListener("form-ui:workflow-state", (event) => {
+    element.addEventListener("xpressui:workflow-state", (event) => {
       onWorkflowState((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 

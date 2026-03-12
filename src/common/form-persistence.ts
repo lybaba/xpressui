@@ -278,7 +278,7 @@ export class FormPersistenceRuntime {
 
     if (hydrationResult.migratedFromLocalStorage) {
       this.options.emitEvent(
-        "form-ui:storage-migrated",
+        "xpressui:storage-migrated",
         this.createEventDetail(this.options.getValues(), {
           source: hydrationResult.source,
           migratedFromLocalStorage: true,
@@ -683,7 +683,7 @@ export class FormPersistenceRuntime {
     },
   ): void {
     this.options.emitEvent(
-      "form-ui:resume-share-code-claim-blocked",
+      "xpressui:resume-share-code-claim-blocked",
       this.createEventDetail(this.options.getValues(), {
         code,
         ...result,
@@ -694,7 +694,7 @@ export class FormPersistenceRuntime {
   emitShareCodeClaimState(result: TResumeShareCodeClaimDetail, response?: Response): void {
     this.lastShareCodeClaimDetail = result;
     this.options.emitEvent(
-      "form-ui:resume-share-code-claim-state",
+      "xpressui:resume-share-code-claim-state",
       this.createEventDetail(this.options.getValues(), result, response),
     );
   }
@@ -893,7 +893,7 @@ export class FormPersistenceRuntime {
     signatureVersion?: string;
   }): void {
     this.options.emitEvent(
-      "form-ui:resume-token-invalid-signature",
+      "xpressui:resume-token-invalid-signature",
       this.createEventDetail({}, {
         token,
         savedAt: state.savedAt,
@@ -1109,7 +1109,7 @@ export class FormPersistenceRuntime {
   }
 
   emitDraftRestored(values: Record<string, any>): void {
-    this.options.emitEvent("form-ui:draft-restored", this.createEventDetail(values));
+    this.options.emitEvent("xpressui:draft-restored", this.createEventDetail(values));
   }
 
   saveDraft(values?: Record<string, any>): void {
@@ -1120,7 +1120,7 @@ export class FormPersistenceRuntime {
     const draftValues = values || this.options.getValues();
     this.storageAdapter.saveDraft(draftValues);
     this.saveCurrentStepIndex(this.options.getCurrentStepIndex?.() ?? null);
-    this.options.emitEvent("form-ui:draft-saved", this.createEventDetail(draftValues));
+    this.options.emitEvent("xpressui:draft-saved", this.createEventDetail(draftValues));
   }
 
   scheduleDraftSave(): void {
@@ -1150,7 +1150,7 @@ export class FormPersistenceRuntime {
 
     this.storageAdapter.clearDraft();
     this.saveCurrentStepIndex(null);
-    this.options.emitEvent("form-ui:draft-cleared", this.createEventDetail({}));
+    this.options.emitEvent("xpressui:draft-cleared", this.createEventDetail({}));
   }
 
   enqueueSubmission(values: Record<string, any>): void {
@@ -1161,7 +1161,7 @@ export class FormPersistenceRuntime {
     const queue = this.storageAdapter.enqueueSubmission(values);
     const nextEntry = queue[0];
     this.options.emitEvent(
-      "form-ui:queued",
+      "xpressui:queued",
       this.createEventDetail(values, {
         queueLength: queue.length,
         deadLetterLength: this.storageAdapter.loadDeadLetterQueue().length,
@@ -1192,7 +1192,7 @@ export class FormPersistenceRuntime {
     }
 
     this.options.emitEvent(
-      "form-ui:queue-state",
+      "xpressui:queue-state",
       this.createEventDetail(this.options.getValues(), this.getQueueState()),
     );
   }
@@ -1236,7 +1236,7 @@ export class FormPersistenceRuntime {
         return null;
       }
       this.options.emitEvent(
-        "form-ui:resume-token-created",
+        "xpressui:resume-token-created",
         this.createEventDetail(currentValues, {
           token,
           savedAt: state.savedAt,
@@ -1312,7 +1312,7 @@ export class FormPersistenceRuntime {
 
       try {
         this.options.emitEvent(
-          "form-ui:resume-token-created",
+          "xpressui:resume-token-created",
           this.createEventDetail(currentValues, {
             operation: parsed.operation,
             token: parsed.token,
@@ -1369,7 +1369,7 @@ export class FormPersistenceRuntime {
       }
 
       this.options.emitEvent(
-        "form-ui:resume-share-code-created",
+        "xpressui:resume-share-code-created",
         this.createEventDetail(this.options.getValues(), {
           operation: parsed.operation,
           code: parsed.code,
@@ -1446,7 +1446,7 @@ export class FormPersistenceRuntime {
               : {}),
           };
           this.options.emitEvent(
-            "form-ui:resume-share-code-claim-blocked",
+            "xpressui:resume-share-code-claim-blocked",
             this.createEventDetail(this.options.getValues(), {
               code,
               reason: remotePolicy.code,
@@ -1580,7 +1580,7 @@ export class FormPersistenceRuntime {
       };
 
       this.options.emitEvent(
-        "form-ui:resume-share-code-claimed",
+        "xpressui:resume-share-code-claimed",
         this.createEventDetail(this.options.getValues(), {
           operation: parsed.operation,
           code: parsed.code,
@@ -1638,7 +1638,7 @@ export class FormPersistenceRuntime {
       };
       this.lastShareCodeRestoreDetail = detail;
       this.options.emitEvent(
-        "form-ui:resume-share-code-restore-state",
+        "xpressui:resume-share-code-restore-state",
         this.createEventDetail(this.options.getValues(), detail),
       );
       return detail;
@@ -1646,7 +1646,7 @@ export class FormPersistenceRuntime {
 
     const restoredDraft = this.applyResumeSnapshot(claim.lookup.snapshot);
     this.options.emitEvent(
-      "form-ui:resume-token-restored",
+      "xpressui:resume-token-restored",
       this.createEventDetail(restoredDraft, {
         token: claim.lookup.token,
         snapshot: claim.lookup.snapshot,
@@ -1668,7 +1668,7 @@ export class FormPersistenceRuntime {
     };
     this.lastShareCodeRestoreDetail = detail;
     this.options.emitEvent(
-      "form-ui:resume-share-code-restore-state",
+      "xpressui:resume-share-code-restore-state",
       this.createEventDetail(restoredDraft, detail),
     );
     return detail;
@@ -1696,7 +1696,7 @@ export class FormPersistenceRuntime {
       if (parsed.expired) {
         this.deleteResumeToken(token);
         this.options.emitEvent(
-          "form-ui:resume-token-expired",
+          "xpressui:resume-token-expired",
           this.createEventDetail({}, {
             token,
             savedAt: parsed.savedAt,
@@ -1709,7 +1709,7 @@ export class FormPersistenceRuntime {
 
       const restoredDraft = this.applyResumeSnapshot(snapshot);
       this.options.emitEvent(
-        "form-ui:resume-token-restored",
+        "xpressui:resume-token-restored",
         this.createEventDetail(restoredDraft, {
           token,
           snapshot,
@@ -1842,7 +1842,7 @@ export class FormPersistenceRuntime {
     if (lookup.resumeEndpoint && lookup.snapshot) {
       const restoredDraft = this.applyResumeSnapshot(lookup.snapshot);
       this.options.emitEvent(
-        "form-ui:resume-token-restored",
+        "xpressui:resume-token-restored",
         this.createEventDetail(restoredDraft, {
           token: lookup.token,
           snapshot: lookup.snapshot,
@@ -1967,7 +1967,7 @@ export class FormPersistenceRuntime {
       return false;
     }
     this.options.emitEvent(
-      "form-ui:resume-token-deleted",
+      "xpressui:resume-token-deleted",
       this.createEventDetail(this.options.getValues(), {
         token,
       }),
@@ -1981,7 +1981,7 @@ export class FormPersistenceRuntime {
       const deleted = this.deleteResumeToken(token);
       if (deleted) {
         this.options.emitEvent(
-          "form-ui:resume-token-invalidated",
+          "xpressui:resume-token-invalidated",
           this.createEventDetail(this.options.getValues(), {
             token,
             remote: false,
@@ -2005,7 +2005,7 @@ export class FormPersistenceRuntime {
         }
         this.resumeTokenMemory.delete(token);
         this.options.emitEvent(
-          "form-ui:resume-token-invalidated",
+          "xpressui:resume-token-invalidated",
           this.createEventDetail(this.options.getValues(), {
             operation: "invalidate",
             token,
@@ -2037,7 +2037,7 @@ export class FormPersistenceRuntime {
       }
       this.resumeTokenMemory.delete(token);
       this.options.emitEvent(
-        "form-ui:resume-token-invalidated",
+        "xpressui:resume-token-invalidated",
         this.createEventDetail(this.options.getValues(), {
           operation: parsed.operation,
           token: parsed.token,
@@ -2080,7 +2080,7 @@ export class FormPersistenceRuntime {
 
     this.storageAdapter.clearDeadLetterQueue();
     this.options.emitEvent(
-      "form-ui:dead-letter-cleared",
+      "xpressui:dead-letter-cleared",
       this.createEventDetail({}, this.getQueueState()),
     );
     this.emitQueueState();
@@ -2099,7 +2099,7 @@ export class FormPersistenceRuntime {
     const resetEntry = entry.values;
     const queue = this.storageAdapter.enqueueSubmission(resetEntry);
     this.options.emitEvent(
-      "form-ui:dead-letter-requeued",
+      "xpressui:dead-letter-requeued",
       this.createEventDetail(resetEntry, {
         queueLength: queue.length,
         deadLetterLength: this.storageAdapter.loadDeadLetterQueue().length,
@@ -2124,7 +2124,7 @@ export class FormPersistenceRuntime {
     try {
       const { response, result } = await this.options.submitValues(entry.values, formConfig.submit);
       this.options.emitEvent(
-        "form-ui:dead-letter-replayed-success",
+        "xpressui:dead-letter-replayed-success",
         this.createEventDetail(entry.values, result, response),
       );
       this.emitQueueState();
@@ -2139,7 +2139,7 @@ export class FormPersistenceRuntime {
       };
       const deadLetter = this.storageAdapter.enqueueDeadLetter(replayEntry);
       this.options.emitEvent(
-        "form-ui:dead-letter-replayed-error",
+        "xpressui:dead-letter-replayed-error",
         this.createEventDetail(
           entry.values,
           {
@@ -2188,7 +2188,7 @@ export class FormPersistenceRuntime {
           const { response, result } = await this.options.submitValues(entry.values, formConfig.submit);
           this.storageAdapter.dequeueSubmission();
           this.options.emitEvent(
-            "form-ui:sync-success",
+            "xpressui:sync-success",
             this.createEventDetail(entry.values, result, response),
           );
           this.emitQueueState();
@@ -2205,7 +2205,7 @@ export class FormPersistenceRuntime {
             this.storageAdapter.dequeueSubmission();
             const deadLetter = this.storageAdapter.enqueueDeadLetter(nextEntry);
             this.options.emitEvent(
-              "form-ui:dead-lettered",
+              "xpressui:dead-lettered",
               this.createEventDetail(
                 entry.values,
                 {
@@ -2220,7 +2220,7 @@ export class FormPersistenceRuntime {
             this.storageAdapter.updateQueueEntry(nextEntry);
           }
           this.options.emitEvent(
-            "form-ui:sync-error",
+            "xpressui:sync-error",
             this.createEventDetail(entry.values, error?.result, error?.response, error),
           );
           this.emitQueueState();

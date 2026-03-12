@@ -36,8 +36,8 @@ rendered the form HTML and the browser only calls `hydrateFormUI(container, form
   - `field.includeInSubmit: true` (field-level)
   - `submit.settingFieldAllowlist: string[]` (submit-level whitelist)
   - `submit.includeSettingFields: true` (global include)
-- The component emits `form-ui:submit-success` on successful HTTP responses
-- The component emits `form-ui:submit-error` on non-2xx responses
+- The component emits `xpressui:submit-success` on successful HTTP responses
+- The component emits `xpressui:submit-error` on non-2xx responses
 - Provider-specific events are emitted in addition to the generic events
 - `submit.transport(values, context)` lets the host app fully control the
   submission transport without using built-in `fetch` logic. Supported return
@@ -47,7 +47,7 @@ rendered the form HTML and the browser only calls `hydrateFormUI(container, form
   validation hooks in the runtime validation chain
 - `form.setValidationI18n(...)` can switch validation locale/catalog at runtime
 - submit attempts blocked by client validation emit
-  `form-ui:validation-blocked-submit` before any network request
+  `xpressui:validation-blocked-submit` before any network request
 
 ## Workflow-Aware Provider Additions
 
@@ -71,8 +71,8 @@ Suggested response statuses:
 - `hold_expired`
 
 Provider events:
-- success: `form-ui:calendar-availability-hold-success`
-- error: `form-ui:calendar-availability-hold-error`
+- success: `xpressui:calendar-availability-hold-success`
+- error: `xpressui:calendar-availability-hold-error`
 
 ### `payment-capture`
 
@@ -93,8 +93,8 @@ Suggested response statuses:
 - failure-like: `failed`, `declined`, `rejected`
 
 Provider events:
-- success: `form-ui:payment-capture-success`
-- error: `form-ui:payment-capture-error`
+- success: `xpressui:payment-capture-success`
+- error: `xpressui:payment-capture-error`
 
 ### `identity-review`
 
@@ -117,8 +117,8 @@ Suggested response statuses:
 - `rejected`
 
 Provider events:
-- success: `form-ui:identity-review-success`
-- error: `form-ui:identity-review-error`
+- success: `xpressui:identity-review-success`
+- error: `xpressui:identity-review-error`
 
 ## View And Hybrid Runtime Contract
 
@@ -273,7 +273,7 @@ Snapshot shape:
 }
 ```
 
-The hydrated runtime emits `form-ui:output-snapshot` in `view` and `hybrid` modes when output rendering is refreshed.
+The hydrated runtime emits `xpressui:output-snapshot` in `view` and `hybrid` modes when output rendering is refreshed.
 The latest snapshot is also available in debug tools (`attachFormDebugObserver`, `createFormDebugPanel`).
 
 ### Submit Lifecycle Hooks
@@ -285,7 +285,7 @@ The latest snapshot is also available in debug tools (`attachFormDebugObserver`,
 - `postSuccess`: runs after success events
 - `postFailure`: runs after error events
 
-If a lifecycle hook throws, `xpressui` emits `form-ui:submit-hook-error` with
+If a lifecycle hook throws, `xpressui` emits `xpressui:submit-hook-error` with
 `detail.result.stage` set to `preSubmit`, `postSuccess`, or `postFailure`.
 
 ## Provider Config Schemas
@@ -329,7 +329,7 @@ Client-side hardening options for share-code claim flows:
 - `storage.shareCodeClaimBlockMs`
 
 When local policy blocks a claim attempt, runtime emits
-`form-ui:resume-share-code-claim-blocked` without sending a backend request.
+`xpressui:resume-share-code-claim-blocked` without sending a backend request.
 
 `POST` request body:
 
@@ -466,8 +466,8 @@ Policy guidance:
 - keep backend claim enforcement aligned with the client-side throttle and blocking windows
 
 Client-side events:
-- `form-ui:resume-share-code-claim-state` emits every claim outcome with the normalized lifecycle state
-- `form-ui:resume-share-code-restore-state` emits every restore attempt with:
+- `xpressui:resume-share-code-claim-state` emits every claim outcome with the normalized lifecycle state
+- `xpressui:resume-share-code-restore-state` emits every restore attempt with:
   - `restored`
   - `claim_failed`
 - `form.getResumeStatusSummary()` exposes the latest cross-device status in one object:
@@ -519,7 +519,7 @@ console.log(admin.getOperationalSummary());
 console.log(admin.getIncidentSummary(5));
 console.log(await form.restoreFromShareCodeDetailAsync("SHARE-42"));
 ```
-- `form-ui:resume-share-code-claim-blocked` remains the dedicated blocked/throttled event for existing integrations
+- `xpressui:resume-share-code-claim-blocked` remains the dedicated blocked/throttled event for existing integrations
 
 `GET` not-found response:
 
@@ -545,7 +545,7 @@ Recommended `DELETE` response:
 
 When `storage.verifyResumeToken(...)` is configured, `xpressui` verifies remote
 signed payloads before caching/restoring them. Invalid signatures are rejected
-and emit `form-ui:resume-token-invalid-signature`.
+and emit `xpressui:resume-token-invalid-signature`.
 
 ### Signed Resume Token Hooks
 
@@ -557,7 +557,7 @@ For local/remote resume cache hardening, storage config can provide:
 
 When verification fails, runtime emits:
 
-- `form-ui:resume-token-invalid-signature`
+- `xpressui:resume-token-invalid-signature`
 
 The payload includes:
 - `token`
@@ -795,8 +795,8 @@ HTTP status: `422`
 ```
 
 Frontend events:
-- `form-ui:submit-success`
-- `form-ui:reservation-success`
+- `xpressui:submit-success`
+- `xpressui:reservation-success`
 
 ## Payment Provider
 
@@ -853,9 +853,9 @@ HTTP status: `402`
 ```
 
 Frontend events:
-- `form-ui:submit-success`
-- `form-ui:payment-success`
-- `form-ui:payment-error`
+- `xpressui:submit-success`
+- `xpressui:payment-success`
+- `xpressui:payment-error`
 
 ## Stripe Payment Provider
 
@@ -911,9 +911,9 @@ HTTP status: `400`
 ```
 
 Frontend events:
-- `form-ui:submit-success`
-- `form-ui:payment-stripe-success`
-- `form-ui:payment-stripe-error`
+- `xpressui:submit-success`
+- `xpressui:payment-stripe-success`
+- `xpressui:payment-stripe-error`
 
 ## Identity Verification Webhook Provider
 
@@ -976,9 +976,9 @@ Suggested success response:
 ```
 
 Frontend events:
-- `form-ui:submit-success`
-- `form-ui:identity-verification-webhook-success`
-- `form-ui:identity-verification-webhook-error`
+- `xpressui:submit-success`
+- `xpressui:identity-verification-webhook-success`
+- `xpressui:identity-verification-webhook-error`
 
 ## CRM Provider
 
@@ -1022,8 +1022,8 @@ Suggested success response:
 ```
 
 Frontend events:
-- `form-ui:crm-success`
-- `form-ui:crm-error`
+- `xpressui:crm-success`
+- `xpressui:crm-error`
 
 ## Calendar Booking Provider
 
@@ -1079,8 +1079,8 @@ the provider succeeds. Supported shapes:
 - `{ "type": "workflow", "state": "approved" }`
 
 Frontend events:
-- `form-ui:calendar-booking-success`
-- `form-ui:calendar-booking-error`
+- `xpressui:calendar-booking-success`
+- `xpressui:calendar-booking-error`
 
 ## Calendar Cancel Provider
 
@@ -1124,8 +1124,8 @@ Suggested success response:
 ```
 
 Frontend events:
-- `form-ui:calendar-cancel-success`
-- `form-ui:calendar-cancel-error`
+- `xpressui:calendar-cancel-success`
+- `xpressui:calendar-cancel-error`
 
 ## Calendar Reschedule Provider
 
@@ -1171,8 +1171,8 @@ Suggested success response:
 ```
 
 Frontend events:
-- `form-ui:calendar-reschedule-success`
-- `form-ui:calendar-reschedule-error`
+- `xpressui:calendar-reschedule-success`
+- `xpressui:calendar-reschedule-error`
 
 ## Approval Request Provider
 
@@ -1249,10 +1249,10 @@ optional. If omitted, the built-in provider still maps known statuses
 workflow transitions.
 
 Frontend events:
-- `form-ui:approval-request-success`
-- `form-ui:approval-request-error`
-- `form-ui:approval-requested`
-- `form-ui:approval-complete`
+- `xpressui:approval-request-success`
+- `xpressui:approval-request-error`
+- `xpressui:approval-requested`
+- `xpressui:approval-complete`
 
 ## Approval Decision Provider
 
@@ -1297,9 +1297,9 @@ Suggested success response:
 ```
 
 Frontend events:
-- `form-ui:approval-decision-success`
-- `form-ui:approval-decision-error`
-- `form-ui:approval-state`
+- `xpressui:approval-decision-success`
+- `xpressui:approval-decision-error`
+- `xpressui:approval-state`
 
 ## Approval Comment Provider
 
@@ -1359,8 +1359,8 @@ HTTP status: `422`
 ```
 
 Frontend events:
-- `form-ui:approval-comment-success`
-- `form-ui:approval-comment-error`
+- `xpressui:approval-comment-success`
+- `xpressui:approval-comment-error`
 
 ## Dynamic Options Endpoint
 
@@ -1551,7 +1551,7 @@ instead of the original `File` object.
 
 When presign/direct upload fails with retryable statuses (`429`, `5xx`, network
 errors), retries are attempted within `uploadRetryMaxAttempts`.
-Runtime diagnostics are emitted through `form-ui:upload-retry` with:
+Runtime diagnostics are emitted through `xpressui:upload-retry` with:
 - `result.stage` (`presign` or `upload`)
 - `result.fieldName`
 - `result.fileName`
@@ -1561,7 +1561,7 @@ Runtime diagnostics are emitted through `form-ui:upload-retry` with:
 - `result.reason`
 - `result.status` (when available)
 
-When retries are exhausted, `form-ui:upload-error` includes the same retry
+When retries are exhausted, `xpressui:upload-error` includes the same retry
 context (`stage`, `fieldName`, `fileName`, `attempt`, `maxAttempts`,
 `retryable`, `reason`, `status`) to ease operational diagnostics.
 
@@ -1589,7 +1589,7 @@ Optional policy hooks can run before any upload starts:
 - `submit.contentModerationPolicy(context)`
 - `submit.virusScanPolicy(context)`
 
-When a policy rejects a file, runtime emits `form-ui:file-policy-rejected` and
+When a policy rejects a file, runtime emits `xpressui:file-policy-rejected` and
 submission is interrupted before binary transfer.
 
 Minimal Express example:
@@ -1633,7 +1633,7 @@ Suggested success response:
 ```
 
 Frontend event:
-- `form-ui:options-loaded`
+- `xpressui:options-loaded`
 
 ## Express Example
 

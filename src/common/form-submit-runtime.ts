@@ -301,7 +301,7 @@ export function resolveApprovalStateUpdate(options: {
 
   const events: TResolvedSubmitEvent[] = [
     {
-      eventName: "form-ui:approval-state",
+      eventName: "xpressui:approval-state",
       detail: {
         ...options.detail,
         response: options.response,
@@ -312,7 +312,7 @@ export function resolveApprovalStateUpdate(options: {
 
   if (status === "pending_approval") {
     events.push({
-      eventName: "form-ui:approval-requested",
+      eventName: "xpressui:approval-requested",
       detail: {
         ...options.detail,
         response: options.response,
@@ -322,7 +322,7 @@ export function resolveApprovalStateUpdate(options: {
     });
   } else if (status === "approved" || status === "completed") {
     events.push({
-      eventName: "form-ui:approval-complete",
+      eventName: "xpressui:approval-complete",
       detail: {
         ...options.detail,
         response: options.response,

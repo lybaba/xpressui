@@ -403,7 +403,7 @@
       };
       form.addEventListener("input", () => renderCheckoutSummary());
       form.addEventListener("change", () => renderCheckoutSummary());
-      form.addEventListener("form-ui:workflow-step", () => renderCheckoutSummary());
+      form.addEventListener("xpressui:workflow-step", () => renderCheckoutSummary());
       renderCheckoutSummary();
 
       const originalFetch = window.fetch.bind(window);
@@ -433,7 +433,7 @@
         });
       };
 
-      form.addEventListener("form-ui:submit-success", (event) => {
+      form.addEventListener("xpressui:submit-success", (event) => {
         const result = event.detail?.result;
         renderResult(
           "Latest Submit",

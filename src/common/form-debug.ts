@@ -10,7 +10,7 @@ export type TFormDebugEventRecord = {
 };
 
 export type TFormDebugRuleRecord = Omit<TFormDebugEventRecord, "type" | "detail"> & {
-  type: "form-ui:rule-applied";
+  type: "xpressui:rule-applied";
   detail: {
     result?: TFormRuleAppliedDetail;
     [key: string]: any;
@@ -18,11 +18,11 @@ export type TFormDebugRuleRecord = Omit<TFormDebugEventRecord, "type" | "detail"
 };
 
 export type TFormDebugTemplateDiagnosticRecord = TFormDebugEventRecord & {
-  type: "form-ui:rule-template-missing-field" | "form-ui:rule-template-warning-cleared";
+  type: "xpressui:rule-template-missing-field" | "xpressui:rule-template-warning-cleared";
 };
 
 export type TFormDebugRuleStateRecord = TFormDebugEventRecord & {
-  type: "form-ui:rule-state";
+  type: "xpressui:rule-state";
   detail: {
     result?: {
       rules?: TFormRuleAppliedDetail[];
@@ -32,7 +32,7 @@ export type TFormDebugRuleStateRecord = TFormDebugEventRecord & {
 };
 
 export type TFormDebugTemplateWarningStateRecord = TFormDebugEventRecord & {
-  type: "form-ui:rule-template-warning-state";
+  type: "xpressui:rule-template-warning-state";
   detail: {
     result?: {
       warnings?: TFormActiveTemplateWarning[];
@@ -42,19 +42,19 @@ export type TFormDebugTemplateWarningStateRecord = TFormDebugEventRecord & {
 };
 
 export type TFormDebugOutputSnapshotRecord = TFormDebugEventRecord & {
-  type: "form-ui:output-snapshot";
+  type: "xpressui:output-snapshot";
 };
 
 export type TFormDebugWorkflowSnapshotRecord = TFormDebugEventRecord & {
-  type: "form-ui:workflow-step" | "form-ui:workflow-state" | "form-ui:workflow-snapshot";
+  type: "xpressui:workflow-step" | "xpressui:workflow-state" | "xpressui:workflow-snapshot";
 };
 
 export type TFormDebugResumeClaimStateRecord = TFormDebugEventRecord & {
-  type: "form-ui:resume-share-code-claim-state";
+  type: "xpressui:resume-share-code-claim-state";
 };
 
 export type TFormDebugProviderContractWarningRecord = TFormDebugEventRecord & {
-  type: "form-ui:provider-contract-warning";
+  type: "xpressui:provider-contract-warning";
 };
 
 export type TFormDebugSnapshot = {
@@ -102,51 +102,51 @@ export type TFormDebugOptions = {
 };
 
 const DEFAULT_DEBUG_EVENTS = [
-  "form-ui:submit",
-  "form-ui:validation-blocked-submit",
-  "form-ui:submit-success",
-  "form-ui:submit-error",
-  "form-ui:options-loaded",
-  "form-ui:rule-applied",
-  "form-ui:rule-state",
-  "form-ui:rule-template-missing-field",
-  "form-ui:rule-template-warning-cleared",
-  "form-ui:rule-template-warning-state",
-  "form-ui:draft-saved",
-  "form-ui:draft-restored",
-  "form-ui:draft-cleared",
-  "form-ui:queued",
-  "form-ui:queue-state",
-  "form-ui:sync-success",
-  "form-ui:sync-error",
-  "form-ui:upload-retry",
-  "form-ui:file-policy-rejected",
-  "form-ui:dead-lettered",
-  "form-ui:dead-letter-cleared",
-  "form-ui:dead-letter-requeued",
-  "form-ui:dead-letter-replayed-success",
-  "form-ui:dead-letter-replayed-error",
-  "form-ui:reservation-success",
-  "form-ui:payment-success",
-  "form-ui:payment-error",
-  "form-ui:payment-stripe-success",
-  "form-ui:payment-stripe-error",
-  "form-ui:webhook-success",
-  "form-ui:webhook-error",
-  "form-ui:booking-availability-success",
-  "form-ui:booking-availability-error",
-  "form-ui:step-change",
-  "form-ui:step-blocked",
-  "form-ui:step-skipped",
-  "form-ui:step-jumped",
-  "form-ui:workflow-state",
-  "form-ui:workflow-step",
-  "form-ui:workflow-snapshot",
-  "form-ui:resume-share-code-claim-state",
-  "form-ui:resume-share-code-claim-blocked",
-  "form-ui:provider-contract-warning",
-  "form-ui:validation-i18n-updated",
-  "form-ui:output-snapshot",
+  "xpressui:submit",
+  "xpressui:validation-blocked-submit",
+  "xpressui:submit-success",
+  "xpressui:submit-error",
+  "xpressui:options-loaded",
+  "xpressui:rule-applied",
+  "xpressui:rule-state",
+  "xpressui:rule-template-missing-field",
+  "xpressui:rule-template-warning-cleared",
+  "xpressui:rule-template-warning-state",
+  "xpressui:draft-saved",
+  "xpressui:draft-restored",
+  "xpressui:draft-cleared",
+  "xpressui:queued",
+  "xpressui:queue-state",
+  "xpressui:sync-success",
+  "xpressui:sync-error",
+  "xpressui:upload-retry",
+  "xpressui:file-policy-rejected",
+  "xpressui:dead-lettered",
+  "xpressui:dead-letter-cleared",
+  "xpressui:dead-letter-requeued",
+  "xpressui:dead-letter-replayed-success",
+  "xpressui:dead-letter-replayed-error",
+  "xpressui:reservation-success",
+  "xpressui:payment-success",
+  "xpressui:payment-error",
+  "xpressui:payment-stripe-success",
+  "xpressui:payment-stripe-error",
+  "xpressui:webhook-success",
+  "xpressui:webhook-error",
+  "xpressui:booking-availability-success",
+  "xpressui:booking-availability-error",
+  "xpressui:step-change",
+  "xpressui:step-blocked",
+  "xpressui:step-skipped",
+  "xpressui:step-jumped",
+  "xpressui:workflow-state",
+  "xpressui:workflow-step",
+  "xpressui:workflow-snapshot",
+  "xpressui:resume-share-code-claim-state",
+  "xpressui:resume-share-code-claim-blocked",
+  "xpressui:provider-contract-warning",
+  "xpressui:validation-i18n-updated",
+  "xpressui:output-snapshot",
 ];
 
 export function attachFormDebugObserver(
@@ -179,14 +179,14 @@ export function attachFormDebugObserver(
         events.splice(0, events.length - maxEvents);
       }
 
-      if (record.type === "form-ui:rule-applied") {
+      if (record.type === "xpressui:rule-applied") {
         ruleEvents.push(record as TFormDebugRuleRecord);
         if (ruleEvents.length > maxEvents) {
           ruleEvents.splice(0, ruleEvents.length - maxEvents);
         }
       }
 
-      if (record.type === "form-ui:rule-state") {
+      if (record.type === "xpressui:rule-state") {
         recentAppliedRules = Array.isArray(record.detail?.result?.rules)
           ? [...record.detail.result.rules]
           : [];
@@ -194,8 +194,8 @@ export function attachFormDebugObserver(
       }
 
       if (
-        record.type === "form-ui:rule-template-missing-field" ||
-        record.type === "form-ui:rule-template-warning-cleared"
+        record.type === "xpressui:rule-template-missing-field" ||
+        record.type === "xpressui:rule-template-warning-cleared"
       ) {
         templateDiagnostics.push(record as TFormDebugTemplateDiagnosticRecord);
         if (templateDiagnostics.length > maxEvents) {
@@ -203,30 +203,30 @@ export function attachFormDebugObserver(
         }
       }
 
-      if (record.type === "form-ui:rule-template-warning-state") {
+      if (record.type === "xpressui:rule-template-warning-state") {
         activeTemplateWarnings = Array.isArray(record.detail?.result?.warnings)
           ? [...record.detail.result.warnings]
           : [];
         lastTemplateWarningState = record as TFormDebugTemplateWarningStateRecord;
       }
 
-      if (record.type === "form-ui:output-snapshot") {
+      if (record.type === "xpressui:output-snapshot") {
         lastOutputSnapshot = record as TFormDebugOutputSnapshotRecord;
       }
 
       if (
-        record.type === "form-ui:workflow-step" ||
-        record.type === "form-ui:workflow-state" ||
-        record.type === "form-ui:workflow-snapshot"
+        record.type === "xpressui:workflow-step" ||
+        record.type === "xpressui:workflow-state" ||
+        record.type === "xpressui:workflow-snapshot"
       ) {
         lastWorkflowSnapshot = record as TFormDebugWorkflowSnapshotRecord;
       }
 
-      if (record.type === "form-ui:resume-share-code-claim-state") {
+      if (record.type === "xpressui:resume-share-code-claim-state") {
         lastResumeShareCodeClaimState = record as TFormDebugResumeClaimStateRecord;
       }
 
-      if (record.type === "form-ui:provider-contract-warning") {
+      if (record.type === "xpressui:provider-contract-warning") {
         lastProviderContractWarning = record as TFormDebugProviderContractWarningRecord;
       }
 

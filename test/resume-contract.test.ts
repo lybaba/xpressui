@@ -70,7 +70,7 @@ describe("Resume Contract", () => {
     });
     const onClaimBlocked = vi.fn();
 
-    element.addEventListener("form-ui:resume-share-code-claim-blocked", (event) => {
+    element.addEventListener("xpressui:resume-share-code-claim-blocked", (event) => {
       onClaimBlocked((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 

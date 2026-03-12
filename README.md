@@ -173,7 +173,7 @@ if (container) {
     },
   });
 
-  form?.addEventListener('form-ui:submit-success', (event) => {
+  form?.addEventListener('xpressui:submit-success', (event) => {
     console.log('Submitted', (event as CustomEvent).detail.values);
   });
 }
@@ -215,7 +215,7 @@ Static browser demos are available in [`./demos`](/home/lyb/projects/xpressui/de
 - [`identity-check.html`](/home/lyb/projects/xpressui/demos/identity-check.html)
 - [`view-photo-gallery.html`](/home/lyb/projects/xpressui/demos/view-photo-gallery.html) (`mode="view"`)
 - [`hybrid-ecommerce.html`](/home/lyb/projects/xpressui/demos/hybrid-ecommerce.html) (`mode="hybrid"`)
-- [`hybrid-output-snapshot.html`](/home/lyb/projects/xpressui/demos/hybrid-output-snapshot.html) (`mode="hybrid"` + `form-ui:output-snapshot`)
+- [`hybrid-output-snapshot.html`](/home/lyb/projects/xpressui/demos/hybrid-output-snapshot.html) (`mode="hybrid"` + `xpressui:output-snapshot`)
 - [`headless-runtime.html`](/home/lyb/projects/xpressui/demos/headless-runtime.html) (headless `FormRuntime` only)
 - [`remote-resume-flow.html`](/home/lyb/projects/xpressui/demos/remote-resume-flow.html) (remote save/resume token lifecycle)
 - [`provider-transition-flow.html`](/home/lyb/projects/xpressui/demos/provider-transition-flow.html) (provider transition routing demo)
@@ -383,7 +383,7 @@ Public types exported for headless integrations:
 
 ## Debug Observer
 
-Use `attachFormDebugObserver(...)` to record `form-ui:*` runtime events without
+Use `attachFormDebugObserver(...)` to record `xpressui:*` runtime events without
 instrumenting each event manually.
 
 ```ts
@@ -435,28 +435,28 @@ The observer API:
 - `clearLastWorkflowSnapshot()`
 - `detach()`
 
-`getRuleHistory()` returns only `form-ui:rule-applied` events. Use
+`getRuleHistory()` returns only `xpressui:rule-applied` events. Use
 `clearRuleHistory()` to reset that rule-specific buffer without clearing the
 full event log.
 
 `getRecentAppliedRules()` returns the latest rule-state snapshot seen by the
 observer. Use `clearRecentAppliedRules()` to reset only that local cache.
 
-`getLastRuleState()` returns the last full `form-ui:rule-state` event record,
+`getLastRuleState()` returns the last full `xpressui:rule-state` event record,
 including its timestamp.
 
-`getTemplateDiagnostics()` returns only `form-ui:rule-template-missing-field`
-and `form-ui:rule-template-warning-cleared` events.
+`getTemplateDiagnostics()` returns only `xpressui:rule-template-missing-field`
+and `xpressui:rule-template-warning-cleared` events.
 
 Use `clearActiveTemplateWarnings()` to reset only the observer's local cached
 warning state.
 
 `getActiveTemplateWarnings()` returns the current active template warning state
-without requiring you to keep the latest `form-ui:rule-template-warning-state`
+without requiring you to keep the latest `xpressui:rule-template-warning-state`
 event yourself.
 
 `getLastTemplateWarningState()` returns the last full
-`form-ui:rule-template-warning-state` event record, including its timestamp.
+`xpressui:rule-template-warning-state` event record, including its timestamp.
 
 `getSnapshot()` returns the observer's current derived state in one read:
 recent rules, last rule-state event, active template warnings, last template
@@ -502,10 +502,10 @@ If you do not provide a submit endpoint, the component validates the form and
 emits events. Your app decides what to do next.
 
 Events:
-- `form-ui:submit`
-- `form-ui:validation-blocked-submit`
-- `form-ui:submit-success`
-- `form-ui:submit-error`
+- `xpressui:submit`
+- `xpressui:validation-blocked-submit`
+- `xpressui:submit-success`
+- `xpressui:submit-error`
 
 ### 2. Direct API submission
 
@@ -539,7 +539,7 @@ Supported submit options:
 - `providerResponseContract` (`compat`, `warn-v2`, `strict-v2`)
 - `lifecycle` (`preSubmit`, `postSuccess`, `postFailure`)
 - `transport(values, context)` (optional custom transport override)
-  - hook exceptions emit `form-ui:submit-hook-error` with `result.stage`,
+  - hook exceptions emit `xpressui:submit-hook-error` with `result.stage`,
     `result.hookIndex`, and `result.hookName`
   - accepted return shapes:
   - `{ result }`
@@ -683,7 +683,7 @@ Request body:
 ```
 
 Extra event:
-- `form-ui:reservation-success`
+- `xpressui:reservation-success`
 
 ### Payment
 
@@ -715,8 +715,8 @@ Request body:
 ```
 
 Extra events:
-- `form-ui:payment-success`
-- `form-ui:payment-error`
+- `xpressui:payment-success`
+- `xpressui:payment-error`
 
 ### Stripe Payment
 
@@ -761,8 +761,8 @@ Expected backend response:
 ```
 
 Extra events:
-- `form-ui:payment-stripe-success`
-- `form-ui:payment-stripe-error`
+- `xpressui:payment-stripe-success`
+- `xpressui:payment-stripe-error`
 
 ### Webhook
 
@@ -798,8 +798,8 @@ Request body:
 ```
 
 Extra events:
-- `form-ui:webhook-success`
-- `form-ui:webhook-error`
+- `xpressui:webhook-success`
+- `xpressui:webhook-error`
 
 ### Booking Availability
 
@@ -845,8 +845,8 @@ Typical backend response:
 ```
 
 Extra events:
-- `form-ui:booking-availability-success`
-- `form-ui:booking-availability-error`
+- `xpressui:booking-availability-success`
+- `xpressui:booking-availability-error`
 
 ### Calendar Booking
 
@@ -892,8 +892,8 @@ Typical backend response:
 ```
 
 Extra events:
-- `form-ui:calendar-booking-success`
-- `form-ui:calendar-booking-error`
+- `xpressui:calendar-booking-success`
+- `xpressui:calendar-booking-error`
 
 ### Calendar Cancel
 
@@ -936,8 +936,8 @@ Typical backend response:
 ```
 
 Extra events:
-- `form-ui:calendar-cancel-success`
-- `form-ui:calendar-cancel-error`
+- `xpressui:calendar-cancel-success`
+- `xpressui:calendar-cancel-error`
 
 ### Calendar Reschedule
 
@@ -983,8 +983,8 @@ Typical backend response:
 ```
 
 Extra events:
-- `form-ui:calendar-reschedule-success`
-- `form-ui:calendar-reschedule-error`
+- `xpressui:calendar-reschedule-success`
+- `xpressui:calendar-reschedule-error`
 
 ### Approval Request
 
@@ -1035,10 +1035,10 @@ Typical backend responses:
 ```
 
 Extra events:
-- `form-ui:approval-request-success`
-- `form-ui:approval-request-error`
-- `form-ui:approval-requested`
-- `form-ui:approval-complete`
+- `xpressui:approval-request-success`
+- `xpressui:approval-request-error`
+- `xpressui:approval-requested`
+- `xpressui:approval-complete`
 
 ### Approval Decision
 
@@ -1082,9 +1082,9 @@ Typical backend response:
 ```
 
 Extra events:
-- `form-ui:approval-decision-success`
-- `form-ui:approval-decision-error`
-- `form-ui:approval-state`
+- `xpressui:approval-decision-success`
+- `xpressui:approval-decision-error`
+- `xpressui:approval-state`
 
 ### Approval Comment
 
@@ -1128,8 +1128,8 @@ Typical backend response:
 ```
 
 Extra events:
-- `form-ui:approval-comment-success`
-- `form-ui:approval-comment-error`
+- `xpressui:approval-comment-success`
+- `xpressui:approval-comment-error`
 
 ### Email
 
@@ -1173,8 +1173,8 @@ Typical backend response:
 ```
 
 Extra events:
-- `form-ui:email-success`
-- `form-ui:email-error`
+- `xpressui:email-success`
+- `xpressui:email-error`
 
 ### CRM
 
@@ -1218,8 +1218,8 @@ Typical backend response:
 ```
 
 Extra events:
-- `form-ui:crm-success`
-- `form-ui:crm-error`
+- `xpressui:crm-success`
+- `xpressui:crm-error`
 
 Use `identity-verification` when your backend verifies scanned identity data
 and you want a normalized request contract for KYC / onboarding workflows.
@@ -1237,8 +1237,8 @@ Request shape:
 ```
 
 Extra events:
-- `form-ui:identity-verification-success`
-- `form-ui:identity-verification-error`
+- `xpressui:identity-verification-success`
+- `xpressui:identity-verification-error`
 - `identity-verification-stripe` and `identity-verification-webhook` follow the
   same normalized `identity` payload shape with provider-specific actions
 
@@ -1306,12 +1306,12 @@ hydrateFormUI(container, {
 ```
 
 Extra event:
-- `form-ui:options-loaded`
-- `form-ui:rule-applied`
-- `form-ui:rule-state`
-- `form-ui:rule-template-missing-field`
-- `form-ui:rule-template-warning-cleared`
-- `form-ui:rule-template-warning-state`
+- `xpressui:options-loaded`
+- `xpressui:rule-applied`
+- `xpressui:rule-state`
+- `xpressui:rule-template-missing-field`
+- `xpressui:rule-template-warning-cleared`
+- `xpressui:rule-template-warning-state`
 
 ## File Uploads
 
@@ -1422,22 +1422,22 @@ Frontend behavior:
   `mrz.documentNumber`, `mrz.valid`, `fields.firstName`
 
 Extra event:
-- `form-ui:file-validation-error`
-- `form-ui:file-policy-rejected`
-- `form-ui:queue-disabled-for-files`
-- `form-ui:upload-start`
-- `form-ui:upload-progress`
-- `form-ui:upload-retry`
-- `form-ui:upload-complete`
-- `form-ui:upload-error`
-- `form-ui:qr-scan-success`
-- `form-ui:qr-scan-error`
-- `form-ui:document-scan-cropped`
-- `form-ui:document-scan-bounds-detected`
-- `form-ui:document-text-detected`
-- `form-ui:document-mrz-detected`
-- `form-ui:document-data`
-- `form-ui:document-fields-populated`
+- `xpressui:file-validation-error`
+- `xpressui:file-policy-rejected`
+- `xpressui:queue-disabled-for-files`
+- `xpressui:upload-start`
+- `xpressui:upload-progress`
+- `xpressui:upload-retry`
+- `xpressui:upload-complete`
+- `xpressui:upload-error`
+- `xpressui:qr-scan-success`
+- `xpressui:qr-scan-error`
+- `xpressui:document-scan-cropped`
+- `xpressui:document-scan-bounds-detected`
+- `xpressui:document-text-detected`
+- `xpressui:document-mrz-detected`
+- `xpressui:document-data`
+- `xpressui:document-fields-populated`
 
 Retry/upload diagnostics include structured fields such as `stage`, `fieldName`,
 `fileName`, `attempt`, `maxAttempts`, `nextRetryAt`, `reason`, and `status`
@@ -1478,7 +1478,7 @@ Current rule scope:
 - `set-value` can use a constant via `value`, copy another field via `sourceField`, or compose multiple fields via `template` (`{{firstName}} {{lastName}}`)
 - `set-value` can also transform the written value with `transform`: `copy`, `trim`, `lowercase`, `uppercase`, `slugify`
 - `set-error` shows a field-level error message through the normal form error UI
-- `lock-submit` disables submit buttons and emits `form-ui:submit-locked` until the rule no longer matches
+- `lock-submit` disables submit buttons and emits `xpressui:submit-locked` until the rule no longer matches
 
 ## Local Draft Storage
 
@@ -1551,31 +1551,31 @@ If the form contains file fields, offline queue mode is disabled and uploads are
 not retried automatically.
 
 Draft events:
-- `form-ui:draft-saved`
-- `form-ui:draft-restored`
-- `form-ui:draft-cleared`
-- `form-ui:storage-migrated`
-- `form-ui:resume-token-created`
-- `form-ui:resume-token-restored`
-- `form-ui:resume-token-deleted`
-- `form-ui:resume-token-invalidated`
-- `form-ui:resume-token-expired`
-- `form-ui:resume-token-invalid-signature`
-- `form-ui:resume-share-code-created`
-- `form-ui:resume-share-code-claimed`
-- `form-ui:resume-share-code-claim-blocked`
+- `xpressui:draft-saved`
+- `xpressui:draft-restored`
+- `xpressui:draft-cleared`
+- `xpressui:storage-migrated`
+- `xpressui:resume-token-created`
+- `xpressui:resume-token-restored`
+- `xpressui:resume-token-deleted`
+- `xpressui:resume-token-invalidated`
+- `xpressui:resume-token-expired`
+- `xpressui:resume-token-invalid-signature`
+- `xpressui:resume-share-code-created`
+- `xpressui:resume-share-code-claimed`
+- `xpressui:resume-share-code-claim-blocked`
 
 Queue events:
-- `form-ui:queued`
-- `form-ui:queue-state`
-- `form-ui:queue-disabled-for-files`
-- `form-ui:sync-success`
-- `form-ui:sync-error`
-- `form-ui:dead-lettered`
-- `form-ui:dead-letter-cleared`
-- `form-ui:dead-letter-requeued`
-- `form-ui:dead-letter-replayed-success`
-- `form-ui:dead-letter-replayed-error`
+- `xpressui:queued`
+- `xpressui:queue-state`
+- `xpressui:queue-disabled-for-files`
+- `xpressui:sync-success`
+- `xpressui:sync-error`
+- `xpressui:dead-lettered`
+- `xpressui:dead-letter-cleared`
+- `xpressui:dead-letter-requeued`
+- `xpressui:dead-letter-replayed-success`
+- `xpressui:dead-letter-replayed-error`
 
 Runtime inspection helpers:
 - `form.getQueueState()`
@@ -1620,8 +1620,8 @@ If `shareCodeEndpoint` is configured (or omitted, fallback to `resumeEndpoint`):
 - `restoreFromShareCodeAsync(code)` claims and restores snapshot values in one call
 
 Share-code claim lifecycle events:
-- `form-ui:resume-share-code-claim-state`
-- `form-ui:resume-share-code-claim-blocked`
+- `xpressui:resume-share-code-claim-state`
+- `xpressui:resume-share-code-claim-blocked`
 
 You can harden local share-code abuse behavior with:
 - `shareCodeClaimThrottleMs` (minimum delay between claim attempts for same code)
@@ -1785,84 +1785,84 @@ Headless runtime:
 - `runtime.previousStep()`
 
 Event:
-- `form-ui:step-change`
-- `form-ui:step-blocked`
-- `form-ui:step-skipped`
-- `form-ui:step-jumped`
-- `form-ui:workflow-step`
-- `form-ui:workflow-snapshot`
-- `form-ui:provider-transition`
-- `form-ui:provider-step-routed`
-- `form-ui:provider-messages`
-- `form-ui:provider-contract-warning`
-- `form-ui:validation-i18n-updated`
+- `xpressui:step-change`
+- `xpressui:step-blocked`
+- `xpressui:step-skipped`
+- `xpressui:step-jumped`
+- `xpressui:workflow-step`
+- `xpressui:workflow-snapshot`
+- `xpressui:provider-transition`
+- `xpressui:provider-step-routed`
+- `xpressui:provider-messages`
+- `xpressui:provider-contract-warning`
+- `xpressui:validation-i18n-updated`
 
 If a provider returns a normalized workflow transition and your form defines
 `workflowStepTargets`, the hydrated runtime now routes the wizard automatically to the
-matching step and emits `form-ui:provider-step-routed` in addition to the
-generic `form-ui:provider-transition`.
+matching step and emits `xpressui:provider-step-routed` in addition to the
+generic `xpressui:provider-transition`.
 
 If a provider returns normalized `messages`, the hydrated runtime emits
-`form-ui:provider-messages` with a uniform payload so you can drive toasts,
+`xpressui:provider-messages` with a uniform payload so you can drive toasts,
 notices, or banners without reading `providerResult.messages` manually.
 
 ## Events
 
 Core events emitted by `<form-ui>`:
-- `form-ui:submit`
-- `form-ui:validation-blocked-submit`
-- `form-ui:submit-success`
-- `form-ui:submit-error`
-- `form-ui:options-loaded`
-- `form-ui:rule-applied`
-- `form-ui:rule-state`
-- `form-ui:rule-template-missing-field`
-- `form-ui:rule-template-warning-cleared`
-- `form-ui:rule-template-warning-state`
-- `form-ui:draft-saved`
-- `form-ui:draft-restored`
-- `form-ui:draft-cleared`
-- `form-ui:queued`
-- `form-ui:queue-state`
-- `form-ui:sync-success`
-- `form-ui:sync-error`
-- `form-ui:dead-lettered`
-- `form-ui:dead-letter-cleared`
-- `form-ui:dead-letter-requeued`
-- `form-ui:dead-letter-replayed-success`
-- `form-ui:dead-letter-replayed-error`
+- `xpressui:submit`
+- `xpressui:validation-blocked-submit`
+- `xpressui:submit-success`
+- `xpressui:submit-error`
+- `xpressui:options-loaded`
+- `xpressui:rule-applied`
+- `xpressui:rule-state`
+- `xpressui:rule-template-missing-field`
+- `xpressui:rule-template-warning-cleared`
+- `xpressui:rule-template-warning-state`
+- `xpressui:draft-saved`
+- `xpressui:draft-restored`
+- `xpressui:draft-cleared`
+- `xpressui:queued`
+- `xpressui:queue-state`
+- `xpressui:sync-success`
+- `xpressui:sync-error`
+- `xpressui:dead-lettered`
+- `xpressui:dead-letter-cleared`
+- `xpressui:dead-letter-requeued`
+- `xpressui:dead-letter-replayed-success`
+- `xpressui:dead-letter-replayed-error`
 
 Provider-specific events:
-- `form-ui:reservation-success`
-- `form-ui:payment-success`
-- `form-ui:payment-error`
-- `form-ui:payment-stripe-success`
-- `form-ui:payment-stripe-error`
-- `form-ui:webhook-success`
-- `form-ui:webhook-error`
-- `form-ui:booking-availability-success`
-- `form-ui:booking-availability-error`
-- `form-ui:calendar-booking-success`
-- `form-ui:calendar-booking-error`
-- `form-ui:calendar-cancel-success`
-- `form-ui:calendar-cancel-error`
-- `form-ui:calendar-reschedule-success`
-- `form-ui:calendar-reschedule-error`
-- `form-ui:approval-request-success`
-- `form-ui:approval-request-error`
-- `form-ui:approval-requested`
-- `form-ui:approval-complete`
-- `form-ui:approval-decision-success`
-- `form-ui:approval-decision-error`
-- `form-ui:approval-state`
-- `form-ui:approval-comment-success`
-- `form-ui:approval-comment-error`
-- `form-ui:workflow-state`
-- `form-ui:workflow-snapshot`
-- `form-ui:email-success`
-- `form-ui:email-error`
-- `form-ui:crm-success`
-- `form-ui:crm-error`
+- `xpressui:reservation-success`
+- `xpressui:payment-success`
+- `xpressui:payment-error`
+- `xpressui:payment-stripe-success`
+- `xpressui:payment-stripe-error`
+- `xpressui:webhook-success`
+- `xpressui:webhook-error`
+- `xpressui:booking-availability-success`
+- `xpressui:booking-availability-error`
+- `xpressui:calendar-booking-success`
+- `xpressui:calendar-booking-error`
+- `xpressui:calendar-cancel-success`
+- `xpressui:calendar-cancel-error`
+- `xpressui:calendar-reschedule-success`
+- `xpressui:calendar-reschedule-error`
+- `xpressui:approval-request-success`
+- `xpressui:approval-request-error`
+- `xpressui:approval-requested`
+- `xpressui:approval-complete`
+- `xpressui:approval-decision-success`
+- `xpressui:approval-decision-error`
+- `xpressui:approval-state`
+- `xpressui:approval-comment-success`
+- `xpressui:approval-comment-error`
+- `xpressui:workflow-state`
+- `xpressui:workflow-snapshot`
+- `xpressui:email-success`
+- `xpressui:email-error`
+- `xpressui:crm-success`
+- `xpressui:crm-error`
 
 Event detail includes:
 - `values`

@@ -38,7 +38,6 @@ import {
 } from "./common/field";
 import { FormDynamicRuntime } from "./common/form-dynamic";
 import type { TFormActiveTemplateWarning } from "./common/form-dynamic";
-import { emitAliasedFormEvent } from "./common/form-event";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
@@ -446,7 +445,7 @@ export class FormUI extends HTMLElement {
         this.submitLockMessage = nextMessage;
         if (changed) {
           this.syncStepControls();
-          this.emitFormEvent("form-ui:submit-lock", {
+          this.emitFormEvent("xpressui:submit-lock", {
             values: this.form?.getState().values || {},
             formConfig: this.formConfig,
             submit: this.formConfig?.submit,
@@ -822,7 +821,7 @@ export class FormUI extends HTMLElement {
 
   emitOutputSnapshot = (values?: Record<string, any>) => {
     const snapshot = this.getOutputSnapshot(values);
-    this.emitFormEvent("form-ui:output-snapshot", {
+    this.emitFormEvent("xpressui:output-snapshot", {
       values:
         values
         || this.form?.getState().values
@@ -1401,7 +1400,7 @@ export class FormUI extends HTMLElement {
         },
       );
 
-      this.emitFormEvent("form-ui:document-scan-cropped", {
+      this.emitFormEvent("xpressui:document-scan-cropped", {
         values: this.engine.normalizeValues(this.form?.getState().values || {}),
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -1414,7 +1413,7 @@ export class FormUI extends HTMLElement {
         },
       });
 
-      this.emitFormEvent("form-ui:document-scan-bounds-detected", {
+      this.emitFormEvent("xpressui:document-scan-bounds-detected", {
         values: this.engine.normalizeValues(this.form?.getState().values || {}),
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -1472,7 +1471,7 @@ export class FormUI extends HTMLElement {
       const insight = this.getDocumentScanInsight(fieldConfig);
       insight.textBySlot[slotIndex] = detectedText;
 
-      this.emitFormEvent("form-ui:document-text-detected", {
+      this.emitFormEvent("xpressui:document-text-detected", {
         values: this.engine.normalizeValues(this.form?.getState().values || {}),
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -1526,7 +1525,7 @@ export class FormUI extends HTMLElement {
             this.form.change(fieldConfig.documentSexTargetField, normalizedFields.sex);
           }
         }
-        this.emitFormEvent("form-ui:document-mrz-detected", {
+        this.emitFormEvent("xpressui:document-mrz-detected", {
           values: this.engine.normalizeValues(this.form?.getState().values || {}),
           formConfig: this.formConfig,
           submit: this.formConfig?.submit,
@@ -1557,7 +1556,7 @@ export class FormUI extends HTMLElement {
         normalized: normalizedContract,
       });
 
-      this.emitFormEvent("form-ui:document-data", {
+      this.emitFormEvent("xpressui:document-data", {
         values: this.engine.normalizeValues(this.form?.getState().values || {}),
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -1571,7 +1570,7 @@ export class FormUI extends HTMLElement {
       });
 
       if (mrz) {
-        this.emitFormEvent("form-ui:document-fields-populated", {
+        this.emitFormEvent("xpressui:document-fields-populated", {
           values: this.engine.normalizeValues(this.form?.getState().values || {}),
           formConfig: this.formConfig,
           submit: this.formConfig?.submit,
@@ -1718,7 +1717,7 @@ export class FormUI extends HTMLElement {
     const detector = this.getBarcodeDetector();
     if (!detector || typeof detector.detect !== "function") {
       if (!silent) {
-        this.emitFormEvent("form-ui:qr-scan-error", {
+        this.emitFormEvent("xpressui:qr-scan-error", {
           values: this.engine.normalizeValues(this.form?.getState().values || {}),
           formConfig: this.formConfig,
           submit: this.formConfig?.submit,
@@ -1748,7 +1747,7 @@ export class FormUI extends HTMLElement {
 
       this.form?.change(fieldConfig.name, qrResult.rawValue);
       this.stopQrCamera(fieldConfig.name, false);
-      this.emitFormEvent("form-ui:qr-scan-success", {
+      this.emitFormEvent("xpressui:qr-scan-success", {
         values: this.engine.normalizeValues({
           ...(this.form?.getState().values || {}),
           [fieldConfig.name]: qrResult.rawValue,
@@ -1771,7 +1770,7 @@ export class FormUI extends HTMLElement {
       );
     } catch (error) {
       if (!silent) {
-        this.emitFormEvent("form-ui:qr-scan-error", {
+        this.emitFormEvent("xpressui:qr-scan-error", {
           values: this.engine.normalizeValues(this.form?.getState().values || {}),
           formConfig: this.formConfig,
           submit: this.formConfig?.submit,
@@ -1789,7 +1788,7 @@ export class FormUI extends HTMLElement {
     const detector = this.getBarcodeDetector();
     if (!detector || typeof detector.detect !== "function") {
       const error = new Error("QR scan is not available in this browser.");
-      this.emitFormEvent("form-ui:qr-scan-error", {
+      this.emitFormEvent("xpressui:qr-scan-error", {
         values: this.engine.normalizeValues(this.form?.getState().values || {}),
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -1824,7 +1823,7 @@ export class FormUI extends HTMLElement {
       }
 
       this.stopQrCamera(fieldConfig.name, false);
-      this.emitFormEvent("form-ui:qr-scan-success", {
+      this.emitFormEvent("xpressui:qr-scan-success", {
         values: this.engine.normalizeValues({
           ...(this.form?.getState().values || {}),
           [fieldConfig.name]: qrResult.rawValue,
@@ -1839,7 +1838,7 @@ export class FormUI extends HTMLElement {
 
       return qrResult.rawValue;
     } catch (error) {
-      this.emitFormEvent("form-ui:qr-scan-error", {
+      this.emitFormEvent("xpressui:qr-scan-error", {
         values: this.engine.normalizeValues(this.form?.getState().values || {}),
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -4844,7 +4843,7 @@ export class FormUI extends HTMLElement {
           blockingFields.forEach((fieldName) => {
             this.form?.blur(fieldName);
           });
-          this.emitFormEvent("form-ui:validation-blocked-submit", {
+          this.emitFormEvent("xpressui:validation-blocked-submit", {
             values: this.engine.normalizeValues(submitValues),
             formConfig: this.formConfig,
             submit: this.formConfig?.submit,
@@ -5001,7 +5000,7 @@ export class FormUI extends HTMLElement {
     };
     this.engine.setFormConfig(this.formConfig);
     this.persistence.setFormConfig(this.formConfig);
-    this.emitFormEvent("form-ui:validation-i18n-updated", {
+    this.emitFormEvent("xpressui:validation-i18n-updated", {
       values: this.engine.normalizeValues(this.form?.getState().values || {}),
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
@@ -5219,8 +5218,8 @@ export class FormUI extends HTMLElement {
       ...(response ? { response } : {}),
       result: this.getWorkflowSnapshot(),
     };
-    this.emitFormEvent("form-ui:workflow-step", workflowDetail);
-    this.emitFormEvent("form-ui:workflow-snapshot", workflowDetail);
+    this.emitFormEvent("xpressui:workflow-step", workflowDetail);
+    this.emitFormEvent("xpressui:workflow-snapshot", workflowDetail);
   }
 
   goToWorkflowStep = (state?: string): boolean => {
@@ -5235,7 +5234,7 @@ export class FormUI extends HTMLElement {
     this.persistence.saveCurrentStepIndex(this.currentStepIndex);
     this.syncStepVisibility();
     this.syncStepControls();
-    this.emitFormEvent("form-ui:step-jumped", {
+    this.emitFormEvent("xpressui:step-jumped", {
       values: this.form?.getState().values || {},
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
@@ -5459,7 +5458,7 @@ export class FormUI extends HTMLElement {
     const progress = this.getStepProgress();
     const conditionalNextStepName = this.getConditionalNextStepName();
 
-    this.emitFormEvent("form-ui:step-change", {
+    this.emitFormEvent("xpressui:step-change", {
       values: this.form?.getState().values || {},
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
@@ -5503,7 +5502,7 @@ export class FormUI extends HTMLElement {
     const conditionalTarget = this.steps.getConditionalNextStepName(values);
     const isStepValid = this.validateCurrentStep();
     if (!wasSkippable && !isStepValid) {
-      this.emitFormEvent("form-ui:step-blocked", {
+      this.emitFormEvent("xpressui:step-blocked", {
         values,
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -5518,7 +5517,7 @@ export class FormUI extends HTMLElement {
     }
     const jumped = Boolean(conditionalTarget);
     if (jumped) {
-      this.emitFormEvent("form-ui:step-jumped", {
+      this.emitFormEvent("xpressui:step-jumped", {
         values,
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -5528,7 +5527,7 @@ export class FormUI extends HTMLElement {
         },
       });
     } else if (wasSkippable) {
-      this.emitFormEvent("form-ui:step-skipped", {
+      this.emitFormEvent("xpressui:step-skipped", {
         values,
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -5612,7 +5611,7 @@ export class FormUI extends HTMLElement {
     this.steps.setWorkflowState(nextState);
     const moved = this.goToWorkflowStep(nextState);
     const routed = moved || (workflowTarget !== null && workflowTarget === this.getCurrentStepName());
-    this.emitFormEvent("form-ui:workflow-state", {
+    this.emitFormEvent("xpressui:workflow-state", {
       ...detail,
       response,
       result: {
@@ -5671,7 +5670,7 @@ export class FormUI extends HTMLElement {
         result,
       );
       if (workflowRoute.routed) {
-        this.emitFormEvent("form-ui:provider-step-routed", {
+        this.emitFormEvent("xpressui:provider-step-routed", {
           ...detail,
           response,
           result: {
@@ -5694,7 +5693,7 @@ export class FormUI extends HTMLElement {
       return null;
     }
 
-    this.emitFormEvent("form-ui:step-jumped", {
+    this.emitFormEvent("xpressui:step-jumped", {
       ...detail,
       response,
       result: {
@@ -5729,7 +5728,7 @@ export class FormUI extends HTMLElement {
         continue;
       }
 
-      this.emitFormEvent("form-ui:provider-transition", {
+      this.emitFormEvent("xpressui:provider-transition", {
         ...detail,
         response,
         result: {
@@ -5752,7 +5751,7 @@ export class FormUI extends HTMLElement {
     values: Record<string, any>,
     validationError: TValidationError,
   ) => {
-    this.emitFormEvent("form-ui:file-validation-error", {
+    this.emitFormEvent("xpressui:file-validation-error", {
       values: this.engine.normalizeValues(values),
       formConfig: this.formConfig,
       submit: this.formConfig?.submit,
@@ -5793,20 +5792,13 @@ export class FormUI extends HTMLElement {
     detail: TFormUISubmitDetail,
     cancelable: boolean = false,
   ) => {
-    return emitAliasedFormEvent(
-      (name, eventDetail, eventCancelable = false) => {
-        const event = new CustomEvent<TFormUISubmitDetail>(name, {
-          detail: eventDetail as TFormUISubmitDetail,
-          bubbles: true,
-          cancelable: eventCancelable,
-        });
-
-        return this.dispatchEvent(event);
-      },
-      eventName,
+    const event = new CustomEvent<TFormUISubmitDetail>(eventName, {
       detail,
+      bubbles: true,
       cancelable,
-    );
+    });
+
+    return this.dispatchEvent(event);
   }
 
   submitToApi = async (
@@ -5852,7 +5844,7 @@ export class FormUI extends HTMLElement {
       return;
     }
 
-    this.emitFormEvent("form-ui:provider-messages", {
+    this.emitFormEvent("xpressui:provider-messages", {
       ...detail,
       response,
       result,
@@ -5865,7 +5857,7 @@ export class FormUI extends HTMLElement {
   ) => {
     const warning = getProviderContractWarning(result, submitConfig);
     if (warning) {
-      this.emitFormEvent("form-ui:provider-contract-warning", {
+      this.emitFormEvent("xpressui:provider-contract-warning", {
         values: this.engine.normalizeValues(this.form?.getState().values || {}),
         formConfig: this.formConfig,
         submit: submitConfig,
@@ -5881,7 +5873,7 @@ export class FormUI extends HTMLElement {
     detail: TFormUISubmitDetail,
     hookError: unknown,
   ) => {
-    this.emitFormEvent("form-ui:submit-hook-error", {
+    this.emitFormEvent("xpressui:submit-hook-error", {
       ...detail,
       error: hookError,
       result: buildSubmitHookErrorResult(stage, hookError),
@@ -5896,7 +5888,7 @@ export class FormUI extends HTMLElement {
       this.formConfig?.submit?.documentFieldPaths,
     );
     if (this.submitLockedByRules) {
-      this.emitFormEvent("form-ui:submit-locked", {
+      this.emitFormEvent("xpressui:submit-locked", {
         values: formValues,
         formConfig: this.formConfig,
         submit: this.formConfig?.submit,
@@ -5914,7 +5906,7 @@ export class FormUI extends HTMLElement {
     try {
       const preSubmitResult = await runConfiguredSubmitLifecycleStage(this.formConfig?.submit, "preSubmit", detail);
       if (preSubmitResult.canceled) {
-        this.emitFormEvent("form-ui:submit-canceled", {
+        this.emitFormEvent("xpressui:submit-canceled", {
           ...detail,
           result: {
             reason: "pre-submit-canceled",
@@ -5929,13 +5921,13 @@ export class FormUI extends HTMLElement {
         values: formValues,
         error: hookError,
       };
-      this.emitFormEvent("form-ui:submit-error", hookDetail);
+      this.emitFormEvent("xpressui:submit-error", hookDetail);
       this.emitSubmitHookError("preSubmit", hookDetail, hookError);
       this.setWorkflowState("error", hookDetail, undefined, hookError);
       throw hookError;
     }
     detail.values = formValues;
-    const shouldContinue = this.emitFormEvent("form-ui:submit", detail, true);
+    const shouldContinue = this.emitFormEvent("xpressui:submit", detail, true);
 
     if (!shouldContinue) {
       return;
@@ -5948,7 +5940,7 @@ export class FormUI extends HTMLElement {
     if (!hasEndpoint && !customTransport) {
       this.clearDraft();
       this.setWorkflowState("submitted", detail);
-      this.emitFormEvent("form-ui:submit-success", detail);
+      this.emitFormEvent("xpressui:submit-success", detail);
       try {
         await runConfiguredSubmitLifecycleStage(this.formConfig?.submit, "postSuccess", detail);
       } catch (hookError) {
@@ -5982,7 +5974,7 @@ export class FormUI extends HTMLElement {
         result,
         providerResult,
       };
-      this.emitFormEvent("form-ui:submit-success", successDetail);
+      this.emitFormEvent("xpressui:submit-success", successDetail);
       this.emitProviderMessages(successDetail, providerResult, response, "success");
       this.emitApprovalStateEvents(successDetail, result, providerResult, response);
       const appliedProviderTransition = this.applyProviderTransition(successDetail, response, result, providerResult);
@@ -6007,11 +5999,11 @@ export class FormUI extends HTMLElement {
         const queueError = new Error(
           "Offline queue is disabled for file uploads. Retry while online after re-selecting files.",
         );
-        this.emitFormEvent("form-ui:queue-disabled-for-files", {
+        this.emitFormEvent("xpressui:queue-disabled-for-files", {
           ...detail,
           error: queueError,
         });
-        this.emitFormEvent("form-ui:submit-error", {
+        this.emitFormEvent("xpressui:submit-error", {
           ...detail,
           error: queueError,
         });
@@ -6036,7 +6028,7 @@ export class FormUI extends HTMLElement {
         providerResult,
         error,
       };
-      this.emitFormEvent("form-ui:submit-error", errorDetail);
+      this.emitFormEvent("xpressui:submit-error", errorDetail);
       this.emitProviderMessages(errorDetail, providerResult, error?.response, "error");
       this.setWorkflowState("error", errorDetail, error?.response, error?.result);
       const providerErrorEvent = getProviderErrorEventName(this.formConfig?.submit?.action);

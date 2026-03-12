@@ -167,10 +167,10 @@
       });
 
       [
-        "form-ui:submit",
-        "form-ui:submit-success",
-        "form-ui:provider-transition",
-        "form-ui:workflow-state",
+        "xpressui:submit",
+        "xpressui:submit-success",
+        "xpressui:provider-transition",
+        "xpressui:workflow-state",
       ].forEach((eventName) => {
         form.addEventListener(eventName, (event) => {
           pushEvent(eventName, event.detail || {});

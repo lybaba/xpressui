@@ -705,7 +705,7 @@ registerProvider("reservation", {
       reservation: values,
     };
   },
-  successEventName: "form-ui:reservation-success",
+  successEventName: "xpressui:reservation-success",
 });
 
 registerProvider("payment", {
@@ -723,8 +723,8 @@ registerProvider("payment", {
       payment: values,
     };
   },
-  successEventName: "form-ui:payment-success",
-  errorEventName: "form-ui:payment-error",
+  successEventName: "xpressui:payment-success",
+  errorEventName: "xpressui:payment-error",
 });
 
 registerProvider("payment-stripe", {
@@ -742,8 +742,8 @@ registerProvider("payment-stripe", {
       payment: values,
     };
   },
-  successEventName: "form-ui:payment-stripe-success",
-  errorEventName: "form-ui:payment-stripe-error",
+  successEventName: "xpressui:payment-stripe-success",
+  errorEventName: "xpressui:payment-stripe-error",
 });
 
 registerProvider("webhook", {
@@ -761,8 +761,8 @@ registerProvider("webhook", {
       data: values,
     };
   },
-  successEventName: "form-ui:webhook-success",
-  errorEventName: "form-ui:webhook-error",
+  successEventName: "xpressui:webhook-success",
+  errorEventName: "xpressui:webhook-error",
 });
 
 registerProvider("booking-availability", {
@@ -780,8 +780,8 @@ registerProvider("booking-availability", {
       availability: values,
     };
   },
-  successEventName: "form-ui:booking-availability-success",
-  errorEventName: "form-ui:booking-availability-error",
+  successEventName: "xpressui:booking-availability-success",
+  errorEventName: "xpressui:booking-availability-error",
 });
 
 registerProvider("calendar-booking", {
@@ -799,8 +799,8 @@ registerProvider("calendar-booking", {
       booking: values,
     };
   },
-  successEventName: "form-ui:calendar-booking-success",
-  errorEventName: "form-ui:calendar-booking-error",
+  successEventName: "xpressui:calendar-booking-success",
+  errorEventName: "xpressui:calendar-booking-error",
 });
 
 registerProvider("calendar-cancel", {
@@ -818,8 +818,8 @@ registerProvider("calendar-cancel", {
       cancellation: values,
     };
   },
-  successEventName: "form-ui:calendar-cancel-success",
-  errorEventName: "form-ui:calendar-cancel-error",
+  successEventName: "xpressui:calendar-cancel-success",
+  errorEventName: "xpressui:calendar-cancel-error",
 });
 
 registerProvider("calendar-reschedule", {
@@ -837,8 +837,8 @@ registerProvider("calendar-reschedule", {
       reschedule: values,
     };
   },
-  successEventName: "form-ui:calendar-reschedule-success",
-  errorEventName: "form-ui:calendar-reschedule-error",
+  successEventName: "xpressui:calendar-reschedule-success",
+  errorEventName: "xpressui:calendar-reschedule-error",
 });
 
 registerProvider("approval-request", {
@@ -876,8 +876,8 @@ registerProvider("approval-request", {
 
     return null;
   },
-  successEventName: "form-ui:approval-request-success",
-  errorEventName: "form-ui:approval-request-error",
+  successEventName: "xpressui:approval-request-success",
+  errorEventName: "xpressui:approval-request-error",
 });
 
 registerProvider("approval-decision", {
@@ -910,8 +910,8 @@ registerProvider("approval-decision", {
 
     return null;
   },
-  successEventName: "form-ui:approval-decision-success",
-  errorEventName: "form-ui:approval-decision-error",
+  successEventName: "xpressui:approval-decision-success",
+  errorEventName: "xpressui:approval-decision-error",
 });
 
 registerProvider("approval-comment", {
@@ -929,8 +929,8 @@ registerProvider("approval-comment", {
       comment: values,
     };
   },
-  successEventName: "form-ui:approval-comment-success",
-  errorEventName: "form-ui:approval-comment-error",
+  successEventName: "xpressui:approval-comment-success",
+  errorEventName: "xpressui:approval-comment-error",
 });
 
 registerProvider("email", {
@@ -948,8 +948,8 @@ registerProvider("email", {
       email: values,
     };
   },
-  successEventName: "form-ui:email-success",
-  errorEventName: "form-ui:email-error",
+  successEventName: "xpressui:email-success",
+  errorEventName: "xpressui:email-error",
 });
 
 registerProvider("crm", {
@@ -967,8 +967,8 @@ registerProvider("crm", {
       contact: values,
     };
   },
-  successEventName: "form-ui:crm-success",
-  errorEventName: "form-ui:crm-error",
+  successEventName: "xpressui:crm-success",
+  errorEventName: "xpressui:crm-error",
 });
 
 registerProvider("identity-verification", {
@@ -986,8 +986,8 @@ registerProvider("identity-verification", {
       identity: values,
     };
   },
-  successEventName: "form-ui:identity-verification-success",
-  errorEventName: "form-ui:identity-verification-error",
+  successEventName: "xpressui:identity-verification-success",
+  errorEventName: "xpressui:identity-verification-error",
 });
 
 registerProvider("identity-verification-stripe", {
@@ -1005,8 +1005,8 @@ registerProvider("identity-verification-stripe", {
       identity: values,
     };
   },
-  successEventName: "form-ui:identity-verification-stripe-success",
-  errorEventName: "form-ui:identity-verification-stripe-error",
+  successEventName: "xpressui:identity-verification-stripe-success",
+  errorEventName: "xpressui:identity-verification-stripe-error",
 });
 
 registerProvider("identity-verification-webhook", {
@@ -1024,8 +1024,8 @@ registerProvider("identity-verification-webhook", {
       identity: values,
     };
   },
-  successEventName: "form-ui:identity-verification-webhook-success",
-  errorEventName: "form-ui:identity-verification-webhook-error",
+  successEventName: "xpressui:identity-verification-webhook-success",
+  errorEventName: "xpressui:identity-verification-webhook-error",
 });
 
 registerProvider("calendar-availability-hold", {
@@ -1067,8 +1067,8 @@ registerProvider("calendar-availability-hold", {
 
     return null;
   },
-  successEventName: "form-ui:calendar-availability-hold-success",
-  errorEventName: "form-ui:calendar-availability-hold-error",
+  successEventName: "xpressui:calendar-availability-hold-success",
+  errorEventName: "xpressui:calendar-availability-hold-error",
 });
 
 registerProvider("payment-capture", {
@@ -1113,8 +1113,8 @@ registerProvider("payment-capture", {
 
     return null;
   },
-  successEventName: "form-ui:payment-capture-success",
-  errorEventName: "form-ui:payment-capture-error",
+  successEventName: "xpressui:payment-capture-success",
+  errorEventName: "xpressui:payment-capture-error",
 });
 
 registerProvider("identity-review", {
@@ -1157,6 +1157,6 @@ registerProvider("identity-review", {
 
     return null;
   },
-  successEventName: "form-ui:identity-review-success",
-  errorEventName: "form-ui:identity-review-error",
+  successEventName: "xpressui:identity-review-success",
+  errorEventName: "xpressui:identity-review-error",
 });

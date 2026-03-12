@@ -75,7 +75,7 @@
     <main>
       <a href="./index.html">Retour aux démos</a>
       <h1>Hybrid Output Snapshot</h1>
-      <p>Démo live de l’événement <code>form-ui:output-snapshot</code> et du panneau ops combiné avec snapshot de rendu.</p>
+      <p>Démo live de l’événement <code>xpressui:output-snapshot</code> et du panneau ops combiné avec snapshot de rendu.</p>
 
       <div class="layout">
         <section class="shell">
@@ -200,7 +200,7 @@
       });
       debug.appendChild(panel.element);
 
-      form.addEventListener("form-ui:output-snapshot", (event) => {
+      form.addEventListener("xpressui:output-snapshot", (event) => {
         latestSnapshot.textContent = JSON.stringify(event.detail?.result || {}, null, 2);
       });
 

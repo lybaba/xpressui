@@ -182,7 +182,7 @@ export class FormDynamicRuntime {
         if (warningChanged) {
           this.activeTemplateWarnings[templateWarningKey] = nextWarning;
           const context = this.options.getEventContext();
-          this.options.emitEvent("form-ui:rule-template-missing-field", {
+          this.options.emitEvent("xpressui:rule-template-missing-field", {
             values: this.options.getFormValues(),
             formConfig: context.formConfig,
             submit: context.submit,
@@ -207,7 +207,7 @@ export class FormDynamicRuntime {
       if (previousWarning) {
         delete this.activeTemplateWarnings[templateWarningKey];
         const context = this.options.getEventContext();
-        this.options.emitEvent("form-ui:rule-template-warning-cleared", {
+        this.options.emitEvent("xpressui:rule-template-warning-cleared", {
           values: this.options.getFormValues(),
           formConfig: context.formConfig,
           submit: context.submit,
@@ -315,7 +315,7 @@ export class FormDynamicRuntime {
     }
 
     const context = this.options.getEventContext();
-    this.options.emitEvent("form-ui:rule-applied", {
+    this.options.emitEvent("xpressui:rule-applied", {
       values: this.options.getFormValues(),
       formConfig: context.formConfig,
       submit: context.submit,
@@ -349,7 +349,7 @@ export class FormDynamicRuntime {
 
   emitTemplateWarningState(): void {
     const context = this.options.getEventContext();
-    this.options.emitEvent("form-ui:rule-template-warning-state", {
+    this.options.emitEvent("xpressui:rule-template-warning-state", {
       values: this.options.getFormValues(),
       formConfig: context.formConfig,
       submit: context.submit,
@@ -361,7 +361,7 @@ export class FormDynamicRuntime {
 
   emitRuleState(): void {
     const context = this.options.getEventContext();
-    this.options.emitEvent("form-ui:rule-state", {
+    this.options.emitEvent("xpressui:rule-state", {
       values: this.options.getFormValues(),
       formConfig: context.formConfig,
       submit: context.submit,
@@ -614,7 +614,7 @@ export class FormDynamicRuntime {
     }
 
     const context = this.options.getEventContext();
-    this.options.emitEvent("form-ui:options-loaded", {
+    this.options.emitEvent("xpressui:options-loaded", {
       values: this.options.getFormValues(),
       formConfig: context.formConfig,
       submit: context.submit,

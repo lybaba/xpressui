@@ -94,8 +94,8 @@ export function createResumeStatusPanel(
     render();
   };
 
-  target.addEventListener("form-ui:resume-share-code-claim-state", claimListener as EventListener);
-  target.addEventListener("form-ui:resume-share-code-restore-state", restoreListener as EventListener);
+  target.addEventListener("xpressui:resume-share-code-claim-state", claimListener as EventListener);
+  target.addEventListener("xpressui:resume-share-code-restore-state", restoreListener as EventListener);
   render();
 
   return {
@@ -104,8 +104,8 @@ export function createResumeStatusPanel(
       render();
     },
     detach() {
-      target.removeEventListener("form-ui:resume-share-code-claim-state", claimListener as EventListener);
-      target.removeEventListener("form-ui:resume-share-code-restore-state", restoreListener as EventListener);
+      target.removeEventListener("xpressui:resume-share-code-claim-state", claimListener as EventListener);
+      target.removeEventListener("xpressui:resume-share-code-restore-state", restoreListener as EventListener);
       element.remove();
     },
   };

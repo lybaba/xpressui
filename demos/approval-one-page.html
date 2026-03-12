@@ -100,15 +100,15 @@
         ],
       });
 
-      form.addEventListener("form-ui:submit", (event) => {
+      form.addEventListener("xpressui:submit", (event) => {
         write({ event: "submit", values: event.detail?.values || {} });
       });
 
-      form.addEventListener("form-ui:submit-success", (event) => {
+      form.addEventListener("xpressui:submit-success", (event) => {
         write({ event: "submit-success", result: event.detail?.result || {} });
       });
 
-      form.addEventListener("form-ui:submit-error", (event) => {
+      form.addEventListener("xpressui:submit-error", (event) => {
         write({ event: "submit-error", result: event.detail?.result || {} });
       });
 

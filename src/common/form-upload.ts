@@ -465,7 +465,7 @@ export class FormUploadRuntime {
         const decision = isUploadPolicyAllowed(result);
         if (!decision.allowed) {
           const reason = decision.reason || `${stage} policy rejected file "${file.name}".`;
-          this.emitEvent("form-ui:file-policy-rejected", {
+          this.emitEvent("xpressui:file-policy-rejected", {
             values,
             submit: submitConfig,
             result: {
@@ -532,7 +532,7 @@ export class FormUploadRuntime {
     );
 
     this.emitUploadEvent(
-      "form-ui:upload-start",
+      "xpressui:upload-start",
       values,
       submitConfig,
       createUploadState(fileFieldNames, "uploading", 0),
@@ -545,7 +545,7 @@ export class FormUploadRuntime {
       body,
       (progress) => {
         this.emitUploadEvent(
-          "form-ui:upload-progress",
+          "xpressui:upload-progress",
           values,
           submitConfig,
           createUploadState(fileFieldNames, "uploading", progress),
@@ -553,7 +553,7 @@ export class FormUploadRuntime {
       },
     ).catch((error) => {
       this.emitUploadEvent(
-        "form-ui:upload-error",
+        "xpressui:upload-error",
         values,
         submitConfig,
         createUploadState(fileFieldNames, "error", 0),
@@ -562,7 +562,7 @@ export class FormUploadRuntime {
     });
 
     this.emitUploadEvent(
-      "form-ui:upload-complete",
+      "xpressui:upload-complete",
       values,
       submitConfig,
       createUploadState(fileFieldNames, "complete", 100),
@@ -591,7 +591,7 @@ export class FormUploadRuntime {
     const retryPolicy = normalizeRetryPolicy(submitConfig);
 
     this.emitUploadEvent(
-      "form-ui:upload-start",
+      "xpressui:upload-start",
       values,
       submitConfig,
       createUploadState(fileFieldNames, "uploading", 0),
@@ -632,7 +632,7 @@ export class FormUploadRuntime {
             const delayMs = getRetryDelayMs(retryPolicy, attempt);
             const nextRetryAt = Date.now() + delayMs;
             this.emitUploadEvent(
-              "form-ui:upload-retry",
+              "xpressui:upload-retry",
               values,
               submitConfig,
               createUploadState(fileFieldNames, "uploading", Math.round((completed / total) * 100)),
@@ -690,7 +690,7 @@ export class FormUploadRuntime {
       }).catch((error) => {
         const retryMeta = (error as any)?.__uploadRetry as TUploadRetryFailureMeta | undefined;
         this.emitUploadEvent(
-          "form-ui:upload-error",
+          "xpressui:upload-error",
           values,
           submitConfig,
           createUploadState(fileFieldNames, "error", Math.round((completed / total) * 100)),
@@ -733,7 +733,7 @@ export class FormUploadRuntime {
             (progress) => {
               const aggregateProgress = Math.round(((completed + progress / 100) / total) * 100);
               this.emitUploadEvent(
-                "form-ui:upload-progress",
+                "xpressui:upload-progress",
                 values,
                 submitConfig,
                 createUploadState(fileFieldNames, "uploading", aggregateProgress),
@@ -805,7 +805,7 @@ export class FormUploadRuntime {
               }
               resumeState.updatedAt = Date.now();
               this.emitUploadEvent(
-                "form-ui:upload-resume-state",
+                "xpressui:upload-resume-state",
                 values,
                 submitConfig,
                 createUploadState(
@@ -832,7 +832,7 @@ export class FormUploadRuntime {
             }
           } catch {
             this.emitUploadEvent(
-              "form-ui:upload-resume-state",
+              "xpressui:upload-resume-state",
               values,
               submitConfig,
               createUploadState(fileFieldNames, "uploading", Math.round((completed / total) * 100)),
@@ -851,7 +851,7 @@ export class FormUploadRuntime {
         }
         if (!resumeState.resumeUrl && resumeState.nextChunkIndex > 0) {
           this.emitUploadEvent(
-            "form-ui:upload-resume-state",
+            "xpressui:upload-resume-state",
             values,
             submitConfig,
             createUploadState(
@@ -876,7 +876,7 @@ export class FormUploadRuntime {
           : resumeState.nextChunkIndex;
         if (resumeChunkIndex > 0) {
           this.emitUploadEvent(
-            "form-ui:upload-progress",
+            "xpressui:upload-progress",
             values,
             submitConfig,
             createUploadState(fileFieldNames, "uploading", Math.round(((completed + resumeChunkIndex / totalChunks) / total) * 100)),
@@ -906,7 +906,7 @@ export class FormUploadRuntime {
               const chunkProgress = (chunkIndex + progress / 100) / totalChunks;
               const aggregateProgress = Math.round(((completed + chunkProgress) / total) * 100);
               this.emitUploadEvent(
-                "form-ui:upload-progress",
+                "xpressui:upload-progress",
                 values,
                 submitConfig,
                 createUploadState(fileFieldNames, "uploading", aggregateProgress),
@@ -936,7 +936,7 @@ export class FormUploadRuntime {
       ).catch((error) => {
         const retryMeta = (error as any)?.__uploadRetry as TUploadRetryFailureMeta | undefined;
         this.emitUploadEvent(
-          "form-ui:upload-error",
+          "xpressui:upload-error",
           values,
           submitConfig,
           createUploadState(fileFieldNames, "error", Math.round((completed / total) * 100)),
@@ -966,7 +966,7 @@ export class FormUploadRuntime {
     }
 
     this.emitUploadEvent(
-      "form-ui:upload-complete",
+      "xpressui:upload-complete",
       transformedValues,
       submitConfig,
       createUploadState(fileFieldNames, "complete", 100),

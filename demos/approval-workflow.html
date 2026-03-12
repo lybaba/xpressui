@@ -153,7 +153,7 @@
         },
       });
 
-      form.addEventListener("form-ui:submit", (event) => {
+      form.addEventListener("xpressui:submit", (event) => {
         renderResult(
           "Submitted Values",
           "Payload envoyé au provider approval-request.",
@@ -161,7 +161,7 @@
         );
       });
 
-      form.addEventListener("form-ui:approval-requested", (event) => {
+      form.addEventListener("xpressui:approval-requested", (event) => {
         renderResult(
           "Approval Requested",
           "Réponse mockée: le backend a créé une demande d'approbation en attente.",
@@ -169,7 +169,7 @@
         );
       });
 
-      form.addEventListener("form-ui:approval-complete", (event) => {
+      form.addEventListener("xpressui:approval-complete", (event) => {
         renderResult(
           "Approval Complete",
           "Réponse mockée: le backend a approuvé directement la demande.",
@@ -177,7 +177,7 @@
         );
       });
 
-      form.addEventListener("form-ui:submit-error", (event) => {
+      form.addEventListener("xpressui:submit-error", (event) => {
         renderResult(
           "Submit Error",
           "Erreur de soumission renvoyée par le runtime.",

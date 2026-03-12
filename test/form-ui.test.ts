@@ -268,24 +268,21 @@ describe('FormUI', () => {
     });
   });
 
-  it('emits hydrated event aliases alongside legacy DOM event names', () => {
+  it('emits xpressui DOM event names', () => {
     const element = document.createElement('form-ui') as FormUI;
-    const onLegacy = vi.fn();
-    const onHydrated = vi.fn();
+    const onSubmitSuccess = vi.fn();
 
     document.body.appendChild(element);
-    element.addEventListener('form-ui:submit-success', onLegacy);
-    element.addEventListener('xpressui:submit-success', onHydrated);
+    element.addEventListener('xpressui:submit-success', onSubmitSuccess);
 
-    element.emitFormEvent('form-ui:submit-success', {
+    element.emitFormEvent('xpressui:submit-success', {
       values: { email: 'demo@example.com' },
       formConfig: null,
       result: { ok: true },
     });
 
-    expect(onLegacy).toHaveBeenCalledTimes(1);
-    expect(onHydrated).toHaveBeenCalledTimes(1);
-    expect((onHydrated.mock.calls[0]?.[0] as CustomEvent<TFormUISubmitDetail>).detail.result).toEqual({
+    expect(onSubmitSuccess).toHaveBeenCalledTimes(1);
+    expect((onSubmitSuccess.mock.calls[0]?.[0] as CustomEvent<TFormUISubmitDetail>).detail.result).toEqual({
       ok: true,
     });
   });
@@ -2140,7 +2137,7 @@ describe('FormUI', () => {
     `);
 
     const snapshots: Array<Record<string, any>> = [];
-    element.addEventListener('form-ui:output-snapshot', (event) => {
+    element.addEventListener('xpressui:output-snapshot', (event) => {
       snapshots.push((event as CustomEvent<TFormUISubmitDetail>).detail.result);
     });
 
@@ -2193,7 +2190,7 @@ describe('FormUI', () => {
     `);
     const onStepChange = vi.fn();
 
-    element.addEventListener('form-ui:step-change', (event) => {
+    element.addEventListener('xpressui:step-change', (event) => {
       onStepChange((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -2311,7 +2308,7 @@ describe('FormUI', () => {
     `);
     const submitSuccess = vi.fn();
 
-    element.addEventListener('form-ui:submit-success', submitSuccess);
+    element.addEventListener('xpressui:submit-success', submitSuccess);
 
     const form = element.querySelector('#wizard_form') as HTMLFormElement;
     const firstName = element.querySelector('#first_name') as HTMLInputElement;
@@ -3069,9 +3066,9 @@ describe('FormUI', () => {
     const skipped = vi.fn();
     const jumped = vi.fn();
 
-    element.addEventListener('form-ui:step-blocked', blocked);
-    element.addEventListener('form-ui:step-skipped', skipped);
-    element.addEventListener('form-ui:step-jumped', jumped);
+    element.addEventListener('xpressui:step-blocked', blocked);
+    element.addEventListener('xpressui:step-skipped', skipped);
+    element.addEventListener('xpressui:step-jumped', jumped);
 
     expect(element.nextStep()).toBe(false);
     expect(blocked).toHaveBeenCalledTimes(1);
@@ -3570,7 +3567,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#contact_form') as HTMLFormElement;
     const onSubmitSuccess = vi.fn();
 
-    element.addEventListener('form-ui:submit-success', (event) => {
+    element.addEventListener('xpressui:submit-success', (event) => {
       onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -3885,7 +3882,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
     const onHookError = vi.fn();
-    element.addEventListener('form-ui:submit-hook-error', (event) => {
+    element.addEventListener('xpressui:submit-hook-error', (event) => {
       onHookError((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -3926,7 +3923,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
     const onSubmitSuccess = vi.fn();
-    element.addEventListener('form-ui:submit-success', (event) => {
+    element.addEventListener('xpressui:submit-success', (event) => {
       onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -3971,7 +3968,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
     const onSubmitSuccess = vi.fn();
-    element.addEventListener('form-ui:submit-success', (event) => {
+    element.addEventListener('xpressui:submit-success', (event) => {
       onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -4085,7 +4082,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
 
-    element.addEventListener('form-ui:submit-canceled', (event) => {
+    element.addEventListener('xpressui:submit-canceled', (event) => {
       onSubmitCanceled((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -4178,16 +4175,16 @@ describe('FormUI', () => {
     await flushAsyncWork();
 
     expect(observer.getEvents().map((event) => event.type)).toEqual([
-      'form-ui:submit',
-      'form-ui:workflow-state',
-      'form-ui:workflow-step',
-      'form-ui:workflow-snapshot',
-      'form-ui:workflow-state',
-      'form-ui:workflow-step',
-      'form-ui:workflow-snapshot',
-      'form-ui:submit-success',
+      'xpressui:submit',
+      'xpressui:workflow-state',
+      'xpressui:workflow-step',
+      'xpressui:workflow-snapshot',
+      'xpressui:workflow-state',
+      'xpressui:workflow-step',
+      'xpressui:workflow-snapshot',
+      'xpressui:submit-success',
     ]);
-    const firstWorkflowState = observer.getEvents().find((event) => event.type === 'form-ui:workflow-state');
+    const firstWorkflowState = observer.getEvents().find((event) => event.type === 'xpressui:workflow-state');
     expect(firstWorkflowState?.detail?.result?.snapshot).toEqual(
       expect.objectContaining({
         workflowState: 'submitting',
@@ -4195,7 +4192,7 @@ describe('FormUI', () => {
     );
     expect(observer.getLastWorkflowSnapshot()).toEqual(
       expect.objectContaining({
-        type: 'form-ui:workflow-snapshot',
+        type: 'xpressui:workflow-snapshot',
         detail: expect.objectContaining({
           result: expect.objectContaining({
             workflowState: 'submitted',
@@ -4206,7 +4203,7 @@ describe('FormUI', () => {
     expect(observer.getSnapshot()).toEqual(
       expect.objectContaining({
         lastWorkflowSnapshot: expect.objectContaining({
-          type: 'form-ui:workflow-snapshot',
+          type: 'xpressui:workflow-snapshot',
         }),
       }),
     );
@@ -4229,23 +4226,23 @@ describe('FormUI', () => {
     }) as FormUI;
     const observer = attachFormDebugObserver(element, { maxEvents: 10 });
 
-    element.dispatchEvent(new CustomEvent('form-ui:upload-retry', {
+    element.dispatchEvent(new CustomEvent('xpressui:upload-retry', {
       bubbles: true,
       detail: { result: { attempt: 1 } },
     }));
-    element.dispatchEvent(new CustomEvent('form-ui:file-policy-rejected', {
+    element.dispatchEvent(new CustomEvent('xpressui:file-policy-rejected', {
       bubbles: true,
       detail: { result: { stage: 'file-acceptance' } },
     }));
-    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-blocked', {
+    element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-claim-blocked', {
       bubbles: true,
       detail: { result: { reason: 'throttled' } },
     }));
 
     expect(observer.getEvents().map((entry) => entry.type)).toEqual([
-      'form-ui:upload-retry',
-      'form-ui:file-policy-rejected',
-      'form-ui:resume-share-code-claim-blocked',
+      'xpressui:upload-retry',
+      'xpressui:file-policy-rejected',
+      'xpressui:resume-share-code-claim-blocked',
     ]);
 
     observer.detach();
@@ -4262,7 +4259,7 @@ describe('FormUI', () => {
     }) as FormUI;
     const observer = attachFormDebugObserver(element, { maxEvents: 10 });
 
-    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+    element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-claim-state', {
       bubbles: true,
       detail: {
         result: {
@@ -4272,7 +4269,7 @@ describe('FormUI', () => {
         },
       },
     }));
-    element.dispatchEvent(new CustomEvent('form-ui:provider-contract-warning', {
+    element.dispatchEvent(new CustomEvent('xpressui:provider-contract-warning', {
       bubbles: true,
       detail: {
         result: {
@@ -4285,7 +4282,7 @@ describe('FormUI', () => {
 
     expect(observer.getLastResumeShareCodeClaimState()).toEqual(
       expect.objectContaining({
-        type: 'form-ui:resume-share-code-claim-state',
+        type: 'xpressui:resume-share-code-claim-state',
         detail: expect.objectContaining({
           result: expect.objectContaining({
             code: 'SHARE-42',
@@ -4296,7 +4293,7 @@ describe('FormUI', () => {
     );
     expect(observer.getLastProviderContractWarning()).toEqual(
       expect.objectContaining({
-        type: 'form-ui:provider-contract-warning',
+        type: 'xpressui:provider-contract-warning',
         detail: expect.objectContaining({
           result: expect.objectContaining({
             expectedContract: 'provider-envelope-v2',
@@ -4308,10 +4305,10 @@ describe('FormUI', () => {
     expect(observer.getSnapshot()).toEqual(
       expect.objectContaining({
         lastResumeShareCodeClaimState: expect.objectContaining({
-          type: 'form-ui:resume-share-code-claim-state',
+          type: 'xpressui:resume-share-code-claim-state',
         }),
         lastProviderContractWarning: expect.objectContaining({
-          type: 'form-ui:provider-contract-warning',
+          type: 'xpressui:provider-contract-warning',
         }),
       }),
     );
@@ -4431,7 +4428,7 @@ describe('FormUI', () => {
     }) as FormUI;
 
     const panel = createFormDebugPanel(element, { title: 'Provider Debug' });
-    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+    element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-claim-state', {
       bubbles: true,
       detail: {
         result: {
@@ -4441,7 +4438,7 @@ describe('FormUI', () => {
         },
       },
     }));
-    element.dispatchEvent(new CustomEvent('form-ui:provider-contract-warning', {
+    element.dispatchEvent(new CustomEvent('xpressui:provider-contract-warning', {
       bubbles: true,
       detail: {
         result: {
@@ -4477,7 +4474,7 @@ describe('FormUI', () => {
     }) as FormUI;
 
     const panel = createFormDebugPanel(element, { title: 'Timeline Debug', maxVisibleEvents: 5 });
-    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+    element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-claim-state', {
       bubbles: true,
       detail: {
         result: {
@@ -4486,7 +4483,7 @@ describe('FormUI', () => {
         },
       },
     }));
-    element.dispatchEvent(new CustomEvent('form-ui:provider-contract-warning', {
+    element.dispatchEvent(new CustomEvent('xpressui:provider-contract-warning', {
       bubbles: true,
       detail: {
         result: {
@@ -4501,15 +4498,15 @@ describe('FormUI', () => {
     const providerPreset = Array.from(
       panel.element.querySelectorAll('.xpressui-debug-panel__filter-preset'),
     ).find((button) => (button as HTMLButtonElement).textContent === 'Provider') as HTMLButtonElement;
-    expect(timeline.textContent).toContain('"type": "form-ui:resume-share-code-claim-state"');
-    expect(timeline.textContent).toContain('"type": "form-ui:provider-contract-warning"');
+    expect(timeline.textContent).toContain('"type": "xpressui:resume-share-code-claim-state"');
+    expect(timeline.textContent).toContain('"type": "xpressui:provider-contract-warning"');
 
     providerPreset.click();
 
     expect(filter.value).toBe('provider');
     expect(providerPreset.getAttribute('data-active')).toBe('true');
-    expect(timeline.textContent).toContain('"type": "form-ui:provider-contract-warning"');
-    expect(timeline.textContent).not.toContain('"type": "form-ui:resume-share-code-claim-state"');
+    expect(timeline.textContent).toContain('"type": "xpressui:provider-contract-warning"');
+    expect(timeline.textContent).not.toContain('"type": "xpressui:resume-share-code-claim-state"');
 
     panel.detach();
   });
@@ -4597,7 +4594,7 @@ describe('FormUI', () => {
     expect(panel.element.textContent).toContain('Operational Summary');
     expect(panel.element.textContent).toContain('Recent Rules');
 
-    element.dispatchEvent(new CustomEvent('form-ui:provider-contract-warning', {
+    element.dispatchEvent(new CustomEvent('xpressui:provider-contract-warning', {
       bubbles: true,
       detail: {
         result: {
@@ -4605,7 +4602,7 @@ describe('FormUI', () => {
         },
       },
     }));
-    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+    element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-claim-state', {
       bubbles: true,
       detail: {
         result: {
@@ -4639,7 +4636,7 @@ describe('FormUI', () => {
     const panel = createResumeStatusPanel(element, { title: 'Resume Status' });
     document.body.appendChild(panel.element);
 
-    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-claim-state', {
+    element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-claim-state', {
       bubbles: true,
       detail: {
         result: {
@@ -4649,7 +4646,7 @@ describe('FormUI', () => {
         },
       },
     }));
-    element.dispatchEvent(new CustomEvent('form-ui:resume-share-code-restore-state', {
+    element.dispatchEvent(new CustomEvent('xpressui:resume-share-code-restore-state', {
       bubbles: true,
       detail: {
         result: {
@@ -4713,7 +4710,7 @@ describe('FormUI', () => {
     ]);
     expect(observer.getLastRuleState()).toEqual(
       expect.objectContaining({
-        type: 'form-ui:rule-state',
+        type: 'xpressui:rule-state',
         timestamp: expect.any(Number),
         detail: expect.objectContaining({
           result: {
@@ -4748,7 +4745,7 @@ describe('FormUI', () => {
           },
         ],
         lastRuleState: expect.objectContaining({
-          type: 'form-ui:rule-state',
+          type: 'xpressui:rule-state',
           timestamp: expect.any(Number),
         }),
         activeTemplateWarnings: [],
@@ -4763,7 +4760,7 @@ describe('FormUI', () => {
     expect(observer.getLastRuleState()).toBeNull();
     expect(observer.getActiveTemplateWarnings()).toEqual([]);
     expect(observer.getLastTemplateWarningState()).toBeNull();
-    expect(observer.getEvents().some((event) => event.type === 'form-ui:rule-applied')).toBe(true);
+    expect(observer.getEvents().some((event) => event.type === 'xpressui:rule-applied')).toBe(true);
 
     observer.detach();
   });
@@ -4806,7 +4803,7 @@ describe('FormUI', () => {
     await flushAsyncWork();
 
     expect(observer.getTemplateDiagnostics().map((event) => event.type)).toEqual([
-      'form-ui:rule-template-missing-field',
+      'xpressui:rule-template-missing-field',
     ]);
 
     observer.clearTemplateDiagnostics();
@@ -4861,7 +4858,7 @@ describe('FormUI', () => {
     ]);
     expect(observer.getLastTemplateWarningState()).toEqual(
       expect.objectContaining({
-        type: 'form-ui:rule-template-warning-state',
+        type: 'xpressui:rule-template-warning-state',
         timestamp: expect.any(Number),
         detail: expect.objectContaining({
           result: {
@@ -4897,7 +4894,7 @@ describe('FormUI', () => {
           },
         ],
         lastRuleState: expect.objectContaining({
-          type: 'form-ui:rule-state',
+          type: 'xpressui:rule-state',
           timestamp: expect.any(Number),
         }),
         activeTemplateWarnings: [
@@ -4909,7 +4906,7 @@ describe('FormUI', () => {
           },
         ],
         lastTemplateWarningState: expect.objectContaining({
-          type: 'form-ui:rule-template-warning-state',
+          type: 'xpressui:rule-template-warning-state',
           timestamp: expect.any(Number),
         }),
       })
@@ -5103,7 +5100,7 @@ describe('FormUI', () => {
     const input = element.querySelector('#email') as HTMLInputElement;
     const onValidationBlocked = vi.fn();
 
-    element.addEventListener('form-ui:validation-blocked-submit', (event) => {
+    element.addEventListener('xpressui:validation-blocked-submit', (event) => {
       onValidationBlocked((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -5238,7 +5235,7 @@ describe('FormUI', () => {
     }) as FormUI;
     const services = element.querySelector('#services') as HTMLSelectElement;
 
-    element.addEventListener('form-ui:submit-success', (event) => {
+    element.addEventListener('xpressui:submit-success', (event) => {
       onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -5417,7 +5414,7 @@ describe('FormUI', () => {
     const input = element.querySelector('#attachment') as HTMLInputElement;
     const file = new File(['upload'], 'upload.pdf', { type: 'application/pdf' });
 
-    ['form-ui:upload-start', 'form-ui:upload-progress', 'form-ui:upload-complete'].forEach((type) => {
+    ['xpressui:upload-start', 'xpressui:upload-progress', 'xpressui:upload-complete'].forEach((type) => {
       element.addEventListener(type, () => {
         eventTypes.push(type);
       });
@@ -5432,9 +5429,9 @@ describe('FormUI', () => {
     await flushAsyncWork();
     await element.onSubmit((element.form?.getState().values || {}) as Record<string, any>);
 
-    expect(eventTypes).toContain('form-ui:upload-start');
-    expect(eventTypes).toContain('form-ui:upload-progress');
-    expect(eventTypes).toContain('form-ui:upload-complete');
+    expect(eventTypes).toContain('xpressui:upload-start');
+    expect(eventTypes).toContain('xpressui:upload-progress');
+    expect(eventTypes).toContain('xpressui:upload-complete');
     expect((element.querySelector('#attachment_selection') as HTMLElement).textContent).toContain(
       'Uploaded',
     );
@@ -5631,7 +5628,7 @@ describe('FormUI', () => {
     const initialFile = new File(['one'], 'one.pdf', { type: 'application/pdf' });
     const rejectedFile = new File(['two'], 'two.pdf', { type: 'application/pdf' });
 
-    element.addEventListener('form-ui:file-validation-error', (event) => {
+    element.addEventListener('xpressui:file-validation-error', (event) => {
       onFileValidationError((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -5865,7 +5862,7 @@ describe('FormUI', () => {
     const input = element.querySelector('#scan_code') as HTMLInputElement;
     const imageFile = new File(['image'], 'qr.png', { type: 'image/png' });
 
-    element.addEventListener('form-ui:qr-scan-success', (event) => {
+    element.addEventListener('xpressui:qr-scan-success', (event) => {
       onQrScanSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -5914,7 +5911,7 @@ describe('FormUI', () => {
     const input = element.querySelector('#scan_code') as HTMLInputElement;
     const imageFile = new File(['image'], 'qr.png', { type: 'image/png' });
 
-    element.addEventListener('form-ui:qr-scan-error', (event) => {
+    element.addEventListener('xpressui:qr-scan-error', (event) => {
       onQrScanError((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -5975,7 +5972,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
 
-    element.addEventListener('form-ui:qr-scan-success', (event) => {
+    element.addEventListener('xpressui:qr-scan-success', (event) => {
       onQrScanSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -6408,22 +6405,22 @@ describe('FormUI', () => {
     const input = element.querySelector('#passport') as HTMLInputElement;
     const sourceFile = new File(['passport'], 'passport.png', { type: 'image/png' });
 
-    element.addEventListener('form-ui:document-scan-cropped', (event) => {
+    element.addEventListener('xpressui:document-scan-cropped', (event) => {
       onCrop((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
-    element.addEventListener('form-ui:document-scan-bounds-detected', (event) => {
+    element.addEventListener('xpressui:document-scan-bounds-detected', (event) => {
       onBounds((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
-    element.addEventListener('form-ui:document-text-detected', (event) => {
+    element.addEventListener('xpressui:document-text-detected', (event) => {
       onText((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
-    element.addEventListener('form-ui:document-mrz-detected', (event) => {
+    element.addEventListener('xpressui:document-mrz-detected', (event) => {
       onMrz((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
-    element.addEventListener('form-ui:document-data', (event) => {
+    element.addEventListener('xpressui:document-data', (event) => {
       onData((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
-    element.addEventListener('form-ui:document-fields-populated', (event) => {
+    element.addEventListener('xpressui:document-fields-populated', (event) => {
       onFieldsPopulated((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -6716,7 +6713,7 @@ describe('FormUI', () => {
     }) as FormUI;
     const wrongType = new File(['image'], 'image.png', { type: 'image/png' });
 
-    element.addEventListener('form-ui:file-validation-error', (event) => {
+    element.addEventListener('xpressui:file-validation-error', (event) => {
       onFileValidationError((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -7044,9 +7041,9 @@ describe('FormUI', () => {
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(emittedEvents).toContain('form-ui:upload-start');
-    expect(emittedEvents).toContain('form-ui:upload-progress');
-    expect(emittedEvents).toContain('form-ui:upload-complete');
+    expect(emittedEvents).toContain('xpressui:upload-start');
+    expect(emittedEvents).toContain('xpressui:upload-progress');
+    expect(emittedEvents).toContain('xpressui:upload-complete');
 
     const presignRequest = fetchMock.mock.calls[0][1] as RequestInit;
     expect(presignRequest.body).toBe(JSON.stringify({
@@ -7303,7 +7300,7 @@ describe('FormUI', () => {
 
     const runtime = new FormUploadRuntime({
       emitEvent(eventName, detail) {
-        if (eventName === 'form-ui:upload-resume-state') {
+        if (eventName === 'xpressui:upload-resume-state') {
           emittedResumeStates.push(detail.result);
         }
         return true;
@@ -7410,7 +7407,7 @@ describe('FormUI', () => {
 
     const runtime = new FormUploadRuntime({
       emitEvent: (eventName, detail) => {
-        if (eventName === 'form-ui:upload-retry') {
+        if (eventName === 'xpressui:upload-retry') {
           emittedRetryDetails.push(detail.result);
         }
         return true;
@@ -7485,7 +7482,7 @@ describe('FormUI', () => {
       );
     const runtime = new FormUploadRuntime({
       emitEvent: (eventName, detail) => {
-        if (eventName === 'form-ui:upload-error') {
+        if (eventName === 'xpressui:upload-error') {
           uploadErrorEvents.push(detail.result);
         }
         return true;
@@ -7543,7 +7540,7 @@ describe('FormUI', () => {
     });
     const runtime = new FormUploadRuntime({
       emitEvent: (eventName, detail) => {
-        if (eventName === 'form-ui:file-policy-rejected') {
+        if (eventName === 'xpressui:file-policy-rejected') {
           rejectedEvents.push(detail.result);
         }
         return true;
@@ -7615,7 +7612,7 @@ describe('FormUI', () => {
     const onQueueDisabled = vi.fn();
     const upload = new File(['content'], 'proof.pdf', { type: 'application/pdf' });
 
-    element.addEventListener('form-ui:queue-disabled-for-files', (event) => {
+    element.addEventListener('xpressui:queue-disabled-for-files', (event) => {
       onQueueDisabled((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -8745,7 +8742,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#booking-api_form') as HTMLFormElement;
     const onSuccess = vi.fn();
 
-    element.addEventListener('form-ui:submit-success', (event) => {
+    element.addEventListener('xpressui:submit-success', (event) => {
       onSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -8796,10 +8793,10 @@ describe('FormUI', () => {
     }) as FormUI;
     const onContractWarning = vi.fn();
     const onSubmitError = vi.fn();
-    element.addEventListener('form-ui:provider-contract-warning', (event) => {
+    element.addEventListener('xpressui:provider-contract-warning', (event) => {
       onContractWarning((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
-    element.addEventListener('form-ui:submit-error', (event) => {
+    element.addEventListener('xpressui:submit-error', (event) => {
       onSubmitError((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -9250,7 +9247,7 @@ describe('FormUI', () => {
     const country = element.querySelector('#country') as HTMLInputElement;
     const onRuleApplied = vi.fn();
 
-    element.addEventListener('form-ui:rule-applied', (event) => {
+    element.addEventListener('xpressui:rule-applied', (event) => {
       onRuleApplied((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -9295,7 +9292,7 @@ describe('FormUI', () => {
     const currency = element.querySelector('#currency') as HTMLInputElement;
     const onRuleApplied = vi.fn();
 
-    element.addEventListener('form-ui:rule-applied', (event) => {
+    element.addEventListener('xpressui:rule-applied', (event) => {
       onRuleApplied((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -9704,7 +9701,7 @@ describe('FormUI', () => {
     const fullName = element.querySelector('#fullName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
-    element.addEventListener('form-ui:rule-template-missing-field', (event) => {
+    element.addEventListener('xpressui:rule-template-missing-field', (event) => {
       onMissingField((event as CustomEvent<any>).detail);
     });
 
@@ -9760,7 +9757,7 @@ describe('FormUI', () => {
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
-    element.addEventListener('form-ui:rule-template-missing-field', (event) => {
+    element.addEventListener('xpressui:rule-template-missing-field', (event) => {
       onMissingField((event as CustomEvent<any>).detail);
     });
 
@@ -9807,7 +9804,7 @@ describe('FormUI', () => {
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
-    element.addEventListener('form-ui:rule-template-missing-field', (event) => {
+    element.addEventListener('xpressui:rule-template-missing-field', (event) => {
       onMissingField((event as CustomEvent<any>).detail);
     });
 
@@ -9889,7 +9886,7 @@ describe('FormUI', () => {
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
-    element.addEventListener('form-ui:rule-template-warning-cleared', (event) => {
+    element.addEventListener('xpressui:rule-template-warning-cleared', (event) => {
       onWarningCleared((event as CustomEvent<any>).detail);
     });
 
@@ -9962,7 +9959,7 @@ describe('FormUI', () => {
     const firstName = element.querySelector('#firstName') as HTMLInputElement;
     const autoFullName = element.querySelector('#autoFullName') as HTMLInputElement;
 
-    element.addEventListener('form-ui:rule-template-warning-state', (event) => {
+    element.addEventListener('xpressui:rule-template-warning-state', (event) => {
       onWarningState((event as CustomEvent<any>).detail);
     });
 
@@ -10143,10 +10140,10 @@ describe('FormUI', () => {
     const onSubmitLocked = vi.fn();
     const onSubmitSuccess = vi.fn();
 
-    element.addEventListener('form-ui:submit-locked', (event) => {
+    element.addEventListener('xpressui:submit-locked', (event) => {
       onSubmitLocked((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
-    element.addEventListener('form-ui:submit-success', (event) => {
+    element.addEventListener('xpressui:submit-success', (event) => {
       onSubmitSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10195,7 +10192,7 @@ describe('FormUI', () => {
           actions: [
             {
               type: 'emit-event',
-              field: 'form-ui:custom-review',
+              field: 'xpressui:custom-review',
               template: 'Review requested for {{email}}',
             },
           ],
@@ -10210,7 +10207,7 @@ describe('FormUI', () => {
     const email = element.querySelector('#email') as HTMLInputElement;
     const onCustomReview = vi.fn();
 
-    element.addEventListener('form-ui:custom-review', (event) => {
+    element.addEventListener('xpressui:custom-review', (event) => {
       onCustomReview((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10225,7 +10222,7 @@ describe('FormUI', () => {
         result: expect.objectContaining({
           ruleId: 'emit-review-event',
           action: 'emit-event',
-          eventName: 'form-ui:custom-review',
+          eventName: 'xpressui:custom-review',
           payload: 'Review requested for review@example.com',
         }),
       }),
@@ -10267,7 +10264,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#payment-form_form') as HTMLFormElement;
     const onPaymentSuccess = vi.fn();
 
-    element.addEventListener('form-ui:payment-success', (event) => {
+    element.addEventListener('xpressui:payment-success', (event) => {
       onPaymentSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10346,7 +10343,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#stripe-form_form') as HTMLFormElement;
     const onStripeSuccess = vi.fn();
 
-    element.addEventListener('form-ui:payment-stripe-success', (event) => {
+    element.addEventListener('xpressui:payment-stripe-success', (event) => {
       onStripeSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10425,7 +10422,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#payment-capture-form_form') as HTMLFormElement;
     const onCaptureSuccess = vi.fn();
 
-    element.addEventListener('form-ui:payment-capture-success', (event) => {
+    element.addEventListener('xpressui:payment-capture-success', (event) => {
       onCaptureSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10495,7 +10492,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#webhook-form_form') as HTMLFormElement;
     const onWebhookSuccess = vi.fn();
 
-    element.addEventListener('form-ui:webhook-success', (event) => {
+    element.addEventListener('xpressui:webhook-success', (event) => {
       onWebhookSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10566,7 +10563,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#webhook-messages-form_form') as HTMLFormElement;
     const onProviderMessages = vi.fn();
 
-    element.addEventListener('form-ui:provider-messages', (event) => {
+    element.addEventListener('xpressui:provider-messages', (event) => {
       onProviderMessages((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10640,7 +10637,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#availability-form_form') as HTMLFormElement;
     const onAvailabilitySuccess = vi.fn();
 
-    element.addEventListener('form-ui:booking-availability-success', (event) => {
+    element.addEventListener('xpressui:booking-availability-success', (event) => {
       onAvailabilitySuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10724,7 +10721,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#calendar-booking-form_form') as HTMLFormElement;
     const onBookingSuccess = vi.fn();
 
-    element.addEventListener('form-ui:calendar-booking-success', (event) => {
+    element.addEventListener('xpressui:calendar-booking-success', (event) => {
       onBookingSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10812,7 +10809,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#calendar-transition-form_form') as HTMLFormElement;
     const onProviderTransition = vi.fn();
 
-    element.addEventListener('form-ui:provider-transition', (event) => {
+    element.addEventListener('xpressui:provider-transition', (event) => {
       onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10893,10 +10890,10 @@ describe('FormUI', () => {
     const onProviderTransition = vi.fn();
     const onProviderStepRouted = vi.fn();
 
-    element.addEventListener('form-ui:provider-transition', (event) => {
+    element.addEventListener('xpressui:provider-transition', (event) => {
       onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
-    element.addEventListener('form-ui:provider-step-routed', (event) => {
+    element.addEventListener('xpressui:provider-step-routed', (event) => {
       onProviderStepRouted((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -10985,7 +10982,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#approval-routing-policy-form_form') as HTMLFormElement;
     const onProviderTransition = vi.fn();
 
-    element.addEventListener('form-ui:provider-transition', (event) => {
+    element.addEventListener('xpressui:provider-transition', (event) => {
       onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11058,7 +11055,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#approval-status-derived-form_form') as HTMLFormElement;
     const onProviderTransition = vi.fn();
 
-    element.addEventListener('form-ui:provider-transition', (event) => {
+    element.addEventListener('xpressui:provider-transition', (event) => {
       onProviderTransition((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11118,7 +11115,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#calendar-cancel-form_form') as HTMLFormElement;
     const onCancelSuccess = vi.fn();
 
-    element.addEventListener('form-ui:calendar-cancel-success', (event) => {
+    element.addEventListener('xpressui:calendar-cancel-success', (event) => {
       onCancelSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11192,7 +11189,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#calendar-reschedule-form_form') as HTMLFormElement;
     const onRescheduleSuccess = vi.fn();
 
-    element.addEventListener('form-ui:calendar-reschedule-success', (event) => {
+    element.addEventListener('xpressui:calendar-reschedule-success', (event) => {
       onRescheduleSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11265,7 +11262,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#calendar-availability-hold-form_form') as HTMLFormElement;
     const onHoldSuccess = vi.fn();
 
-    element.addEventListener('form-ui:calendar-availability-hold-success', (event) => {
+    element.addEventListener('xpressui:calendar-availability-hold-success', (event) => {
       onHoldSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11335,7 +11332,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#email-form_form') as HTMLFormElement;
     const onEmailSuccess = vi.fn();
 
-    element.addEventListener('form-ui:email-success', (event) => {
+    element.addEventListener('xpressui:email-success', (event) => {
       onEmailSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11407,7 +11404,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#crm-form_form') as HTMLFormElement;
     const onCrmSuccess = vi.fn();
 
-    element.addEventListener('form-ui:crm-success', (event) => {
+    element.addEventListener('xpressui:crm-success', (event) => {
       onCrmSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11473,7 +11470,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#identity-form_form') as HTMLFormElement;
     const onIdentitySuccess = vi.fn();
 
-    element.addEventListener('form-ui:identity-verification-success', (event) => {
+    element.addEventListener('xpressui:identity-verification-success', (event) => {
       onIdentitySuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11714,7 +11711,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#identity-review-form_form') as HTMLFormElement;
     const onIdentityReviewSuccess = vi.fn();
 
-    element.addEventListener('form-ui:identity-review-success', (event) => {
+    element.addEventListener('xpressui:identity-review-success', (event) => {
       onIdentityReviewSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11757,8 +11754,8 @@ describe('FormUI', () => {
           quote: values,
         };
       },
-      successEventName: 'form-ui:quote-success',
-      errorEventName: 'form-ui:quote-error',
+      successEventName: 'xpressui:quote-success',
+      errorEventName: 'xpressui:quote-error',
     });
 
     expect(getProviderDefinition('quote-request')).not.toBeNull();
@@ -11790,7 +11787,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#quote-form_form') as HTMLFormElement;
     const onQuoteSuccess = vi.fn();
 
-    element.addEventListener('form-ui:quote-success', (event) => {
+    element.addEventListener('xpressui:quote-success', (event) => {
       onQuoteSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -11997,7 +11994,7 @@ describe('FormUI', () => {
     const restoredInput = secondElement.querySelector('#email') as HTMLInputElement;
     const onDraftRestored = vi.fn();
 
-    secondElement.addEventListener('form-ui:draft-restored', (event) => {
+    secondElement.addEventListener('xpressui:draft-restored', (event) => {
       onDraftRestored((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
     secondElement.initialize();
@@ -12033,7 +12030,7 @@ describe('FormUI', () => {
     const input = element.querySelector('#email') as HTMLInputElement;
     const onResumeRestored = vi.fn();
 
-    element.addEventListener('form-ui:resume-token-restored', (event) => {
+    element.addEventListener('xpressui:resume-token-restored', (event) => {
       onResumeRestored((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -12199,7 +12196,7 @@ describe('FormUI', () => {
     const input = element.querySelector('#email') as HTMLInputElement;
     const onInvalidSignature = vi.fn();
 
-    element.addEventListener('form-ui:resume-token-invalid-signature', (event) => {
+    element.addEventListener('xpressui:resume-token-invalid-signature', (event) => {
       onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -12603,7 +12600,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
     const onInvalidSignature = vi.fn();
-    element.addEventListener('form-ui:resume-token-invalid-signature', (event) => {
+    element.addEventListener('xpressui:resume-token-invalid-signature', (event) => {
       onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -12684,7 +12681,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
     const onClaimState = vi.fn();
-    element.addEventListener('form-ui:resume-share-code-claim-state', (event) => {
+    element.addEventListener('xpressui:resume-share-code-claim-state', (event) => {
       onClaimState((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -12776,7 +12773,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
     const onInvalidSignature = vi.fn();
-    element.addEventListener('form-ui:resume-token-invalid-signature', (event) => {
+    element.addEventListener('xpressui:resume-token-invalid-signature', (event) => {
       onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -12854,7 +12851,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
     const onRestoreState = vi.fn();
-    element.addEventListener('form-ui:resume-share-code-restore-state', (event) => {
+    element.addEventListener('xpressui:resume-share-code-restore-state', (event) => {
       onRestoreState((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -12962,7 +12959,7 @@ describe('FormUI', () => {
       ],
     }) as FormUI;
     const onClaimBlocked = vi.fn();
-    element.addEventListener('form-ui:resume-share-code-claim-blocked', (event) => {
+    element.addEventListener('xpressui:resume-share-code-claim-blocked', (event) => {
       onClaimBlocked((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -13017,7 +13014,7 @@ describe('FormUI', () => {
     const form = element.querySelector('#queue-form_form') as HTMLFormElement;
     const onQueued = vi.fn();
 
-    element.addEventListener('form-ui:queued', (event) => {
+    element.addEventListener('xpressui:queued', (event) => {
       onQueued((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -13091,7 +13088,7 @@ describe('FormUI', () => {
       }),
     );
 
-    element.addEventListener('form-ui:sync-success', (event) => {
+    element.addEventListener('xpressui:sync-success', (event) => {
       onSyncSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -13161,7 +13158,7 @@ describe('FormUI', () => {
       }),
     );
 
-    element.addEventListener('form-ui:sync-error', (event) => {
+    element.addEventListener('xpressui:sync-error', (event) => {
       onSyncError((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -13221,7 +13218,7 @@ describe('FormUI', () => {
       }),
     );
 
-    element.addEventListener('form-ui:dead-lettered', (event) => {
+    element.addEventListener('xpressui:dead-lettered', (event) => {
       onDeadLettered((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -13329,7 +13326,7 @@ describe('FormUI', () => {
       }),
     );
 
-    element.addEventListener('form-ui:dead-letter-requeued', (event) => {
+    element.addEventListener('xpressui:dead-letter-requeued', (event) => {
       onRequeued((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 
@@ -13396,7 +13393,7 @@ describe('FormUI', () => {
       }),
     );
 
-    element.addEventListener('form-ui:dead-letter-replayed-success', (event) => {
+    element.addEventListener('xpressui:dead-letter-replayed-success', (event) => {
       onReplaySuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
     });
 

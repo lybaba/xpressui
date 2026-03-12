@@ -248,7 +248,7 @@ describe("Remote Resume", () => {
       fields: [{ name: "email", label: "Email", type: "email" }],
     }) as FormUI;
     const onInvalidSignature = vi.fn();
-    element.addEventListener("form-ui:resume-token-invalid-signature", (event) => {
+    element.addEventListener("xpressui:resume-token-invalid-signature", (event) => {
       onInvalidSignature((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
@@ -390,7 +390,7 @@ describe("Remote Resume", () => {
       fields: [{ name: "email", label: "Email", type: "email" }],
     }) as FormUI;
     const onInvalidSignature = vi.fn();
-    element.addEventListener("form-ui:resume-token-invalid-signature", (event) => {
+    element.addEventListener("xpressui:resume-token-invalid-signature", (event) => {
       onInvalidSignature((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
@@ -429,7 +429,7 @@ describe("Remote Resume", () => {
       fields: [{ name: "email", label: "Email", type: "email" }],
     }) as FormUI;
     const onClaimBlocked = vi.fn();
-    element.addEventListener("form-ui:resume-share-code-claim-blocked", (event) => {
+    element.addEventListener("xpressui:resume-share-code-claim-blocked", (event) => {
       onClaimBlocked((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 

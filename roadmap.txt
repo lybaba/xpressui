@@ -23,7 +23,7 @@ Current State
 Major capabilities already implemented in the codebase:
 - public hydration/runtime entry via `hydrateFormUI(...)` + `FormRuntime`
 - headless runtime via `FormRuntime`
-- Web Component runtime via `FormUI`
+- hydration runtime via `FormUI`
 - schema validation + migration helpers
 - provider registry abstraction
 - dynamic rules and conditional field runtime
@@ -116,8 +116,8 @@ Strategic Objectives
 3. Improve multi-step workflow expressiveness
 4. Harden binary/file/document flows for production
 5. Improve bundle discipline and API surface clarity
-6. Keep `FormUI` as a thin UI adapter over runtime services
-7. Allow `FormUI` to operate as a read-oriented `ViewUI` for resource/data rendering
+6. Keep the hydration layer as a thin UI adapter over runtime services
+7. Allow the hydration layer to operate as a read-oriented `ViewUI` for resource/data rendering
 
 
 Current Assessment
@@ -126,7 +126,7 @@ Current Assessment
 The product has crossed the point where broad new capability is the main need.
 The core runtime surface is now wide enough for real workflow use cases:
 - schema-driven mounting
-- headless + Web Component runtimes
+- headless + hydration runtimes
 - workflow rules and multi-step flows
 - persistence and resume primitives
 - binary/document capture flows

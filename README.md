@@ -1,7 +1,7 @@
 # xpress-ui
 
-`@lybaba/xpressui` is a lightweight form engine built around a custom element:
-`<form-ui>`.
+`@lybaba/xpressui` is a lightweight form runtime for backend-rendered workflow
+forms.
 
 It helps you:
 - define forms from simple JavaScript objects
@@ -12,8 +12,9 @@ It helps you:
 - render resources in `view`/`hybrid` with built-in `text`, `html`, `image`,
   `file`, `document`, `video`, `audio`, `map`, and `link` output renderers
 
-This repository currently ships a browser-focused Web Component library. It is
-not the old React `PostUI` API shown in earlier versions of the README.
+This repository currently ships a browser runtime plus hydration layer for
+server-rendered forms. It is not the old React `PostUI` API shown in earlier
+versions of the README.
 
 ## Current Scope
 
@@ -33,7 +34,7 @@ shell and `xpressui` only hydrates it.
 Note:
 - unless stated otherwise, examples below assume the matching HTML shell already exists in the page and the JS layer only calls `hydrateFormUI(...)`
 
-`FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
+The hydrated form instance also exposes `getActiveTemplateWarnings()` for direct inspection of
 active template issues on the mounted component.
 Use `clearActiveTemplateWarnings()` to reset that warning state.
 It also exposes `getRecentAppliedRules()` to inspect the latest effective rule
@@ -82,8 +83,8 @@ If you only need cross-device resume claim/restore feedback, use
 `createResumeStatusPanel(...)`.
 `createFormOpsPanel(...)` can also embed that resume status surface via its
 `resume` option.
-For headless or custom UI integrations, use `getResumeStatusSummary()` on
-`FormUI` or `FormRuntime`.
+For headless or custom UI integrations, use `getResumeStatusSummary()` on the
+hydrated form instance or on `FormRuntime`.
 
 The public form contract is now versioned.
 Current public schema version:
@@ -258,7 +259,7 @@ Example:
 
 ## Renderer Extension Cookbook
 
-`FormUI` supports renderer extension without patching core runtime.
+The hydrated runtime supports renderer extension without patching core runtime.
 
 Register a global renderer:
 
@@ -1600,7 +1601,7 @@ Runtime inspection helpers:
 
 `createResumeToken()` stores a local resume snapshot and returns a token scoped
 to the current form name. `restoreFromResumeToken(token)` reloads that snapshot
-back into the form draft state and restores field values in `FormUI`.
+back into the form draft state and restores field values in the hydrated form.
 `listResumeTokens()` returns the local token inventory for the current form, and
 `deleteResumeToken(token)` removes one.
 
@@ -1649,7 +1650,7 @@ Standalone local admin helper:
 - `admin.getWorkflowContext(values?)`
 - `admin.getOperationalSummary(values?)`
 
-It can inspect and manage local state without a mounted `FormUI` instance:
+It can inspect and manage local state without a hydrated form instance:
 - `getSnapshot()`
 - `exportSnapshot()`
 - `importSnapshot(snapshot, mode?)`
@@ -1739,7 +1740,7 @@ Common field types used today:
 
 ## Multi-step Forms
 
-If a form defines multiple sections, `FormUI` can now navigate them as a simple
+If a form defines multiple sections, the hydrated runtime can now navigate them as a simple
 wizard without changing your submit contract.
 
 Helpers:
@@ -1766,7 +1767,7 @@ Behavior:
 - submitting before the last step advances to the next valid step instead of final submit
 - the current step is persisted in drafts and resume tokens
 - `stepSections` is available as a clearer public alias for step metadata, while `sections.custom` remains supported for compatibility
-- `FormStepRuntime` now holds the reusable step-navigation logic shared by `FormUI` and `FormRuntime`
+- `FormStepRuntime` now holds the reusable step-navigation logic shared by the hydrated runtime and `FormRuntime`
 - wizard presets are available through `createFormPreset('booking-wizard')` and `createFormPreset('identity-onboarding')`
 
 Headless runtime:
@@ -1797,11 +1798,11 @@ Event:
 - `form-ui:validation-i18n-updated`
 
 If a provider returns a normalized workflow transition and your form defines
-`workflowStepTargets`, `FormUI` now routes the wizard automatically to the
+`workflowStepTargets`, the hydrated runtime now routes the wizard automatically to the
 matching step and emits `form-ui:provider-step-routed` in addition to the
 generic `form-ui:provider-transition`.
 
-If a provider returns normalized `messages`, `FormUI` emits
+If a provider returns normalized `messages`, the hydrated runtime emits
 `form-ui:provider-messages` with a uniform payload so you can drive toasts,
 notices, or banners without reading `providerResult.messages` manually.
 
@@ -1924,7 +1925,7 @@ For concrete request and response examples, see:
 ## Status
 
 What is stable in the current codebase:
-- Web Component rendering
+- hydrated browser rendering over backend-owned HTML
 - schema-based validation
 - API submission hooks
 - reservation, payment, Stripe, webhook, booking-availability, calendar booking, calendar cancel, calendar reschedule, approval-request, approval-decision, approval-comment, and email provider flows

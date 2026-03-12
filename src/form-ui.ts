@@ -38,6 +38,7 @@ import {
 } from "./common/field";
 import { FormDynamicRuntime } from "./common/form-dynamic";
 import type { TFormActiveTemplateWarning } from "./common/form-dynamic";
+import { emitAliasedFormEvent } from "./common/form-event";
 import {
   FormPersistenceRuntime,
   TFormQueueState,
@@ -5792,13 +5793,20 @@ export class FormUI extends HTMLElement {
     detail: TFormUISubmitDetail,
     cancelable: boolean = false,
   ) => {
-    const event = new CustomEvent<TFormUISubmitDetail>(eventName, {
-      detail,
-      bubbles: true,
-      cancelable,
-    });
+    return emitAliasedFormEvent(
+      (name, eventDetail, eventCancelable = false) => {
+        const event = new CustomEvent<TFormUISubmitDetail>(name, {
+          detail: eventDetail as TFormUISubmitDetail,
+          bubbles: true,
+          cancelable: eventCancelable,
+        });
 
-    return this.dispatchEvent(event);
+        return this.dispatchEvent(event);
+      },
+      eventName,
+      detail,
+      cancelable,
+    );
   }
 
   submitToApi = async (

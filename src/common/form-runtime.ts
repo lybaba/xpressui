@@ -43,6 +43,7 @@ import {
   TFormStorageHealth,
   TFormStorageSnapshot,
 } from "./form-persistence";
+import { emitAliasedFormEvent } from "./form-event";
 
 export type TFormRuntimeSubmitResult = {
   response: Response;
@@ -94,6 +95,17 @@ export type TFormRuntimeOptions = {
 
 function noopEmitEvent(): boolean {
   return true;
+}
+
+function createAliasedEmitEvent(
+  emitEvent: TFormRuntimeEmitEvent,
+): TFormRuntimeEmitEvent {
+  return (eventName, detail) =>
+    emitAliasedFormEvent(
+      (name, nextDetail) => emitEvent(name, nextDetail),
+      eventName,
+      detail,
+    );
 }
 
 export type TFormRuntimePublicApi = Pick<
@@ -175,8 +187,9 @@ export class FormRuntime {
   constructor(formConfig: TFormConfig | null = null, options: TFormRuntimeOptions = {}) {
     this.formConfig = null;
     this.engine = new FormEngineRuntime();
+    const emitEvent = createAliasedEmitEvent(options.emitEvent || noopEmitEvent);
     this.options = {
-      emitEvent: options.emitEvent || noopEmitEvent,
+      emitEvent,
       getValues: options.getValues || (() => ({})),
       submitValues: options.submitValues || (() => {
         throw new Error("unreachable");

@@ -80,6 +80,29 @@ describe("Public API", () => {
     expect(hydratedDetail).toEqual(legacyDetail);
   });
 
+  it("emits both legacy and hydrated event names from the headless runtime", () => {
+    const emitted: string[] = [];
+    const runtime = new FormRuntime(createFormConfig({
+      name: "headless-events",
+      title: "Headless Events",
+      id: "headless-events",
+      fields: [{ name: "email", type: "email", label: "Email" }],
+    }), {
+      emitEvent: (eventName) => {
+        emitted.push(eventName);
+        return true;
+      },
+    });
+
+    runtime.options.emitEvent("form-ui:draft-saved", {
+      values: { email: "demo@example.com" },
+      formConfig: null,
+    });
+
+    expect(emitted).toContain("form-ui:draft-saved");
+    expect(emitted).toContain("xpressui:draft-saved");
+  });
+
   it("exposes a public api manifest with stable and advanced boundaries", () => {
     const manifest = getPublicApiManifest();
 

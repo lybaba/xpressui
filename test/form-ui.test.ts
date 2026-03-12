@@ -268,6 +268,28 @@ describe('FormUI', () => {
     });
   });
 
+  it('emits hydrated event aliases alongside legacy DOM event names', () => {
+    const element = document.createElement('form-ui') as FormUI;
+    const onLegacy = vi.fn();
+    const onHydrated = vi.fn();
+
+    document.body.appendChild(element);
+    element.addEventListener('form-ui:submit-success', onLegacy);
+    element.addEventListener('xpressui:submit-success', onHydrated);
+
+    element.emitFormEvent('form-ui:submit-success', {
+      values: { email: 'demo@example.com' },
+      formConfig: null,
+      result: { ok: true },
+    });
+
+    expect(onLegacy).toHaveBeenCalledTimes(1);
+    expect(onHydrated).toHaveBeenCalledTimes(1);
+    expect((onHydrated.mock.calls[0]?.[0] as CustomEvent<TFormUISubmitDetail>).detail.result).toEqual({
+      ok: true,
+    });
+  });
+
   it('provides business form presets that can be converted to mountable markup', () => {
     const formConfig = createFormPreset('identity-check', {
       name: 'kyc-form',

@@ -27,9 +27,8 @@ The public API is centered on:
 
 The main package entrypoint now focuses on `FormRuntime` plus hydration helpers.
 For backend-rendered integrations such as `iakpress-console`, the recommended
-path is `hydrateFormUI(...)` from `@lybaba/xpressui` or
-`@lybaba/xpressui/hydrate`, so the page owns the HTML shell and `xpressui`
-only hydrates it.
+path is `hydrateFormUI(...)` from `@lybaba/xpressui`, so the page owns the HTML
+shell and `xpressui` only hydrates it.
 
 `FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
 active template issues on the mounted component.
@@ -104,7 +103,7 @@ The package is configured for GitHub Packages:
 npm install @lybaba/xpressui
 ```
 
-For hydration-only usage, import the lighter subpath:
+Use the main package entrypoint:
 
 ```ts
 import { hydrateFormUI } from '@lybaba/xpressui';

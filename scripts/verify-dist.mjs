@@ -16,8 +16,6 @@ globalThis.CustomEvent = dom.window.CustomEvent;
 
 const distEntry = path.resolve(process.cwd(), "dist/xpressui.mjs");
 const mod = await import(pathToFileURL(distEntry).href);
-const hydrateEntry = path.resolve(process.cwd(), "dist/hydrate.mjs");
-const hydrateMod = await import(pathToFileURL(hydrateEntry).href);
 
 const expectedFunctionExports = [
   "createFormConfig",
@@ -58,31 +56,6 @@ if (typeof mod.createTemplateMarkup === "function") {
 
 if (missing.length) {
   throw new Error(`dist export verification failed: ${missing.join(", ")}`);
-}
-
-const expectedHydrateFunctionExports = [
-  "createFormConfig",
-  "createFormPreset",
-  "createSubmitRequestFromProvider",
-  "getProviderDefinition",
-  "hydrateFormUI",
-  "migratePublicFormConfig",
-  "registerProvider",
-  "validatePublicFormConfig",
-];
-
-const hydrateMissing = expectedHydrateFunctionExports.filter((key) => typeof hydrateMod[key] !== "function");
-
-if (typeof hydrateMod.PUBLIC_FORM_SCHEMA_VERSION !== "number") {
-  hydrateMissing.push("PUBLIC_FORM_SCHEMA_VERSION");
-}
-
-if (typeof hydrateMod.mountFormUI === "function") {
-  hydrateMissing.push("mountFormUI should not be exported from ./hydrate");
-}
-
-if (hydrateMissing.length) {
-  throw new Error(`hydrate dist export verification failed: ${hydrateMissing.join(", ")}`);
 }
 
 console.log("dist exports verified");

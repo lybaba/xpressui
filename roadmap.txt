@@ -148,7 +148,6 @@ Planning principle for the next lots:
 - finish contract-heavy runtime work before expanding showcase/demo surface
 - treat backend/console-rendered HTML as the preferred presentation source whenever a hydration contract exists
 - keep demos aligned with that rule by shipping inline field shells in `demos/*.html` and using hydration as the default demo contract
-- expose a hydration-oriented package entrypoint so backend-owned shells do not have to import template-generation code
 - keep the main package entry focused on runtime + hydration only
 
 
@@ -163,9 +162,8 @@ Current direction:
 Completed:
 - every `FormUI` demo page under `demos/` now embeds its required form shell directly in HTML
 - demo pages now use `hydrateFormUI(...)` instead of `mountFormUI(...)`
-- a dedicated `@lybaba/xpressui/hydrate` entrypoint now ships the hydration/runtime surface without the standalone template builder exports
 - the main `@lybaba/xpressui` entrypoint now matches that runtime/hydration-focused surface
-- `FormUI` demo pages now import `../dist/hydrate.mjs`, while `../dist/xpressui.mjs` stays aligned with the root runtime/hydration entry and the headless demo keeps using it for `FormRuntime`
+- `FormUI` demo pages now import `../dist/xpressui.mjs`, which is now the single public runtime/hydration bundle
 - `headless-runtime.html` remains the intentional exception because it demonstrates `FormRuntime` without `FormUI`
 
 Follow-up:

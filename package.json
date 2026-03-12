@@ -12,12 +12,6 @@
       "import": "./dist/xpressui.mjs",
       "require": "./lib/index.js",
       "default": "./dist/xpressui.mjs"
-    },
-    "./hydrate": {
-      "types": "./lib/hydrate.d.ts",
-      "import": "./dist/hydrate.mjs",
-      "require": "./lib/hydrate.js",
-      "default": "./dist/hydrate.mjs"
     }
   },
   "publishConfig": {

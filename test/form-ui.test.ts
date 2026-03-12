@@ -2588,6 +2588,8 @@ describe('HydratedFormHost', () => {
 
     expect(hydrated.getCurrentStepIndex()).toBe(0);
     expect(submitButton.type).toBe('submit');
+    expect(backButton.type).toBe('button');
+    expect(nextButton.type).toBe('button');
 
     firstName.value = 'Alice';
     expect(hydrated.nextStep()).toBe(true);

@@ -46,9 +46,11 @@ type TEventCapableHydratedHost = HTMLElement & {
   ): boolean;
 };
 
-function renderFixture(markup: string): FormUI {
+type THydratedRuntimeHost = HTMLElement & Record<string, any>;
+
+function renderFixture(markup: string): THydratedRuntimeHost {
   document.body.innerHTML = markup;
-  return document.querySelector('form-ui') as FormUI;
+  return document.querySelector('form-ui') as THydratedRuntimeHost;
 }
 
 function normalizeLocalStorageApi() {

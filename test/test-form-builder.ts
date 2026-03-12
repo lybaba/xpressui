@@ -4,6 +4,7 @@ import TFormConfig from '../src/common/TFormConfig';
 import { PUBLIC_FORM_SCHEMA_VERSION, validatePublicFormConfig } from '../src/common/public-schema';
 import { createFormConfig, TSimpleFieldInput, TSimpleFormInput } from '../src/common/form-config-factory';
 import { hydrateFormUI } from '../src/common/form-hydrate';
+import { FormUI } from '../src/form-ui';
 import {
   APPROVAL_STATE_TYPE,
   CAMERA_PHOTO_TYPE,
@@ -611,11 +612,32 @@ export function mountHydratedTestForm(
   const existingForm = container.querySelector('form') as HTMLFormElement | null;
   const existingTemplate = container.querySelector('template');
   if (existingForm && !existingTemplate) {
-    return hydrateFormUI(container, config);
+    customElements.upgrade(container);
+    const hydratedElement = hydrateFormUI(container, config);
+    if (hydratedElement) {
+      customElements.upgrade(hydratedElement);
+    }
+    return hydratedElement;
   }
 
   container.innerHTML = createTemplateMarkup(config, templateName);
-  const element = container.querySelector('form-ui') as HTMLElement | null;
+  customElements.upgrade(container);
+  const resolvedTemplateName = templateName || config.name;
+  let element = container.querySelector('form-ui') as HTMLElement | null;
+
+  if (!(element instanceof FormUI)) {
+    const host = document.createElement('form-ui') as HTMLElement;
+    host.setAttribute('name', resolvedTemplateName);
+    if (config.mode) {
+      host.setAttribute('mode', config.mode);
+    }
+    element?.replaceWith(host);
+    if (!element) {
+      container.appendChild(host);
+    }
+    customElements.upgrade(host);
+    element = host;
+  }
 
   if (
     element &&

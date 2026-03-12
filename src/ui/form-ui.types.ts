@@ -139,3 +139,13 @@ export type TQuizAnswerItem = {
 export type TFormUIDocumentState = Record<string, TDocumentScanInsight>;
 
 export type TFormUIProviderTransition = TFormProviderTransition;
+
+export type THydratedFormSubmitDetail = TFormUISubmitDetail;
+
+export type THydratedFormApprovalState = TFormApprovalState;
+
+export type THydratedFormWorkflowState = TFormWorkflowState;
+
+export type THydratedFormDocumentState = TFormUIDocumentState;
+
+export type THydratedFormProviderTransition = TFormUIProviderTransition;

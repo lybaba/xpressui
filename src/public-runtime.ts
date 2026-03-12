@@ -1,4 +1,9 @@
 export type {
+  THydratedFormApprovalState,
+  THydratedFormDocumentState,
+  THydratedFormProviderTransition,
+  THydratedFormSubmitDetail,
+  THydratedFormWorkflowState,
   TFormApprovalState,
   TFormUISubmitDetail,
   TFormWorkflowState,

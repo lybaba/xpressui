@@ -19,8 +19,6 @@ const require = createRequire(import.meta.url);
 const mod = require(libEntry);
 const hydrateEntry = path.resolve(process.cwd(), "lib/hydrate.js");
 const hydrateMod = require(hydrateEntry);
-const standaloneEntry = path.resolve(process.cwd(), "lib/standalone.js");
-const standaloneMod = require(standaloneEntry);
 
 const expectedFunctionExports = [
   "createFormConfig",
@@ -86,20 +84,6 @@ if (typeof hydrateMod.mountFormUI === "function") {
 
 if (hydrateMissing.length) {
   throw new Error(`hydrate lib export verification failed: ${hydrateMissing.join(", ")}`);
-}
-
-const expectedStandaloneFunctionExports = [
-  "createFormConfig",
-  "createMountSnippet",
-  "createTemplateMarkup",
-  "hydrateFormUI",
-  "mountFormUI",
-];
-
-const standaloneMissing = expectedStandaloneFunctionExports.filter((key) => typeof standaloneMod[key] !== "function");
-
-if (standaloneMissing.length) {
-  throw new Error(`standalone lib export verification failed: ${standaloneMissing.join(", ")}`);
 }
 
 console.log("lib exports verified");

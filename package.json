@@ -18,12 +18,6 @@
       "import": "./dist/hydrate.mjs",
       "require": "./lib/hydrate.js",
       "default": "./dist/hydrate.mjs"
-    },
-    "./standalone": {
-      "types": "./lib/standalone.d.ts",
-      "import": "./dist/standalone.mjs",
-      "require": "./lib/standalone.js",
-      "default": "./dist/standalone.mjs"
     }
   },
   "publishConfig": {

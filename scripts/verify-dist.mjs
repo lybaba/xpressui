@@ -18,8 +18,6 @@ const distEntry = path.resolve(process.cwd(), "dist/xpressui.mjs");
 const mod = await import(pathToFileURL(distEntry).href);
 const hydrateEntry = path.resolve(process.cwd(), "dist/hydrate.mjs");
 const hydrateMod = await import(pathToFileURL(hydrateEntry).href);
-const standaloneEntry = path.resolve(process.cwd(), "dist/standalone.mjs");
-const standaloneMod = await import(pathToFileURL(standaloneEntry).href);
 
 const expectedFunctionExports = [
   "createFormConfig",
@@ -85,20 +83,6 @@ if (typeof hydrateMod.mountFormUI === "function") {
 
 if (hydrateMissing.length) {
   throw new Error(`hydrate dist export verification failed: ${hydrateMissing.join(", ")}`);
-}
-
-const expectedStandaloneFunctionExports = [
-  "createFormConfig",
-  "createMountSnippet",
-  "createTemplateMarkup",
-  "hydrateFormUI",
-  "mountFormUI",
-];
-
-const standaloneMissing = expectedStandaloneFunctionExports.filter((key) => typeof standaloneMod[key] !== "function");
-
-if (standaloneMissing.length) {
-  throw new Error(`standalone dist export verification failed: ${standaloneMissing.join(", ")}`);
 }
 
 console.log("dist exports verified");

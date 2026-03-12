@@ -31,11 +31,6 @@ path is `hydrateFormUI(...)` from `@lybaba/xpressui` or
 `@lybaba/xpressui/hydrate`, so the page owns the HTML shell and `xpressui`
 only hydrates it.
 
-`mountFormUI(...)` remains available from `@lybaba/xpressui/standalone` when
-you want `xpressui` to generate the template markup from a plain object.
-If you need scaffolding code from an existing config object, use
-`createMountSnippet(...)` from that same standalone entrypoint.
-
 `FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
 active template issues on the mounted component.
 Use `clearActiveTemplateWarnings()` to reset that warning state.
@@ -115,12 +110,6 @@ For hydration-only usage, import the lighter subpath:
 import { hydrateFormUI } from '@lybaba/xpressui';
 ```
 
-For standalone template generation, use the dedicated subpath:
-
-```ts
-import { mountFormUI } from '@lybaba/xpressui/standalone';
-```
-
 If you publish privately through GitHub Packages, make sure your npm registry
 and auth are configured for the `@lybaba` scope.
 
@@ -187,16 +176,12 @@ if (container) {
 }
 ```
 
-If you want `xpressui` to generate the full HTML template for you, keep using
-`mountFormUI(...)` from `@lybaba/xpressui/standalone`.
-
 ## Faster Form Creation
 
 If you want less boilerplate, use the built-in field helpers and presets:
 
 ```ts
-import { createFormPreset, fieldFactory } from '@lybaba/xpressui';
-import { mountFormUI } from '@lybaba/xpressui/standalone';
+import { createFormPreset, fieldFactory, hydrateFormUI } from '@lybaba/xpressui';
 
 const form = createFormPreset('identity-check', {
   name: 'onboarding-kyc',
@@ -205,31 +190,7 @@ const form = createFormPreset('identity-check', {
   ],
 });
 
-mountFormUI(container, form);
-```
-
-## Snippet Generation
-
-Generate a ready-to-paste mount snippet from a form config:
-
-```ts
-import { createFormConfig } from '@lybaba/xpressui';
-import { createMountSnippet } from '@lybaba/xpressui/standalone';
-
-const formConfig = createFormConfig({
-  name: 'contact-form',
-  title: 'Contact',
-  fields: [
-    { name: 'email', label: 'Email', type: 'email', required: true },
-  ],
-});
-
-const snippet = createMountSnippet(formConfig, {
-  containerSelector: '#app',
-  configVariableName: 'contactFormConfig',
-});
-
-console.log(snippet);
+hydrateFormUI(container, form);
 ```
 
 Available presets:

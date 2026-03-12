@@ -6,7 +6,7 @@ import {
   isDocumentNormalizedContractV2,
   summarizeNormalizedDocumentContract,
 } from "../src/index";
-import { mountFormUI } from "../src/standalone";
+import { mountFormUI } from "../src/common/form-builder";
 import { resetDomAndStorage } from "./test-utils";
 
 describe("Document Contract", () => {

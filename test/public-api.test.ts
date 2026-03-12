@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as publicApi from "../src/index";
-import * as standaloneApi from "../src/standalone";
 import {
   createFormAdminPanel,
   createFormOpsPanel,
@@ -29,7 +28,7 @@ import {
   createMountSnippet,
   createTemplateMarkup,
   mountFormUI,
-} from "../src/standalone";
+} from "../src/common/form-builder";
 import { resetDomAndStorage } from "./test-utils";
 
 describe("Public API", () => {
@@ -65,9 +64,9 @@ describe("Public API", () => {
     expect(publicApi.resolveProviderTransition).toBe(resolveProviderTransition);
     expect(publicApi.validateProviderResponseEnvelopeV2).toBe(validateProviderResponseEnvelopeV2);
     expect(publicApi.isProviderResponseEnvelopeV2).toBe(isProviderResponseEnvelopeV2);
-    expect(standaloneApi.createMountSnippet).toBe(createMountSnippet);
-    expect(standaloneApi.createTemplateMarkup).toBe(createTemplateMarkup);
-    expect(standaloneApi.mountFormUI).toBe(mountFormUI);
+    expect(publicApi.createMountSnippet).toBeUndefined();
+    expect(publicApi.createTemplateMarkup).toBeUndefined();
+    expect(publicApi.mountFormUI).toBeUndefined();
   });
 
   it("exposes a public api manifest with stable and advanced boundaries", () => {

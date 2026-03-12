@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as publicApi from '../src/index';
-import * as standaloneApi from '../src/standalone';
 import { createStorageAdapter } from '../src/common/form-storage';
 import {
   createLocalFormAdmin,
@@ -38,7 +37,7 @@ import {
   createMountSnippet,
   createTemplateMarkup,
   mountFormUI,
-} from '../src/standalone';
+} from '../src/common/form-builder';
 
 function renderFixture(markup: string): FormUI {
   document.body.innerHTML = markup;

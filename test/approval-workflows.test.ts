@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FormUI, TFormUISubmitDetail } from "../src/index";
-import { mountFormUI } from "../src/standalone";
+import { mountFormUI } from "../src/common/form-builder";
 import { flushAsyncWork, resetDomAndStorage } from "./test-utils";
 
 describe("Approval Workflows", () => {

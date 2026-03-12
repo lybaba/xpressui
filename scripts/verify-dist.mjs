@@ -29,7 +29,6 @@ const expectedFunctionExports = [
 ];
 
 const expectedClassExports = [
-  "FormUI",
   "FormRuntime",
 ];
 

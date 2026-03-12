@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   DOCUMENT_NORMALIZED_CONTRACT_VERSION,
   createNormalizedDocumentContract,
-  FormUI,
   isDocumentNormalizedContractV2,
   summarizeNormalizedDocumentContract,
 } from "../src/index";
+import { FormUI } from "../src/form-ui";
 import { mountFormUI } from "./test-form-builder";
 import { resetDomAndStorage } from "./test-utils";
 

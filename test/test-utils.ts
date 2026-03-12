@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import { FormUI } from "../src/index";
+import { FormUI } from "../src/form-ui";
 
 export function renderFixture(markup: string): FormUI {
   document.body.innerHTML = markup;

@@ -19,7 +19,6 @@ import {
   FormStepRuntime,
   FormRuntime,
   FormUploadRuntime,
-  FormUI,
   getProviderDefinition,
   isProviderResponseEnvelopeV2,
   getPublicApiManifest,
@@ -33,6 +32,7 @@ import {
   TFormUISubmitDetail,
   validatePublicFormConfig,
 } from '../src/index';
+import { FormUI } from '../src/form-ui';
 import {
   createMountSnippet,
   createTemplateMarkup,

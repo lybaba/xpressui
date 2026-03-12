@@ -65,6 +65,7 @@ describe("Public API", () => {
     expect(publicApi.createMountSnippet).toBeUndefined();
     expect(publicApi.createTemplateMarkup).toBeUndefined();
     expect(publicApi.mountFormUI).toBeUndefined();
+    expect(publicApi.FormUI).toBeUndefined();
   });
 
   it("exposes a public api manifest with stable and advanced boundaries", () => {

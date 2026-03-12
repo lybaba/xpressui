@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FormUI, TFormUISubmitDetail } from "../src/index";
+import { TFormUISubmitDetail } from "../src/index";
+import { FormUI } from "../src/form-ui";
 import { mountFormUI } from "./test-form-builder";
 import { flushAsyncWork, resetDomAndStorage } from "./test-utils";
 

@@ -5,7 +5,6 @@ import {
   createFormOpsPanel,
   createResumeStatusPanel,
   THydratedFormSubmitDetail,
-  TFormUISubmitDetail,
   createLocalFormAdmin,
   createFormConfig,
   createFormPreset,
@@ -71,12 +70,12 @@ describe("Public API", () => {
   });
 
   it("keeps hydrated type aliases compatible with legacy submit detail types", () => {
-    const legacyDetail: TFormUISubmitDetail = {
+    const hydratedDetail: THydratedFormSubmitDetail = {
       values: { email: "demo@example.com" },
       formConfig: null,
       result: { ok: true },
     };
-    const hydratedDetail: THydratedFormSubmitDetail = legacyDetail;
+    const legacyDetail: import("../src/index").TFormUISubmitDetail = hydratedDetail;
 
     expect(hydratedDetail).toEqual(legacyDetail);
   });

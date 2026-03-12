@@ -83,6 +83,7 @@ Major capabilities already implemented in the codebase:
   - unused `TFormConfig` options removed
   - dead form-builder / preset wiring for removed config attributes cleaned up
   - hydrated public aliases now avoid introducing new `TFormUI*` names into the public surface while keeping compatibility with existing imports
+  - public entrypoint tests now prefer hydrated aliases, leaving `TFormUI*` names as compatibility types instead of the recommended naming path
 - UI shell preservation progress:
   - standard file uploads now keep a persistent selection shell and only replace a focused dynamic body region
   - QR scan and document scan now keep their upload shell and mutate dedicated result/control regions instead of rebuilding the whole selection area

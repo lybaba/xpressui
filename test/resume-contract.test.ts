@@ -4,7 +4,7 @@ import {
   getResumeShareCodeClaimPresentation,
   isRemoteResumePolicy,
   REMOTE_RESUME_CONTRACT_VERSION,
-  TFormUISubmitDetail,
+  THydratedFormSubmitDetail,
 } from "../src/index";
 import { mountFormUI } from "./test-form-builder";
 import { resetDomAndStorage } from "./test-utils";
@@ -71,7 +71,7 @@ describe("Resume Contract", () => {
     const onClaimBlocked = vi.fn();
 
     element.addEventListener("form-ui:resume-share-code-claim-blocked", (event) => {
-      onClaimBlocked((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onClaimBlocked((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await expect(element.claimResumeShareCode("SHARE-42")).resolves.toBeNull();

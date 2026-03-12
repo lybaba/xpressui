@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { TFormUISubmitDetail } from "../src/index";
+import { THydratedFormSubmitDetail } from "../src/index";
 import { FormUI } from "../src/form-ui";
 import { mountFormUI } from "./test-form-builder";
 import { flushAsyncWork, resetDomAndStorage } from "./test-utils";
@@ -51,7 +51,7 @@ describe("Approval Workflows", () => {
     const onApprovalRequested = vi.fn();
 
     element.addEventListener("form-ui:approval-requested", (event) => {
-      onApprovalRequested((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onApprovalRequested((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     requesterEmail.value = "approver@example.com";
@@ -116,7 +116,7 @@ describe("Approval Workflows", () => {
     const onApprovalComplete = vi.fn();
 
     element.addEventListener("form-ui:approval-complete", (event) => {
-      onApprovalComplete((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onApprovalComplete((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     requestId.value = "req_123";
@@ -171,7 +171,7 @@ describe("Approval Workflows", () => {
     const onApprovalState = vi.fn();
 
     element.addEventListener("form-ui:approval-state", (event) => {
-      onApprovalState((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onApprovalState((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     approvalId.value = "apr_123";
@@ -252,7 +252,7 @@ describe("Approval Workflows", () => {
     const onCommentSuccess = vi.fn();
 
     element.addEventListener("form-ui:approval-comment-success", (event) => {
-      onCommentSuccess((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onCommentSuccess((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     approvalId.value = "apr_123";
@@ -338,7 +338,7 @@ describe("Approval Workflows", () => {
     const onWorkflowState = vi.fn();
 
     element.addEventListener("form-ui:workflow-state", (event) => {
-      onWorkflowState((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onWorkflowState((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     requesterEmail.value = "approver@example.com";

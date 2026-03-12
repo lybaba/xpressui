@@ -7,7 +7,7 @@ import type {
 import type TFormConfig from "../common/TFormConfig";
 import type { TFormSubmitRequest } from "../common/TFormConfig";
 
-export type TFormUISubmitDetail = {
+export type THydratedFormSubmitDetail = {
   values: Record<string, any>;
   formConfig: TFormConfig | null;
   submit?: TFormSubmitRequest;
@@ -17,14 +17,14 @@ export type TFormUISubmitDetail = {
   error?: unknown;
 };
 
-export type TFormApprovalState = {
+export type THydratedFormApprovalState = {
   status: string;
   approvalId?: string;
   result?: any;
   providerResult?: TNormalizedProviderResult;
 };
 
-export type TFormWorkflowState =
+export type THydratedFormWorkflowState =
   | "draft"
   | "submitting"
   | "submitted"
@@ -136,16 +136,21 @@ export type TQuizAnswerItem = {
   maxNumOfChoices?: number;
 };
 
-export type TFormUIDocumentState = Record<string, TDocumentScanInsight>;
+export type THydratedFormDocumentState = Record<string, TDocumentScanInsight>;
 
-export type TFormUIProviderTransition = TFormProviderTransition;
+export type THydratedFormProviderTransition = TFormProviderTransition;
 
-export type THydratedFormSubmitDetail = TFormUISubmitDetail;
+/** @deprecated Prefer `THydratedFormSubmitDetail`. */
+export type TFormUISubmitDetail = THydratedFormSubmitDetail;
 
-export type THydratedFormApprovalState = TFormApprovalState;
+/** @deprecated Prefer `THydratedFormApprovalState`. */
+export type TFormApprovalState = THydratedFormApprovalState;
 
-export type THydratedFormWorkflowState = TFormWorkflowState;
+/** @deprecated Prefer `THydratedFormWorkflowState`. */
+export type TFormWorkflowState = THydratedFormWorkflowState;
 
-export type THydratedFormDocumentState = TFormUIDocumentState;
+/** @deprecated Prefer `THydratedFormDocumentState`. */
+export type TFormUIDocumentState = THydratedFormDocumentState;
 
-export type THydratedFormProviderTransition = TFormUIProviderTransition;
+/** @deprecated Prefer `THydratedFormProviderTransition`. */
+export type TFormUIProviderTransition = THydratedFormProviderTransition;

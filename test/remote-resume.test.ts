@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { TFormUISubmitDetail } from "../src/index";
+import { THydratedFormSubmitDetail } from "../src/index";
 import { FormUI } from "../src/form-ui";
 import { mountFormUI } from "./test-form-builder";
 import { flushAsyncWork, resetDomAndStorage } from "./test-utils";
@@ -249,7 +249,7 @@ describe("Remote Resume", () => {
     }) as FormUI;
     const onInvalidSignature = vi.fn();
     element.addEventListener("form-ui:resume-token-invalid-signature", (event) => {
-      onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onInvalidSignature((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await expect(element.createResumeTokenAsync()).resolves.toBeNull();
@@ -391,7 +391,7 @@ describe("Remote Resume", () => {
     }) as FormUI;
     const onInvalidSignature = vi.fn();
     element.addEventListener("form-ui:resume-token-invalid-signature", (event) => {
-      onInvalidSignature((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onInvalidSignature((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await expect(element.claimResumeShareCode("SHARE-FAIL")).resolves.toBeNull();
@@ -430,7 +430,7 @@ describe("Remote Resume", () => {
     }) as FormUI;
     const onClaimBlocked = vi.fn();
     element.addEventListener("form-ui:resume-share-code-claim-blocked", (event) => {
-      onClaimBlocked((event as CustomEvent<TFormUISubmitDetail>).detail);
+      onClaimBlocked((event as CustomEvent<THydratedFormSubmitDetail>).detail);
     });
 
     await expect(element.claimResumeShareCode("SHARE-LOCK")).resolves.toBeNull();

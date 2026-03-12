@@ -79,7 +79,7 @@ describe("Document Contract", () => {
     });
   });
 
-  it("can include normalized document data in submitted FormUI payloads", async () => {
+  it("can include normalized document data in submitted hydrated payloads", async () => {
     const fetchSpy = vi.spyOn(window, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ saved: true }), {
         status: 200,

@@ -4490,7 +4490,7 @@ describe('FormUI', () => {
     panel.detach();
   });
 
-  it('can render an admin panel from FormUI operational helpers', () => {
+  it('can render an admin panel from hydrated runtime operational helpers', () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {
       name: 'admin-panel-form',
@@ -4541,7 +4541,7 @@ describe('FormUI', () => {
     expect(document.body.contains(panel.element)).toBe(false);
   });
 
-  it('can render a combined ops panel from FormUI and local admin helpers', () => {
+  it('can render a combined ops panel from the hydrated runtime and local admin helpers', () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {
       name: 'ops-panel-form',
@@ -4904,7 +4904,7 @@ describe('FormUI', () => {
     observer.detach();
   });
 
-  it('exposes active template warnings directly on FormUI', async () => {
+  it('exposes active template warnings directly on the hydrated runtime host', async () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {
       name: 'form-ui-active-template-warnings-form',
@@ -4953,7 +4953,7 @@ describe('FormUI', () => {
     expect(element.getActiveTemplateWarnings()).toEqual([]);
   });
 
-  it('exposes recently applied rules directly on FormUI', async () => {
+  it('exposes recently applied rules directly on the hydrated runtime host', async () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {
       name: 'form-ui-recent-rules-form',
@@ -11527,7 +11527,7 @@ describe('FormUI', () => {
     );
   });
 
-  it('can whitelist document submission fields in submitted FormUI payloads', async () => {
+  it('can whitelist document submission fields in submitted hydrated payloads', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ saved: true }), {
         status: 200,
@@ -11987,7 +11987,7 @@ describe('FormUI', () => {
     );
   });
 
-  it('creates and restores local resume tokens through FormUI', async () => {
+  it('creates and restores local resume tokens through the hydrated runtime host', async () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {
       name: 'resume-form',
@@ -13395,7 +13395,7 @@ describe('FormUI', () => {
     );
   });
 
-  it('exposes a local admin API independent of FormUI', async () => {
+  it('exposes a local admin API independent of the hydrated runtime host', async () => {
     const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ ok: true }), {
         status: 200,
@@ -13838,11 +13838,11 @@ describe('FormUI', () => {
     });
   });
 
-  it('exposes operational and incident summaries directly on FormUI', () => {
+  it('exposes operational and incident summaries directly on the hydrated runtime host', () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {
       name: 'form-ui-summary-form',
-      title: 'FormUI Summary Form',
+      title: 'Hydrated Summary Form',
       storage: {
         mode: 'draft-and-queue',
         adapter: 'local-storage',

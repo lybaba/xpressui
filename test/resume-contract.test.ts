@@ -3,10 +3,10 @@ import {
   getRemoteResumePolicy,
   getResumeShareCodeClaimPresentation,
   isRemoteResumePolicy,
-  mountFormUI,
   REMOTE_RESUME_CONTRACT_VERSION,
   TFormUISubmitDetail,
 } from "../src/index";
+import { mountFormUI } from "../src/standalone";
 import { resetDomAndStorage } from "./test-utils";
 
 describe("Resume Contract", () => {

@@ -5,14 +5,11 @@ export type TPublicApiManifest = {
 };
 
 const STABLE_PUBLIC_API = [
-  "mountFormUI",
   "hydrateFormUI",
   "createFormConfig",
-  "createMountSnippet",
   "createFormPreset",
   "fieldFactory",
   "stepFactory",
-  "createTemplateMarkup",
   "FormUI",
   "FormRuntime",
   "FormUploadRuntime",

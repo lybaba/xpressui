@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as publicApi from "../src/index";
+import * as standaloneApi from "../src/standalone";
 import {
   createFormAdminPanel,
   createFormOpsPanel,
@@ -7,7 +8,6 @@ import {
   createLocalFormAdmin,
   createFormConfig,
   createFormPreset,
-  createMountSnippet,
   createSubmitRequestFromProvider,
   fieldFactory,
   FormRuntime,
@@ -17,14 +17,19 @@ import {
   getProviderDefinition,
   getPublicApiManifest,
   getResumeShareCodeClaimPresentation,
+  hydrateFormUI,
   isProviderResponseEnvelopeV2,
-  mountFormUI,
   PUBLIC_FORM_SCHEMA_VERSION,
   registerProvider,
   resolveProviderTransition,
   validateProviderResponseEnvelopeV2,
   validatePublicFormConfig,
 } from "../src/index";
+import {
+  createMountSnippet,
+  createTemplateMarkup,
+  mountFormUI,
+} from "../src/standalone";
 import { resetDomAndStorage } from "./test-utils";
 
 describe("Public API", () => {
@@ -43,10 +48,9 @@ describe("Public API", () => {
     expect(publicApi.FormStepRuntime).toBe(FormStepRuntime);
     expect(publicApi.FormUploadRuntime).toBe(FormUploadRuntime);
     expect(publicApi.createFormConfig).toBe(createFormConfig);
-    expect(publicApi.createMountSnippet).toBe(createMountSnippet);
     expect(publicApi.createFormPreset).toBe(createFormPreset);
     expect(publicApi.fieldFactory).toBe(fieldFactory);
-    expect(publicApi.mountFormUI).toBe(mountFormUI);
+    expect(publicApi.hydrateFormUI).toBe(hydrateFormUI);
     expect(publicApi.createFormAdminPanel).toBe(createFormAdminPanel);
     expect(publicApi.createFormOpsPanel).toBe(createFormOpsPanel);
     expect(publicApi.createResumeStatusPanel).toBe(createResumeStatusPanel);
@@ -61,6 +65,9 @@ describe("Public API", () => {
     expect(publicApi.resolveProviderTransition).toBe(resolveProviderTransition);
     expect(publicApi.validateProviderResponseEnvelopeV2).toBe(validateProviderResponseEnvelopeV2);
     expect(publicApi.isProviderResponseEnvelopeV2).toBe(isProviderResponseEnvelopeV2);
+    expect(standaloneApi.createMountSnippet).toBe(createMountSnippet);
+    expect(standaloneApi.createTemplateMarkup).toBe(createTemplateMarkup);
+    expect(standaloneApi.mountFormUI).toBe(mountFormUI);
   });
 
   it("exposes a public api manifest with stable and advanced boundaries", () => {
@@ -69,12 +76,10 @@ describe("Public API", () => {
     expect(manifest.schemaVersion).toBe(1);
     expect(manifest.stable).toEqual(
       expect.arrayContaining([
-        "mountFormUI",
+        "hydrateFormUI",
         "createFormConfig",
-        "createMountSnippet",
         "createFormPreset",
         "fieldFactory",
-        "createTemplateMarkup",
         "FormUI",
         "FormRuntime",
         "FormUploadRuntime",

@@ -18,14 +18,15 @@ const distEntry = path.resolve(process.cwd(), "dist/xpressui.mjs");
 const mod = await import(pathToFileURL(distEntry).href);
 const hydrateEntry = path.resolve(process.cwd(), "dist/hydrate.mjs");
 const hydrateMod = await import(pathToFileURL(hydrateEntry).href);
+const standaloneEntry = path.resolve(process.cwd(), "dist/standalone.mjs");
+const standaloneMod = await import(pathToFileURL(standaloneEntry).href);
 
 const expectedFunctionExports = [
   "createFormConfig",
   "createLocalFormAdmin",
   "createSubmitRequestFromProvider",
-  "createTemplateMarkup",
   "getProviderDefinition",
-  "mountFormUI",
+  "hydrateFormUI",
   "migratePublicFormConfig",
   "registerProvider",
   "validatePublicFormConfig",
@@ -43,6 +44,18 @@ const missing = [
 
 if (typeof mod.PUBLIC_FORM_SCHEMA_VERSION !== "number") {
   missing.push("PUBLIC_FORM_SCHEMA_VERSION");
+}
+
+if (missing.length) {
+  throw new Error(`dist export verification failed: ${missing.join(", ")}`);
+}
+
+if (typeof mod.mountFormUI === "function") {
+  missing.push("mountFormUI should not be exported from root dist entry");
+}
+
+if (typeof mod.createTemplateMarkup === "function") {
+  missing.push("createTemplateMarkup should not be exported from root dist entry");
 }
 
 if (missing.length) {
@@ -72,6 +85,20 @@ if (typeof hydrateMod.mountFormUI === "function") {
 
 if (hydrateMissing.length) {
   throw new Error(`hydrate dist export verification failed: ${hydrateMissing.join(", ")}`);
+}
+
+const expectedStandaloneFunctionExports = [
+  "createFormConfig",
+  "createMountSnippet",
+  "createTemplateMarkup",
+  "hydrateFormUI",
+  "mountFormUI",
+];
+
+const standaloneMissing = expectedStandaloneFunctionExports.filter((key) => typeof standaloneMod[key] !== "function");
+
+if (standaloneMissing.length) {
+  throw new Error(`standalone dist export verification failed: ${standaloneMissing.join(", ")}`);
 }
 
 console.log("dist exports verified");

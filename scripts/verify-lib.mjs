@@ -19,14 +19,15 @@ const require = createRequire(import.meta.url);
 const mod = require(libEntry);
 const hydrateEntry = path.resolve(process.cwd(), "lib/hydrate.js");
 const hydrateMod = require(hydrateEntry);
+const standaloneEntry = path.resolve(process.cwd(), "lib/standalone.js");
+const standaloneMod = require(standaloneEntry);
 
 const expectedFunctionExports = [
   "createFormConfig",
   "createLocalFormAdmin",
   "createSubmitRequestFromProvider",
-  "createTemplateMarkup",
   "getProviderDefinition",
-  "mountFormUI",
+  "hydrateFormUI",
   "migratePublicFormConfig",
   "registerProvider",
   "validatePublicFormConfig",
@@ -44,6 +45,18 @@ const missing = [
 
 if (typeof mod.PUBLIC_FORM_SCHEMA_VERSION !== "number") {
   missing.push("PUBLIC_FORM_SCHEMA_VERSION");
+}
+
+if (missing.length) {
+  throw new Error(`lib export verification failed: ${missing.join(", ")}`);
+}
+
+if (typeof mod.mountFormUI === "function") {
+  missing.push("mountFormUI should not be exported from root lib entry");
+}
+
+if (typeof mod.createTemplateMarkup === "function") {
+  missing.push("createTemplateMarkup should not be exported from root lib entry");
 }
 
 if (missing.length) {
@@ -73,6 +86,20 @@ if (typeof hydrateMod.mountFormUI === "function") {
 
 if (hydrateMissing.length) {
   throw new Error(`hydrate lib export verification failed: ${hydrateMissing.join(", ")}`);
+}
+
+const expectedStandaloneFunctionExports = [
+  "createFormConfig",
+  "createMountSnippet",
+  "createTemplateMarkup",
+  "hydrateFormUI",
+  "mountFormUI",
+];
+
+const standaloneMissing = expectedStandaloneFunctionExports.filter((key) => typeof standaloneMod[key] !== "function");
+
+if (standaloneMissing.length) {
+  throw new Error(`standalone lib export verification failed: ${standaloneMissing.join(", ")}`);
 }
 
 console.log("lib exports verified");

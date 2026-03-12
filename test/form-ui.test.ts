@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as publicApi from '../src/index';
+import * as standaloneApi from '../src/standalone';
 import { createStorageAdapter } from '../src/common/form-storage';
 import {
   createLocalFormAdmin,
@@ -7,8 +8,6 @@ import {
   createFormOpsPanel,
   createResumeStatusPanel,
   createFormPreset,
-  createMountSnippet,
-  createTemplateMarkup,
   createSubmitRequestFromProvider,
   attachFormDebugObserver,
   createFormAdminPanel,
@@ -28,7 +27,6 @@ import {
   hydrateFormUI,
   normalizeProviderResult,
   resolveProviderTransition,
-  mountFormUI,
   PUBLIC_FORM_SCHEMA_VERSION,
   REMOTE_RESUME_CONTRACT_VERSION,
   registerProvider,
@@ -36,6 +34,11 @@ import {
   TFormUISubmitDetail,
   validatePublicFormConfig,
 } from '../src/index';
+import {
+  createMountSnippet,
+  createTemplateMarkup,
+  mountFormUI,
+} from '../src/standalone';
 
 function renderFixture(markup: string): FormUI {
   document.body.innerHTML = markup;

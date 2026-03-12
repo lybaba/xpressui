@@ -2516,6 +2516,47 @@ describe('HydratedFormHost', () => {
     expect(hydrated.querySelector('[data-form-step-actions]')).toBeNull();
   });
 
+  it('does not restore the saved step index without a draft to restore', () => {
+    window.localStorage.setItem('xpressui:draft:wizard:step', '2');
+    const element = renderFixture(`
+      <template id="wizard">
+        <form
+          id="wizard_form"
+          data-type="contactform"
+          data-name="wizard"
+          data-label="Wizard"
+        >
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two"></div>
+          <div data-type="section" data-name="step_three" data-label="Step Three"></div>
+          <input
+            id="first_name"
+            name="first_name"
+            type="text"
+            data-type="text"
+            data-name="first_name"
+            data-label="First Name"
+            data-section-name="step_one"
+          />
+          <input
+            id="notes"
+            name="notes"
+            type="text"
+            data-type="text"
+            data-name="notes"
+            data-label="Notes"
+            data-section-name="step_three"
+          />
+        </form>
+      </template>
+      <form-ui name="wizard" mode="form-multi-step"></form-ui>
+    `);
+
+    expect(element.getCurrentStepIndex()).toBe(0);
+    expect((element.querySelector('#first_name') as HTMLElement).getAttribute('data-step-hidden') || undefined).toBeUndefined();
+    expect((element.querySelector('#notes') as HTMLElement).getAttribute('data-step-hidden')).toBe('true');
+  });
+
   it('restores the saved current step from draft storage and supports custom step labels', () => {
     const markup = `
       <template id="wizard">

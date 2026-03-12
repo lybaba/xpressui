@@ -4799,9 +4799,11 @@ export class HydratedFormHost extends HTMLElement {
       this.persistence.setFormConfig(this.formConfig);
       this.stepNames = this.isMultiStepMode() ? this.steps.getStepNames() : [];
       this.currentStepIndex = this.isMultiStepMode() ? this.steps.getCurrentStepIndex() : 0;
+      const draftValues = this.persistence.loadDraftValues();
       const savedStepIndex = this.persistence.loadCurrentStepIndex();
       if (
         this.isMultiStepMode() &&
+        Object.keys(draftValues).length > 0 &&
         typeof savedStepIndex === "number" &&
         savedStepIndex >= 0 &&
         savedStepIndex < this.stepNames.length
@@ -4809,7 +4811,6 @@ export class HydratedFormHost extends HTMLElement {
         this.steps.setCurrentStepIndex(savedStepIndex);
         this.currentStepIndex = this.steps.getCurrentStepIndex();
       }
-      const draftValues = this.persistence.loadDraftValues();
       const renderMode = this.getBaseRenderMode();
       const hybridInitialValues =
         renderMode === "hybrid"

@@ -1185,7 +1185,7 @@ describe('HydratedFormHost', () => {
     expect(output.getAttribute('data-media-display-policy')).toBe('thumbnail');
   });
 
-  it('supports product-list fields with a 20-product max catalog, global sticky cart and gallery modal', async () => {
+  it('supports product-list fields with a 20-product max catalog, inline totals, and gallery modal', async () => {
     const products = Array.from({ length: 25 }, (_, index) => ({
       value: `sku_${index + 1}`,
       name: `Product ${index + 1}`,
@@ -1213,7 +1213,7 @@ describe('HydratedFormHost', () => {
     }) as HydratedFormHost;
 
     expect(element.querySelectorAll('[data-product-card]').length).toBe(20);
-    expect(element.querySelectorAll('[data-product-list-global-cart]').length).toBe(1);
+    expect(element.querySelectorAll('[data-product-list-global-cart]').length).toBe(0);
 
     const addFirst = element.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
     addFirst.click();
@@ -1236,33 +1236,10 @@ describe('HydratedFormHost', () => {
     addAgain.click();
     await flushAsyncWork();
     expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(2);
-    expect(element.querySelectorAll('[data-product-cart-item]').length).toBe(1);
-    expect((element.querySelector('[data-product-cart-summary="true"]') as HTMLElement).textContent).toBe('2');
-    expect((element.querySelector('[data-product-cart-total-badge="true"]') as HTMLElement).textContent).toContain('180.00€');
-
-    const cartTrigger = element.querySelector('[data-product-cart-trigger="true"]') as HTMLButtonElement;
-    expect(cartTrigger.getAttribute('aria-haspopup')).toBe('dialog');
-    expect(cartTrigger.getAttribute('aria-expanded')).toBe('false');
-    cartTrigger.click();
-    await flushAsyncWork();
-    const cartOverlay = element.querySelector('[data-product-cart-overlay="true"]') as HTMLElement;
-    expect(cartOverlay.getAttribute('data-state')).toBe('open');
-    const cartPanel = element.querySelector('[data-product-cart-panel="true"]') as HTMLElement;
-    expect(cartPanel.getAttribute('role')).toBe('dialog');
-    expect(cartPanel.getAttribute('aria-modal')).toBe('true');
-    expect(cartTrigger.getAttribute('aria-expanded')).toBe('true');
-    expect(document.body.style.overflow).toBe('hidden');
-
-    const cartClose = element.querySelector('[data-product-cart-close="true"]') as HTMLButtonElement;
-    cartClose.click();
-    await flushAsyncWork();
-    expect(cartOverlay.getAttribute('data-state')).toBe('closing');
-    await new Promise((resolve) => setTimeout(resolve, 220));
-    expect(cartOverlay.getAttribute('data-state')).toBe('closed');
-    expect(cartOverlay.getAttribute('aria-hidden')).toBe('true');
-    expect(cartTrigger.getAttribute('aria-expanded')).toBe('false');
-    expect([cartTrigger, document.body]).toContain(document.activeElement);
-    expect(document.body.style.overflow).toBe('');
+    expect(element.querySelector('[data-product-cart-trigger="true"]')).toBeNull();
+    expect(element.querySelector('[data-product-cart-overlay="true"]')).toBeNull();
+    expect((element.querySelector('[data-product-list-total="products"]') as HTMLElement).style.display).toBe('inline-flex');
+    expect((element.querySelector('[data-product-list-total-amount="products"]') as HTMLElement).textContent).toContain('180.00€');
 
     const card = element.querySelector('[data-product-open-gallery="sku_1"]') as HTMLElement;
     card.click();
@@ -1279,7 +1256,7 @@ describe('HydratedFormHost', () => {
     expect(document.body.style.overflow).toBe('');
   });
 
-  it('renders a single global cart even with multiple product-list fields in the same form', async () => {
+  it('renders independent inline totals when multiple product-list fields share the same form', async () => {
     const products = [
       {
         value: 'sku_1',
@@ -1321,8 +1298,9 @@ describe('HydratedFormHost', () => {
     addB.click();
     await flushAsyncWork();
 
-    expect(element.querySelectorAll('[data-product-list-global-cart]').length).toBe(1);
-    expect(element.querySelectorAll('[data-product-cart-item]').length).toBe(2);
+    expect(element.querySelectorAll('[data-product-list-global-cart]').length).toBe(0);
+    expect((element.querySelector('[data-product-list-total-amount="products_a"]') as HTMLElement).textContent).toContain('90.00€');
+    expect((element.querySelector('[data-product-list-total-amount="products_b"]') as HTMLElement).textContent).toContain('90.00€');
   });
 
   it('preserves product-list catalog and control shells while cart quantities change', async () => {
@@ -1363,19 +1341,12 @@ describe('HydratedFormHost', () => {
     await flushAsyncWork();
 
     const inlineTotal = element.querySelector('[data-product-list-total="products"]') as HTMLElement;
-    const cartPanel = element.querySelector('[data-product-cart-panel="true"]') as HTMLElement;
-    const cartHeader = cartPanel.querySelector('[data-product-cart-header="true"]') as HTMLElement;
-    const cartTotal = cartPanel.querySelector('[data-product-cart-total="true"]') as HTMLElement;
-    const cartList = cartPanel.querySelector('[data-product-cart-list="true"]') as HTMLElement;
-    const cartItem = cartPanel.querySelector('[data-product-cart-item="products:sku_1"]') as HTMLElement;
-    const cartQty = cartPanel.querySelector('[data-product-cart-qty="products:sku_1"]') as HTMLElement;
-    const cartSubtotal = cartPanel.querySelector('[data-product-cart-subtotal="products:sku_1"]') as HTMLElement;
-
     expect(selection.querySelector('[data-product-list-catalog="products"]')).toBe(catalog);
     expect(selection.querySelector('[data-product-card="sku_1"]')).toBe(card);
     expect(selection.querySelector('[data-product-controls="sku_1"]')).toBe(controls);
     expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controls);
     expect(element.querySelector('[data-product-list-total="products"]')).toBe(inlineTotal);
+    expect(element.querySelector('[data-product-cart-panel="true"]')).toBeNull();
     expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(1);
 
     const inc = selection.querySelector('[data-product-action="add"][data-product-id="sku_1"]') as HTMLButtonElement;
@@ -1387,18 +1358,10 @@ describe('HydratedFormHost', () => {
     expect(selection.querySelector('[data-product-controls="sku_1"]')).toBe(controls);
     expect(selection.querySelector('[data-product-control-row="sku_1"]')).toBe(controls);
     expect(element.querySelector('[data-product-list-total="products"]')).toBe(inlineTotal);
-    expect(element.querySelector('[data-product-cart-panel="true"]')).toBe(cartPanel);
-    expect(cartPanel.querySelector('[data-product-cart-header="true"]')).toBe(cartHeader);
-    expect(cartPanel.querySelector('[data-product-cart-total="true"]')).toBe(cartTotal);
-    expect(cartPanel.querySelector('[data-product-cart-list="true"]')).toBe(cartList);
-    expect(cartPanel.querySelector('[data-product-cart-item="products:sku_1"]')).toBe(cartItem);
-    expect(cartPanel.querySelector('[data-product-cart-qty="products:sku_1"]')).toBe(cartQty);
-    expect(cartPanel.querySelector('[data-product-cart-subtotal="products:sku_1"]')).toBe(cartSubtotal);
+    expect(element.querySelector('[data-product-cart-panel="true"]')).toBeNull();
     expect((element.getFieldValue('products') as Array<Record<string, any>>)[0].quantity).toBe(2);
     expect((selection.querySelector('[data-product-quantity-pill="sku_1"]') as HTMLElement).textContent).toContain('2');
     expect((inlineTotal.querySelector('[data-product-list-total-amount="products"]') as HTMLElement).textContent).toBe('180.00€');
-    expect(cartQty.textContent).toBe('x2');
-    expect(cartSubtotal.textContent).toBe('180.00€');
   });
 
   it('reuses backend product-list shells instead of creating extra runtime wrappers', async () => {

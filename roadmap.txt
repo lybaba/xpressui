@@ -140,7 +140,7 @@ feature breadth:
 - file/document flows need stronger backend and privacy semantics for production
 - admin/debug building blocks exist, but operator workflows are still thin
 - docs/demos need to mirror the canonical backend and operational scenarios exactly
-- FormUI demos should embed the HTML shell they need and prefer `hydrateFormUI(...)` so showcase pages exercise the same ownership model as `iakpress-console`
+- hydrated demos should embed the HTML shell they need and prefer `hydrateFormUI(...)` so showcase pages exercise the same ownership model as `iakpress-console`
 
 Planning principle for the next lots:
 - do not add many new primitives before provider/save-resume/file contracts are tighter
@@ -160,11 +160,11 @@ Current direction:
 - demo pages should mirror that backend-first ownership model so bundle size pressure is visible during local development too
 
 Completed:
-- every `FormUI` demo page under `demos/` now embeds its required form shell directly in HTML
+- every hydrated demo page under `demos/` now embeds its required form shell directly in HTML
 - demo pages now use `hydrateFormUI(...)`
 - the main `@lybaba/xpressui` entrypoint now matches that runtime/hydration-focused surface
-- `FormUI` demo pages now import `../dist/xpressui.mjs`, which is now the single public runtime/hydration bundle
-- `headless-runtime.html` remains the intentional exception because it demonstrates `FormRuntime` without `FormUI`
+- hydrated demo pages now import `../dist/xpressui.mjs`, which is now the single public runtime/hydration bundle
+- `headless-runtime.html` remains the intentional exception because it demonstrates `FormRuntime` without the hydration layer
 
 Follow-up:
 - keep new demos on the same contract by default
@@ -375,7 +375,7 @@ Completed:
   - simple one-page approval flow
   - remote save/resume flow
   - provider transition flow
-- dedicated “headless only” demo without `FormUI`
+- dedicated “headless only” demo without the hydration layer
 
 Remaining:
 - docs that mirror demo scenarios exactly

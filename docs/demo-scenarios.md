@@ -30,7 +30,7 @@ Scenario focus:
 | `demos/hybrid-ecommerce.html` | Product list + image gallery + checkout | `mode="hybrid"`, `product-list`, `image-gallery` | cart/gallery modal interactions, `form-ui:submit-success` |
 | `demos/quiz-showcase.html` | Quiz field with single/multi/open answers | `quiz`, `minNumOfChoices`, `maxNumOfChoices` | live value updates from quiz card selection |
 | `demos/hybrid-output-snapshot.html` | Inspect output snapshot in hybrid mode with ops panel | `getOutputSnapshot`, `createFormOpsPanel` | `form-ui:output-snapshot` |
-| `demos/headless-runtime.html` | Runtime without `FormUI` | `FormRuntime` APIs only | Host-defined event bridge |
+| `demos/headless-runtime.html` | Runtime without hydration layer | `FormRuntime` APIs only | Host-defined event bridge |
 
 ## Provider Transition Sandbox
 

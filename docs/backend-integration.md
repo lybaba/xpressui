@@ -122,7 +122,7 @@ Provider events:
 
 ## View And Hybrid Runtime Contract
 
-`FormUI` can now run in three render modes:
+The hydrated runtime can now run in three render modes:
 
 - `mode="form"` (default): input-first behavior
 - `mode="view"`: read-only output rendering, no submit interactions
@@ -273,7 +273,7 @@ Snapshot shape:
 }
 ```
 
-`FormUI` emits `form-ui:output-snapshot` in `view` and `hybrid` modes when output rendering is refreshed.
+The hydrated runtime emits `form-ui:output-snapshot` in `view` and `hybrid` modes when output rendering is refreshed.
 The latest snapshot is also available in debug tools (`attachFormDebugObserver`, `createFormDebugPanel`).
 
 ### Submit Lifecycle Hooks

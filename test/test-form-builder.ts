@@ -653,7 +653,7 @@ export function mountHydratedTestForm(
   const validationConfig = (config as any).validation;
   const storageConfig = (config as any).storage;
   if (
-    (lifecycle || submitTransport || validationConfig || storageConfig) &&
+    (config.submit || validationConfig || storageConfig) &&
     element &&
     'formConfig' in element &&
     (element as any).formConfig &&
@@ -662,6 +662,7 @@ export function mountHydratedTestForm(
     if ((element as any).formConfig.submit) {
       (element as any).formConfig.submit = {
         ...(element as any).formConfig.submit,
+        ...(config.submit || {}),
         ...(lifecycle ? { lifecycle } : {}),
         ...(submitTransport ? { transport: submitTransport } : {}),
       };

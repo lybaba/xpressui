@@ -3,6 +3,31 @@ import { TFormSubmitRequest } from "./TFormConfig";
 import { SETTING_TYPE, isFileLikeValue } from "./field";
 import { buildProviderPayload } from "./provider-registry";
 
+function buildSubmitMetadataValue(value: any): any {
+  if (value !== "$submissionId") {
+    return value;
+  }
+
+  if (typeof globalThis !== "undefined" && globalThis.crypto?.randomUUID) {
+    return `submission_${globalThis.crypto.randomUUID()}`;
+  }
+
+  return `submission_${Date.now()}`;
+}
+
+function buildSubmitMetadata(
+  submitConfig: TFormSubmitRequest,
+): Record<string, any> {
+  const metadata = submitConfig.metadata;
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(metadata).map(([key, value]) => [key, buildSubmitMetadataValue(value)]),
+  );
+}
+
 function isAbsoluteUrl(value: string): boolean {
   return /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(value) || value.startsWith("//");
 }
@@ -104,7 +129,10 @@ export function buildSubmitPayload(
         }),
       );
 
-  return buildProviderPayload(filteredValues, submitConfig);
+  return {
+    ...buildProviderPayload(filteredValues, submitConfig),
+    ...buildSubmitMetadata(submitConfig),
+  };
 }
 
 export function buildFormDataBody(

@@ -4033,6 +4033,49 @@ describe('HydratedFormHost', () => {
     );
   });
 
+  it('includes configured submit metadata in hydrated submit payloads', async () => {
+    const fetchSpy = vi.spyOn(window, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const container = document.createElement('div');
+    const element = mountHydratedTestForm(container, {
+      name: 'submit-metadata-form',
+      title: 'Submit Metadata Form',
+      submit: {
+        endpoint: '/api/submit-metadata',
+        method: 'POST',
+        metadata: {
+          projectId: 'proj_123',
+          projectSlug: 'multi-step-form',
+          submissionId: '$submissionId',
+        },
+      },
+      fields: [
+        { name: 'email', label: 'Email', type: 'email' },
+      ],
+    }) as HydratedFormHost;
+
+    await element.onSubmit({ email: 'project@example.com' });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/submit-metadata',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.any(String),
+      }),
+    );
+    const [, requestInit] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(requestInit.body))).toMatchObject({
+      email: 'project@example.com',
+      projectId: 'proj_123',
+      projectSlug: 'multi-step-form',
+    });
+    expect(JSON.parse(String(requestInit.body)).submissionId).toMatch(/^submission_/);
+  });
+
   it('emits submit-hook-error with hook metadata when a lifecycle hook throws', async () => {
     const postSuccess = vi
       .fn()

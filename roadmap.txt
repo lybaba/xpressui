@@ -78,6 +78,9 @@ Major capabilities already implemented in the codebase:
   - submit/provider event helpers extracted
   - field DOM/event/presentation helpers extracted
   - `src/index.ts` materially reduced and more orchestral
+- submit contract progress:
+  - public `submit.metadata` now lets hydration/runtime inject stable integration metadata into outgoing payloads
+  - placeholder-based metadata generation now supports runtime-owned submission ids for exported integrations
 - public type cleanup progress:
   - unused `TFieldConfig` options removed
   - unused `TFormConfig` options removed
@@ -235,6 +238,7 @@ Remaining:
 Completed:
 - consistent provider-specific error normalization
 - pre-submit / post-success / post-failure lifecycle hooks
+- submit metadata support in the public request contract so exported integrations can attach project/submission identity without custom host code
 
 Exit criteria:
 - new providers can be added with little or no hydration-layer changes

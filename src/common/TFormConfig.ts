@@ -34,6 +34,7 @@ export enum RenderingMode {
 
 export type TFormSubmitRequest = {
     endpoint: string;
+    metadata?: Record<string, any>;
     baseUrl?: string;
     includeSettingFields?: boolean;
     settingFieldAllowlist?: string[];

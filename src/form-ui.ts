@@ -2067,13 +2067,24 @@ export class HydratedFormHost extends HTMLElement {
     let amount = totalNode.querySelector("[data-product-list-total-amount]") as HTMLSpanElement | null;
     if (totalAmount > 0) {
       totalNode.style.display = "inline-flex";
+      totalNode.style.alignItems = "center";
+      totalNode.style.gap = "8px";
+      totalNode.style.padding = "7px 12px";
+      totalNode.style.borderRadius = "999px";
+      totalNode.style.background = "rgba(15, 23, 42, 0.08)";
+      totalNode.style.border = "1px solid rgba(15, 23, 42, 0.14)";
+      totalNode.style.boxShadow = "inset 0 1px 0 rgba(255,255,255,0.45)";
+      totalNode.style.color = "#0f172a";
+      totalNode.style.fontSize = "12px";
+      totalNode.style.fontWeight = "700";
+      totalNode.style.lineHeight = "1";
       if (!icon) {
         icon = document.createElement("span");
         icon.setAttribute("data-product-list-total-icon", fieldConfig.name);
         icon.setAttribute("aria-hidden", "true");
         icon.style.display = "inline-flex";
         icon.style.alignItems = "center";
-        icon.style.marginRight = "6px";
+        icon.style.color = "#1d4ed8";
         icon.textContent = "🛒";
         totalNode.appendChild(icon);
       }
@@ -2082,6 +2093,8 @@ export class HydratedFormHost extends HTMLElement {
         amount.setAttribute("data-product-list-total-amount", fieldConfig.name);
         totalNode.appendChild(amount);
       }
+      amount.style.fontVariantNumeric = "tabular-nums";
+      amount.style.letterSpacing = "0.01em";
       amount.textContent = `${totalAmount.toFixed(2)}€`;
       return;
     }

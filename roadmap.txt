@@ -140,7 +140,7 @@ feature breadth:
 - file/document flows need stronger backend and privacy semantics for production
 - admin/debug building blocks exist, but operator workflows are still thin
 - docs/demos need to mirror the canonical backend and operational scenarios exactly
-- FormUI demos should embed the HTML shell they need and prefer `hydrateFormUI(...)` over `mountFormUI(...)` so showcase pages exercise the same ownership model as `iakpress-console`
+- FormUI demos should embed the HTML shell they need and prefer `hydrateFormUI(...)` so showcase pages exercise the same ownership model as `iakpress-console`
 
 Planning principle for the next lots:
 - do not add many new primitives before provider/save-resume/file contracts are tighter
@@ -358,7 +358,7 @@ Exit criteria:
 
 
 Phase 6: Demo and Developer Experience
-Status: In progress (expanded, snippet support shipped)
+Status: In progress
 
 Goal:
 Make the product easy to understand, adopt, and validate quickly.
@@ -376,7 +376,6 @@ Completed:
   - remote save/resume flow
   - provider transition flow
 - dedicated “headless only” demo without `FormUI`
-- snippet generation directly from form config (`createMountSnippet(...)`)
 
 Remaining:
 - docs that mirror demo scenarios exactly

@@ -30,6 +30,10 @@ For backend-rendered integrations such as `iakpress-console`, the recommended
 path is `hydrateFormUI(...)` from `@lybaba/xpressui`, so the page owns the HTML
 shell and `xpressui` only hydrates it.
 
+Note:
+- a few deeper historical examples below still reference older standalone mounting flows
+- they should be read as legacy/internal context, not as the current public integration model
+
 `FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
 active template issues on the mounted component.
 Use `clearActiveTemplateWarnings()` to reset that warning state.

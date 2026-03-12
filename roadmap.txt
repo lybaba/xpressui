@@ -161,7 +161,7 @@ Current direction:
 
 Completed:
 - every `FormUI` demo page under `demos/` now embeds its required form shell directly in HTML
-- demo pages now use `hydrateFormUI(...)` instead of `mountFormUI(...)`
+- demo pages now use `hydrateFormUI(...)`
 - the main `@lybaba/xpressui` entrypoint now matches that runtime/hydration-focused surface
 - `FormUI` demo pages now import `../dist/xpressui.mjs`, which is now the single public runtime/hydration bundle
 - `headless-runtime.html` remains the intentional exception because it demonstrates `FormRuntime` without `FormUI`

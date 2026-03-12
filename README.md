@@ -31,8 +31,6 @@ path is `hydrateFormUI(...)` from `@lybaba/xpressui`, so the page owns the HTML
 shell and `xpressui` only hydrates it.
 
 Note:
-- a few deeper historical examples below still reference older standalone mounting flows
-- they should be read as legacy/internal context, not as the current public integration model
 - unless stated otherwise, examples below assume the matching HTML shell already exists in the page and the JS layer only calls `hydrateFormUI(...)`
 
 `FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
@@ -513,7 +511,7 @@ Events:
 Provide a `submit` block and the component will call your backend with `fetch`.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'booking-form',
   title: 'Book a Table',
   submit: {
@@ -550,7 +548,7 @@ Supported submit options:
 Custom transport example:
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'custom-submit-form',
   submit: {
     endpoint: '/api/unused-when-transport-is-set',
@@ -572,7 +570,7 @@ Validation hooks:
 Validation i18n example:
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'checkout-form',
   title: 'Checkout',
   validation: {
@@ -602,7 +600,7 @@ mountFormUI(container, {
 Example lifecycle hooks:
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'booking-form',
   title: 'Book a Table',
   submit: {
@@ -657,7 +655,7 @@ New workflow-aware providers are also available:
 ### Reservation
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'reservation-form',
   title: 'Reserve',
   provider: {
@@ -689,7 +687,7 @@ Extra event:
 ### Payment
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'payment-form',
   title: 'Pay Now',
   provider: {
@@ -725,7 +723,7 @@ Use `payment-stripe` when your backend creates a Stripe PaymentIntent and
 returns checkout metadata to the frontend.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'stripe-payment-form',
   title: 'Pay with Stripe',
   provider: {
@@ -772,7 +770,7 @@ normalized payload to another backend endpoint without creating a custom
 provider first.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'webhook-form',
   title: 'Webhook Form',
   provider: {
@@ -808,7 +806,7 @@ Use `booking-availability` when your backend returns available slots, pricing,
 or scheduling metadata for a selected service/date combination.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'availability-form',
   title: 'Availability',
   provider: {
@@ -855,7 +853,7 @@ Use `calendar-booking` when your backend confirms a selected slot and creates a
 real booking record.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'calendar-booking-form',
   title: 'Calendar Booking',
   provider: {
@@ -901,7 +899,7 @@ Extra events:
 Use `calendar-cancel` when your backend cancels an existing booking.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'calendar-cancel-form',
   title: 'Calendar Cancel',
   provider: {
@@ -946,7 +944,7 @@ Use `calendar-reschedule` when your backend changes an existing booking to a
 new date or slot.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'calendar-reschedule-form',
   title: 'Calendar Reschedule',
   provider: {
@@ -993,7 +991,7 @@ Use `approval-request` when your backend creates a request that may stay in a
 `pending_approval` state before final approval.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'approval-request-form',
   title: 'Approval Request',
   provider: {
@@ -1047,7 +1045,7 @@ Use `approval-decision` when your backend records the final approver decision on
 an existing approval request.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'approval-decision-form',
   title: 'Approval Decision',
   provider: {
@@ -1093,7 +1091,7 @@ Use `approval-comment` when your backend stores notes, approver comments, or
 audit trail messages linked to an approval request.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'approval-comment-form',
   title: 'Approval Comment',
   provider: {
@@ -1138,7 +1136,7 @@ Use `email` when your backend exposes a messaging endpoint and you want a
 normalized request contract for outbound email workflows.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'email-form',
   title: 'Email Form',
   provider: {
@@ -1183,7 +1181,7 @@ Use `crm` when your backend creates or updates leads in a CRM system with a
 normalized contact payload.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'crm-form',
   title: 'CRM Form',
   provider: {
@@ -1251,7 +1249,7 @@ The component supports two dynamic patterns out of the box:
 - basic rules (`AND` / `OR`, `show`, `hide`, `clear-value`)
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'dynamic-booking',
   title: 'Dynamic Booking',
   fields: [
@@ -1280,7 +1278,7 @@ mountFormUI(container, {
 `select-multiple` works with remote options as well:
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'dynamic-topics',
   title: 'Dynamic Topics',
   fields: [
@@ -1320,7 +1318,7 @@ Use `type: 'file'` with `submit.mode: 'form-data'` when your backend expects
 multipart uploads.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'upload-form',
   title: 'Upload',
   submit: {
@@ -1447,7 +1445,7 @@ when available.
 You can also define basic rules at the form level:
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'rules-form',
   title: 'Rules',
   rules: [
@@ -1486,7 +1484,7 @@ Current rule scope:
 The runtime can persist draft values in the browser with `localStorage`.
 
 ```ts
-mountFormUI(container, {
+hydrateFormUI(container, {
   name: 'inspection-form',
   title: 'Inspection',
   storage: {

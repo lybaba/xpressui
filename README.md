@@ -18,25 +18,23 @@ not the old React `PostUI` API shown in earlier versions of the README.
 ## Current Scope
 
 The public API is centered on:
-- `FormUI` (the custom element class)
 - `FormRuntime` (the composed headless runtime)
 - `FormUploadRuntime` (the dedicated upload runtime)
 - `hydrateFormUI(...)`
-- `mountFormUI(...)`
 - `createFormConfig(...)`
-- `createMountSnippet(...)`
 - `createFormPreset(...)`
 - `fieldFactory`
-- `createTemplateMarkup(...)`
 
+The main package entrypoint now focuses on `FormRuntime` plus hydration helpers.
 For backend-rendered integrations such as `iakpress-console`, the recommended
-path is `hydrateFormUI(...)` from `@lybaba/xpressui/hydrate`, so the page owns
-the HTML shell and `xpressui` only hydrates it.
+path is `hydrateFormUI(...)` from `@lybaba/xpressui` or
+`@lybaba/xpressui/hydrate`, so the page owns the HTML shell and `xpressui`
+only hydrates it.
 
-`mountFormUI(...)` remains available for standalone usage when you want
-`xpressui` to generate the template markup from a plain object.
+`mountFormUI(...)` remains available from `@lybaba/xpressui/standalone` when
+you want `xpressui` to generate the template markup from a plain object.
 If you need scaffolding code from an existing config object, use
-`createMountSnippet(...)`.
+`createMountSnippet(...)` from that same standalone entrypoint.
 
 `FormUI` also exposes `getActiveTemplateWarnings()` for direct inspection of
 active template issues on the mounted component.
@@ -52,13 +50,9 @@ for queue/dead-letter/resume samples oriented toward ops/debug workflows.
 
 Public API you should treat as stable:
 - `hydrateFormUI(...)`
-- `mountFormUI(...)`
 - `createFormConfig(...)`
-- `createMountSnippet(...)`
 - `createFormPreset(...)`
 - `fieldFactory`
-- `createTemplateMarkup(...)`
-- `FormUI`
 - `FormRuntime`
 - `FormUploadRuntime`
 - `createLocalFormAdmin(...)`
@@ -118,7 +112,13 @@ npm install @lybaba/xpressui
 For hydration-only usage, import the lighter subpath:
 
 ```ts
-import { hydrateFormUI } from '@lybaba/xpressui/hydrate';
+import { hydrateFormUI } from '@lybaba/xpressui';
+```
+
+For standalone template generation, use the dedicated subpath:
+
+```ts
+import { mountFormUI } from '@lybaba/xpressui/standalone';
 ```
 
 If you publish privately through GitHub Packages, make sure your npm registry
@@ -127,7 +127,7 @@ and auth are configured for the `@lybaba` scope.
 ## Quick Start
 
 ```ts
-import { hydrateFormUI } from '@lybaba/xpressui/hydrate';
+import { hydrateFormUI } from '@lybaba/xpressui';
 
 const container = document.getElementById('app');
 
@@ -188,14 +188,15 @@ if (container) {
 ```
 
 If you want `xpressui` to generate the full HTML template for you, keep using
-`mountFormUI(...)` from `@lybaba/xpressui`.
+`mountFormUI(...)` from `@lybaba/xpressui/standalone`.
 
 ## Faster Form Creation
 
 If you want less boilerplate, use the built-in field helpers and presets:
 
 ```ts
-import { createFormPreset, fieldFactory, mountFormUI } from '@lybaba/xpressui';
+import { createFormPreset, fieldFactory } from '@lybaba/xpressui';
+import { mountFormUI } from '@lybaba/xpressui/standalone';
 
 const form = createFormPreset('identity-check', {
   name: 'onboarding-kyc',
@@ -212,7 +213,8 @@ mountFormUI(container, form);
 Generate a ready-to-paste mount snippet from a form config:
 
 ```ts
-import { createFormConfig, createMountSnippet } from '@lybaba/xpressui';
+import { createFormConfig } from '@lybaba/xpressui';
+import { createMountSnippet } from '@lybaba/xpressui/standalone';
 
 const formConfig = createFormConfig({
   name: 'contact-form',

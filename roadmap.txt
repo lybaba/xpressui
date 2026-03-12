@@ -21,7 +21,8 @@ Current State
 -------------
 
 Major capabilities already implemented in the codebase:
-- public schema-driven mounting via `mountFormUI(...)`
+- public hydration/runtime entry via `hydrateFormUI(...)` + `FormRuntime`
+- standalone schema-driven mounting via `mountFormUI(...)`
 - headless runtime via `FormRuntime`
 - Web Component runtime via `FormUI`
 - schema validation + migration helpers
@@ -150,6 +151,7 @@ Planning principle for the next lots:
 - keep runtime-created HTML as a fallback path for standalone usage, not the default ownership model for field shells
 - keep demos aligned with that rule by shipping inline field shells in `demos/*.html` and using hydration as the default demo contract
 - expose a hydration-oriented package entrypoint so backend-owned shells do not have to import the standalone template builder path
+- keep the main package entry focused on runtime + hydration, with standalone HTML generation moved to a dedicated subpath
 
 
 Demo Hydration Status
@@ -164,7 +166,8 @@ Completed:
 - every `FormUI` demo page under `demos/` now embeds its required form shell directly in HTML
 - demo pages now use `hydrateFormUI(...)` instead of `mountFormUI(...)`
 - a dedicated `@lybaba/xpressui/hydrate` entrypoint now ships the hydration/runtime surface without the standalone template builder exports
-- `FormUI` demo pages now import `../dist/hydrate.mjs`, leaving `../dist/xpressui.mjs` for standalone/headless scenarios
+- the main `@lybaba/xpressui` entrypoint now matches that runtime/hydration-focused surface, while standalone HTML generation lives under `@lybaba/xpressui/standalone`
+- `FormUI` demo pages now import `../dist/hydrate.mjs`, while `../dist/xpressui.mjs` stays aligned with the root runtime/hydration entry and the headless demo keeps using it for `FormRuntime`
 - `headless-runtime.html` remains the intentional exception because it demonstrates `FormRuntime` without `FormUI`
 
 Follow-up:

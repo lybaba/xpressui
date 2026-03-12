@@ -1241,8 +1241,8 @@ describe('HydratedFormHost', () => {
     expect((element.querySelector('[data-product-list-total="products"]') as HTMLElement).style.display).toBe('inline-flex');
     expect((element.querySelector('[data-product-list-total-amount="products"]') as HTMLElement).textContent).toContain('180.00€');
 
-    const card = element.querySelector('[data-product-open-gallery="sku_1"]') as HTMLElement;
-    card.click();
+    const media = element.querySelector('[data-product-media="sku_1"]') as HTMLElement;
+    media.click();
     await flushAsyncWork();
     const galleryOverlay = document.body.querySelector('[data-product-gallery-overlay="true"]') as HTMLElement;
     expect(galleryOverlay).not.toBeNull();

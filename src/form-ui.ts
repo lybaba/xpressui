@@ -2781,9 +2781,8 @@ export class HydratedFormHost extends HTMLElement {
         productList.appendChild(card);
       }
 
-      card.setAttribute("data-product-open-gallery", product.id);
       card.className = "rounded border border-base-300 p-2";
-      card.style.cursor = "pointer";
+      card.style.cursor = "default";
       card.style.borderColor = currentQuantity > 0 ? "rgb(59 130 246)" : "";
       card.style.boxShadow = currentQuantity > 0 ? "0 0 0 2px rgba(59, 130, 246, 0.12)" : "";
       card.style.background = currentQuantity > 0 ? "rgba(59, 130, 246, 0.05)" : "rgba(248, 250, 252, 0.84)";
@@ -2804,6 +2803,8 @@ export class HydratedFormHost extends HTMLElement {
         card.appendChild(thumbFrame);
       }
       if (thumbFrame) {
+        thumbFrame.setAttribute("data-product-open-gallery", product.id);
+        thumbFrame.style.cursor = "pointer";
         thumbFrame.style.width = "100%";
         thumbFrame.style.aspectRatio = "4 / 3";
         thumbFrame.style.maxHeight = "164px";
@@ -2909,7 +2910,9 @@ export class HydratedFormHost extends HTMLElement {
         title.setAttribute("data-product-title", product.id);
         card.appendChild(title);
       }
+      title.setAttribute("data-product-open-gallery", product.id);
       title.className = "mt-2 text-sm font-semibold";
+      title.style.cursor = "pointer";
       title.style.width = "100%";
       title.style.overflow = "hidden";
       title.style.textOverflow = "ellipsis";

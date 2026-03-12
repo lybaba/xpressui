@@ -53,6 +53,10 @@ if (typeof mod.createTemplateMarkup === "function") {
   missing.push("createTemplateMarkup should not be exported from root dist entry");
 }
 
+if (typeof mod.FormUI === "function") {
+  missing.push("FormUI should not be exported from root dist entry");
+}
+
 if (missing.length) {
   throw new Error(`dist export verification failed: ${missing.join(", ")}`);
 }

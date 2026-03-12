@@ -54,6 +54,10 @@ if (typeof mod.createTemplateMarkup === "function") {
   missing.push("createTemplateMarkup should not be exported from root lib entry");
 }
 
+if (typeof mod.FormUI === "function") {
+  missing.push("FormUI should not be exported from root lib entry");
+}
+
 if (missing.length) {
   throw new Error(`lib export verification failed: ${missing.join(", ")}`);
 }

@@ -88,6 +88,7 @@ Major capabilities already implemented in the codebase:
   - test-only mount snippet generation was removed because the package no longer exposes any public standalone mount API
   - internal test harness naming now prefers `mountHydratedTestForm(...)` so helper vocabulary matches the hydrate-only product model
   - high-signal test descriptions now describe hydrated runtime behavior instead of treating `FormUI` as the product-facing concept
+  - small direct-host tests now use focused structural host types where the full `FormUI` class is not needed
 - UI shell preservation progress:
   - standard file uploads now keep a persistent selection shell and only replace a focused dynamic body region
   - QR scan and document scan now keep their upload shell and mutate dedicated result/control regions instead of rebuilding the whole selection area

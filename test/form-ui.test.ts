@@ -38,6 +38,14 @@ import {
   mountHydratedTestForm,
 } from './test-form-builder';
 
+type TEventCapableHydratedHost = HTMLElement & {
+  emitFormEvent(
+    eventName: string,
+    detail: TFormUISubmitDetail,
+    cancelable?: boolean,
+  ): boolean;
+};
+
 function renderFixture(markup: string): FormUI {
   document.body.innerHTML = markup;
   return document.querySelector('form-ui') as FormUI;
@@ -268,7 +276,7 @@ describe('FormUI', () => {
   });
 
   it('emits xpressui DOM event names', () => {
-    const element = document.createElement('form-ui') as FormUI;
+    const element = document.createElement('form-ui') as TEventCapableHydratedHost;
     const onSubmitSuccess = vi.fn();
 
     document.body.appendChild(element);

@@ -24,11 +24,6 @@ import {
   UPLOAD_IMAGE_TYPE,
 } from '../src/common/field';
 
-export type TFormSnippetOptions = {
-  containerSelector?: string;
-  configVariableName?: string;
-};
-
 function escapeHtml(value: string): string {
   return value
     .replaceAll('&', '&amp;')
@@ -661,40 +656,4 @@ export function mountFormUI(
   }
 
   return element;
-}
-
-function serializeSnippetConfig(value: any): string {
-  return JSON.stringify(
-    value,
-    (_key, entry) => {
-      if (typeof entry === "function") {
-        return `[Function ${entry.name || "anonymous"}]`;
-      }
-      if (entry instanceof Date) {
-        return entry.toISOString();
-      }
-      return entry;
-    },
-    2,
-  );
-}
-
-export function createMountSnippet(
-  input: TSimpleFormInput | TFormConfig,
-  options: TFormSnippetOptions = {},
-): string {
-  const config = "fields" in input ? createFormConfig(input) : validatePublicFormConfig(input);
-  const containerSelector = options.containerSelector || "#app";
-  const configVariableName = options.configVariableName || "formConfig";
-  const configLiteral = serializeSnippetConfig(config);
-
-  return `import { mountFormUI } from "@lybaba/xpressui";
-
-const container = document.querySelector("${containerSelector}");
-const ${configVariableName} = ${configLiteral};
-
-if (container) {
-  mountFormUI(container, ${configVariableName});
-}
-`;
 }

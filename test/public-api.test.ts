@@ -24,11 +24,6 @@ import {
   validateProviderResponseEnvelopeV2,
   validatePublicFormConfig,
 } from "../src/index";
-import {
-  createMountSnippet,
-  createTemplateMarkup,
-  mountFormUI,
-} from "./test-form-builder";
 import { resetDomAndStorage } from "./test-utils";
 
 describe("Public API", () => {

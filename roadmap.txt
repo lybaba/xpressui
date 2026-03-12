@@ -85,6 +85,7 @@ Major capabilities already implemented in the codebase:
   - hydrated public aliases now avoid introducing new `TFormUI*` names into the public surface while keeping compatibility with existing imports
   - public entrypoint tests now prefer hydrated aliases, leaving `TFormUI*` names as compatibility types instead of the recommended naming path
   - runtime event emission now mirrors legacy `form-ui:*` notifications onto `xpressui:*` aliases so new integrations can detach from the old component name without breaking existing listeners
+  - test-only mount snippet generation was removed because the package no longer exposes any public standalone mount API
 - UI shell preservation progress:
   - standard file uploads now keep a persistent selection shell and only replace a focused dynamic body region
   - QR scan and document scan now keep their upload shell and mutate dedicated result/control regions instead of rebuilding the whole selection area

@@ -34,7 +34,6 @@ import {
 } from '../src/index';
 import { FormUI } from '../src/form-ui';
 import {
-  createMountSnippet,
   createTemplateMarkup,
   mountFormUI,
 } from './test-form-builder';
@@ -377,26 +376,6 @@ describe('FormUI', () => {
     expect(markup).toContain('data-name="first_step"');
     expect(markup).toContain('data-name="second_step"');
     expect(markup).toContain('data-step-summary="true"');
-  });
-
-  it('can generate a mount snippet directly from form config', () => {
-    const snippet = createMountSnippet({
-      name: 'snippet-form',
-      title: 'Snippet Form',
-      fields: [
-        { type: 'email', name: 'email', label: 'Email', required: true },
-      ],
-      submit: {
-        endpoint: '/api/snippet',
-        method: 'POST',
-      },
-    });
-
-    expect(snippet).toContain('import { mountFormUI } from "@lybaba/xpressui";');
-    expect(snippet).toContain('const container = document.querySelector("#app");');
-    expect(snippet).toContain('mountFormUI(container, formConfig);');
-    expect(snippet).toContain('"name": "snippet-form"');
-    expect(snippet).toContain('"endpoint": "/api/snippet"');
   });
 
   it('hydrates a named template into the custom element', () => {

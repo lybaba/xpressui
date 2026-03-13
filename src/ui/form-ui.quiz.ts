@@ -11,7 +11,7 @@ export function getQuizCatalog(fieldConfig: TFieldConfig): TQuizAnswerItem[] {
     .slice(0, 20)
     .map((choice, index) => {
       const id = String((choice as any).value || (choice as any).id || `quiz_answer_${index + 1}`);
-      const name = String((choice as any).name || (choice as any).label || id);
+      const name = String((choice as any).label || (choice as any).title || (choice as any).name || id);
       const desc = typeof (choice as any).desc === "string" ? (choice as any).desc : "";
       const image_thumbnail = String((choice as any).image_thumbnail || (choice as any).imageThumbnail || "");
       const image_medium = String(
@@ -46,7 +46,7 @@ export function getQuizSelectionItems(value: any): TQuizAnswerItem[] {
     .filter((entry) => entry && typeof entry === "object")
     .map((entry, index) => ({
       id: String((entry as any).id || (entry as any).value || `quiz_answer_${index + 1}`),
-      name: String((entry as any).name || (entry as any).label || (entry as any).id || ""),
+      name: String((entry as any).label || (entry as any).title || (entry as any).name || (entry as any).id || ""),
       desc: typeof (entry as any).desc === "string" ? (entry as any).desc : "",
       image_thumbnail: String((entry as any).image_thumbnail || ""),
       image_medium: String((entry as any).image_medium || ""),

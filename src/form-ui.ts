@@ -2932,7 +2932,7 @@ export class HydratedFormHost extends HTMLElement {
       title.style.whiteSpace = "nowrap";
       title.style.lineHeight = "1.2";
       title.style.textAlign = "center";
-      title.textContent = product.name;
+      title.textContent = this.getChoiceDisplayLabel(product, product.id);
 
       let pricing = card.querySelector("[data-product-pricing]") as HTMLDivElement | null;
       if (!pricing) {
@@ -3122,7 +3122,7 @@ export class HydratedFormHost extends HTMLElement {
       }
       if (preview) {
         preview.src = previewSrc || "";
-        preview.alt = imageItem.name;
+        preview.alt = this.getChoiceDisplayLabel(imageItem, imageItem.id);
         preview.style.width = "100%";
         preview.style.height = "140px";
         preview.style.objectFit = "cover";
@@ -3138,7 +3138,7 @@ export class HydratedFormHost extends HTMLElement {
       title.className = "mt-2 text-sm font-semibold";
       title.style.overflowWrap = "anywhere";
       title.style.wordBreak = "break-word";
-      title.textContent = imageItem.name;
+      title.textContent = this.getChoiceDisplayLabel(imageItem, imageItem.id);
 
       const photoCount = imageItem.photos_full.length;
       let stateRow = card.querySelector("[data-image-meta-row]") as HTMLDivElement | null;
@@ -3431,10 +3431,18 @@ export class HydratedFormHost extends HTMLElement {
     minWidth = "220px",
   ) {
     container.style.display = "grid";
-    container.style.gap = "12px";
+    container.style.gap = "8px";
     container.setAttribute("data-choice-layout", layout);
     container.style.gridTemplateColumns =
       layout === "vertical" ? "1fr" : `repeat(auto-fit, minmax(${minWidth}, 1fr))`;
+  }
+
+  private getChoiceDisplayLabel(choice: Record<string, any>, fallback = "") {
+    return String(choice.label ?? choice.title ?? choice.name ?? choice.value ?? choice.id ?? fallback);
+  }
+
+  private isCompactChoiceCard(label: string, desc?: string, previewSrc?: string | null) {
+    return !previewSrc && !desc && label.trim().length <= 20;
   }
 
   renderQuizSelection = (
@@ -3499,12 +3507,15 @@ export class HydratedFormHost extends HTMLElement {
       grid.setAttribute("data-quiz-catalog", fieldConfig.name);
     }
     const quizLayout = this.resolveChoiceLayout(fieldConfig, grid, "horizontal");
-    this.applyChoiceLayout(grid, quizLayout);
+    this.applyChoiceLayout(grid, quizLayout, "150px");
     grid.style.marginBottom = "14px";
 
     answers.forEach((answer) => {
       const selected = Boolean(selectedMap[answer.id]);
       const disabled = !selected && limitReached && fieldConfig.multiple;
+      const previewSrc = answer.image_medium || answer.image_thumbnail;
+      const displayLabel = this.getChoiceDisplayLabel(answer, answer.id);
+      const compactCard = this.isCompactChoiceCard(displayLabel, answer.desc, previewSrc);
 
       let card = grid.querySelector(`[data-quiz-answer-card="${answer.id}"]`) as HTMLDivElement | null;
       if (!card) {
@@ -3520,13 +3531,15 @@ export class HydratedFormHost extends HTMLElement {
       card.setAttribute("tabindex", disabled ? "-1" : "0");
       card.setAttribute("aria-pressed", selected ? "true" : "false");
       card.className = "template-choice-card";
+      card.setAttribute("data-choice-density", compactCard ? "compact" : "default");
       card.style.cursor = disabled ? "not-allowed" : "pointer";
       card.style.opacity = disabled ? "0.55" : "1";
       card.style.borderColor = selected ? "rgba(15, 118, 110, 0.38)" : "";
       card.style.boxShadow = selected ? "0 0 0 2px rgba(15, 118, 110, 0.12)" : "";
       card.style.background = selected ? "rgba(240, 253, 250, 0.96)" : "rgba(255, 255, 255, 0.98)";
+      card.style.minHeight = compactCard ? "0" : previewSrc ? "unset" : "56px";
+      card.style.padding = compactCard ? "10px 12px" : "12px 14px";
 
-      const previewSrc = answer.image_medium || answer.image_thumbnail;
       let preview = card.querySelector("[data-quiz-answer-image]") as HTMLImageElement | null;
       if (!preview && previewSrc) {
         preview = document.createElement("img");
@@ -3535,11 +3548,11 @@ export class HydratedFormHost extends HTMLElement {
       }
       if (preview) {
         preview.src = previewSrc || "";
-        preview.alt = answer.name;
+        preview.alt = displayLabel;
         preview.style.width = "100%";
-        preview.style.height = "148px";
+        preview.style.height = "120px";
         preview.style.objectFit = "cover";
-        preview.style.borderRadius = "14px";
+        preview.style.borderRadius = "12px";
         preview.style.marginBottom = "4px";
       }
 
@@ -3552,7 +3565,7 @@ export class HydratedFormHost extends HTMLElement {
       title.className = "template-choice-title";
       title.style.overflowWrap = "anywhere";
       title.style.wordBreak = "break-word";
-      title.textContent = answer.name;
+      title.textContent = displayLabel;
 
       let stateRow = card.querySelector("[data-quiz-answer-state]") as HTMLDivElement | null;
       if (!stateRow) {
@@ -3606,6 +3619,23 @@ export class HydratedFormHost extends HTMLElement {
         selectedBadge.textContent = "";
       }
     });
+
+    const compactOnly = answers.length > 0 && answers.every((answer) =>
+      this.isCompactChoiceCard(
+        this.getChoiceDisplayLabel(answer, answer.id),
+        answer.desc,
+        answer.image_medium || answer.image_thumbnail,
+      )
+    );
+    if (compactOnly) {
+      grid.setAttribute("data-choice-density", "compact");
+      grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(132px, max-content))";
+      grid.style.justifyContent = "start";
+    } else {
+      grid.removeAttribute("data-choice-density");
+      grid.style.justifyContent = "";
+      this.applyChoiceLayout(grid, quizLayout, "150px");
+    }
 
     Array.from(grid.querySelectorAll("[data-quiz-answer-card]")).forEach((node) => {
       const answerId = (node as HTMLElement).getAttribute("data-quiz-answer-card");

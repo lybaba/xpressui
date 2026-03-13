@@ -1928,7 +1928,14 @@ export class HydratedFormHost extends HTMLElement {
 
   getImageGallerySelectionLimit = (fieldConfig: TFieldConfig) => {
     const catalogSize = this.getImageGalleryCatalog(fieldConfig).length;
-    const requestedMax = Number(fieldConfig.maxNumOfChoices);
+    const requestedMax = Number(
+      fieldConfig.maxNumOfChoices
+      ?? (
+        Array.isArray(fieldConfig.choices) && fieldConfig.choices.length > 0
+          ? fieldConfig.choices[0]?.maxNumOfChoices
+          : undefined
+      ),
+    );
     if (!Number.isFinite(requestedMax) || requestedMax <= 0) {
       return catalogSize || 0;
     }

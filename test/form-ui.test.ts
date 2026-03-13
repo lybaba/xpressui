@@ -1549,6 +1549,52 @@ describe('HydratedFormHost', () => {
     expect(body.textContent).toContain('Image 2');
   });
 
+  it('treats image-gallery fields as single-select when maxNumOfChoices only exists on choices', async () => {
+    const container = document.createElement('div');
+    const element = mountHydratedTestForm(container, {
+      name: 'image-gallery-choice-limit-demo',
+      title: 'Image Gallery Choice Limit Demo',
+      fields: [
+        {
+          type: 'image-gallery',
+          name: 'lookbook',
+          label: 'Lookbook',
+          choices: [
+            {
+              value: 'img_1',
+              label: 'Image 1',
+              maxNumOfChoices: 1,
+              image_thumbnail: 'https://cdn.example.test/thumb_1.jpg',
+              image_medium: 'https://cdn.example.test/medium_1.jpg',
+              photos_full: ['https://cdn.example.test/full_1.jpg'],
+            },
+            {
+              value: 'img_2',
+              label: 'Image 2',
+              maxNumOfChoices: 1,
+              image_thumbnail: 'https://cdn.example.test/thumb_2.jpg',
+              image_medium: 'https://cdn.example.test/medium_2.jpg',
+              photos_full: ['https://cdn.example.test/full_2.jpg'],
+            },
+          ] as any,
+        },
+      ],
+    }) as HydratedFormHost;
+
+    expect(element.querySelector('button[data-image-gallery-action="toggle"]')).toBeNull();
+
+    const firstCard = element.querySelector('[data-image-card="img_1"]') as HTMLElement;
+    const secondCard = element.querySelector('[data-image-card="img_2"]') as HTMLElement;
+
+    firstCard.click();
+    await flushAsyncWork();
+    expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).map((item) => item.id)).toEqual(['img_1']);
+
+    secondCard.click();
+    await flushAsyncWork();
+    expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).map((item) => item.id)).toEqual(['img_2']);
+  });
+
   it('reuses backend image-gallery catalog shells instead of creating an extra catalog wrapper', async () => {
     const container = document.createElement('div');
     container.innerHTML = `

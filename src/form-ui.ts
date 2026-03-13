@@ -2700,9 +2700,13 @@ export class HydratedFormHost extends HTMLElement {
     const currentItems = this.getImageGallerySelectionItems(currentValue);
     const existingIndex = currentItems.findIndex((entry) => entry.id === imageId);
     const nextItems = [...currentItems];
+    const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
 
     if (action === "toggle") {
       if (existingIndex >= 0) {
+        if (selectionLimit === 1) {
+          return nextItems;
+        }
         return nextItems.filter((entry) => entry.id !== imageId);
       }
 
@@ -2710,7 +2714,6 @@ export class HydratedFormHost extends HTMLElement {
         return nextItems;
       }
 
-      const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
       if (selectionLimit === 1) {
         return [image];
       }

@@ -1590,6 +1590,10 @@ describe('HydratedFormHost', () => {
     await flushAsyncWork();
     expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).map((item) => item.id)).toEqual(['img_1']);
 
+    firstCard.click();
+    await flushAsyncWork();
+    expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).map((item) => item.id)).toEqual(['img_1']);
+
     secondCard.click();
     await flushAsyncWork();
     expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).map((item) => item.id)).toEqual(['img_2']);

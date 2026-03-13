@@ -1828,33 +1828,21 @@ describe('HydratedFormHost', () => {
 
     const selection = element.querySelector('#materials_selection') as HTMLElement;
     const grid = selection.querySelector('[data-quiz-catalog="materials"]') as HTMLElement;
-    const selectedPanel = selection.querySelector('[data-quiz-selection="materials"]') as HTMLElement;
-    const heading = selection.querySelector('[data-quiz-selection-heading="materials"]') as HTMLElement;
-    const body = selection.querySelector('[data-quiz-selection-body="materials"]') as HTMLElement;
     const woodCard = selection.querySelector('[data-quiz-answer-card="wood"]') as HTMLElement;
     const steelCard = selection.querySelector('[data-quiz-answer-card="steel"]') as HTMLElement;
-
-    expect(heading.textContent).toBe('Selected Answers (0/2)');
-    expect(body.textContent).toContain('No answer selected');
+    expect(selection.querySelector('[data-quiz-selection="materials"]')).toBeNull();
 
     woodCard.click();
     await flushAsyncWork();
 
     expect(selection.querySelector('[data-quiz-catalog="materials"]')).toBe(grid);
-    expect(selection.querySelector('[data-quiz-selection="materials"]')).toBe(selectedPanel);
-    expect(selection.querySelector('[data-quiz-selection-heading="materials"]')).toBe(heading);
-    expect(selection.querySelector('[data-quiz-selection-body="materials"]')).toBe(body);
-    expect(heading.textContent).toBe('Selected Answers (1/2)');
-    expect(body.textContent).toContain('Wood');
-
-    const selectedRow = selection.querySelector('[data-quiz-selection-item="wood"]') as HTMLElement;
+    expect(woodCard.getAttribute('data-selected')).toBe('true');
 
     steelCard.click();
     await flushAsyncWork();
 
-    expect(selection.querySelector('[data-quiz-selection-item="wood"]')).toBe(selectedRow);
-    expect(heading.textContent).toBe('Selected Answers (2/2)');
-    expect(body.textContent).toContain('Steel');
+    expect(woodCard.getAttribute('data-selected')).toBe('true');
+    expect(steelCard.getAttribute('data-selected')).toBe('true');
   });
 
   it('reuses backend quiz catalog shells instead of creating an extra catalog wrapper', async () => {

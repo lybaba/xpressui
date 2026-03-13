@@ -120,6 +120,8 @@ export type TProductCartItem = TProductListItem & {
 export type TImageGalleryItem = {
   id: string;
   name: string;
+  sale_price?: number | null;
+  discount_price?: number | null;
   image_thumbnail: string;
   image_medium: string;
   photos_full: string[];

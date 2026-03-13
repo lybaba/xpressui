@@ -277,7 +277,7 @@ function renderField(field: TFieldConfig, sectionName: string): string {
 </div>`;
   }
 
-  if (field.type === IMAGE_GALLERY_TYPE) {
+  if (field.type === IMAGE_GALLERY_TYPE || field.type === 'select-product') {
     const choicesAttr = field.choices?.length
       ? ` data-choices="${escapeHtml(JSON.stringify(field.choices))}"`
       : '';

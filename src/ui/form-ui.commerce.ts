@@ -45,6 +45,11 @@ export function getImageGalleryCatalog(fieldConfig: TFieldConfig): TImageGallery
     .map((choice, index) => {
       const id = String((choice as any).value || (choice as any).id || `image_${index + 1}`);
       const name = String((choice as any).name || (choice as any).label || id);
+      const salePriceRaw = (choice as any).sale_price ?? (choice as any).salePrice;
+      const discountPriceRaw = (choice as any).discount_price ?? (choice as any).discountPrice;
+      const sale_price = salePriceRaw === undefined || salePriceRaw === null ? null : Number(salePriceRaw);
+      const discount_price =
+        discountPriceRaw === undefined || discountPriceRaw === null ? null : Number(discountPriceRaw);
       const image_thumbnail = String((choice as any).image_thumbnail || (choice as any).imageThumbnail || "");
       const image_medium = String(
         (choice as any).image_medium || (choice as any).imageMedium || image_thumbnail,
@@ -58,6 +63,8 @@ export function getImageGalleryCatalog(fieldConfig: TFieldConfig): TImageGallery
       return {
         id,
         name,
+        sale_price: Number.isFinite(sale_price as number) ? sale_price : null,
+        discount_price: Number.isFinite(discount_price as number) ? discount_price : null,
         image_thumbnail,
         image_medium,
         photos_full,
@@ -112,6 +119,14 @@ export function getImageGallerySelectionItems(value: any): TImageGalleryItem[] {
     .map((entry, index) => ({
       id: String((entry as any).id || (entry as any).value || `image_${index + 1}`),
       name: String((entry as any).name || (entry as any).label || (entry as any).id || ""),
+      sale_price:
+        (entry as any).sale_price === undefined || (entry as any).sale_price === null
+          ? null
+          : Number((entry as any).sale_price),
+      discount_price:
+        (entry as any).discount_price === undefined || (entry as any).discount_price === null
+          ? null
+          : Number((entry as any).discount_price),
       image_thumbnail: String((entry as any).image_thumbnail || ""),
       image_medium: String((entry as any).image_medium || ""),
       photos_full: Array.isArray((entry as any).photos_full)

@@ -32,6 +32,7 @@ import {
   QUIZ_TYPE,
   RADIO_BUTTONS_TYPE,
   QR_SCAN_TYPE,
+  SELECT_PRODUCT_TYPE,
   SETTING_TYPE,
   UPLOAD_FILE_TYPE,
   UNKNOWN_TYPE,
@@ -1882,7 +1883,7 @@ export class HydratedFormHost extends HTMLElement {
   }
 
   isImageGalleryField = (fieldConfig: TFieldConfig) => {
-    return fieldConfig.type === IMAGE_GALLERY_TYPE;
+    return fieldConfig.type === IMAGE_GALLERY_TYPE || fieldConfig.type === SELECT_PRODUCT_TYPE;
   }
 
   isQuizField = (fieldConfig: TFieldConfig) => {
@@ -3072,6 +3073,7 @@ export class HydratedFormHost extends HTMLElement {
     const selectionLimit = this.getImageGallerySelectionLimit(fieldConfig);
     const isSingleSelect = selectionLimit === 1;
     const limitReached = selectionLimit > 0 && selectedItems.length >= selectionLimit;
+    const isSelectProductField = fieldConfig.type === SELECT_PRODUCT_TYPE;
 
     const gallery =
       (selectionElement.querySelector(
@@ -3158,7 +3160,14 @@ export class HydratedFormHost extends HTMLElement {
       galleryBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
       galleryBadge.style.opacity = "0.68";
       galleryBadge.style.overflowWrap = "anywhere";
-      galleryBadge.textContent = photoCount ? `${photoCount} photos` : "single image";
+      if (isSelectProductField) {
+        const unitPrice = imageItem.discount_price ?? imageItem.sale_price;
+        galleryBadge.textContent = unitPrice !== undefined && unitPrice !== null
+          ? `${Number(unitPrice).toFixed(2)}€`
+          : "single image";
+      } else {
+        galleryBadge.textContent = photoCount ? `${photoCount} photos` : "single image";
+      }
 
       let selectedBadge = stateRow.querySelector("[data-image-gallery-state]") as HTMLSpanElement | null;
       if (!selectedBadge) {
@@ -3264,7 +3273,7 @@ export class HydratedFormHost extends HTMLElement {
       fieldConfig.name,
     );
     heading.className = "mb-2 text-sm font-semibold";
-    heading.textContent = `Selected Images (${selectedItems.length}${selectionLimit ? `/${selectionLimit}` : ""})`;
+    heading.textContent = `${isSelectProductField ? "Selected Products" : "Selected Images"} (${selectedItems.length}${selectionLimit ? `/${selectionLimit}` : ""})`;
     const selectedBody = this.ensureSelectionChild(
       selectedPanel,
       `[data-image-gallery-selection-body="${fieldConfig.name}"]`,
@@ -3290,7 +3299,7 @@ export class HydratedFormHost extends HTMLElement {
       "data-image-gallery-empty-title",
       fieldConfig.name,
     );
-    emptyTitle.textContent = "No image selected";
+    emptyTitle.textContent = isSelectProductField ? "No product selected" : "No image selected";
     const emptyHint = this.ensureSelectionChild(
       emptyState,
       `[data-image-gallery-empty-hint="${fieldConfig.name}"]`,
@@ -3300,7 +3309,9 @@ export class HydratedFormHost extends HTMLElement {
       fieldConfig.name,
     );
     emptyHint.style.opacity = "0.72";
-    emptyHint.textContent = "Use the gallery cards above to build the selection.";
+    emptyHint.textContent = isSelectProductField
+      ? "Use the product cards above to build the selection."
+      : "Use the gallery cards above to build the selection.";
     const list = this.ensureSelectionChild(
       selectedBody,
       `[data-image-gallery-list="${fieldConfig.name}"]`,
@@ -3373,6 +3384,25 @@ export class HydratedFormHost extends HTMLElement {
       name.style.overflowWrap = "anywhere";
       name.style.wordBreak = "break-word";
       name.textContent = item.name;
+
+      let price = row.querySelector("[data-image-gallery-price]") as HTMLDivElement | null;
+      const unitPrice = item.discount_price ?? item.sale_price;
+      if (!price && isSelectProductField && unitPrice !== undefined && unitPrice !== null) {
+        price = document.createElement("div");
+        price.setAttribute("data-image-gallery-price", item.id);
+        row.appendChild(price);
+      }
+      if (price) {
+        if (isSelectProductField && unitPrice !== undefined && unitPrice !== null) {
+          price.className = "text-xs font-semibold";
+          price.style.marginLeft = "auto";
+          price.style.whiteSpace = "nowrap";
+          price.textContent = `${Number(unitPrice).toFixed(2)}€`;
+        } else {
+          price.remove();
+          price = null;
+        }
+      }
 
       let remove = row.querySelector('[data-image-gallery-action="remove"]') as HTMLButtonElement | null;
       if (!remove) {

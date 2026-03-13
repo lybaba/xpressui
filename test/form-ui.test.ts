@@ -220,6 +220,39 @@ describe('HydratedFormHost', () => {
     });
 
     expect(
+      fieldFactory.selectProduct(
+        'featured_item',
+        'Featured Item',
+        [
+          {
+            value: 'sku_1',
+            label: 'Starter Pack',
+            image_thumbnail: 'https://cdn.example.test/thumb_product.jpg',
+            image_medium: 'https://cdn.example.test/medium_product.jpg',
+            sale_price: 49,
+            discount_price: 39,
+          } as any,
+        ],
+        { required: true },
+      ),
+    ).toEqual({
+      type: 'select-product',
+      name: 'featured_item',
+      label: 'Featured Item',
+      choices: [
+        {
+          value: 'sku_1',
+          label: 'Starter Pack',
+          image_thumbnail: 'https://cdn.example.test/thumb_product.jpg',
+          image_medium: 'https://cdn.example.test/medium_product.jpg',
+          sale_price: 49,
+          discount_price: 39,
+        },
+      ],
+      required: true,
+    });
+
+    expect(
       fieldFactory.quiz(
         'style_quiz',
         'Style Quiz',
@@ -1200,7 +1233,7 @@ describe('HydratedFormHost', () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {
       name: 'product-list-demo',
-      title: 'Product List Demo',
+      title: 'Product Catalog Demo',
       fields: [
         {
           type: 'product-list',
@@ -1281,7 +1314,7 @@ describe('HydratedFormHost', () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {
       name: 'product-list-multi-demo',
-      title: 'Product List Multi Demo',
+      title: 'Product Catalog Multi Demo',
       fields: [
         {
           type: 'product-list',
@@ -1328,7 +1361,7 @@ describe('HydratedFormHost', () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {
       name: 'product-list-shell-demo',
-      title: 'Product List Shell Demo',
+      title: 'Product Catalog Shell Demo',
       fields: [
         {
           type: 'product-list',
@@ -1375,7 +1408,7 @@ describe('HydratedFormHost', () => {
   it('reuses backend product-list shells instead of creating extra runtime wrappers', async () => {
     const container = document.createElement('div');
     container.innerHTML = `
-      <form id="hydrated_product_list_form" data-type="contactform" data-name="hydrated_product_list" data-label="Hydrated Product List">
+      <form id="hydrated_product_list_form" data-type="contactform" data-name="hydrated_product_list" data-label="Hydrated Product Catalog">
         <div data-type="section" data-name="main" data-label="Main">
           <input id="products" name="products" type="hidden" data-type="product-list" data-name="products" data-label="Products" data-section-name="main" />
           <div id="products_selection" data-product-list-zone="products">
@@ -1397,7 +1430,7 @@ describe('HydratedFormHost', () => {
 
     const element = hydrateForm(container, createFormConfig({
       name: 'hydrated_product_list',
-      title: 'Hydrated Product List',
+      title: 'Hydrated Product Catalog',
       fields: [
         {
           type: 'product-list',
@@ -1597,6 +1630,62 @@ describe('HydratedFormHost', () => {
     secondCard.click();
     await flushAsyncWork();
     expect((element.getFieldValue('lookbook') as Array<Record<string, any>>).map((item) => item.id)).toEqual(['img_2']);
+  });
+
+  it('keeps sale and discount prices when select-product items are selected', async () => {
+    const container = document.createElement('div');
+    const element = mountHydratedTestForm(container, {
+      name: 'select-product-demo',
+      title: 'Select Product Demo',
+      fields: [
+        {
+          type: 'select-product',
+          name: 'featured_item',
+          label: 'Featured Item',
+          choices: [
+            {
+              value: 'sku_1',
+              label: 'Starter Pack',
+              sale_price: 49,
+              discount_price: 39,
+              image_thumbnail: 'https://cdn.example.test/thumb_1.jpg',
+              image_medium: 'https://cdn.example.test/medium_1.jpg',
+              photos_full: ['https://cdn.example.test/full_1.jpg'],
+              maxNumOfChoices: 1,
+            },
+            {
+              value: 'sku_2',
+              label: 'Growth Pack',
+              sale_price: 79,
+              discount_price: 59,
+              image_thumbnail: 'https://cdn.example.test/thumb_2.jpg',
+              image_medium: 'https://cdn.example.test/medium_2.jpg',
+              photos_full: ['https://cdn.example.test/full_2.jpg'],
+              maxNumOfChoices: 1,
+            },
+          ] as any,
+        },
+      ],
+    }) as HydratedFormHost;
+
+    const firstCard = element.querySelector('[data-image-card="sku_1"]') as HTMLElement;
+    firstCard.click();
+    await flushAsyncWork();
+
+    expect(element.getFieldValue('featured_item')).toEqual([
+      expect.objectContaining({
+        id: 'sku_1',
+        name: 'Starter Pack',
+        sale_price: 49,
+        discount_price: 39,
+      }),
+    ]);
+
+    const badge = element.querySelector('[data-image-gallery-badge="sku_1"]') as HTMLElement;
+    expect(badge.textContent).toBe('39.00€');
+
+    const selectedPrice = element.querySelector('[data-image-gallery-price="sku_1"]') as HTMLElement;
+    expect(selectedPrice.textContent).toBe('39.00€');
   });
 
   it('reuses backend image-gallery catalog shells instead of creating an extra catalog wrapper', async () => {

@@ -226,6 +226,9 @@ export function migratePublicFormConfig(input: Record<string, any>): TFormConfig
     if (fieldType === "image-gallery" || fieldType === "imagegallery" || fieldType === "selectimage") {
       return "select-image";
     }
+    if (fieldType === "selectproduct") {
+      return "select-product";
+    }
 
     return fieldType;
   };

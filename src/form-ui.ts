@@ -1928,6 +1928,10 @@ export class HydratedFormHost extends HTMLElement {
   }
 
   getImageGallerySelectionLimit = (fieldConfig: TFieldConfig) => {
+    if (fieldConfig.type === SELECT_PRODUCT_TYPE) {
+      return 1;
+    }
+
     const catalogSize = this.getImageGalleryCatalog(fieldConfig).length;
     const requestedMax = Number(
       fieldConfig.maxNumOfChoices
@@ -3092,7 +3096,7 @@ export class HydratedFormHost extends HTMLElement {
 
     images.forEach((imageItem) => {
       const selected = Boolean(selectedMap[imageItem.id]);
-      const disabled = !selected && limitReached;
+      const disabled = !selected && limitReached && !isSingleSelect;
 
       let card = gallery!.querySelector(`[data-image-card="${imageItem.id}"]`) as HTMLDivElement | null;
       if (!card) {
@@ -3109,11 +3113,15 @@ export class HydratedFormHost extends HTMLElement {
         card.removeAttribute("data-image-id");
       }
       card.className = "rounded border border-base-300 p-2 transition-all";
-      card.style.cursor = disabled ? "not-allowed" : "pointer";
-      card.style.opacity = disabled ? "0.55" : "1";
+      card.style.cursor = "pointer";
+      card.style.opacity = "1";
       card.style.borderColor = selected ? "rgb(59 130 246)" : "";
       card.style.boxShadow = selected ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "";
       card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "rgba(248, 250, 252, 0.82)";
+      if (isSelectProductField) {
+        card.style.padding = "10px";
+        card.style.borderRadius = "18px";
+      }
 
       const previewSrc = imageItem.image_medium || imageItem.image_thumbnail;
       let preview = card.querySelector("img") as HTMLImageElement | null;
@@ -3126,7 +3134,7 @@ export class HydratedFormHost extends HTMLElement {
         preview.src = previewSrc || "";
         preview.alt = this.getChoiceDisplayLabel(imageItem, imageItem.id);
         preview.style.width = "100%";
-        preview.style.height = "140px";
+        preview.style.height = isSelectProductField ? "220px" : "140px";
         preview.style.objectFit = "cover";
         preview.style.borderRadius = "8px";
       }
@@ -3141,6 +3149,11 @@ export class HydratedFormHost extends HTMLElement {
       title.style.overflowWrap = "anywhere";
       title.style.wordBreak = "break-word";
       title.textContent = this.getChoiceDisplayLabel(imageItem, imageItem.id);
+      if (isSelectProductField) {
+        title.style.fontSize = "18px";
+        title.style.lineHeight = "1.3";
+        title.style.marginTop = "12px";
+      }
 
       const photoCount = imageItem.photos_full.length;
       let stateRow = card.querySelector("[data-image-meta-row]") as HTMLDivElement | null;
@@ -3150,6 +3163,9 @@ export class HydratedFormHost extends HTMLElement {
         card.appendChild(stateRow);
       }
       stateRow.className = "mt-2 flex items-center justify-between gap-2";
+      if (isSelectProductField) {
+        stateRow.style.marginTop = "6px";
+      }
 
       let galleryBadge = stateRow.querySelector("[data-image-gallery-badge]") as HTMLSpanElement | null;
       if (!galleryBadge) {
@@ -3161,10 +3177,12 @@ export class HydratedFormHost extends HTMLElement {
       galleryBadge.style.opacity = "0.68";
       galleryBadge.style.overflowWrap = "anywhere";
       if (isSelectProductField) {
+        galleryBadge.className = "text-sm font-semibold";
+        galleryBadge.style.opacity = "1";
         const unitPrice = imageItem.discount_price ?? imageItem.sale_price;
         galleryBadge.textContent = unitPrice !== undefined && unitPrice !== null
           ? `${Number(unitPrice).toFixed(2)}€`
-          : "single image";
+          : "";
       } else {
         galleryBadge.textContent = photoCount ? `${photoCount} photos` : "single image";
       }
@@ -3201,6 +3219,24 @@ export class HydratedFormHost extends HTMLElement {
         selectedBadge.style.color = "";
         selectedBadge.style.whiteSpace = "nowrap";
         selectedBadge.textContent = "Available";
+      }
+      if (isSelectProductField) {
+        if (selected) {
+          selectedBadge.className = "text-[11px] font-semibold";
+          selectedBadge.style.display = "inline-flex";
+          selectedBadge.style.padding = "4px 8px";
+          selectedBadge.style.borderRadius = "999px";
+          selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
+          selectedBadge.style.color = "rgb(29, 78, 216)";
+          selectedBadge.style.whiteSpace = "nowrap";
+          selectedBadge.textContent = "Selected";
+        } else {
+          selectedBadge.textContent = "";
+          selectedBadge.style.display = "none";
+          selectedBadge.style.padding = "0";
+          selectedBadge.style.background = "transparent";
+          selectedBadge.style.color = "";
+        }
       }
 
       let controls = card.querySelector("[data-image-controls]") as HTMLDivElement | null;
@@ -3253,6 +3289,16 @@ export class HydratedFormHost extends HTMLElement {
         node.remove();
       }
     });
+
+    if (isSelectProductField) {
+      const existingSelectedPanel = selectionElement.querySelector(
+        `[data-image-gallery-selection="${fieldConfig.name}"]`,
+      ) as HTMLDivElement | null;
+      if (existingSelectedPanel) {
+        existingSelectedPanel.style.display = "none";
+      }
+      return;
+    }
 
     const selectedPanel = this.ensureSelectionChild(
       selectionElement,

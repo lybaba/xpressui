@@ -1684,8 +1684,10 @@ describe('HydratedFormHost', () => {
     const badge = element.querySelector('[data-image-gallery-badge="sku_1"]') as HTMLElement;
     expect(badge.textContent).toBe('39.00€');
 
-    const selectedPrice = element.querySelector('[data-image-gallery-price="sku_1"]') as HTMLElement;
-    expect(selectedPrice.textContent).toBe('39.00€');
+    const selectedState = element.querySelector('[data-image-gallery-state="sku_1"]') as HTMLElement;
+    expect(selectedState.textContent).toBe('Selected');
+    expect(selectedState.style.display).toBe('inline-flex');
+    expect(element.querySelector('[data-image-gallery-selection="featured_item"]')).toBeNull();
   });
 
   it('reuses backend image-gallery catalog shells instead of creating an extra catalog wrapper', async () => {

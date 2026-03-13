@@ -222,12 +222,47 @@ function cloneObject<T>(value: T): T {
 export function migratePublicFormConfig(input: Record<string, any>): TFormConfig {
   const config = cloneObject(input) as Record<string, any>;
 
+  const normalizeFieldType = (fieldType: unknown) => {
+    if (fieldType === "image-gallery" || fieldType === "imagegallery" || fieldType === "selectimage") {
+      return "select-image";
+    }
+
+    return fieldType;
+  };
+
+  const normalizeSections = (sections: unknown) => {
+    if (!sections || typeof sections !== "object") {
+      return sections;
+    }
+
+    return Object.fromEntries(
+      Object.entries(sections as Record<string, any>).map(([sectionName, sectionValue]) => {
+        if (sectionName === "custom" || !Array.isArray(sectionValue)) {
+          return [sectionName, sectionValue];
+        }
+
+        return [
+          sectionName,
+          sectionValue.map((entry) => (
+            entry && typeof entry === "object" && "type" in entry
+              ? { ...entry, type: normalizeFieldType((entry as Record<string, any>).type) }
+              : entry
+          )),
+        ];
+      }),
+    );
+  };
+
   if (!config.version) {
     config.version = PUBLIC_FORM_SCHEMA_VERSION;
   }
 
   if (!config.title && typeof config.label === "string" && config.label) {
     config.title = config.label;
+  }
+
+  if (config.sections) {
+    config.sections = normalizeSections(config.sections);
   }
 
   return config as TFormConfig;

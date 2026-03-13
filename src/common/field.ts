@@ -43,7 +43,8 @@ export const ACTION_TARGET_TYPE = 'action-target';
 export const SELECT_MULTIPLE_TYPE = 'select-multiple';
 export const CHECKBOXES_TYPE = 'checkboxes';
 export const PRODUCT_LIST_TYPE = 'product-list';
-export const IMAGE_GALLERY_TYPE = 'image-gallery';
+export const SELECT_IMAGE_TYPE = 'select-image';
+export const IMAGE_GALLERY_TYPE = SELECT_IMAGE_TYPE;
 export const QUIZ_TYPE = 'quiz';
 export const SETTING_TYPE = 'setting';
 
@@ -148,7 +149,7 @@ export const REQUEST_FORM_FIELD_TYPES: Array<TFieldType> = [
     UPLOAD_IMAGE_TYPE_FIELD,
     UPLOAD_FILE_TYPE_FIELD,
     { type: PRODUCT_LIST_TYPE, name: 'Product List' },
-    { type: IMAGE_GALLERY_TYPE, name: 'Image Gallery' },
+    { type: IMAGE_GALLERY_TYPE, name: 'Select Image' },
     { type: QUIZ_TYPE, name: 'Quiz' },
     { type: SETTING_TYPE, name: 'Setting' },
 ];

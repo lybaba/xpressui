@@ -205,7 +205,7 @@ describe('HydratedFormHost', () => {
         { required: true },
       ),
     ).toEqual({
-      type: 'image-gallery',
+      type: 'select-image',
       name: 'lookbook',
       label: 'Lookbook',
       choices: [

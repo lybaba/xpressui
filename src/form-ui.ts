@@ -4143,6 +4143,8 @@ export class HydratedFormHost extends HTMLElement {
     selectionElement.classList.toggle("bg-base-200", isDragActive);
     selectionElement.dataset.uploadSelectionState =
       uploadState?.status || (selectedFiles.length ? "selected" : isDragActive ? "drag" : "idle");
+    selectionElement.style.display =
+      !isDocumentScan && !isQrScan && !uploadState && !isDragActive && !selectedFiles.length ? "none" : "";
     titleElement.textContent = this.getUploadSelectionTitle(fieldConfig, selectedFiles, qrValue, fileCountLabel);
     messageElement.textContent = this.getUploadSelectionMessage(fieldConfig, selectedFiles, qrValue);
     messageElement.style.display = messageElement.textContent ? "" : "none";
@@ -4281,7 +4283,8 @@ export class HydratedFormHost extends HTMLElement {
         row.appendChild(removeButton);
       }
       removeButton.className = "btn btn-xs btn-ghost";
-      removeButton.textContent = "Remove";
+      removeButton.textContent = "×";
+      removeButton.setAttribute("aria-label", `Remove ${file?.name || "file"}`);
       removeButton.setAttribute("data-remove-file-index", String(index));
     });
     Array.from(list.querySelectorAll("[data-upload-file-row]")).forEach((node) => {

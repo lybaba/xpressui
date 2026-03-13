@@ -1867,8 +1867,8 @@ describe('HydratedFormHost', () => {
             <article class="template-choice-card" data-quiz-answer-card="wood" data-quiz-answer-action="toggle" data-quiz-answer-id="wood">
               <div class="template-choice-title" data-quiz-answer-title="wood">Wood</div>
               <div class="template-gallery-caption" data-quiz-answer-state="wood">
-                <span data-quiz-mode="wood">Answer</span>
-                <span data-quiz-selected-state="wood">Available</span>
+                <span data-quiz-mode="wood" hidden></span>
+                <span data-quiz-selected-state="wood" hidden></span>
               </div>
             </article>
           </div>
@@ -1931,7 +1931,8 @@ describe('HydratedFormHost', () => {
     const designFooter = selection.querySelector('[data-choice-option-footer="design"]') as HTMLElement;
     const opsCard = selection.querySelector('[data-choice-option-value="ops"]') as HTMLElement;
 
-    expect(designFooter.textContent).toBe('Click to toggle');
+    expect(designFooter.textContent).toBe('');
+    expect(designFooter.hidden).toBe(true);
 
     designCard.click();
     await flushAsyncWork();
@@ -1940,13 +1941,15 @@ describe('HydratedFormHost', () => {
     expect(selection.querySelector('[data-choice-option-value="design"]')).toBe(designCard);
     expect(selection.querySelector('[data-choice-option-title="design"]')).toBe(designTitle);
     expect(selection.querySelector('[data-choice-option-footer="design"]')).toBe(designFooter);
-    expect(designFooter.textContent).toBe('Selected');
+    expect(designFooter.textContent).toBe('');
+    expect(designFooter.hidden).toBe(true);
 
     opsCard.click();
     await flushAsyncWork();
 
     expect(selection.querySelector('[data-choice-option-value="design"]')).toBe(designCard);
-    expect(designFooter.textContent).toBe('Selected');
+    expect(designFooter.textContent).toBe('');
+    expect(designFooter.hidden).toBe(true);
     expect((element.getFieldValue('interests') as string[])).toEqual(['design', 'ops']);
   });
 
@@ -1959,7 +1962,7 @@ describe('HydratedFormHost', () => {
           <div id="interests_selection" data-choice-list-zone="interests">
             <article data-choice-option-action="toggle" data-choice-option-value="design">
               <div data-choice-option-title="design">Design</div>
-              <div data-choice-option-footer="design">Select</div>
+              <div data-choice-option-footer="design" hidden></div>
             </article>
           </div>
         </div>

@@ -3407,6 +3407,36 @@ export class HydratedFormHost extends HTMLElement {
     });
   }
 
+  private resolveChoiceLayout(
+    fieldConfig: TFieldConfig,
+    container: HTMLElement | null,
+    fallbackLayout: "horizontal" | "vertical",
+  ): "horizontal" | "vertical" {
+    const explicitLayout = fieldConfig.layout;
+    if (explicitLayout === "horizontal" || explicitLayout === "vertical") {
+      return explicitLayout;
+    }
+
+    const shellLayout = container?.getAttribute("data-choice-layout");
+    if (shellLayout === "horizontal" || shellLayout === "vertical") {
+      return shellLayout;
+    }
+
+    return fallbackLayout;
+  }
+
+  private applyChoiceLayout(
+    container: HTMLElement,
+    layout: "horizontal" | "vertical",
+    minWidth = "220px",
+  ) {
+    container.style.display = "grid";
+    container.style.gap = "12px";
+    container.setAttribute("data-choice-layout", layout);
+    container.style.gridTemplateColumns =
+      layout === "vertical" ? "1fr" : `repeat(auto-fit, minmax(${minWidth}, 1fr))`;
+  }
+
   renderQuizSelection = (
     fieldConfig: TFieldConfig,
     value: any,
@@ -3468,9 +3498,8 @@ export class HydratedFormHost extends HTMLElement {
       grid = selectionElement as HTMLDivElement;
       grid.setAttribute("data-quiz-catalog", fieldConfig.name);
     }
-    grid.style.display = "grid";
-    grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
-    grid.style.gap = "10px";
+    const quizLayout = this.resolveChoiceLayout(fieldConfig, grid, "horizontal");
+    this.applyChoiceLayout(grid, quizLayout);
     grid.style.marginBottom = "14px";
 
     answers.forEach((answer) => {
@@ -3490,12 +3519,12 @@ export class HydratedFormHost extends HTMLElement {
       card.setAttribute("role", "button");
       card.setAttribute("tabindex", disabled ? "-1" : "0");
       card.setAttribute("aria-pressed", selected ? "true" : "false");
-      card.className = "rounded border p-2 transition-all";
+      card.className = "template-choice-card";
       card.style.cursor = disabled ? "not-allowed" : "pointer";
       card.style.opacity = disabled ? "0.55" : "1";
-      card.style.borderColor = selected ? "rgb(59 130 246)" : "";
-      card.style.boxShadow = selected ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "";
-      card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "rgba(248, 250, 252, 0.82)";
+      card.style.borderColor = selected ? "rgba(15, 118, 110, 0.38)" : "";
+      card.style.boxShadow = selected ? "0 0 0 2px rgba(15, 118, 110, 0.12)" : "";
+      card.style.background = selected ? "rgba(240, 253, 250, 0.96)" : "rgba(255, 255, 255, 0.98)";
 
       const previewSrc = answer.image_medium || answer.image_thumbnail;
       let preview = card.querySelector("[data-quiz-answer-image]") as HTMLImageElement | null;
@@ -3508,10 +3537,10 @@ export class HydratedFormHost extends HTMLElement {
         preview.src = previewSrc || "";
         preview.alt = answer.name;
         preview.style.width = "100%";
-        preview.style.height = "140px";
+        preview.style.height = "148px";
         preview.style.objectFit = "cover";
-        preview.style.borderRadius = "8px";
-        preview.style.marginBottom = "8px";
+        preview.style.borderRadius = "14px";
+        preview.style.marginBottom = "4px";
       }
 
       let title = card.querySelector("[data-quiz-answer-title]") as HTMLDivElement | null;
@@ -3520,7 +3549,7 @@ export class HydratedFormHost extends HTMLElement {
         title.setAttribute("data-quiz-answer-title", answer.id);
         card.appendChild(title);
       }
-      title.className = "text-sm font-semibold";
+      title.className = "template-choice-title";
       title.style.overflowWrap = "anywhere";
       title.style.wordBreak = "break-word";
       title.textContent = answer.name;
@@ -3531,7 +3560,8 @@ export class HydratedFormHost extends HTMLElement {
         stateRow.setAttribute("data-quiz-answer-state", answer.id);
         card.appendChild(stateRow);
       }
-      stateRow.className = "mt-2 flex items-center justify-between gap-2";
+      stateRow.className = "template-gallery-caption";
+      stateRow.style.justifyContent = "flex-start";
 
       let modeBadge = stateRow.querySelector("[data-quiz-mode]") as HTMLSpanElement | null;
       if (!modeBadge) {
@@ -3539,10 +3569,8 @@ export class HydratedFormHost extends HTMLElement {
         modeBadge.setAttribute("data-quiz-mode", answer.id);
         stateRow.appendChild(modeBadge);
       }
-      modeBadge.className = "text-[11px] font-semibold uppercase tracking-[0.12em]";
-      modeBadge.style.opacity = "0.68";
-      modeBadge.style.overflowWrap = "anywhere";
-      modeBadge.textContent = fieldConfig.multiple ? "Multi select" : "Single select";
+      modeBadge.hidden = true;
+      modeBadge.textContent = "";
 
       let selectedBadge = stateRow.querySelector("[data-quiz-selected-state]") as HTMLSpanElement | null;
       if (!selectedBadge) {
@@ -3551,15 +3579,17 @@ export class HydratedFormHost extends HTMLElement {
         stateRow.appendChild(selectedBadge);
       }
       if (selected) {
-        selectedBadge.className = "text-[11px] font-semibold";
-        selectedBadge.style.padding = "4px 8px";
-        selectedBadge.style.borderRadius = "999px";
-        selectedBadge.style.background = "rgba(59, 130, 246, 0.12)";
-        selectedBadge.style.color = "rgb(29, 78, 216)";
+        selectedBadge.hidden = true;
+        selectedBadge.className = "";
+        selectedBadge.style.padding = "0";
+        selectedBadge.style.borderRadius = "";
+        selectedBadge.style.background = "transparent";
+        selectedBadge.style.color = "";
         selectedBadge.style.whiteSpace = "nowrap";
-        selectedBadge.textContent = "Selected";
+        selectedBadge.textContent = "";
       } else if (disabled) {
-        selectedBadge.className = "text-[11px] font-semibold";
+        selectedBadge.hidden = false;
+        selectedBadge.className = "template-choice-footer";
         selectedBadge.style.padding = "4px 8px";
         selectedBadge.style.borderRadius = "999px";
         selectedBadge.style.background = "rgba(148, 163, 184, 0.12)";
@@ -3567,12 +3597,13 @@ export class HydratedFormHost extends HTMLElement {
         selectedBadge.style.whiteSpace = "nowrap";
         selectedBadge.textContent = "Limit reached";
       } else {
-        selectedBadge.className = "text-[11px] opacity-70";
+        selectedBadge.hidden = true;
+        selectedBadge.className = "template-choice-footer";
         selectedBadge.style.padding = "0";
         selectedBadge.style.background = "transparent";
         selectedBadge.style.color = "";
         selectedBadge.style.whiteSpace = "nowrap";
-        selectedBadge.textContent = "Available";
+        selectedBadge.textContent = "";
       }
     });
 
@@ -3764,9 +3795,8 @@ export class HydratedFormHost extends HTMLElement {
     if (grid === selectionElement) {
       grid.setAttribute("data-choice-list-grid", fieldConfig.name);
     }
-    grid.style.display = "grid";
-    grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
-    grid.style.gap = "10px";
+    const choiceLayout = this.resolveChoiceLayout(fieldConfig, grid, "vertical");
+    this.applyChoiceLayout(grid, choiceLayout);
 
     choices.forEach((choice) => {
       const optionValue = String(choice.value ?? choice.id ?? choice.label ?? "");
@@ -3785,12 +3815,12 @@ export class HydratedFormHost extends HTMLElement {
       card.setAttribute("role", "button");
       card.setAttribute("tabindex", disabled ? "-1" : "0");
       card.setAttribute("aria-pressed", selected ? "true" : "false");
-      card.className = "rounded border p-3 transition-all";
+      card.className = "template-choice-card";
       card.style.cursor = disabled ? "not-allowed" : "pointer";
       card.style.opacity = disabled ? "0.55" : "1";
-      card.style.borderColor = selected ? "rgb(59 130 246)" : "";
-      card.style.boxShadow = selected ? "0 0 0 2px rgba(59, 130, 246, 0.15)" : "";
-      card.style.background = selected ? "rgba(59, 130, 246, 0.06)" : "rgba(248, 250, 252, 0.82)";
+      card.style.borderColor = selected ? "rgba(15, 118, 110, 0.38)" : "";
+      card.style.boxShadow = selected ? "0 0 0 2px rgba(15, 118, 110, 0.12)" : "";
+      card.style.background = selected ? "rgba(240, 253, 250, 0.96)" : "rgba(255, 255, 255, 0.98)";
 
       let title = card.querySelector(`[data-choice-option-title="${optionValue}"]`) as HTMLDivElement | null;
       if (!title) {
@@ -3798,7 +3828,7 @@ export class HydratedFormHost extends HTMLElement {
         title.setAttribute("data-choice-option-title", optionValue);
         card.appendChild(title);
       }
-      title.className = "text-sm font-semibold";
+      title.className = "template-choice-title";
       title.style.overflowWrap = "anywhere";
       title.textContent = String(choice.label ?? optionValue);
 
@@ -3811,7 +3841,7 @@ export class HydratedFormHost extends HTMLElement {
           description.setAttribute("data-choice-option-description", optionValue);
           card.appendChild(description);
         }
-        description.className = "mt-1 text-xs opacity-80";
+        description.className = "template-field-help";
         description.style.overflowWrap = "anywhere";
         description.textContent = choice.desc;
       } else {
@@ -3824,12 +3854,9 @@ export class HydratedFormHost extends HTMLElement {
         footer.setAttribute("data-choice-option-footer", optionValue);
         card.appendChild(footer);
       }
-      footer.className = "mt-2 text-xs opacity-70";
-      footer.textContent = selected
-        ? "Selected"
-        : disabled
-          ? "Selection limit reached"
-          : (fieldConfig.type === RADIO_BUTTONS_TYPE ? "Click to choose" : "Click to toggle");
+      footer.className = "template-choice-footer";
+      footer.hidden = !disabled;
+      footer.textContent = disabled ? "Limit reached" : "";
     });
     Array.from(grid.querySelectorAll("[data-choice-option-value]")).forEach((node) => {
       const optionValue = (node as HTMLElement).getAttribute("data-choice-option-value");

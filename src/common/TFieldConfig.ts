@@ -82,6 +82,7 @@ type TFieldConfig = {
     viewMode?: 'view' | 'edit';
     viewTemplate?: string;
     viewTemplateUnsafe?: boolean;
+    layout?: 'auto' | 'horizontal' | 'vertical' | string;
     choices?: Array<TChoice>;
     mediaInfo?: TMediaInfo;
     linkType?: string;

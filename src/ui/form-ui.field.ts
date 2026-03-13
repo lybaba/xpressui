@@ -133,6 +133,7 @@ export function bindSimpleFieldEvents(options: {
 
 export function bindSelectionFieldEvents(options: {
   selectionElement: HTMLElement;
+  dropZoneElement?: HTMLElement | null;
   input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
   fieldConfig: { name: string; type?: string };
   isFileField: boolean;
@@ -163,6 +164,7 @@ export function bindSelectionFieldEvents(options: {
     selectionElement,
     input,
   } = options;
+  const fileDropTarget = options.dropZoneElement || selectionElement;
 
   selectionElement.addEventListener("click", (event) => {
     const target = event.target as HTMLElement | null;
@@ -325,22 +327,22 @@ export function bindSelectionFieldEvents(options: {
     return;
   }
 
-  selectionElement.addEventListener("dragenter", (event) => {
+  fileDropTarget.addEventListener("dragenter", (event) => {
     event.preventDefault();
     options.setFileDragState(true);
   });
-  selectionElement.addEventListener("dragover", (event) => {
+  fileDropTarget.addEventListener("dragover", (event) => {
     event.preventDefault();
     options.setFileDragState(true);
   });
-  selectionElement.addEventListener("dragleave", (event) => {
+  fileDropTarget.addEventListener("dragleave", (event) => {
     const relatedTarget = event.relatedTarget as Node | null;
-    if (relatedTarget && selectionElement.contains(relatedTarget)) {
+    if (relatedTarget && fileDropTarget.contains(relatedTarget)) {
       return;
     }
     options.setFileDragState(false);
   });
-  selectionElement.addEventListener("drop", (event) => {
+  fileDropTarget.addEventListener("drop", (event) => {
     event.preventDefault();
     options.setFileDragState(false);
     const droppedFiles = Array.from(event.dataTransfer?.files || []);

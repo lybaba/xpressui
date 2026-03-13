@@ -4132,11 +4132,20 @@ export class HydratedFormHost extends HTMLElement {
     const qrValue = isQrScan && typeof value === "string" && value.length ? value : "";
 
     this.clearFilePreviewUrls(fieldConfig.name);
+    this.querySelectorAll(`[data-file-drop-zone="${fieldConfig.name}"]`).forEach((node) => {
+      if (node instanceof HTMLElement) {
+        node.dataset.fileDropState = isDragActive ? "drag" : selectedFiles.length ? "selected" : "idle";
+        node.dataset.fileDragActive = isDragActive ? "true" : "false";
+      }
+    });
 
     selectionElement.classList.toggle("border-primary", isDragActive);
     selectionElement.classList.toggle("bg-base-200", isDragActive);
+    selectionElement.dataset.uploadSelectionState =
+      uploadState?.status || (selectedFiles.length ? "selected" : isDragActive ? "drag" : "idle");
     titleElement.textContent = this.getUploadSelectionTitle(fieldConfig, selectedFiles, qrValue, fileCountLabel);
     messageElement.textContent = this.getUploadSelectionMessage(fieldConfig, selectedFiles, qrValue);
+    messageElement.style.display = messageElement.textContent ? "" : "none";
 
     let status = bodyElement.querySelector(`[data-upload-status="${fieldConfig.name}"]`) as HTMLDivElement | null;
     if (uploadState) {
@@ -4372,7 +4381,7 @@ export class HydratedFormHost extends HTMLElement {
     return !selectedFiles.length
       ? "Awaiting file"
       : selectedFiles.length === 1
-        ? selectedFiles[0]?.name || "1 file selected"
+        ? "Selected file"
         : fileCountLabel;
   }
 
@@ -4391,7 +4400,7 @@ export class HydratedFormHost extends HTMLElement {
 
     return !selectedFiles.length
       ? this.getUploadSelectionIdleMessage(fieldConfig)
-      : "Ready for upload.";
+      : "";
   }
 
   getUploadSelectionIdleMessage = (fieldConfig: TFieldConfig) =>
@@ -4409,6 +4418,12 @@ export class HydratedFormHost extends HTMLElement {
     if (!fieldConfig) {
       return;
     }
+
+    this.querySelectorAll(`[data-file-drop-zone="${fieldName}"]`).forEach((node) => {
+      if (node instanceof HTMLElement) {
+        node.dataset.fileDragActive = active ? "true" : "false";
+      }
+    });
 
     const selectionElement = this.querySelector(`#${fieldName}_selection`) as HTMLElement | null;
     this.renderFileSelection(fieldConfig, this.getFieldValue(fieldName), selectionElement);
@@ -5916,8 +5931,12 @@ export class HydratedFormHost extends HTMLElement {
             });
           }
           if (selectionElement && !fieldViewOnly && !settingField) {
+            const dropZoneElement = this.querySelector(
+              `[data-file-drop-zone="${name}"]`,
+            ) as HTMLElement | null;
             bindConfiguredSelectionFieldEvents({
               selectionElement,
+              dropZoneElement,
               input,
               fieldConfig,
               isFileField: isFileFieldType(fieldConfig.type),

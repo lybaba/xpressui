@@ -5792,6 +5792,65 @@ describe('HydratedFormHost', () => {
     expect(selection.textContent).toContain('drop.pdf');
   });
 
+  it('supports drag and drop when the visible drop zone is separate from the selection shell', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <form id="hydrated_drop_form" data-type="contactform" data-name="hydrated_drop" data-label="Hydrated Drop">
+        <div data-type="section" data-name="main" data-label="Main">
+          <div class="template-upload-box" data-file-drop-zone="attachments">
+            <input
+              id="attachments"
+              name="attachments"
+              type="file"
+              data-type="file"
+              data-name="attachments"
+              data-label="Attachments"
+              data-section-name="main"
+              multiple
+            />
+          </div>
+          <div
+            id="attachments_selection"
+            data-upload-selection-zone="attachments"
+            data-upload-selection-body="attachments"
+          ></div>
+        </div>
+      </form>
+    `;
+    document.body.appendChild(container);
+
+    const element = hydrateForm(container, createFormConfig({
+      name: 'hydrated_drop',
+      title: 'Hydrated Drop',
+      fields: [
+        {
+          name: 'attachments',
+          label: 'Attachments',
+          type: 'file',
+          multiple: true,
+        },
+      ],
+    })) as HydratedFormHost;
+
+    const dropZone = element.querySelector('[data-file-drop-zone="attachments"]') as HTMLElement;
+    const selection = element.querySelector('#attachments_selection') as HTMLElement;
+    const droppedFile = new File(['drop'], 'drop.pdf', { type: 'application/pdf' });
+    const dropEvent = new Event('drop', { bubbles: true }) as DragEvent;
+
+    Object.defineProperty(dropEvent, 'dataTransfer', {
+      configurable: true,
+      value: {
+        files: [droppedFile],
+      },
+    });
+
+    dropZone.dispatchEvent(dropEvent);
+    await flushAsyncWork();
+
+    expect((element.form?.getState().values || {}).attachments).toEqual([droppedFile]);
+    expect(selection.textContent).toContain('drop.pdf');
+  });
+
   it('preserves the static upload shell and updates only the dynamic file selection body', async () => {
     const container = document.createElement('div');
     const element = mountHydratedTestForm(container, {

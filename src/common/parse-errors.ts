@@ -288,6 +288,28 @@ export default function parseErrors(
                             resolvedFieldName,
                             error,
                         );
+                    case "formatMinimum": {
+                        const bound = String((error.params as any)?.limit || (error.params as any)?.comparison || "");
+                        return resolveValidationMessage(
+                            "formatMinimum",
+                            `Value must be on or after ${bound}.`,
+                            { limit: bound },
+                            i18n,
+                            resolvedFieldName,
+                            error,
+                        );
+                    }
+                    case "formatMaximum": {
+                        const bound = String((error.params as any)?.limit || (error.params as any)?.comparison || "");
+                        return resolveValidationMessage(
+                            "formatMaximum",
+                            `Value must be on or before ${bound}.`,
+                            { limit: bound },
+                            i18n,
+                            resolvedFieldName,
+                            error,
+                        );
+                    }
                     case "format": {
                         const format = String((error.params as any)?.format || "").toLowerCase();
                         switch (format) {

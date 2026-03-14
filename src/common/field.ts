@@ -347,21 +347,37 @@ export const getHtmlInputType = (fieldType: string): string => {
 
 
 export const getHtmlInputProps = (fieldConfig: TFieldConfig): Record<string, any> => {
+    const minNumber = Number.isFinite(Number(fieldConfig.min)) ? Number(fieldConfig.min) : undefined;
+    const maxNumber = Number.isFinite(Number(fieldConfig.max)) ? Number(fieldConfig.max) : undefined;
+    const minString = fieldConfig.min ? String(fieldConfig.min) : undefined;
+    const maxString = fieldConfig.max ? String(fieldConfig.max) : undefined;
+
     switch (fieldConfig.type) {
+        case NUMBER_TYPE:
+            return {
+                ...(typeof minNumber === "number" ? { min: minNumber } : {}),
+                ...(typeof maxNumber === "number" ? { max: maxNumber } : {}),
+                ...(fieldConfig.step ? { step: Number(fieldConfig.step) } : {}),
+            };
+
         case PRICE_TYPE:
             return {
-                min: 0
+                min: typeof minNumber === "number" ? minNumber : 0,
+                ...(typeof maxNumber === "number" ? { max: maxNumber } : {}),
+                ...(fieldConfig.step ? { step: Number(fieldConfig.step) } : {}),
             };
 
         case TAX_TYPE:
             return {
-                min: 0,
-                max: 1
+                min: typeof minNumber === "number" ? Math.max(0, minNumber) : 0,
+                max: typeof maxNumber === "number" ? Math.min(1, maxNumber) : 1,
+                ...(fieldConfig.step ? { step: Number(fieldConfig.step) } : {}),
             }
 
         case POSITIVE_INTEGER_TYPE:
             return {
-                min: 0,
+                min: typeof minNumber === "number" ? minNumber : 0,
+                ...(typeof maxNumber === "number" ? { max: maxNumber } : {}),
                 step: 1
             }
 
@@ -387,8 +403,22 @@ export const getHtmlInputProps = (fieldConfig: TFieldConfig): Record<string, any
 
         case DATE_TYPE:
             {
-                const minProp = fieldConfig.min ? { min: fieldConfig.min } : {};
-                const maxProp = fieldConfig.max ? { max: fieldConfig.max } : {};
+                const minProp = minString ? { min: minString } : {};
+                const maxProp = maxString ? { max: maxString } : {};
+                const stepProp = fieldConfig.step ? { step: fieldConfig.step } : {};
+
+                return {
+                    ...minProp,
+                    ...maxProp,
+                    ...stepProp
+                }
+            }
+
+        case DATETIME_TYPE:
+        case TIME_TYPE:
+            {
+                const minProp = minString ? { min: minString } : {};
+                const maxProp = maxString ? { max: maxString } : {};
                 const stepProp = fieldConfig.step ? { step: fieldConfig.step } : {};
 
                 return {

@@ -8094,6 +8094,70 @@ describe('HydratedFormHost', () => {
     expect(Object.keys(runtime.validateValues({})).length).toBeGreaterThan(0);
   });
 
+  it('supports custom min and max validation across numeric and date-like fields', () => {
+    const formConfig = createFormConfig({
+      name: 'bounded-fields-form',
+      title: 'Bounded Fields Form',
+      fields: [
+        {
+          name: 'amount',
+          label: 'Amount',
+          type: 'price',
+          required: true,
+          min: 10,
+          max: 100,
+        },
+        {
+          name: 'rate',
+          label: 'Rate',
+          type: 'tax',
+          min: 0.1,
+          max: 0.25,
+        },
+        {
+          name: 'event_date',
+          label: 'Event Date',
+          type: 'date',
+          min: '2026-03-10',
+          max: '2026-03-20',
+        },
+        {
+          name: 'event_time',
+          label: 'Event Time',
+          type: 'time',
+          min: '09:00',
+          max: '17:00',
+        },
+      ],
+    });
+    const runtime = new FormEngineRuntime();
+    const section = formConfig.sections.main || [];
+
+    runtime.setFormConfig(formConfig);
+    section.forEach((field) => {
+      runtime.setField(field.name, field);
+    });
+
+    expect(runtime.validateValues({
+      amount: '5',
+      rate: '0.3',
+      event_date: '2026-03-09',
+      event_time: '18:15',
+    })).toEqual({
+      amount: expect.objectContaining({ errorMessage: 'Value must be greater than or equal to 10.' }),
+      rate: expect.objectContaining({ errorMessage: 'Value must be less than or equal to 0.25.' }),
+      event_date: expect.objectContaining({ errorMessage: 'Value must be on or after 2026-03-10.' }),
+      event_time: expect.objectContaining({ errorMessage: 'Value must be on or before 17:00.' }),
+    });
+
+    expect(runtime.validateValues({
+      amount: '42',
+      rate: '0.2',
+      event_date: '2026-03-12',
+      event_time: '10:30',
+    })).toEqual({});
+  });
+
   it('exposes a composed headless runtime API', async () => {
     let values: Record<string, any> = { amount: '12.50', email: 'headless@example.com' };
     const formConfig = createFormConfig({

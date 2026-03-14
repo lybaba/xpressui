@@ -28,6 +28,16 @@ import { isEmpty, isObject } from 'lodash';
 import TChoice from "./TChoice";
 import TSchema from "./TSchema";
 
+const getFiniteNumber = (value: unknown): number | undefined => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+const getNonEmptyString = (value: unknown): string | undefined => {
+    const normalized = String(value ?? "").trim();
+    return normalized ? normalized : undefined;
+}
+
 export const FORM_ID = "form";
 export const SECTION_ID = 'attrgroup';
 export const FIELD_ID = "field";
@@ -178,6 +188,10 @@ export const getSectionIndex = (formConfig: TFormConfig, sectionName: string, is
 
 function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
     const res: any = {};
+    const minNumber = getFiniteNumber(fieldConfig.min);
+    const maxNumber = getFiniteNumber(fieldConfig.max);
+    const minString = getNonEmptyString(fieldConfig.min);
+    const maxString = getNonEmptyString(fieldConfig.max);
 
     if (isFileFieldType(fieldConfig.type)) {
         res.anyOf = [
@@ -191,22 +205,30 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
     switch (fieldConfig.type) {
         case NUMBER_TYPE:
             res.type = "number";
+            if (typeof minNumber === "number")
+                res.minimum = minNumber;
+            if (typeof maxNumber === "number")
+                res.maximum = maxNumber;
             break;
 
         case PRICE_TYPE:
             res.type = "number";
-            res.minimum = 0;
+            res.minimum = typeof minNumber === "number" ? minNumber : 0;
+            if (typeof maxNumber === "number")
+                res.maximum = maxNumber;
             break;
 
         case TAX_TYPE:
             res.type = "number";
-            res.minimum = 0;
-            res.maximum = 1;
+            res.minimum = typeof minNumber === "number" ? Math.max(0, minNumber) : 0;
+            res.maximum = typeof maxNumber === "number" ? Math.min(1, maxNumber) : 1;
             break;
 
         case POSITIVE_INTEGER_TYPE:
             res.type = "integer";
-            res.minimum = 0;
+            res.minimum = typeof minNumber === "number" ? minNumber : 0;
+            if (typeof maxNumber === "number")
+                res.maximum = maxNumber;
             break;
 
         case CHECKBOX_TYPE:
@@ -300,16 +322,28 @@ function toAjvFieldType(fieldConfig: TFieldConfig): object | null {
         case DATETIME_TYPE:
             res.type = "string";
             res.format = "date-time"
+            if (minString)
+                res.formatMinimum = minString;
+            if (maxString)
+                res.formatMaximum = maxString;
             break;
 
         case DATE_TYPE:
             res.type = "string";
             res.format = "date"
+            if (minString)
+                res.formatMinimum = minString;
+            if (maxString)
+                res.formatMaximum = maxString;
             break;
 
         case TIME_TYPE:
             res.type = "string";
             res.format = "time"
+            if (minString)
+                res.formatMinimum = minString;
+            if (maxString)
+                res.formatMaximum = maxString;
             break;
 
 

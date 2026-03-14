@@ -70,23 +70,26 @@ export function renderFieldErrorState(options: {
   const displayedError = ruleError || (options.touched ? options.error : undefined);
   if (displayedError) {
     const errorClass = getErrorClass(inputElement);
+    const defaultMessage = errorElement.getAttribute("data-default-message") || "";
     const errorMessage =
       typeof displayedError === "object" && displayedError && "errorMessage" in (displayedError as Record<string, any>)
         ? String((displayedError as Record<string, any>).errorMessage || "")
         : String(displayedError);
-    errorElement.textContent = ruleError ? ruleError : errorMessage;
+    errorElement.textContent = ruleError ? ruleError : (defaultMessage || errorMessage);
     errorElement.style.display = "block";
     inputElement.classList.add(errorClass);
+    inputElement.setAttribute("aria-invalid", "true");
+    errorElement.setAttribute("aria-hidden", "false");
     options.errors[fieldName] = true;
     return;
   }
 
-  if (options.errors[fieldName]) {
-    errorElement.textContent = "";
-    errorElement.style.display = "none";
-    const errorClass = getErrorClass(inputElement);
-    inputElement.classList.remove(errorClass);
-  }
+  errorElement.textContent = "";
+  errorElement.style.display = "none";
+  errorElement.setAttribute("aria-hidden", "true");
+  const errorClass = getErrorClass(inputElement);
+  inputElement.classList.remove(errorClass);
+  inputElement.removeAttribute("aria-invalid");
   options.errors[fieldName] = false;
 }
 

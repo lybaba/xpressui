@@ -5,7 +5,7 @@ import TFormConfig, {
   TFormSubmitRequest,
 } from "./common/TFormConfig";
 import { TValidator } from "./common/Validator";
-import getFormConfig, { getFieldConfig } from "./dom-utils";
+import getFormConfig, { getErrorClass, getFieldConfig } from "./dom-utils";
 import TFieldConfig from "./common/TFieldConfig";
 import { FormEngineRuntime, TDocumentDataViewOptions } from "./common/form-engine";
 import {
@@ -4658,7 +4658,7 @@ export class HydratedFormHost extends HTMLElement {
         });
       }
       this.bindProductListGlobalCartEvents();
-
+      this.resetFieldErrorDisplays();
       this.ensureStepControls(formElem);
 
       this.dynamic.updateConditionalFields();
@@ -5136,6 +5136,10 @@ export class HydratedFormHost extends HTMLElement {
     });
 
     const errors = this.engine.validateValues(values);
+    const firstInvalidField = currentStepFields.find((fieldElement) => Boolean(errors[fieldElement.name]));
+    if (firstInvalidField && typeof firstInvalidField.focus === "function") {
+      firstInvalidField.focus();
+    }
     return !currentStepFields.some((fieldElement) => Boolean(errors[fieldElement.name]));
   }
 
@@ -5843,6 +5847,26 @@ export class HydratedFormHost extends HTMLElement {
 
   getFieldElement = (fieldName: string) => {
     return getConfiguredFieldElement(this, fieldName);
+  }
+
+  resetFieldErrorDisplays = () => {
+    Array.from(this.querySelectorAll<HTMLElement>('[data-field-error], [id$="_error"]')).forEach((errorElement) => {
+      errorElement.textContent = "";
+      errorElement.style.display = "none";
+      errorElement.setAttribute("aria-hidden", "true");
+    });
+
+    Object.keys(this.engine.getFields()).forEach((fieldName) => {
+      const inputElement = this.getFieldElement(fieldName);
+      if (!inputElement) {
+        return;
+      }
+
+      const errorClass = getErrorClass(inputElement);
+      inputElement.classList.remove(errorClass);
+      inputElement.removeAttribute("aria-invalid");
+      this.errors[fieldName] = false;
+    });
   }
 
   renderFieldErrorState = (

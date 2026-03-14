@@ -339,6 +339,7 @@ export function syncStepControls(options: {
   if (options.controls.nextButton) {
     options.controls.nextButton.disabled = options.isLastStep;
     options.controls.nextButton.style.display = options.isLastStep ? "none" : "";
+    options.controls.nextButton.setAttribute("aria-disabled", options.isLastStep ? "true" : "false");
   }
 
   submitButtons.forEach((button) => {

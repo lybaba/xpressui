@@ -5387,6 +5387,85 @@ describe('HydratedFormHost', () => {
     expect(input.classList.contains('input-error')).toBe(false);
   });
 
+  it('keeps backend-rendered error containers hidden until the field is actually invalid', async () => {
+    const element = renderFixture(`
+      <template id="contact-hidden-errors">
+        <form
+          id="contact_hidden_errors_form"
+          data-type="contactform"
+          data-name="contact-hidden-errors"
+          data-label="Contact Hidden Errors"
+        >
+          <div data-type="section" data-name="main" data-label="Main"></div>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            data-type="email"
+            data-name="email"
+            data-label="Email"
+            data-required="true"
+            data-section-name="main"
+          />
+          <span id="email_error" data-default-message="Enter a valid email address.">Enter a valid email address.</span>
+        </form>
+      </template>
+      <form-ui name="contact-hidden-errors"></form-ui>
+    `);
+
+    const input = element.querySelector('#email') as HTMLInputElement;
+    const error = element.querySelector('#email_error') as HTMLSpanElement;
+
+    await flushAsyncWork();
+
+    expect(error.textContent).toBe('');
+    expect(error.style.display).toBe('none');
+    expect(input.getAttribute('aria-invalid')).toBeNull();
+
+    input.dispatchEvent(new FocusEvent('focus'));
+    input.dispatchEvent(new FocusEvent('blur'));
+    await flushAsyncWork();
+
+    expect(error.textContent).toBe('Enter a valid email address.');
+    expect(error.style.display).toBe('block');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+
+    input.value = 'alice@example.com';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new FocusEvent('blur'));
+    await flushAsyncWork();
+
+    expect(error.textContent).toBe('');
+    expect(error.style.display).toBe('none');
+    expect(input.getAttribute('aria-invalid')).toBeNull();
+  });
+
+  it('keeps the user on the same step and focuses the first invalid field when the current step is blocked', async () => {
+    const element = renderFixture(`
+      <template id="wizard-click-blocked">
+        <form id="wizard_click_blocked_form" data-type="contactform" data-name="wizard-click-blocked" data-label="Wizard Click Blocked">
+          <div data-type="section" data-name="step_one" data-label="Step One"></div>
+          <div data-type="section" data-name="step_two" data-label="Step Two"></div>
+          <input id="first_name" name="first_name" type="text" data-type="text" data-name="first_name" data-label="First Name" data-required="true" data-section-name="step_one" />
+          <span id="first_name_error"></span>
+          <input id="last_name" name="last_name" type="text" data-type="text" data-name="last_name" data-label="Last Name" data-section-name="step_two" />
+          <span id="last_name_error"></span>
+        </form>
+      </template>
+      <form-ui name="wizard-click-blocked" mode="form-multi-step"></form-ui>
+    `);
+
+    const firstName = element.querySelector('#first_name') as HTMLInputElement;
+    const error = element.querySelector('#first_name_error') as HTMLSpanElement;
+
+    expect(element.nextStep()).toBe(false);
+    await flushAsyncWork();
+
+    expect(element.getCurrentStepIndex()).toBe(0);
+    expect(error.textContent).toBe('This field is required.');
+    expect(firstName.getAttribute('aria-invalid')).toBe('true');
+  });
+
   it('emits validation-blocked-submit when submit is blocked by validation errors', async () => {
     const element = renderFixture(`
       <template id="validation-blocked">

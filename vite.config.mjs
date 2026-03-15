@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   build: {
     copyPublicDir: false,
+    sourcemap: true,
     lib: {
       entry: {
         xpressui: fileURLToPath(new URL('./src/index.ts', import.meta.url)),

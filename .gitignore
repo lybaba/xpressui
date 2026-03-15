@@ -41,3 +41,5 @@ lib.tsconfig.tsbuildinfo
 .tsbuildinfo
 .npm-cache
 .pages-site
+
+.vscode
